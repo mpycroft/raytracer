@@ -1,4 +1,7 @@
 //! The math module provides mathematical primitives needed throughout the ray
 //! tracer.
 
+#[macro_use]
+mod float;
+
 mod point;

@@ -6,6 +6,5 @@ edition = "2018"
 description = "A ray tracer written in Rust."
 license = "BSD-3-Clause"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
+approx = "0.5.0"

@@ -48,3 +48,12 @@ until some sort of fields in traits feature gets implemented. Since the only
 real usage of homogenous coordinates (w elements) on points and vectors is to
 make the matrix multiplication fall out and we already have that information in
 the type we shouldn't hit any fundamental issues.
+
+### Floating Point Values
+
+We are using the approx crate to handle floating point comparisons. As far as my
+own knowledge of such goes, we should be using absolute differences when
+comparing to zero and relative difference works generally well elsewhere. A
+fairly arbitrary epsilon of 0.000_001 is used to check if two floats are the
+same or not, this should be "good enough" for the sort of accuracy we care about
+without over burdening tests with the default f64 epsilon.
