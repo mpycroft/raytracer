@@ -1,5 +1,7 @@
 use super::float::{FLOAT_EPSILON, FLOAT_ULPS};
+use super::vector::Vector;
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
+use std::ops::{Add, AddAssign};
 
 /// A Point is a representation of a geometric position within the 3 dimensional
 /// scene we are working on.
@@ -13,6 +15,30 @@ pub struct Point {
 impl Point {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self { x, y, z }
+    }
+}
+
+impl Add<Vector> for Point {
+    type Output = Self;
+
+    fn add(self, rhs: Vector) -> Self::Output {
+        Self::Output::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
+    }
+}
+
+impl Add<Point> for Vector {
+    type Output = Point;
+
+    fn add(self, rhs: Point) -> Self::Output {
+        Self::Output::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
+    }
+}
+
+impl AddAssign<Vector> for Point {
+    fn add_assign(&mut self, rhs: Vector) {
+        self.x += rhs.x;
+        self.y += rhs.y;
+        self.z += rhs.z;
     }
 }
 
@@ -76,6 +102,27 @@ mod tests {
         assert_float_relative_eq!(p.x, 4.3);
         assert_float_relative_eq!(p.y, -4.2);
         assert_float_relative_eq!(p.z, 3.1);
+    }
+
+    #[test]
+    fn add() {
+        assert_relative_eq!(
+            Point::new(0.0, 0.5, 0.0) + Vector::new(1.3, 0.0, 0.0),
+            Point::new(1.3, 0.5, 0.0)
+        );
+
+        assert_relative_eq!(
+            Vector::new(0.5, 0.5, 2.3) + Point::new(2.1, 3.4, 0.7),
+            Point::new(2.6, 3.9, 3.0)
+        );
+    }
+
+    #[test]
+    fn add_assign() {
+        let mut p = Point::new(-2.1, 0.3, 1.6);
+        p += Vector::new(1.1, 4.6, 2.2);
+
+        assert_relative_eq!(p, Point::new(-1.0, 4.9, 3.8));
     }
 
     #[test]

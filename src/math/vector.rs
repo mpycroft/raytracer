@@ -1,5 +1,6 @@
 use super::float::{FLOAT_EPSILON, FLOAT_ULPS};
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
+use std::ops::{Add, AddAssign};
 
 /// A Vector is a representation of a geometric vector, pointing in a given
 /// direction and with a magnitude.
@@ -13,6 +14,22 @@ pub struct Vector {
 impl Vector {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self { x, y, z }
+    }
+}
+
+impl Add for Vector {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self::Output::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
+    }
+}
+
+impl AddAssign for Vector {
+    fn add_assign(&mut self, rhs: Self) {
+        self.x += rhs.x;
+        self.y += rhs.y;
+        self.z += rhs.z;
     }
 }
 
@@ -76,6 +93,22 @@ mod tests {
         assert_float_relative_eq!(v.x, 4.3);
         assert_float_relative_eq!(v.y, -4.2);
         assert_float_relative_eq!(v.z, 3.1);
+    }
+
+    #[test]
+    fn add() {
+        assert_relative_eq!(
+            Vector::new(1.3, 2.6, 0.9) + Vector::new(0.0, -1.3, 3.1),
+            Vector::new(1.3, 1.3, 4.0)
+        );
+    }
+
+    #[test]
+    fn add_assign() {
+        let mut v = Vector::new(2.5, 0.3, 1.5);
+        v += Vector::new(1.3, 1.6, 0.0);
+
+        assert_relative_eq!(v, Vector::new(3.8, 1.9, 1.5));
     }
 
     #[test]
