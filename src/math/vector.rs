@@ -1,6 +1,6 @@
 use super::float::{FLOAT_EPSILON, FLOAT_ULPS};
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
-use std::ops::{Add, AddAssign, Neg, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 /// A Vector is a representation of a geometric vector, pointing in a given
 /// direction and with a magnitude.
@@ -30,6 +30,30 @@ impl AddAssign for Vector {
         self.x += rhs.x;
         self.y += rhs.y;
         self.z += rhs.z;
+    }
+}
+
+impl Mul<f64> for Vector {
+    type Output = Self;
+
+    fn mul(self, rhs: f64) -> Self::Output {
+        Self::Output::new(self.x * rhs, self.y * rhs, self.z * rhs)
+    }
+}
+
+impl Mul<Vector> for f64 {
+    type Output = Vector;
+
+    fn mul(self, rhs: Vector) -> Self::Output {
+        rhs * self
+    }
+}
+
+impl MulAssign<f64> for Vector {
+    fn mul_assign(&mut self, rhs: f64) {
+        self.x *= rhs;
+        self.y *= rhs;
+        self.z *= rhs;
     }
 }
 
@@ -133,6 +157,27 @@ mod tests {
         v += Vector::new(1.3, 1.6, 0.0);
 
         assert_relative_eq!(v, Vector::new(3.8, 1.9, 1.5));
+    }
+
+    #[test]
+    fn mul() {
+        assert_relative_eq!(
+            Vector::new(1.0, -2.0, 3.0) * 3.5,
+            Vector::new(3.5, -7.0, 10.5)
+        );
+
+        assert_relative_eq!(
+            0.5 * Vector::new(1.0, -2.0, 3.0),
+            Vector::new(0.5, -1.0, 1.5)
+        );
+    }
+
+    #[test]
+    fn mul_assign() {
+        let mut v = Vector::new(0.0, -2.3, 4.1);
+        v *= 1.3;
+
+        assert_relative_eq!(v, Vector::new(0.0, -2.99, 5.33));
     }
 
     #[test]
