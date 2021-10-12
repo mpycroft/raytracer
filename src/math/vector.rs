@@ -1,6 +1,6 @@
 use super::float::{FLOAT_EPSILON, FLOAT_ULPS};
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
-use std::ops::{Add, AddAssign, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Neg, Sub, SubAssign};
 
 /// A Vector is a representation of a geometric vector, pointing in a given
 /// direction and with a magnitude.
@@ -30,6 +30,14 @@ impl AddAssign for Vector {
         self.x += rhs.x;
         self.y += rhs.y;
         self.z += rhs.z;
+    }
+}
+
+impl Neg for Vector {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        Self::Output::new(-self.x, -self.y, -self.z)
     }
 }
 
@@ -128,10 +136,23 @@ mod tests {
     }
 
     #[test]
+    fn neg() {
+        assert_relative_eq!(
+            -Vector::new(1.0, -2.0, 3.0),
+            Vector::new(-1.0, 2.0, -3.0)
+        );
+    }
+
+    #[test]
     fn sub() {
         assert_relative_eq!(
             Vector::new(3.0, 2.0, 1.0) - Vector::new(5.0, 6.0, 7.0),
             Vector::new(-2.0, -4.0, -6.0)
+        );
+
+        assert_relative_eq!(
+            Vector::new(0.0, 0.0, 0.0) - Vector::new(1.0, -2.0, 3.0),
+            Vector::new(-1.0, 2.0, -3.0)
         );
     }
 
