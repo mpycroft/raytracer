@@ -17,6 +17,10 @@ impl Vector {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self { x, y, z }
     }
+
+    pub fn magnitude(&self) -> f64 {
+        (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
+    }
 }
 
 impl Add for Vector {
@@ -159,6 +163,22 @@ mod tests {
         assert_float_relative_eq!(v.x, 4.3);
         assert_float_relative_eq!(v.y, -4.2);
         assert_float_relative_eq!(v.z, 3.1);
+    }
+
+    #[test]
+    fn magnitude() {
+        assert_float_relative_eq!(Vector::new(1.0, 0.0, 0.0).magnitude(), 1.0);
+        assert_float_relative_eq!(Vector::new(0.0, 1.0, 0.0).magnitude(), 1.0);
+        assert_float_relative_eq!(Vector::new(0.0, 0.0, 1.0).magnitude(), 1.0);
+
+        assert_float_relative_eq!(
+            Vector::new(1.0, 2.0, 3.0).magnitude(),
+            3.741_657
+        );
+        assert_float_relative_eq!(
+            Vector::new(-1.0, -2.0, -3.0).magnitude(),
+            3.741_657
+        );
     }
 
     #[test]
