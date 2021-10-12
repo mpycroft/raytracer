@@ -21,6 +21,15 @@ impl Vector {
     pub fn magnitude(&self) -> f64 {
         (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
     }
+
+    pub fn normalise(&self) -> Self {
+        let magnitude = self.magnitude();
+        if magnitude == 0.0 {
+            return Vector::new(0.0, 0.0, 0.0);
+        }
+
+        Self::new(self.x / magnitude, self.y / magnitude, self.z / magnitude)
+    }
 }
 
 impl Add for Vector {
@@ -178,6 +187,29 @@ mod tests {
         assert_float_relative_eq!(
             Vector::new(-1.0, -2.0, -3.0).magnitude(),
             3.741_657
+        );
+    }
+
+    #[test]
+    fn normalise() {
+        assert_relative_eq!(
+            Vector::new(4.0, 0.0, 0.0).normalise(),
+            Vector::new(1.0, 0.0, 0.0)
+        );
+
+        assert_relative_eq!(
+            Vector::new(1.0, 2.0, 3.0).normalise(),
+            Vector::new(0.267_261, 0.534_522, 0.801_784)
+        );
+
+        assert_float_relative_eq!(
+            Vector::new(1.0, 2.0, 3.0).normalise().magnitude(),
+            1.0
+        );
+
+        assert_float_relative_eq!(
+            Vector::new(0.0, 0.0, 0.0).normalise().magnitude(),
+            0.0
         );
     }
 
