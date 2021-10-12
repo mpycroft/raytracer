@@ -1,6 +1,8 @@
 use super::float::{FLOAT_EPSILON, FLOAT_ULPS};
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
-use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::ops::{
+    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign,
+};
 
 /// A Vector is a representation of a geometric vector, pointing in a given
 /// direction and with a magnitude.
@@ -30,6 +32,22 @@ impl AddAssign for Vector {
         self.x += rhs.x;
         self.y += rhs.y;
         self.z += rhs.z;
+    }
+}
+
+impl Div<f64> for Vector {
+    type Output = Self;
+
+    fn div(self, rhs: f64) -> Self::Output {
+        Self::Output::new(self.x / rhs, self.y / rhs, self.z / rhs)
+    }
+}
+
+impl DivAssign<f64> for Vector {
+    fn div_assign(&mut self, rhs: f64) {
+        self.x /= rhs;
+        self.y /= rhs;
+        self.z /= rhs;
     }
 }
 
@@ -157,6 +175,22 @@ mod tests {
         v += Vector::new(1.3, 1.6, 0.0);
 
         assert_relative_eq!(v, Vector::new(3.8, 1.9, 1.5));
+    }
+
+    #[test]
+    fn div() {
+        assert_relative_eq!(
+            Vector::new(1.0, -2.0, 3.0) / 2.0,
+            Vector::new(0.5, -1.0, 1.5)
+        );
+    }
+
+    #[test]
+    fn div_assign() {
+        let mut v = Vector::new(2.3, 0.0, 1.5);
+        v /= 0.8;
+
+        assert_relative_eq!(v, Vector::new(2.875, 0.0, 1.875));
     }
 
     #[test]
