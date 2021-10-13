@@ -65,11 +65,27 @@ impl Mul<Colour> for f64 {
     }
 }
 
+impl Mul for Colour {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        Self::Output::new(self.r * rhs.r, self.g * rhs.g, self.b * rhs.b)
+    }
+}
+
 impl MulAssign<f64> for Colour {
     fn mul_assign(&mut self, rhs: f64) {
         self.r *= rhs;
         self.g *= rhs;
         self.b *= rhs;
+    }
+}
+
+impl MulAssign for Colour {
+    fn mul_assign(&mut self, rhs: Self) {
+        self.r *= rhs.r;
+        self.g *= rhs.g;
+        self.b *= rhs.b;
     }
 }
 
@@ -162,6 +178,11 @@ mod tests {
             0.9 * Colour::new(-1.5, 0.0, 2.3),
             Colour::new(-1.35, 0.0, 2.07)
         );
+
+        assert_relative_eq!(
+            Colour::new(1.0, 0.2, 0.4) * Colour::new(0.9, 1.0, 0.1),
+            Colour::new(0.9, 0.2, 0.04)
+        );
     }
 
     #[test]
@@ -170,6 +191,10 @@ mod tests {
         c *= -2.35;
 
         assert_relative_eq!(c, Colour::new(-2.35, -3.525, -0.258_5));
+
+        c *= Colour::new(1.0, 0.25, 0.0);
+
+        assert_relative_eq!(c, Colour::new(-2.35, -0.881_25, 0.0));
     }
 
     #[test]
