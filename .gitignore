@@ -70,3 +70,6 @@ Cargo.lock
 
 # We are building a binary project, so do include Cargo.lock
 !Cargo.lock
+
+# Ignore the images we produce
+image.ppm
