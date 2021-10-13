@@ -18,6 +18,14 @@ impl Vector {
         Self { x, y, z }
     }
 
+    pub fn cross(&self, rhs: Self) -> Self {
+        Self::new(
+            self.y * rhs.z - self.z * rhs.y,
+            self.z * rhs.x - self.x * rhs.z,
+            self.x * rhs.y - self.y * rhs.x,
+        )
+    }
+
     pub fn dot(&self, rhs: Self) -> f64 {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
@@ -176,6 +184,15 @@ mod tests {
         assert_float_relative_eq!(v.x, 4.3);
         assert_float_relative_eq!(v.y, -4.2);
         assert_float_relative_eq!(v.z, 3.1);
+    }
+
+    #[test]
+    fn cross() {
+        let v1 = Vector::new(1.0, 2.0, 3.0);
+        let v2 = Vector::new(2.0, 3.0, 4.0);
+
+        assert_relative_eq!(v1.cross(v2), Vector::new(-1.0, 2.0, -1.0));
+        assert_relative_eq!(v2.cross(v1), Vector::new(1.0, -2.0, 1.0));
     }
 
     #[test]
