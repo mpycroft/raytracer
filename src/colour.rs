@@ -4,7 +4,7 @@ use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 
 /// A Colour represents an RGB colour in the image, values generally range from
 /// 0.0..1.0 but can go outside this range before final processing.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Colour {
     pub r: f64,
     pub g: f64,

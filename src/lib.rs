@@ -6,4 +6,8 @@
 #[macro_use]
 pub mod math;
 
-pub mod colour;
+mod canvas;
+mod colour;
+
+pub use canvas::Canvas;
+pub use colour::Colour;
