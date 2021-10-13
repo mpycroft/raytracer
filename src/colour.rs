@@ -15,6 +15,12 @@ impl Colour {
     pub fn new(r: f64, g: f64, b: f64) -> Self {
         Self { r, g, b }
     }
+
+    pub fn to_rgb(&self) -> (u8, u8, u8) {
+        let convert = |c: f64| (c.clamp(0.0, 1.0) * 255.0) as u8;
+
+        (convert(self.r), convert(self.g), convert(self.b))
+    }
 }
 
 impl Add for Colour {
@@ -149,6 +155,12 @@ mod tests {
         assert_float_relative_eq!(c.r, -0.5);
         assert_float_relative_eq!(c.g, 0.4);
         assert_float_relative_eq!(c.b, 1.7);
+    }
+
+    #[test]
+    fn to_rgb() {
+        assert_eq!(Colour::new(0.0, 0.5, 1.0).to_rgb(), (0, 127, 255));
+        assert_eq!(Colour::new(0.4, 1.6, -2.3).to_rgb(), (102, 255, 0));
     }
 
     #[test]
