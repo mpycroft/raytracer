@@ -1,5 +1,5 @@
 use super::float::{FLOAT_EPSILON, FLOAT_ULPS};
-use super::vector::Vector;
+use super::Vector;
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
