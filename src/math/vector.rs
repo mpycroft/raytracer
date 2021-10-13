@@ -18,8 +18,12 @@ impl Vector {
         Self { x, y, z }
     }
 
+    pub fn dot(&self, rhs: Self) -> f64 {
+        self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
+    }
+
     pub fn magnitude(&self) -> f64 {
-        (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
+        self.dot(*self).sqrt()
     }
 
     pub fn normalise(&self) -> Self {
@@ -172,6 +176,14 @@ mod tests {
         assert_float_relative_eq!(v.x, 4.3);
         assert_float_relative_eq!(v.y, -4.2);
         assert_float_relative_eq!(v.z, 3.1);
+    }
+
+    #[test]
+    fn dot() {
+        assert_float_relative_eq!(
+            Vector::new(1.0, 2.0, 3.0).dot(Vector::new(2.0, 3.0, 4.0)),
+            20.0
+        );
     }
 
     #[test]
