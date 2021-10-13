@@ -3,4 +3,7 @@
 //! it easier later on to do benchmarking and doc tests that have issues with
 //! being in a binary.
 
+#[macro_use]
 pub mod math;
+
+pub mod colour;
