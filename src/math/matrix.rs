@@ -1,6 +1,6 @@
 use super::float::{FLOAT_EPSILON, FLOAT_ULPS};
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
-use std::ops::Index;
+use std::ops::{Index, IndexMut, Mul, MulAssign};
 
 /// A Matrix is a square matrix of size T, stored in row major order.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -19,6 +19,46 @@ impl<const T: usize> Index<usize> for Matrix<T> {
 
     fn index(&self, index: usize) -> &Self::Output {
         self.data.index(index)
+    }
+}
+
+impl<const T: usize> IndexMut<usize> for Matrix<T> {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        self.data.index_mut(index)
+    }
+}
+
+impl<const T: usize> Mul for Matrix<T> {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        let mut matrix = Self::Output::new([[0.0; T]; T]);
+
+        for row in 0..T {
+            for col in 0..T {
+                matrix[row][col] = self[row][0] * rhs[0][col]
+                    + self[row][1] * rhs[1][col]
+                    + self[row][2] * rhs[2][col]
+                    + self[row][3] * rhs[3][col];
+            }
+        }
+
+        matrix
+    }
+}
+
+impl<const T: usize> MulAssign for Matrix<T> {
+    fn mul_assign(&mut self, rhs: Self) {
+        let lhs = *self;
+
+        for row in 0..T {
+            for col in 0..T {
+                self[row][col] = lhs[row][0] * rhs[0][col]
+                    + lhs[row][1] * rhs[1][col]
+                    + lhs[row][2] * rhs[2][col]
+                    + lhs[row][3] * rhs[3][col];
+            }
+        }
     }
 }
 
@@ -128,6 +168,55 @@ mod tests {
         assert_float_relative_eq!(m[0][0], -3.0);
         assert_float_relative_eq!(m[1][1], -2.0);
         assert_float_relative_eq!(m[2][2], 1.0);
+    }
+
+    #[test]
+    fn mul() {
+        assert_relative_eq!(
+            Matrix::new([
+                [1.0, 2.0, 3.0, 4.0],
+                [5.0, 6.0, 7.0, 8.0],
+                [9.0, 8.0, 7.0, 6.0],
+                [5.0, 4.0, 3.0, 2.0],
+            ]) * Matrix::new([
+                [-2.0, 1.0, 2.0, 3.0],
+                [3.0, 2.0, 1.0, -1.0],
+                [4.0, 3.0, 6.0, 5.0],
+                [1.0, 2.0, 7.0, 8.0],
+            ]),
+            Matrix::new([
+                [20.0, 22.0, 50.0, 48.0],
+                [44.0, 54.0, 114.0, 108.0],
+                [40.0, 58.0, 110.0, 102.0],
+                [16.0, 26.0, 46.0, 42.0]
+            ])
+        );
+    }
+
+    #[test]
+    fn mul_assign() {
+        let mut m = Matrix::new([
+            [1.3, 0.5, 3.4, 12.0],
+            [0.0, 0.9, 0.8, 2.11],
+            [6.9, 12.3, 11.0, 10.9],
+            [1.0, 2.0, 3.4, 3.1],
+        ]);
+        m *= Matrix::new([
+            [4.1, 4.2, 0.88, -6.1],
+            [1.3, 4.2, -2.1, 2.8],
+            [2.2, 2.3, 1.6, 25.0],
+            [0.0, 0.0, 2.1, -5.1],
+        ]);
+
+        assert_relative_eq!(
+            m,
+            Matrix::new([
+                [13.46, 15.38, 30.734, 17.27],
+                [2.93, 5.62, 3.821, 11.759],
+                [68.48, 105.94, 20.732, 211.76],
+                [14.18, 20.42, 8.63, 68.69]
+            ])
+        );
     }
 
     #[test]
