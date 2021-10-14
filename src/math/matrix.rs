@@ -5,7 +5,11 @@ use super::{
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use std::ops::{Index, IndexMut, Mul, MulAssign};
 
-/// A Matrix is a square matrix of size T, stored in row major order.
+/// A Matrix is a square matrix of size T, stored in row major order. Due to the
+/// limitations on current const generics the implementation is a bit haphazard.
+/// The basics like creation, transpose and multiplication should work on
+/// arbitrary matrices but determinants, sub matrices, cofactors, etc. are only
+/// implemented enough for what we need to work.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Matrix<const T: usize> {
     data: [[f64; T]; T],
@@ -33,6 +37,46 @@ impl<const T: usize> Matrix<T> {
     }
 }
 
+// Unfortunately due to the limited nature of const generics currently there is
+// not a very nice way to handle this type of function. Ideally we would just
+// have this in the general impl with -> Matrix<T - 1> but this is not valid
+// (yet). We can constrain the function with an extra U parameter like we do
+// here in the general impl but since this gets called recursively for
+// Matrix<4>'s it ends up not reducing down correctly (at least not without
+// introducing even more parameters). Therefore this seems like the best
+// solution; a general function and only implement it for Matrix<3/4> since that
+// is all we actually need.
+#[inline(always)]
+fn sub_matrix<const T: usize, const U: usize>(
+    matrix: &Matrix<T>,
+    row: usize,
+    col: usize,
+) -> Matrix<U> {
+    let mut sub_matrix = Matrix::zero();
+
+    let mut new_row = 0;
+    for cur_row in 0..T {
+        if cur_row == row {
+            continue;
+        }
+
+        let mut new_col = 0;
+        for cur_col in 0..T {
+            if cur_col == col {
+                continue;
+            }
+
+            sub_matrix[new_row][new_col] = matrix[cur_row][cur_col];
+
+            new_col += 1;
+        }
+
+        new_row += 1;
+    }
+
+    sub_matrix
+}
+
 impl Matrix<4> {
     pub fn identity() -> Self {
         Self::new([
@@ -41,6 +85,16 @@ impl Matrix<4> {
             [0.0, 0.0, 1.0, 0.0],
             [0.0, 0.0, 0.0, 1.0],
         ])
+    }
+
+    pub fn sub_matrix(&self, row: usize, col: usize) -> Matrix<3> {
+        sub_matrix(self, row, col)
+    }
+}
+
+impl Matrix<3> {
+    pub fn sub_matrix(&self, row: usize, col: usize) -> Matrix<2> {
+        sub_matrix(self, row, col)
     }
 }
 
@@ -267,6 +321,30 @@ mod tests {
         let v = Vector::new(-3.5, 0.0, 1.8);
 
         assert_relative_eq!(identity * v, v);
+    }
+
+    #[test]
+    fn sub_matrix() {
+        assert_relative_eq!(
+            Matrix::new([[1.0, 5.0, 0.0], [-3.0, 2.0, 7.0], [0.0, 6.0, -3.0]])
+                .sub_matrix(0, 2),
+            Matrix::new([[-3.0, 2.0], [0.0, 6.0]])
+        );
+
+        assert_relative_eq!(
+            Matrix::new([
+                [-6.0, 1.0, 1.0, 6.0],
+                [-8.0, 5.0, 8.0, 6.0],
+                [-1.0, 0.0, 8.0, 2.0],
+                [-7.0, 1.0, -1.0, 1.0]
+            ])
+            .sub_matrix(2, 1),
+            Matrix::new([
+                [-6.0, 1.0, 6.0],
+                [-8.0, 8.0, 6.0],
+                [-7.0, -1.0, 1.0]
+            ])
+        );
     }
 
     #[test]
