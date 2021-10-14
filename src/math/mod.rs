@@ -4,6 +4,7 @@
 #[macro_use]
 pub mod float;
 
+mod matrix;
 mod point;
 mod vector;
 
