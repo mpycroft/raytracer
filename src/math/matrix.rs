@@ -17,6 +17,17 @@ impl<const T: usize> Matrix<T> {
     }
 }
 
+impl Matrix<4> {
+    pub fn identity() -> Self {
+        Self::new([
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ])
+    }
+}
+
 impl<const T: usize> Index<usize> for Matrix<T> {
     type Output = [f64; T];
 
@@ -204,6 +215,28 @@ mod tests {
         assert_float_relative_eq!(m[0][0], -3.0);
         assert_float_relative_eq!(m[1][1], -2.0);
         assert_float_relative_eq!(m[2][2], 1.0);
+    }
+
+    #[test]
+    fn identity() {
+        let identity = Matrix::identity();
+
+        let m = Matrix::new([
+            [0.0, 1.0, 2.0, 4.0],
+            [1.0, 2.0, 4.0, 8.0],
+            [2.0, 4.0, 8.0, 16.0],
+            [4.0, 8.0, 16.0, 32.0],
+        ]);
+
+        assert_relative_eq!(m * identity, m);
+
+        let p = Point::new(1.3, 4.5, 0.9);
+
+        assert_relative_eq!(identity * p, p);
+
+        let v = Vector::new(-3.5, 0.0, 1.8);
+
+        assert_relative_eq!(identity * v, v);
     }
 
     #[test]
