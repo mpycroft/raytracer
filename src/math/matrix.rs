@@ -15,6 +15,22 @@ impl<const T: usize> Matrix<T> {
     pub fn new(data: [[f64; T]; T]) -> Self {
         Self { data }
     }
+
+    pub fn zero() -> Self {
+        Self::new([[0.0; T]; T])
+    }
+
+    pub fn transpose(&self) -> Self {
+        let mut matrix = Self::zero();
+
+        for row in 0..T {
+            for col in 0..T {
+                matrix[row][col] = self[col][row];
+            }
+        }
+
+        matrix
+    }
 }
 
 impl Matrix<4> {
@@ -237,6 +253,27 @@ mod tests {
         let v = Vector::new(-3.5, 0.0, 1.8);
 
         assert_relative_eq!(identity * v, v);
+    }
+
+    #[test]
+    fn transpose() {
+        assert_relative_eq!(
+            Matrix::new([
+                [0.0, 9.0, 3.0, 0.0],
+                [9.0, 8.0, 0.0, 8.0],
+                [1.0, 8.0, 5.0, 3.0],
+                [0.0, 0.0, 5.0, 8.0]
+            ])
+            .transpose(),
+            Matrix::new([
+                [0.0, 9.0, 1.0, 0.0],
+                [9.0, 8.0, 8.0, 0.0],
+                [3.0, 0.0, 5.0, 5.0],
+                [0.0, 8.0, 3.0, 8.0]
+            ])
+        );
+
+        assert_relative_eq!(Matrix::identity().transpose(), Matrix::identity());
     }
 
     #[test]
