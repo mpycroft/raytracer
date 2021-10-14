@@ -77,6 +77,15 @@ fn sub_matrix<const T: usize, const U: usize>(
     sub_matrix
 }
 
+// Macros to reduce (very minor) code duplication, we could use functions like
+// calc_sub_matrix but we'd need to make sub_matrix (and possibly others) traits
+// which is a lot of effort for what we are doing here.
+macro_rules! calc_minor {
+    ($self:ident, $row:ident, $col:ident) => {
+        $self.sub_matrix($row, $col).determinant()
+    };
+}
+
 impl Matrix<4> {
     pub fn identity() -> Self {
         Self::new([
@@ -87,12 +96,28 @@ impl Matrix<4> {
         ])
     }
 
+    pub fn determinant(&self) -> f64 {
+        todo!()
+    }
+
+    pub fn minor(&self, row: usize, col: usize) -> f64 {
+        calc_minor!(self, row, col)
+    }
+
     pub fn sub_matrix(&self, row: usize, col: usize) -> Matrix<3> {
         sub_matrix(self, row, col)
     }
 }
 
 impl Matrix<3> {
+    pub fn determinant(&self) -> f64 {
+        todo!()
+    }
+
+    pub fn minor(&self, row: usize, col: usize) -> f64 {
+        calc_minor!(self, row, col)
+    }
+
     pub fn sub_matrix(&self, row: usize, col: usize) -> Matrix<2> {
         sub_matrix(self, row, col)
     }
@@ -321,6 +346,15 @@ mod tests {
         let v = Vector::new(-3.5, 0.0, 1.8);
 
         assert_relative_eq!(identity * v, v);
+    }
+
+    #[test]
+    fn minor() {
+        let m =
+            Matrix::new([[3.0, 5.0, 0.0], [2.0, -1.0, -7.0], [6.0, -1.0, 5.0]]);
+
+        assert_float_relative_eq!(m.sub_matrix(1, 0).determinant(), 25.0);
+        assert_float_relative_eq!(m.minor(1, 0), 25.0);
     }
 
     #[test]
