@@ -44,6 +44,12 @@ impl Matrix<4> {
     }
 }
 
+impl Matrix<2> {
+    pub fn determinant(&self) -> f64 {
+        self[0][0] * self[1][1] - self[0][1] * self[1][0]
+    }
+}
+
 impl<const T: usize> Index<usize> for Matrix<T> {
     type Output = [f64; T];
 
@@ -231,6 +237,14 @@ mod tests {
         assert_float_relative_eq!(m[0][0], -3.0);
         assert_float_relative_eq!(m[1][1], -2.0);
         assert_float_relative_eq!(m[2][2], 1.0);
+    }
+
+    #[test]
+    fn determinant() {
+        assert_float_relative_eq!(
+            Matrix::new([[1.0, 5.0], [-3.0, 2.0]]).determinant(),
+            17.0
+        );
     }
 
     #[test]
