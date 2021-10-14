@@ -1,6 +1,6 @@
 use super::{
     float::{FLOAT_EPSILON, FLOAT_ULPS},
-    Point,
+    Point, Vector,
 };
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use std::ops::{Index, IndexMut, Mul, MulAssign};
@@ -67,6 +67,18 @@ impl Mul<Point> for Matrix<4> {
                 + self[2][1] * rhs.y
                 + self[2][2] * rhs.z
                 + self[2][3],
+        )
+    }
+}
+
+impl Mul<Vector> for Matrix<4> {
+    type Output = Vector;
+
+    fn mul(self, rhs: Vector) -> Self::Output {
+        Vector::new(
+            self[0][0] * rhs.x + self[0][1] * rhs.y + self[0][2] * rhs.z,
+            self[1][0] * rhs.x + self[1][1] * rhs.y + self[1][2] * rhs.z,
+            self[2][0] * rhs.x + self[2][1] * rhs.y + self[2][2] * rhs.z,
         )
     }
 }
@@ -224,6 +236,16 @@ mod tests {
                 [0.0, 0.0, 0.0, 1.0]
             ]) * Point::new(1.0, 2.0, 3.0),
             Point::new(18.0, 24.0, 33.0)
+        );
+
+        assert_relative_eq!(
+            Matrix::new([
+                [1.0, 2.0, -2.0, 3.0],
+                [0.0, 2.5, 0.1, 0.8],
+                [2.4, 4.8, 0.112, -2.5],
+                [1.7, 0.6, 2.3, 1.5]
+            ]) * Vector::new(1.5, 2.5, 4.0),
+            Vector::new(-1.5, 6.65, 16.048)
         );
     }
 
