@@ -2,6 +2,7 @@ use super::{
     float::{FLOAT_EPSILON, FLOAT_ULPS},
     Point, Vector,
 };
+use anyhow::{bail, Result};
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use std::ops::{Index, IndexMut, Mul, MulAssign};
 
@@ -126,6 +127,24 @@ impl Matrix<4> {
 
     pub fn determinant(&self) -> f64 {
         determinant!(self, 4)
+    }
+
+    pub fn invert(&self) -> Result<Self> {
+        let det = self.determinant();
+
+        if float_relative_eq!(det, 0.0) {
+            bail!("Tried to invert a non invertible matrix - {:?}", self);
+        }
+
+        let mut matrix = Matrix::zero();
+
+        for row in 0..4 {
+            for col in 0..4 {
+                matrix[col][row] = self.cofactor(row, col) / det;
+            }
+        }
+
+        Ok(matrix)
     }
 
     pub fn minor(&self, row: usize, col: usize) -> f64 {
@@ -351,6 +370,28 @@ mod tests {
     }
 
     #[test]
+    fn identity() {
+        let identity = Matrix::identity();
+
+        let m = Matrix::new([
+            [0.0, 1.0, 2.0, 4.0],
+            [1.0, 2.0, 4.0, 8.0],
+            [2.0, 4.0, 8.0, 16.0],
+            [4.0, 8.0, 16.0, 32.0],
+        ]);
+
+        assert_relative_eq!(m * identity, m);
+
+        let p = Point::new(1.3, 4.5, 0.9);
+
+        assert_relative_eq!(identity * p, p);
+
+        let v = Vector::new(-3.5, 0.0, 1.8);
+
+        assert_relative_eq!(identity * v, v);
+    }
+
+    #[test]
     fn cofactor() {
         let m =
             Matrix::new([[3.0, 5.0, 0.0], [2.0, -1.0, -7.0], [6.0, -1.0, 5.0]]);
@@ -394,25 +435,105 @@ mod tests {
     }
 
     #[test]
-    fn identity() {
-        let identity = Matrix::identity();
-
+    fn invert() {
         let m = Matrix::new([
-            [0.0, 1.0, 2.0, 4.0],
-            [1.0, 2.0, 4.0, 8.0],
-            [2.0, 4.0, 8.0, 16.0],
-            [4.0, 8.0, 16.0, 32.0],
+            [6.0, 4.0, 4.0, 4.0],
+            [5.0, 5.0, 7.0, 6.0],
+            [4.0, -9.0, 3.0, -7.0],
+            [9.0, 1.0, 7.0, -6.0],
         ]);
 
-        assert_relative_eq!(m * identity, m);
+        assert_float_relative_eq!(m.determinant(), -2120.0);
+        assert!(m.invert().is_ok());
 
-        let p = Point::new(1.3, 4.5, 0.9);
+        let m = Matrix::new([
+            [-4.0, 2.0, -2.0, -3.0],
+            [9.0, 6.0, 2.0, 6.0],
+            [0.0, -5.0, 1.0, -5.0],
+            [0.0, 0.0, 0.0, 0.0],
+        ]);
 
-        assert_relative_eq!(identity * p, p);
+        assert_float_relative_eq!(m.determinant(), 0.0);
+        assert!(m.invert().is_err());
 
-        let v = Vector::new(-3.5, 0.0, 1.8);
+        let m = Matrix::new([
+            [-5.0, 2.0, 6.0, -8.0],
+            [1.0, -5.0, 1.0, 8.0],
+            [7.0, 7.0, -6.0, -7.0],
+            [1.0, -3.0, 7.0, 4.0],
+        ]);
 
-        assert_relative_eq!(identity * v, v);
+        let inverse = m.invert().unwrap();
+
+        assert_float_relative_eq!(m.determinant(), 532.0);
+
+        assert_float_relative_eq!(m.cofactor(2, 3), -160.0);
+        assert_float_relative_eq!(inverse[3][2], -0.300_752);
+
+        assert_float_relative_eq!(m.cofactor(3, 2), 105.0);
+        assert_float_relative_eq!(inverse[2][3], 0.197_368);
+
+        assert_relative_eq!(
+            inverse,
+            Matrix::new([
+                [0.218_045, 0.451_128, 0.240_602, -0.045_113],
+                [-0.808_271, -1.456_767, -0.443_609, 0.520_677],
+                [-0.078_947, -0.223_684, -0.052_632, 0.197_368],
+                [-0.522_556, -0.813_91, -0.300_752, 0.306_391]
+            ])
+        );
+
+        assert_relative_eq!(
+            Matrix::new([
+                [8.0, -5.0, 9.0, 2.0],
+                [7.0, 5.0, 6.0, 1.0],
+                [-6.0, 0.0, 9.0, 6.0],
+                [-3.0, 0.0, -9.0, -4.0]
+            ])
+            .invert()
+            .unwrap(),
+            Matrix::new([
+                [-0.153_846, -0.153_846, -0.282_051, -0.538_461],
+                [-0.076_923, 0.123_077, 0.025_641, 0.030_769],
+                [0.358_974, 0.358_974, 0.435_897, 0.923_077],
+                [-0.692_308, -0.692_308, -0.769_23, -1.923_077]
+            ])
+        );
+
+        assert_relative_eq!(
+            Matrix::new([
+                [9.0, 3.0, 0.0, 9.0,],
+                [-5.0, -2.0, -6.0, -3.0],
+                [-4.0, 9.0, 6.0, 4.0,],
+                [-7.0, 6.0, 6.0, 2.0]
+            ])
+            .invert()
+            .unwrap(),
+            Matrix::new([
+                [-0.040_741, -0.077_778, 0.144_444, -0.222_222],
+                [-0.077_778, 0.033_333, 0.366_667, -0.333_333],
+                [-0.029_012, -0.146_296, -0.109_26, 0.129_63],
+                [0.177_778, 0.066_667, -0.266_667, 0.333_333]
+            ])
+        );
+
+        let m1 = Matrix::new([
+            [3.0, -9.0, 7.0, 3.0],
+            [3.0, -8.0, 2.0, -9.0],
+            [-4.0, 4.0, 4.0, 1.0],
+            [-6.0, 5.0, -1.0, 1.0],
+        ]);
+
+        let m2 = Matrix::new([
+            [8.0, 2.0, 2.0, 2.0],
+            [3.0, -1.0, 7.0, 0.0],
+            [7.0, 0.0, 5.0, 4.0],
+            [6.0, -2.0, 0.0, 5.0],
+        ]);
+
+        let m3 = m1 * m2;
+
+        assert_relative_eq!(m3 * m2.invert().unwrap(), m1);
     }
 
     #[test]
