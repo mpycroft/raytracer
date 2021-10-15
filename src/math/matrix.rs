@@ -98,6 +98,18 @@ macro_rules! calc_cofactor {
     }};
 }
 
+macro_rules! determinant {
+    ($self:ident, $size:expr) => {{
+        let mut det = 0.0;
+
+        for col in 0..$size {
+            det += $self[0][col] * $self.cofactor(0, col);
+        }
+
+        det
+    }};
+}
+
 impl Matrix<4> {
     pub fn identity() -> Self {
         Self::new([
@@ -113,7 +125,7 @@ impl Matrix<4> {
     }
 
     pub fn determinant(&self) -> f64 {
-        todo!()
+        determinant!(self, 4)
     }
 
     pub fn minor(&self, row: usize, col: usize) -> f64 {
@@ -131,7 +143,7 @@ impl Matrix<3> {
     }
 
     pub fn determinant(&self) -> f64 {
-        todo!()
+        determinant!(self, 3)
     }
 
     pub fn minor(&self, row: usize, col: usize) -> f64 {
@@ -356,6 +368,29 @@ mod tests {
             Matrix::new([[1.0, 5.0], [-3.0, 2.0]]).determinant(),
             17.0
         );
+
+        let m =
+            Matrix::new([[1.0, 2.0, 6.0], [-5.0, 8.0, -4.0], [2.0, 6.0, 4.0]]);
+
+        assert_float_relative_eq!(m.cofactor(0, 0), 56.0);
+        assert_float_relative_eq!(m.cofactor(0, 1), 12.0);
+        assert_float_relative_eq!(m.cofactor(0, 2), -46.0);
+
+        assert_float_relative_eq!(m.determinant(), -196.0);
+
+        let m = Matrix::new([
+            [-2.0, -8.0, 3.0, 5.0],
+            [-3.0, 1.0, 7.0, 3.0],
+            [1.0, 2.0, -9.0, 6.0],
+            [-6.0, 7.0, 7.0, -9.0],
+        ]);
+
+        assert_float_relative_eq!(m.cofactor(0, 0), 690.0);
+        assert_float_relative_eq!(m.cofactor(0, 1), 447.0);
+        assert_float_relative_eq!(m.cofactor(0, 2), 210.0);
+        assert_float_relative_eq!(m.cofactor(0, 3), 51.0);
+
+        assert_float_relative_eq!(m.determinant(), -4071.0);
     }
 
     #[test]
