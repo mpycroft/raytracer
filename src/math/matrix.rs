@@ -121,6 +121,17 @@ impl Matrix<4> {
         ])
     }
 
+    pub fn rotate_x(radians: f64) -> Self {
+        let (sin, cos) = radians.sin_cos();
+
+        Self::new([
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, cos, -sin, 0.0],
+            [0.0, sin, cos, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ])
+    }
+
     pub fn scale(x: f64, y: f64, z: f64) -> Self {
         Self::new([
             [x, 0.0, 0.0, 0.0],
@@ -354,6 +365,7 @@ impl<const T: usize> UlpsEq for Matrix<T> {
 mod tests {
     use super::*;
     use approx::*;
+    use std::f64::consts::{FRAC_1_SQRT_2, FRAC_PI_2, FRAC_PI_4};
 
     #[test]
     fn new() {
@@ -407,6 +419,27 @@ mod tests {
         let v = Vector::new(-3.5, 0.0, 1.8);
 
         assert_relative_eq!(identity * v, v);
+    }
+
+    #[test]
+    fn rotate_x() {
+        let p = Point::new(0.0, 1.0, 0.0);
+        let m = Matrix::rotate_x(FRAC_PI_4);
+
+        assert_relative_eq!(
+            m * p,
+            Point::new(0.0, FRAC_1_SQRT_2, FRAC_1_SQRT_2)
+        );
+
+        assert_relative_eq!(
+            Matrix::rotate_x(FRAC_PI_2) * Vector::new(0.0, 1.0, 0.0),
+            Vector::new(0.0, 0.0, 1.0)
+        );
+
+        assert_relative_eq!(
+            m.invert().unwrap() * p,
+            Point::new(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2)
+        );
     }
 
     #[test]
