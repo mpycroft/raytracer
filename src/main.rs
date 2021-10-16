@@ -1,21 +1,28 @@
-use raytracer::math::{Matrix, Point};
+use raytracer::{
+    math::{Matrix, Point},
+    Canvas, Colour,
+};
+use std::{f64::consts::PI, fs::write};
 
 fn main() {
-    let mut id = Matrix::identity();
-    println!("{:?}", id.invert().unwrap());
+    let mut canvas = Canvas::new(500, 500);
 
-    let m = Matrix::new([
-        [1.0, 2.0, 3.0, 4.0],
-        [2.5, 0.5, 3.5, 1.5],
-        [2.0, -1.0, -2.0, -3.0],
-        [5.0, 6.0, 7.0, 8.0],
-    ]);
-    println!("{:?}", m * m.invert().unwrap());
+    let translate = Matrix::translate(250.0, 250.0, 0.0);
+    let scale = Matrix::scale(200.0, 200.0, 200.0);
 
-    println!("{:?}", m.transpose().invert().unwrap());
-    println!("{:?}", m.invert().unwrap().transpose());
+    let point = Point::new(0.0, 1.0, 0.0);
 
-    id[1][2] = 3.0;
+    for count in 0..12 {
+        let rotate = Matrix::rotate_z((count as f64 * (2.0 * PI)) / 12.0);
 
-    println!("{:?}", id * Point::new(1.0, 2.0, 3.0));
+        let pixel = translate * scale * rotate * point;
+
+        canvas.write_pixel(
+            pixel.x as usize,
+            pixel.y as usize,
+            Colour::new(1.0, 1.0, 1.0),
+        );
+    }
+
+    write("image.ppm", canvas.to_ppm()).unwrap();
 }
