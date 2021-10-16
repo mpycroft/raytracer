@@ -132,6 +132,17 @@ impl Matrix<4> {
         ])
     }
 
+    pub fn rotate_y(radians: f64) -> Self {
+        let (sin, cos) = radians.sin_cos();
+
+        Self::new([
+            [cos, 0.0, sin, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+            [-sin, 0.0, cos, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ])
+    }
+
     pub fn scale(x: f64, y: f64, z: f64) -> Self {
         Self::new([
             [x, 0.0, 0.0, 0.0],
@@ -439,6 +450,27 @@ mod tests {
         assert_relative_eq!(
             m.invert().unwrap() * p,
             Point::new(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2)
+        );
+    }
+
+    #[test]
+    fn rotate_y() {
+        let p = Point::new(0.0, 0.0, 1.0);
+        let m = Matrix::rotate_y(FRAC_PI_4);
+
+        assert_relative_eq!(
+            m * p,
+            Point::new(FRAC_1_SQRT_2, 0.0, FRAC_1_SQRT_2)
+        );
+
+        assert_relative_eq!(
+            Matrix::rotate_y(FRAC_PI_2) * Vector::new(0.0, 0.0, 1.0),
+            Vector::new(1.0, 0.0, 0.0)
+        );
+
+        assert_relative_eq!(
+            m.invert().unwrap() * p,
+            Point::new(-FRAC_1_SQRT_2, 0.0, FRAC_1_SQRT_2)
         );
     }
 
