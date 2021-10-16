@@ -593,6 +593,31 @@ mod tests {
     }
 
     #[test]
+    fn chaining_transforms() {
+        let point = Point::new(1.0, 0.0, 1.0);
+        let final_point = Point::new(15.0, 0.0, 7.0);
+
+        let rotate = Matrix::rotate_x(FRAC_PI_2);
+        let scale = Matrix::scale(5.0, 5.0, 5.0);
+        let translate = Matrix::translate(10.0, 5.0, 7.0);
+
+        let mut p = rotate * point;
+        assert_relative_eq!(p, Point::new(1.0, -1.0, 0.0));
+
+        p = scale * p;
+        assert_relative_eq!(p, Point::new(5.0, -5.0, 0.0));
+
+        p = translate * p;
+        assert_relative_eq!(p, final_point);
+
+        let chain = translate * scale * rotate;
+
+        assert_relative_eq!(chain * point, final_point);
+
+        assert_relative_eq!(chain.invert().unwrap() * final_point, point);
+    }
+
+    #[test]
     fn cofactor() {
         let m =
             Matrix::new([[3.0, 5.0, 0.0], [2.0, -1.0, -7.0], [6.0, -1.0, 5.0]]);
