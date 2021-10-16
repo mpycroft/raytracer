@@ -6,6 +6,7 @@ pub mod float;
 
 mod matrix;
 mod point;
+mod ray;
 mod vector;
 
 pub use matrix::Matrix;
