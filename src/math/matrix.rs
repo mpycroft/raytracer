@@ -163,6 +163,15 @@ impl Matrix<4> {
         ])
     }
 
+    pub fn shear(xy: f64, xz: f64, yx: f64, yz: f64, zx: f64, zy: f64) -> Self {
+        Self::new([
+            [1.0, xy, xz, 0.0],
+            [yx, 1.0, yz, 0.0],
+            [zx, zy, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ])
+    }
+
     pub fn translate(x: f64, y: f64, z: f64) -> Self {
         Self::new([
             [1.0, 0.0, 0.0, x],
@@ -527,6 +536,41 @@ mod tests {
             Matrix::scale(-1.0, 1.0, 1.0) * Point::new(2.0, 3.0, 4.0),
             Point::new(-2.0, 3.0, 4.0)
         );
+    }
+
+    #[test]
+    fn shear() {
+        let p = Point::new(2.0, 3.0, 4.0);
+
+        assert_relative_eq!(
+            Matrix::shear(1.0, 0.0, 0.0, 0.0, 0.0, 0.0) * p,
+            Point::new(5.0, 3.0, 4.0)
+        );
+        assert_relative_eq!(
+            Matrix::shear(0.0, 1.0, 0.0, 0.0, 0.0, 0.0) * p,
+            Point::new(6.0, 3.0, 4.0)
+        );
+
+        assert_relative_eq!(
+            Matrix::shear(0.0, 0.0, 1.0, 0.0, 0.0, 0.0) * p,
+            Point::new(2.0, 5.0, 4.0)
+        );
+        assert_relative_eq!(
+            Matrix::shear(0.0, 0.0, 0.0, 1.0, 0.0, 0.0) * p,
+            Point::new(2.0, 7.0, 4.0)
+        );
+
+        assert_relative_eq!(
+            Matrix::shear(0.0, 0.0, 0.0, 0.0, 1.0, 0.0) * p,
+            Point::new(2.0, 3.0, 6.0)
+        );
+        assert_relative_eq!(
+            Matrix::shear(0.0, 0.0, 0.0, 0.0, 0.0, 1.0) * p,
+            Point::new(2.0, 3.0, 7.0)
+        );
+
+        let m = Matrix::shear(1.0, 2.9, 0.0, 1.0, 2.5, 5.2);
+        assert_relative_eq!(m.invert().unwrap() * m * p, p);
     }
 
     #[test]
