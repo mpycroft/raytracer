@@ -1,5 +1,3 @@
-use crate::math::float::{FLOAT_EPSILON, FLOAT_ULPS};
-use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 
 /// A Colour represents an RGB colour in the image, values generally range from
@@ -95,53 +93,7 @@ impl MulAssign for Colour {
     }
 }
 
-impl AbsDiffEq for Colour {
-    type Epsilon = f64;
-
-    fn default_epsilon() -> Self::Epsilon {
-        FLOAT_EPSILON
-    }
-
-    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
-        self.r.abs_diff_eq(&other.r, epsilon)
-            && self.g.abs_diff_eq(&other.g, epsilon)
-            && self.b.abs_diff_eq(&other.b, epsilon)
-    }
-}
-
-impl RelativeEq for Colour {
-    fn default_max_relative() -> Self::Epsilon {
-        FLOAT_EPSILON
-    }
-
-    fn relative_eq(
-        &self,
-        other: &Self,
-        epsilon: Self::Epsilon,
-        max_relative: Self::Epsilon,
-    ) -> bool {
-        self.r.relative_eq(&other.r, epsilon, max_relative)
-            && self.g.relative_eq(&other.g, epsilon, max_relative)
-            && self.b.relative_eq(&other.b, epsilon, max_relative)
-    }
-}
-
-impl UlpsEq for Colour {
-    fn default_max_ulps() -> u32 {
-        FLOAT_ULPS
-    }
-
-    fn ulps_eq(
-        &self,
-        other: &Self,
-        epsilon: Self::Epsilon,
-        max_ulps: u32,
-    ) -> bool {
-        self.r.ulps_eq(&other.r, epsilon, max_ulps)
-            && self.g.ulps_eq(&other.g, epsilon, max_ulps)
-            && self.b.ulps_eq(&other.b, epsilon, max_ulps)
-    }
-}
+add_approx_traits!(Colour { r, g, b });
 
 #[cfg(test)]
 mod tests {

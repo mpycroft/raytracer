@@ -2,7 +2,7 @@
 //! tracer.
 
 #[macro_use]
-pub mod float;
+pub mod approx;
 
 mod matrix;
 mod point;

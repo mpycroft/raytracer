@@ -1,6 +1,4 @@
-use super::float::{FLOAT_EPSILON, FLOAT_ULPS};
 use super::Vector;
-use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
 /// A Point is a representation of a geometric position within the 3 dimensional
@@ -66,53 +64,7 @@ impl SubAssign<Vector> for Point {
     }
 }
 
-impl AbsDiffEq for Point {
-    type Epsilon = f64;
-
-    fn default_epsilon() -> Self::Epsilon {
-        FLOAT_EPSILON
-    }
-
-    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
-        self.x.abs_diff_eq(&other.x, epsilon)
-            && self.y.abs_diff_eq(&other.y, epsilon)
-            && self.z.abs_diff_eq(&other.z, epsilon)
-    }
-}
-
-impl RelativeEq for Point {
-    fn default_max_relative() -> Self::Epsilon {
-        FLOAT_EPSILON
-    }
-
-    fn relative_eq(
-        &self,
-        other: &Self,
-        epsilon: Self::Epsilon,
-        max_relative: Self::Epsilon,
-    ) -> bool {
-        self.x.relative_eq(&other.x, epsilon, max_relative)
-            && self.y.relative_eq(&other.y, epsilon, max_relative)
-            && self.z.relative_eq(&other.z, epsilon, max_relative)
-    }
-}
-
-impl UlpsEq for Point {
-    fn default_max_ulps() -> u32 {
-        FLOAT_ULPS
-    }
-
-    fn ulps_eq(
-        &self,
-        other: &Self,
-        epsilon: Self::Epsilon,
-        max_ulps: u32,
-    ) -> bool {
-        self.x.ulps_eq(&other.x, epsilon, max_ulps)
-            && self.y.ulps_eq(&other.y, epsilon, max_ulps)
-            && self.z.ulps_eq(&other.z, epsilon, max_ulps)
-    }
-}
+add_approx_traits!(Point { x, y, z });
 
 #[cfg(test)]
 mod tests {

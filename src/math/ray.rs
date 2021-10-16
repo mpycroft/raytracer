@@ -1,8 +1,4 @@
-use super::{
-    float::{FLOAT_EPSILON, FLOAT_ULPS},
-    Point, Vector,
-};
-use approx::{AbsDiffEq, RelativeEq, UlpsEq};
+use super::{Point, Vector};
 
 /// A Ray represents a geometric vector with a specific origin point and
 /// pointing in some direction.
@@ -18,54 +14,7 @@ impl Ray {
     }
 }
 
-impl AbsDiffEq for Ray {
-    type Epsilon = f64;
-
-    fn default_epsilon() -> Self::Epsilon {
-        FLOAT_EPSILON
-    }
-
-    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
-        self.origin.abs_diff_eq(&other.origin, epsilon)
-            && self.direction.abs_diff_eq(&other.direction, epsilon)
-    }
-}
-
-impl RelativeEq for Ray {
-    fn default_max_relative() -> Self::Epsilon {
-        FLOAT_EPSILON
-    }
-
-    fn relative_eq(
-        &self,
-        other: &Self,
-        epsilon: Self::Epsilon,
-        max_relative: Self::Epsilon,
-    ) -> bool {
-        self.origin.relative_eq(&other.origin, epsilon, max_relative)
-            && self.direction.relative_eq(
-                &other.direction,
-                epsilon,
-                max_relative,
-            )
-    }
-}
-
-impl UlpsEq for Ray {
-    fn default_max_ulps() -> u32 {
-        FLOAT_ULPS
-    }
-
-    fn ulps_eq(
-        &self,
-        other: &Self,
-        epsilon: Self::Epsilon,
-        max_ulps: u32,
-    ) -> bool {
-        self.origin.ulps_eq(&other.origin, epsilon, max_ulps)
-            && self.direction.ulps_eq(&other.direction, epsilon, max_ulps)
-    }
-}
+add_approx_traits!(Ray { origin, direction });
 
 #[cfg(test)]
 mod tests {

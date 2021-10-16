@@ -1,5 +1,5 @@
 use super::{
-    float::{FLOAT_EPSILON, FLOAT_ULPS},
+    approx::{FLOAT_EPSILON, FLOAT_ULPS},
     Point, Vector,
 };
 use anyhow::{bail, Result};
