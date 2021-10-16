@@ -121,6 +121,15 @@ impl Matrix<4> {
         ])
     }
 
+    pub fn scale(x: f64, y: f64, z: f64) -> Self {
+        Self::new([
+            [x, 0.0, 0.0, 0.0],
+            [0.0, y, 0.0, 0.0],
+            [0.0, 0.0, z, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ])
+    }
+
     pub fn translate(x: f64, y: f64, z: f64) -> Self {
         Self::new([
             [1.0, 0.0, 0.0, x],
@@ -398,6 +407,29 @@ mod tests {
         let v = Vector::new(-3.5, 0.0, 1.8);
 
         assert_relative_eq!(identity * v, v);
+    }
+
+    #[test]
+    fn scale() {
+        let m = Matrix::scale(2.0, 3.0, 4.0);
+
+        assert_relative_eq!(
+            m * Point::new(-4.0, 6.0, 8.0),
+            Point::new(-8.0, 18.0, 32.0)
+        );
+
+        let v = Vector::new(-4.0, 6.0, 8.0);
+        assert_relative_eq!(m * v, Vector::new(-8.0, 18.0, 32.0));
+
+        assert_relative_eq!(
+            m.invert().unwrap() * v,
+            Vector::new(-2.0, 2.0, 2.0)
+        );
+
+        assert_relative_eq!(
+            Matrix::scale(-1.0, 1.0, 1.0) * Point::new(2.0, 3.0, 4.0),
+            Point::new(-2.0, 3.0, 4.0)
+        );
     }
 
     #[test]
