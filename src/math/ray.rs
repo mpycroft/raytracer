@@ -12,6 +12,10 @@ impl Ray {
     pub fn new(origin: Point, direction: Vector) -> Self {
         Self { origin, direction }
     }
+
+    pub fn position(&self, t: f64) -> Point {
+        self.origin + self.direction * t
+    }
 }
 
 add_approx_traits!(Ray { origin, direction });
@@ -30,6 +34,17 @@ mod tests {
 
         assert_relative_eq!(r.origin, p);
         assert_relative_eq!(r.direction, v);
+    }
+
+    #[test]
+    fn position() {
+        let p = Point::new(2.0, 3.0, 4.0);
+        let r = Ray::new(p, Vector::new(1.0, 0.0, 0.0));
+
+        assert_relative_eq!(r.position(0.0), p);
+        assert_relative_eq!(r.position(1.0), Point::new(3.0, 3.0, 4.0));
+        assert_relative_eq!(r.position(-1.0), Point::new(1.0, 3.0, 4.0));
+        assert_relative_eq!(r.position(2.5), Point::new(4.5, 3.0, 4.0));
     }
 
     #[test]
