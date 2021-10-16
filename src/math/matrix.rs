@@ -121,6 +121,15 @@ impl Matrix<4> {
         ])
     }
 
+    pub fn translate(x: f64, y: f64, z: f64) -> Self {
+        Self::new([
+            [1.0, 0.0, 0.0, x],
+            [0.0, 1.0, 0.0, y],
+            [0.0, 0.0, 1.0, z],
+            [0.0, 0.0, 0.0, 1.0],
+        ])
+    }
+
     pub fn cofactor(&self, row: usize, col: usize) -> f64 {
         calc_cofactor!(self, row, col)
     }
@@ -389,6 +398,25 @@ mod tests {
         let v = Vector::new(-3.5, 0.0, 1.8);
 
         assert_relative_eq!(identity * v, v);
+    }
+
+    #[test]
+    fn translate() {
+        let m = Matrix::translate(5.0, -3.0, 2.0);
+
+        assert_relative_eq!(
+            m * Point::new(-3.0, 4.0, 5.0),
+            Point::new(2.0, 1.0, 7.0)
+        );
+
+        assert_relative_eq!(
+            m.invert().unwrap() * Point::new(-3.0, 4.0, 5.0),
+            Point::new(-8.0, 7.0, 3.0)
+        );
+
+        let v = Vector::new(-3.0, 4.0, 5.0);
+
+        assert_relative_eq!(m * v, v);
     }
 
     #[test]
