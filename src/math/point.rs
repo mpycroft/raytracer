@@ -14,6 +14,10 @@ impl Point {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self { x, y, z }
     }
+
+    pub fn origin() -> Self {
+        Self::new(0.0, 0.0, 0.0)
+    }
 }
 
 impl Add<Vector> for Point {
@@ -78,6 +82,11 @@ mod tests {
         assert_float_relative_eq!(p.x, 4.3);
         assert_float_relative_eq!(p.y, -4.2);
         assert_float_relative_eq!(p.z, 3.1);
+    }
+
+    #[test]
+    fn origin() {
+        assert_relative_eq!(Point::origin(), Point::new(0.0, 0.0, 0.0));
     }
 
     #[test]
