@@ -8,6 +8,9 @@ pub mod math;
 
 mod canvas;
 mod colour;
+mod intersect;
+mod sphere;
 
 pub use canvas::Canvas;
 pub use colour::Colour;
+pub use sphere::Sphere;
