@@ -3,7 +3,7 @@ use crate::{math::Ray, Sphere};
 /// A trait that objects need to implement if they can be intersected in a
 /// scene, returns a vector of intersection t values.
 pub trait Intersectable {
-    fn intersect(&self, ray: &Ray) -> Option<Vec<f64>>;
+    fn intersect(&self, ray: &Ray) -> Option<Vec<Intersection>>;
 }
 
 /// An Intersection stores both the t value of the intersection but also a

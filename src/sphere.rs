@@ -1,5 +1,5 @@
 use crate::{
-    intersect::Intersectable,
+    intersect::{Intersectable, Intersection},
     math::{
         approx::{FLOAT_EPSILON, FLOAT_ULPS},
         Point, Ray,
@@ -18,7 +18,7 @@ impl Sphere {
 }
 
 impl Intersectable for Sphere {
-    fn intersect(&self, ray: &Ray) -> Option<Vec<f64>> {
+    fn intersect(&self, ray: &Ray) -> Option<Vec<Intersection>> {
         let sphere_to_ray = ray.origin - Point::origin();
 
         let a = ray.direction.dot(ray.direction);
@@ -36,7 +36,7 @@ impl Intersectable for Sphere {
         let t1 = (-b - discriminant) / a;
         let t2 = (-b + discriminant) / a;
 
-        Some(vec![t1, t2])
+        Some(vec![Intersection::new(self, t1), Intersection::new(self, t2)])
     }
 }
 
@@ -92,6 +92,7 @@ impl UlpsEq for Sphere {
 mod tests {
     use super::*;
     use crate::math::Vector;
+    use approx::*;
 
     #[test]
     fn new() {
@@ -106,14 +107,16 @@ mod tests {
         let i = s.intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), v)).unwrap();
 
         assert_eq!(i.len(), 2);
-        assert_float_relative_eq!(i[0], 4.0);
-        assert_float_relative_eq!(i[1], 6.0);
+        assert_relative_eq!(*i[0].object, s);
+        assert_float_relative_eq!(i[0].t, 4.0);
+        assert_relative_eq!(*i[1].object, s);
+        assert_float_relative_eq!(i[1].t, 6.0);
 
         let i = s.intersect(&Ray::new(Point::new(0.0, 1.0, -5.0), v)).unwrap();
 
         assert_eq!(i.len(), 2);
-        assert_float_relative_eq!(i[0], 5.0);
-        assert_float_relative_eq!(i[1], 5.0);
+        assert_float_relative_eq!(i[0].t, 5.0);
+        assert_float_relative_eq!(i[1].t, 5.0);
 
         let i = s.intersect(&Ray::new(Point::new(0.0, 2.0, -5.0), v));
 
@@ -122,13 +125,13 @@ mod tests {
         let i = s.intersect(&Ray::new(Point::origin(), v)).unwrap();
 
         assert_eq!(i.len(), 2);
-        assert_float_relative_eq!(i[0], -1.0);
-        assert_float_relative_eq!(i[1], 1.0);
+        assert_float_relative_eq!(i[0].t, -1.0);
+        assert_float_relative_eq!(i[1].t, 1.0);
 
         let i = s.intersect(&Ray::new(Point::new(0.0, 0.0, 5.0), v)).unwrap();
 
         assert_eq!(i.len(), 2);
-        assert_float_relative_eq!(i[0], -6.0);
-        assert_float_relative_eq!(i[1], -4.0);
+        assert_float_relative_eq!(i[0].t, -6.0);
+        assert_float_relative_eq!(i[1].t, -4.0);
     }
 }
