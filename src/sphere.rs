@@ -1,7 +1,11 @@
 use crate::{
     intersect::Intersectable,
-    math::{Point, Ray},
+    math::{
+        approx::{FLOAT_EPSILON, FLOAT_ULPS},
+        Point, Ray,
+    },
 };
+use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
 /// A Sphere is a unit sphere centred at the origin (0, 0, 0).
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -39,6 +43,48 @@ impl Intersectable for Sphere {
 impl Default for Sphere {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl AbsDiffEq for Sphere {
+    type Epsilon = f64;
+
+    fn default_epsilon() -> Self::Epsilon {
+        FLOAT_EPSILON
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        true
+    }
+}
+
+impl RelativeEq for Sphere {
+    fn default_max_relative() -> Self::Epsilon {
+        FLOAT_EPSILON
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        true
+    }
+}
+
+impl UlpsEq for Sphere {
+    fn default_max_ulps() -> u32 {
+        FLOAT_ULPS
+    }
+
+    fn ulps_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_ulps: u32,
+    ) -> bool {
+        true
     }
 }
 
