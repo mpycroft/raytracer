@@ -31,6 +31,20 @@ impl<'a> IntersectionList<'a> {
     pub fn new() -> Self {
         Self(Vec::new())
     }
+
+    pub fn hit(&self) -> Option<&Intersection> {
+        let mut intersection = None;
+        let mut smallest = f64::INFINITY;
+
+        for i in &self.0 {
+            if i.t < smallest && i.t >= 0.0 {
+                smallest = i.t;
+                intersection = Some(i);
+            }
+        }
+
+        intersection
+    }
 }
 
 impl<'a> From<Vec<Intersection<'a>>> for IntersectionList<'a> {
@@ -88,5 +102,36 @@ mod tests {
         assert_eq!(list.len(), 2);
         assert_relative_eq!(list[0].t, 1.0);
         assert_relative_eq!(list[1].t, 2.0);
+    }
+
+    #[test]
+    fn hit() {
+        let s = Sphere::new();
+
+        let i1 = Intersection::new(&s, 1.0);
+        let i2 = Intersection::new(&s, 2.0);
+        let list = IntersectionList::from(vec![i1, i2]);
+
+        assert_eq!(list.hit().unwrap(), &i1);
+
+        let i1 = Intersection::new(&s, -1.0);
+        let i2 = Intersection::new(&s, 1.0);
+        let list = IntersectionList::from(vec![i1, i2]);
+
+        assert_eq!(list.hit().unwrap(), &i2);
+
+        let i1 = Intersection::new(&s, -2.0);
+        let i2 = Intersection::new(&s, -1.0);
+        let list = IntersectionList::from(vec![i1, i2]);
+
+        assert!(list.hit().is_none());
+
+        let i1 = Intersection::new(&s, 5.0);
+        let i2 = Intersection::new(&s, 7.0);
+        let i3 = Intersection::new(&s, -3.0);
+        let i4 = Intersection::new(&s, 2.0);
+        let list = IntersectionList::from(vec![i1, i2, i3, i4]);
+
+        assert_eq!(list.hit().unwrap(), &i4);
     }
 }
