@@ -1,5 +1,5 @@
 use crate::{
-    intersect::{Intersectable, Intersection},
+    intersect::{Intersectable, Intersection, IntersectionList},
     math::{
         approx::{FLOAT_EPSILON, FLOAT_ULPS},
         Point, Ray,
@@ -18,7 +18,7 @@ impl Sphere {
 }
 
 impl Intersectable for Sphere {
-    fn intersect(&self, ray: &Ray) -> Option<Vec<Intersection>> {
+    fn intersect(&self, ray: &Ray) -> Option<IntersectionList> {
         let sphere_to_ray = ray.origin - Point::origin();
 
         let a = ray.direction.dot(ray.direction);
@@ -36,7 +36,10 @@ impl Intersectable for Sphere {
         let t1 = (-b - discriminant) / a;
         let t2 = (-b + discriminant) / a;
 
-        Some(vec![Intersection::new(self, t1), Intersection::new(self, t2)])
+        Some(IntersectionList::from(vec![
+            Intersection::new(self, t1),
+            Intersection::new(self, t2),
+        ]))
     }
 }
 
