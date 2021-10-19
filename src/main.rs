@@ -1,27 +1,44 @@
 use raytracer::{
-    math::{Matrix, Point},
-    Canvas, Colour,
+    math::{Matrix, Point, Ray},
+    Canvas, Colour, Intersectable, Sphere,
 };
-use std::{f64::consts::PI, fs::write};
+use std::fs::write;
 
 fn main() {
-    let mut canvas = Canvas::new(500, 500);
+    let canvas_pixels = 100;
+    let mut canvas = Canvas::new(canvas_pixels, canvas_pixels);
 
-    let translate = Matrix::translate(250.0, 250.0, 0.0);
-    let scale = Matrix::scale(200.0, 200.0, 200.0);
+    let origin = Point::new(0.0, 0.0, -5.0);
 
-    let point = Point::new(0.0, 1.0, 0.0);
+    let wall_size = 7.0;
+    let wall_z = 10.0;
 
-    for count in 0..12 {
-        let rotate = Matrix::rotate_z((count as f64 * (2.0 * PI)) / 12.0);
+    let pixel_size = wall_size / canvas_pixels as f64;
+    let half = wall_size / 2.0;
 
-        let pixel = translate * scale * rotate * point;
+    let colour = Colour::new(1.0, 0.0, 0.0);
 
-        canvas.write_pixel(
-            pixel.x as usize,
-            pixel.y as usize,
-            Colour::new(1.0, 1.0, 1.0),
-        );
+    let sphere = Sphere::with_transform(
+        Matrix::shear(1.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+            * Matrix::scale(0.5, 1.0, 1.0),
+    );
+
+    for y in 0..(canvas_pixels - 1) {
+        let world_y = half - pixel_size * y as f64;
+
+        for x in 0..(canvas_pixels - 1) {
+            let world_x = -half + pixel_size * x as f64;
+
+            let position = Point::new(world_x, world_y, wall_z);
+
+            let ray = Ray::new(origin, (position - origin).normalise());
+
+            if let Some(list) = sphere.intersect(&ray) {
+                if list.hit().is_some() {
+                    canvas.write_pixel(x, y, colour);
+                }
+            }
+        }
     }
 
     write("image.ppm", canvas.to_ppm()).unwrap();

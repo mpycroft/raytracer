@@ -13,4 +13,5 @@ mod sphere;
 
 pub use canvas::Canvas;
 pub use colour::Colour;
+pub use intersect::Intersectable;
 pub use sphere::Sphere;

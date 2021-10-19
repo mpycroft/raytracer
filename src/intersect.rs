@@ -47,6 +47,12 @@ impl<'a> IntersectionList<'a> {
     }
 }
 
+impl<'a> Default for IntersectionList<'a> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<'a> From<Vec<Intersection<'a>>> for IntersectionList<'a> {
     fn from(vec: Vec<Intersection<'a>>) -> Self {
         Self(vec)
