@@ -1,19 +1,21 @@
 use crate::{
     intersect::{Intersectable, Intersection, IntersectionList},
-    math::{
-        approx::{FLOAT_EPSILON, FLOAT_ULPS},
-        Point, Ray,
-    },
+    math::{Matrix, Point, Ray},
 };
-use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
 /// A Sphere is a unit sphere centred at the origin (0, 0, 0).
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Sphere;
+pub struct Sphere {
+    transform: Matrix<4>,
+}
 
 impl Sphere {
     pub fn new() -> Self {
-        Self
+        Self::with_transform(Matrix::identity())
+    }
+
+    pub fn with_transform(transform: Matrix<4>) -> Self {
+        Self { transform }
     }
 }
 
@@ -49,47 +51,7 @@ impl Default for Sphere {
     }
 }
 
-impl AbsDiffEq for Sphere {
-    type Epsilon = f64;
-
-    fn default_epsilon() -> Self::Epsilon {
-        FLOAT_EPSILON
-    }
-
-    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
-        true
-    }
-}
-
-impl RelativeEq for Sphere {
-    fn default_max_relative() -> Self::Epsilon {
-        FLOAT_EPSILON
-    }
-
-    fn relative_eq(
-        &self,
-        other: &Self,
-        epsilon: Self::Epsilon,
-        max_relative: Self::Epsilon,
-    ) -> bool {
-        true
-    }
-}
-
-impl UlpsEq for Sphere {
-    fn default_max_ulps() -> u32 {
-        FLOAT_ULPS
-    }
-
-    fn ulps_eq(
-        &self,
-        other: &Self,
-        epsilon: Self::Epsilon,
-        max_ulps: u32,
-    ) -> bool {
-        true
-    }
-}
+add_approx_traits!(Sphere { transform });
 
 #[cfg(test)]
 mod tests {
@@ -99,7 +61,14 @@ mod tests {
 
     #[test]
     fn new() {
-        let _ = Sphere::new();
+        assert_relative_eq!(Sphere::new().transform, Matrix::identity());
+    }
+
+    #[test]
+    fn with_transform() {
+        let m = Matrix::translate(2.0, 3.0, 4.0);
+
+        assert_relative_eq!(Sphere::with_transform(m).transform, m);
     }
 
     #[test]
@@ -136,5 +105,23 @@ mod tests {
         assert_eq!(i.len(), 2);
         assert_float_relative_eq!(i[0].t, -6.0);
         assert_float_relative_eq!(i[1].t, -4.0);
+    }
+
+    #[test]
+    fn approx() {
+        let m = Matrix::rotate_y(1.5);
+
+        let s1 = Sphere::with_transform(m);
+        let s2 = Sphere::with_transform(m);
+        let s3 = Sphere::with_transform(Matrix::translate(0.0, 1.5, 2.3));
+
+        assert_abs_diff_eq!(s1, s2);
+        assert_abs_diff_ne!(s1, s3);
+
+        assert_relative_eq!(s1, s2);
+        assert_relative_ne!(s1, s3);
+
+        assert_ulps_eq!(s1, s2);
+        assert_ulps_ne!(s1, s3);
     }
 }
