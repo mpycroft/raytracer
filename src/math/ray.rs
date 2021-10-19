@@ -1,4 +1,4 @@
-use super::{Point, Vector};
+use super::{Matrix, Point, Vector};
 
 /// A Ray represents a geometric vector with a specific origin point and
 /// pointing in some direction.
@@ -15,6 +15,10 @@ impl Ray {
 
     pub fn position(&self, t: f64) -> Point {
         self.origin + self.direction * t
+    }
+
+    pub fn transform(&self, transform: &Matrix<4>) -> Self {
+        Self::new(*transform * self.origin, *transform * self.direction)
     }
 }
 
@@ -45,6 +49,22 @@ mod tests {
         assert_relative_eq!(r.position(1.0), Point::new(3.0, 3.0, 4.0));
         assert_relative_eq!(r.position(-1.0), Point::new(1.0, 3.0, 4.0));
         assert_relative_eq!(r.position(2.5), Point::new(4.5, 3.0, 4.0));
+    }
+
+    #[test]
+    fn transform() {
+        let v = Vector::new(0.0, 1.0, 0.0);
+        let r = Ray::new(Point::new(1.0, 2.0, 3.0), v);
+
+        assert_relative_eq!(
+            r.transform(&Matrix::translate(3.0, 4.0, 5.0)),
+            Ray::new(Point::new(4.0, 6.0, 8.0), v)
+        );
+
+        assert_relative_eq!(
+            r.transform(&Matrix::scale(2.0, 3.0, 4.0)),
+            Ray::new(Point::new(2.0, 6.0, 12.0), Vector::new(0.0, 3.0, 0.0))
+        );
     }
 
     #[test]
