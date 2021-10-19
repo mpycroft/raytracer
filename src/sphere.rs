@@ -21,6 +21,8 @@ impl Sphere {
 
 impl Intersectable for Sphere {
     fn intersect(&self, ray: &Ray) -> Option<IntersectionList> {
+        let ray = ray.transform(&self.transform.invert().unwrap());
+
         let sphere_to_ray = ray.origin - Point::origin();
 
         let a = ray.direction.dot(ray.direction);
@@ -75,8 +77,9 @@ mod tests {
     fn intersect() {
         let s = Sphere::new();
         let v = Vector::new(0.0, 0.0, 1.0);
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), v);
 
-        let i = s.intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), v)).unwrap();
+        let i = s.intersect(&r).unwrap();
 
         assert_eq!(i.len(), 2);
         assert_relative_eq!(*i[0].object, s);
@@ -105,6 +108,16 @@ mod tests {
         assert_eq!(i.len(), 2);
         assert_float_relative_eq!(i[0].t, -6.0);
         assert_float_relative_eq!(i[1].t, -4.0);
+
+        let s = Sphere::with_transform(Matrix::scale(2.0, 2.0, 2.0));
+        let i = s.intersect(&r).unwrap();
+
+        assert_eq!(i.len(), 2);
+        assert_float_relative_eq!(i[0].t, 3.0);
+        assert_float_relative_eq!(i[1].t, 7.0);
+
+        let s = Sphere::with_transform(Matrix::translate(5.0, 0.0, 0.0));
+        assert!(s.intersect(&r).is_none());
     }
 
     #[test]
