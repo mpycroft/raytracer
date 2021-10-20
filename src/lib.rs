@@ -17,4 +17,5 @@ pub use canvas::Canvas;
 pub use colour::Colour;
 pub use intersect::Intersectable;
 pub use material::Material;
+pub use point_light::PointLight;
 pub use sphere::Sphere;
