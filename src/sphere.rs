@@ -19,7 +19,11 @@ impl Sphere {
     }
 
     pub fn normal_at(&self, point: &Point) -> Vector {
-        *point - Point::origin()
+        let inv_matrix = self.transform.invert().unwrap();
+        let object_point = inv_matrix * *point;
+        let object_normal = object_point - Point::origin();
+
+        (inv_matrix.transpose() * object_normal).normalise()
     }
 }
 
@@ -64,6 +68,7 @@ mod tests {
     use super::*;
     use crate::math::Vector;
     use approx::*;
+    use std::f64::consts::{FRAC_1_SQRT_2, PI};
 
     #[test]
     fn new() {
@@ -146,6 +151,21 @@ mod tests {
         let n = s.normal_at(&Point::new(0.577_35, 0.577_35, 0.577_35));
         assert_relative_eq!(n, Vector::new(0.577_35, 0.577_35, 0.577_35));
         assert_relative_eq!(n, n.normalise());
+
+        assert_relative_eq!(
+            Sphere::with_transform(Matrix::translate(0.0, 1.0, 0.0)).normal_at(
+                &Point::new(0.0, 1.0 + FRAC_1_SQRT_2, -FRAC_1_SQRT_2)
+            ),
+            Vector::new(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2)
+        );
+
+        assert_relative_eq!(
+            Sphere::with_transform(
+                Matrix::scale(1.0, 0.5, 1.0) * Matrix::rotate_z(PI / 5.0)
+            )
+            .normal_at(&Point::new(0.0, 0.577_35, -0.577_35)),
+            Vector::new(0.0, 0.970_142, -0.242_536)
+        );
     }
 
     #[test]
