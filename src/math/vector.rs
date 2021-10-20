@@ -40,6 +40,10 @@ impl Vector {
 
         Self::new(self.x / magnitude, self.y / magnitude, self.z / magnitude)
     }
+
+    pub fn reflect(&self, normal: &Self) -> Self {
+        *self - *normal * 2.0 * self.dot(*normal)
+    }
 }
 
 impl Add for Vector {
@@ -128,6 +132,7 @@ add_approx_traits!(Vector { x, y, z });
 mod tests {
     use super::*;
     use approx::*;
+    use std::f64::consts::FRAC_1_SQRT_2;
 
     #[test]
     fn new() {
@@ -191,6 +196,23 @@ mod tests {
         assert_float_relative_eq!(
             Vector::new(0.0, 0.0, 0.0).normalise().magnitude(),
             0.0
+        );
+    }
+
+    #[test]
+    fn reflect() {
+        assert_relative_eq!(
+            Vector::new(1.0, -1.0, 0.0).reflect(&Vector::new(0.0, 1.0, 0.0)),
+            Vector::new(1.0, 1.0, 0.0)
+        );
+
+        assert_relative_eq!(
+            Vector::new(0.0, -1.0, 0.0).reflect(&Vector::new(
+                FRAC_1_SQRT_2,
+                FRAC_1_SQRT_2,
+                0.0
+            )),
+            Vector::new(1.0, 0.0, 0.0)
         );
     }
 
