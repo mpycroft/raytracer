@@ -1,21 +1,19 @@
 use crate::{
     intersect::{Intersectable, Intersection, IntersectionList},
     math::{Matrix, Point, Ray, Vector},
+    Material,
 };
 
 /// A Sphere is a unit sphere centred at the origin (0, 0, 0).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Sphere {
     transform: Matrix<4>,
+    material: Material,
 }
 
 impl Sphere {
-    pub fn new() -> Self {
-        Self::with_transform(Matrix::identity())
-    }
-
-    pub fn with_transform(transform: Matrix<4>) -> Self {
-        Self { transform }
+    pub fn new(transform: Matrix<4>, material: Material) -> Self {
+        Self { transform, material }
     }
 
     pub fn normal_at(&self, point: &Point) -> Vector {
@@ -57,7 +55,7 @@ impl Intersectable for Sphere {
 
 impl Default for Sphere {
     fn default() -> Self {
-        Self::new()
+        Self { transform: Matrix::identity(), material: Material::default() }
     }
 }
 
@@ -66,25 +64,32 @@ add_approx_traits!(Sphere { transform });
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::Vector;
+    use crate::{math::Vector, Colour};
     use approx::*;
     use std::f64::consts::{FRAC_1_SQRT_2, PI};
 
     #[test]
     fn new() {
-        assert_relative_eq!(Sphere::new().transform, Matrix::identity());
+        let transform = Matrix::translate(2.0, 3.0, 4.0);
+        let m = Material::new(Colour::new(0.0, 1.0, 0.3), 0.1, 0.4, 0.6, 42.0);
+
+        let s = Sphere::new(transform, m);
+
+        assert_relative_eq!(s.transform, transform);
+        assert_relative_eq!(s.material, m);
     }
 
     #[test]
-    fn with_transform() {
-        let m = Matrix::translate(2.0, 3.0, 4.0);
+    fn default() {
+        let s = Sphere::default();
 
-        assert_relative_eq!(Sphere::with_transform(m).transform, m);
+        assert_relative_eq!(s.transform, Matrix::identity());
+        assert_relative_eq!(s.material, Material::default());
     }
 
     #[test]
     fn intersect() {
-        let s = Sphere::new();
+        let s = Sphere::default();
         let v = Vector::new(0.0, 0.0, 1.0);
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), v);
 
@@ -118,20 +123,21 @@ mod tests {
         assert_float_relative_eq!(i[0].t, -6.0);
         assert_float_relative_eq!(i[1].t, -4.0);
 
-        let s = Sphere::with_transform(Matrix::scale(2.0, 2.0, 2.0));
+        let s = Sphere::new(Matrix::scale(2.0, 2.0, 2.0), Material::default());
         let i = s.intersect(&r).unwrap();
 
         assert_eq!(i.len(), 2);
         assert_float_relative_eq!(i[0].t, 3.0);
         assert_float_relative_eq!(i[1].t, 7.0);
 
-        let s = Sphere::with_transform(Matrix::translate(5.0, 0.0, 0.0));
+        let s =
+            Sphere::new(Matrix::translate(5.0, 0.0, 0.0), Material::default());
         assert!(s.intersect(&r).is_none());
     }
 
     #[test]
     fn normal_at() {
-        let s = Sphere::new();
+        let s = Sphere::default();
 
         assert_relative_eq!(
             s.normal_at(&Point::new(1.0, 0.0, 0.0)),
@@ -153,15 +159,19 @@ mod tests {
         assert_relative_eq!(n, n.normalise());
 
         assert_relative_eq!(
-            Sphere::with_transform(Matrix::translate(0.0, 1.0, 0.0)).normal_at(
-                &Point::new(0.0, 1.0 + FRAC_1_SQRT_2, -FRAC_1_SQRT_2)
-            ),
+            Sphere::new(Matrix::translate(0.0, 1.0, 0.0), Material::default())
+                .normal_at(&Point::new(
+                    0.0,
+                    1.0 + FRAC_1_SQRT_2,
+                    -FRAC_1_SQRT_2
+                )),
             Vector::new(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2)
         );
 
         assert_relative_eq!(
-            Sphere::with_transform(
-                Matrix::scale(1.0, 0.5, 1.0) * Matrix::rotate_z(PI / 5.0)
+            Sphere::new(
+                Matrix::scale(1.0, 0.5, 1.0) * Matrix::rotate_z(PI / 5.0),
+                Material::default()
             )
             .normal_at(&Point::new(0.0, 0.577_35, -0.577_35)),
             Vector::new(0.0, 0.970_142, -0.242_536)
@@ -170,11 +180,18 @@ mod tests {
 
     #[test]
     fn approx() {
-        let m = Matrix::rotate_y(1.5);
-
-        let s1 = Sphere::with_transform(m);
-        let s2 = Sphere::with_transform(m);
-        let s3 = Sphere::with_transform(Matrix::translate(0.0, 1.5, 2.3));
+        let s1 = Sphere::new(
+            Matrix::rotate_y(1.5),
+            Material::new(Colour::new(0.7, 0.7, 0.1), 0.3, 0.45, 0.07, 157.8),
+        );
+        let s2 = Sphere::new(
+            Matrix::rotate_y(1.5),
+            Material::new(Colour::new(0.7, 0.7, 0.1), 0.3, 0.45, 0.07, 157.8),
+        );
+        let s3 = Sphere::new(
+            Matrix::translate(0.0, 1.5, 2.3),
+            Material::new(Colour::new(0.701, 0.7, 0.1), 0.3, 0.45, 0.07, 157.2),
+        );
 
         assert_abs_diff_eq!(s1, s2);
         assert_abs_diff_ne!(s1, s3);

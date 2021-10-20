@@ -80,7 +80,7 @@ mod tests {
 
     #[test]
     fn intersection_new() {
-        let s = Sphere::new();
+        let s = Sphere::default();
 
         let i = Intersection::new(&s, 3.5);
 
@@ -90,7 +90,7 @@ mod tests {
 
     #[test]
     fn intersection_list_new() {
-        let s = Sphere::new();
+        let s = Sphere::default();
 
         let mut list = IntersectionList::new();
         assert_eq!(list.len(), 0);
@@ -112,7 +112,7 @@ mod tests {
 
     #[test]
     fn hit() {
-        let s = Sphere::new();
+        let s = Sphere::default();
 
         let i1 = Intersection::new(&s, 1.0);
         let i2 = Intersection::new(&s, 2.0);

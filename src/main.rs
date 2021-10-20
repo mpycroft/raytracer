@@ -1,6 +1,6 @@
 use raytracer::{
     math::{Matrix, Point, Ray},
-    Canvas, Colour, Intersectable, Sphere,
+    Canvas, Colour, Intersectable, Material, Sphere,
 };
 use std::fs::write;
 
@@ -18,9 +18,10 @@ fn main() {
 
     let colour = Colour::new(1.0, 0.0, 0.0);
 
-    let sphere = Sphere::with_transform(
+    let sphere = Sphere::new(
         Matrix::shear(1.0, 0.0, 0.0, 0.0, 0.0, 0.0)
             * Matrix::scale(0.5, 1.0, 1.0),
+        Material::default(),
     );
 
     for y in 0..(canvas_pixels - 1) {
