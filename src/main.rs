@@ -1,11 +1,11 @@
 use raytracer::{
     math::{Matrix, Point, Ray},
-    Canvas, Colour, Intersectable, Material, Sphere,
+    Canvas, Colour, Intersectable, Material, PointLight, Sphere,
 };
 use std::fs::write;
 
 fn main() {
-    let canvas_pixels = 100;
+    let canvas_pixels = 250;
     let mut canvas = Canvas::new(canvas_pixels, canvas_pixels);
 
     let origin = Point::new(0.0, 0.0, -5.0);
@@ -16,12 +16,16 @@ fn main() {
     let pixel_size = wall_size / canvas_pixels as f64;
     let half = wall_size / 2.0;
 
-    let colour = Colour::new(1.0, 0.0, 0.0);
-
     let sphere = Sphere::new(
         Matrix::shear(1.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+            * Matrix::rotate_z(0.7)
             * Matrix::scale(0.5, 1.0, 1.0),
-        Material::default(),
+        Material::new(Colour::new(1.0, 0.2, 1.0), 0.1, 0.9, 0.9, 200.0),
+    );
+
+    let light = PointLight::new(
+        Colour::new(1.0, 1.0, 1.0),
+        Point::new(10.0, 10.0, -10.0),
     );
 
     for y in 0..(canvas_pixels - 1) {
@@ -35,7 +39,16 @@ fn main() {
             let ray = Ray::new(origin, (position - origin).normalise());
 
             if let Some(list) = sphere.intersect(&ray) {
-                if list.hit().is_some() {
+                if let Some(hit) = list.hit() {
+                    let point = ray.position(hit.t);
+                    let normal = hit.object.normal_at(&point);
+                    let eye = -ray.direction;
+
+                    let colour = hit
+                        .object
+                        .material
+                        .lighting(&light, &point, &eye, &normal);
+
                     canvas.write_pixel(x, y, colour);
                 }
             }

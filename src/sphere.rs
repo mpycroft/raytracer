@@ -7,8 +7,8 @@ use crate::{
 /// A Sphere is a unit sphere centred at the origin (0, 0, 0).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Sphere {
-    transform: Matrix<4>,
-    material: Material,
+    pub transform: Matrix<4>,
+    pub material: Material,
 }
 
 impl Sphere {
