@@ -1,6 +1,6 @@
 use crate::{
     intersect::{Intersectable, Intersection, IntersectionList},
-    math::{Matrix, Point, Ray},
+    math::{Matrix, Point, Ray, Vector},
 };
 
 /// A Sphere is a unit sphere centred at the origin (0, 0, 0).
@@ -16,6 +16,10 @@ impl Sphere {
 
     pub fn with_transform(transform: Matrix<4>) -> Self {
         Self { transform }
+    }
+
+    pub fn normal_at(&self, point: &Point) -> Vector {
+        *point - Point::origin()
     }
 }
 
@@ -118,6 +122,30 @@ mod tests {
 
         let s = Sphere::with_transform(Matrix::translate(5.0, 0.0, 0.0));
         assert!(s.intersect(&r).is_none());
+    }
+
+    #[test]
+    fn normal_at() {
+        let s = Sphere::new();
+
+        assert_relative_eq!(
+            s.normal_at(&Point::new(1.0, 0.0, 0.0)),
+            Vector::new(1.0, 0.0, 0.0)
+        );
+
+        assert_relative_eq!(
+            s.normal_at(&Point::new(0.0, 1.0, 0.0)),
+            Vector::new(0.0, 1.0, 0.0)
+        );
+
+        assert_relative_eq!(
+            s.normal_at(&Point::new(0.0, 0.0, 1.0)),
+            Vector::new(0.0, 0.0, 1.0)
+        );
+
+        let n = s.normal_at(&Point::new(0.577_35, 0.577_35, 0.577_35));
+        assert_relative_eq!(n, Vector::new(0.577_35, 0.577_35, 0.577_35));
+        assert_relative_eq!(n, n.normalise());
     }
 
     #[test]
