@@ -9,6 +9,7 @@ pub mod math;
 mod canvas;
 mod colour;
 mod intersect;
+mod material;
 mod point_light;
 mod sphere;
 
