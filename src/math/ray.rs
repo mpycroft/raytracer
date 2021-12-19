@@ -1,18 +1,16 @@
+use derive_more::Constructor;
+
 use super::{Matrix, Point, Vector};
 
 /// A Ray represents a geometric vector with a specific origin point and
 /// pointing in some direction.
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
 pub struct Ray {
     pub origin: Point,
     pub direction: Vector,
 }
 
 impl Ray {
-    pub fn new(origin: Point, direction: Vector) -> Self {
-        Self { origin, direction }
-    }
-
     pub fn position(&self, t: f64) -> Point {
         self.origin + self.direction * t
     }

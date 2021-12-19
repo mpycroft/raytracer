@@ -1,3 +1,5 @@
+use derive_more::Constructor;
+
 use crate::{
     intersect::{Intersectable, Intersection, IntersectionList},
     math::{Matrix, Point, Ray, Vector},
@@ -5,17 +7,13 @@ use crate::{
 };
 
 /// A Sphere is a unit sphere centred at the origin (0, 0, 0).
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
 pub struct Sphere {
     pub transform: Matrix<4>,
     pub material: Material,
 }
 
 impl Sphere {
-    pub fn new(transform: Matrix<4>, material: Material) -> Self {
-        Self { transform, material }
-    }
-
     pub fn normal_at(&self, point: &Point) -> Vector {
         let inv_matrix = self.transform.invert().unwrap();
         let object_point = inv_matrix * *point;

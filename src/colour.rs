@@ -1,8 +1,10 @@
 use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 
+use derive_more::Constructor;
+
 /// A Colour represents an RGB colour in the image, values generally range from
 /// 0.0..1.0 but can go outside this range before final processing.
-#[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd, Constructor)]
 pub struct Colour {
     pub r: f64,
     pub g: f64,
@@ -10,10 +12,6 @@ pub struct Colour {
 }
 
 impl Colour {
-    pub fn new(r: f64, g: f64, b: f64) -> Self {
-        Self { r, g, b }
-    }
-
     pub fn to_rgb(&self) -> (u8, u8, u8) {
         let convert = |c: f64| (c.clamp(0.0, 1.0) * 255.0) as u8;
 

@@ -2,9 +2,11 @@ use std::ops::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign,
 };
 
+use derive_more::Constructor;
+
 /// A Vector is a representation of a geometric vector, pointing in a given
 /// direction and with a magnitude.
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
 pub struct Vector {
     pub x: f64,
     pub y: f64,
@@ -12,10 +14,6 @@ pub struct Vector {
 }
 
 impl Vector {
-    pub fn new(x: f64, y: f64, z: f64) -> Self {
-        Self { x, y, z }
-    }
-
     pub fn cross(&self, rhs: Self) -> Self {
         Self::new(
             self.y * rhs.z - self.z * rhs.y,

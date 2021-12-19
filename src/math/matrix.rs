@@ -2,6 +2,7 @@ use std::ops::{Index, IndexMut, Mul, MulAssign};
 
 use anyhow::{bail, Result};
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
+use derive_more::Constructor;
 
 use super::{
     approx::{FLOAT_EPSILON, FLOAT_ULPS},
@@ -13,16 +14,12 @@ use super::{
 /// The basics like creation, transpose and multiplication should work on
 /// arbitrary matrices but determinants, sub matrices, cofactors, etc. are only
 /// implemented enough for what we need to work.
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
 pub struct Matrix<const T: usize> {
     data: [[f64; T]; T],
 }
 
 impl<const T: usize> Matrix<T> {
-    pub fn new(data: [[f64; T]; T]) -> Self {
-        Self { data }
-    }
-
     pub fn zero() -> Self {
         Self::new([[0.0; T]; T])
     }

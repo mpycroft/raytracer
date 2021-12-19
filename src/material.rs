@@ -1,3 +1,5 @@
+use derive_more::Constructor;
+
 use crate::{
     math::{Point, Vector},
     Colour, PointLight,
@@ -5,7 +7,7 @@ use crate::{
 
 /// Material represents what a given object is made up of including what colour
 /// it is and how it reacts to light.
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
 pub struct Material {
     pub colour: Colour,
     pub ambient: f64,
@@ -15,16 +17,6 @@ pub struct Material {
 }
 
 impl Material {
-    pub fn new(
-        colour: Colour,
-        ambient: f64,
-        diffuse: f64,
-        specular: f64,
-        shininess: f64,
-    ) -> Self {
-        Self { colour, ambient, diffuse, specular, shininess }
-    }
-
     pub fn lighting(
         &self,
         light: &PointLight,

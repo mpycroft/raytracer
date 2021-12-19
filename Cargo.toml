@@ -7,5 +7,6 @@ description = "A ray tracer written in Rust."
 license = "BSD-3-Clause"
 
 [dependencies]
-approx = "0.5.0"
 anyhow = "1.0.44"
+approx = "0.5.0"
+derive_more = "0.99.17"

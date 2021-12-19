@@ -1,5 +1,7 @@
 use std::ops::{Deref, DerefMut};
 
+use derive_more::Constructor;
+
 use crate::{math::Ray, Sphere};
 
 /// A trait that objects need to implement if they can be intersected in a
@@ -10,16 +12,10 @@ pub trait Intersectable {
 
 /// An Intersection stores both the t value of the intersection but also a
 /// reference to the object that was intersected.
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
 pub struct Intersection<'a> {
     pub object: &'a Sphere,
     pub t: f64,
-}
-
-impl<'a> Intersection<'a> {
-    pub fn new(object: &'a Sphere, t: f64) -> Self {
-        Intersection { object, t }
-    }
 }
 
 /// An IntersectionList is a simple wrapper around a vector of Intersections, it
