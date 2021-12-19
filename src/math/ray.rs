@@ -26,8 +26,9 @@ add_approx_traits!(Ray { origin, direction });
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::*;
+
+    use super::*;
 
     #[test]
     fn new() {

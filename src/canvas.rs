@@ -38,8 +38,9 @@ impl Canvas {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::*;
+
+    use super::*;
 
     #[test]
     fn new() {

@@ -130,9 +130,11 @@ add_approx_traits!(Vector { x, y, z });
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use approx::*;
     use std::f64::consts::FRAC_1_SQRT_2;
+
+    use approx::*;
+
+    use super::*;
 
     #[test]
     fn new() {

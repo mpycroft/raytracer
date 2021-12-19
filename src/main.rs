@@ -1,8 +1,9 @@
+use std::fs::write;
+
 use raytracer::{
     math::{Matrix, Point, Ray},
     Canvas, Colour, Intersectable, Material, PointLight, Sphere,
 };
-use std::fs::write;
 
 fn main() {
     let canvas_pixels = 250;

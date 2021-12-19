@@ -18,8 +18,9 @@ add_approx_traits!(PointLight { intensity, position });
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::*;
+
+    use super::*;
 
     #[test]
     fn new() {

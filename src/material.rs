@@ -71,9 +71,11 @@ add_approx_traits!(Material { colour, ambient, diffuse, specular, shininess });
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use approx::*;
     use std::f64::consts::FRAC_1_SQRT_2;
+
+    use approx::*;
+
+    use super::*;
 
     #[test]
     fn new() {

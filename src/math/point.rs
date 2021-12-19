@@ -1,5 +1,6 @@
-use super::Vector;
 use std::ops::{Add, AddAssign, Sub, SubAssign};
+
+use super::Vector;
 
 /// A Point is a representation of a geometric position within the 3 dimensional
 /// scene we are working on.
@@ -72,8 +73,9 @@ add_approx_traits!(Point { x, y, z });
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::*;
+
+    use super::*;
 
     #[test]
     fn new() {

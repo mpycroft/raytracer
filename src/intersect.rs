@@ -1,5 +1,6 @@
-use crate::{math::Ray, Sphere};
 use std::ops::{Deref, DerefMut};
+
+use crate::{math::Ray, Sphere};
 
 /// A trait that objects need to implement if they can be intersected in a
 /// scene, returns a vector of intersection t values.
@@ -75,8 +76,9 @@ impl<'a> DerefMut for IntersectionList<'a> {
 
 #[cfg(test)]
 mod tests {
+    use approx::*;
+
     use super::*;
-    use approx::assert_relative_eq;
 
     #[test]
     fn intersection_new() {

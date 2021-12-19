@@ -97,8 +97,9 @@ add_approx_traits!(Colour { r, g, b });
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::*;
+
+    use super::*;
 
     #[test]
     fn new() {

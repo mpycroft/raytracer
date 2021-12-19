@@ -1,10 +1,12 @@
+use std::ops::{Index, IndexMut, Mul, MulAssign};
+
+use anyhow::{bail, Result};
+use approx::{AbsDiffEq, RelativeEq, UlpsEq};
+
 use super::{
     approx::{FLOAT_EPSILON, FLOAT_ULPS},
     Point, Vector,
 };
-use anyhow::{bail, Result};
-use approx::{AbsDiffEq, RelativeEq, UlpsEq};
-use std::ops::{Index, IndexMut, Mul, MulAssign};
 
 /// A Matrix is a square matrix of size T, stored in row major order. Due to the
 /// limitations on current const generics the implementation is a bit haphazard.
@@ -394,9 +396,11 @@ impl<const T: usize> UlpsEq for Matrix<T> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use approx::*;
     use std::f64::consts::{FRAC_1_SQRT_2, FRAC_PI_2, FRAC_PI_4};
+
+    use approx::*;
+
+    use super::*;
 
     #[test]
     fn new() {

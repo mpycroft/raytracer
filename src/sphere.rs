@@ -63,10 +63,12 @@ add_approx_traits!(Sphere { transform });
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::{math::Vector, Colour};
-    use approx::*;
     use std::f64::consts::{FRAC_1_SQRT_2, PI};
+
+    use approx::*;
+
+    use super::*;
+    use crate::Colour;
 
     #[test]
     fn new() {
