@@ -13,7 +13,7 @@ use super::{
 /// The basics like creation, transpose and multiplication should work on
 /// arbitrary matrices but determinants, sub matrices, cofactors, etc. are only
 /// implemented enough for what we need to work.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct Matrix<const T: usize> {
     data: [[f64; T]; T],
 }

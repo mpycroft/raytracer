@@ -4,7 +4,7 @@ use super::Vector;
 
 /// A Point is a representation of a geometric position within the 3 dimensional
 /// scene we are working on.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct Point {
     pub x: f64,
     pub y: f64,

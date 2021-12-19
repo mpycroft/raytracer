@@ -2,7 +2,7 @@ use crate::{math::Point, Colour};
 
 /// A PointLight is a light source that has no size and radiates light in all
 /// directions equally.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct PointLight {
     pub intensity: Colour,
     pub position: Point,

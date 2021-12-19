@@ -5,7 +5,7 @@ use crate::{
 };
 
 /// A Sphere is a unit sphere centred at the origin (0, 0, 0).
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct Sphere {
     pub transform: Matrix<4>,
     pub material: Material,

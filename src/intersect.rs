@@ -10,7 +10,7 @@ pub trait Intersectable {
 
 /// An Intersection stores both the t value of the intersection but also a
 /// reference to the object that was intersected.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct Intersection<'a> {
     pub object: &'a Sphere,
     pub t: f64,
@@ -25,7 +25,7 @@ impl<'a> Intersection<'a> {
 /// An IntersectionList is a simple wrapper around a vector of Intersections, it
 /// gives us type safety over using a plain Vec and makes it obvious what we are
 /// doing.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub struct IntersectionList<'a>(Vec<Intersection<'a>>);
 
 impl<'a> IntersectionList<'a> {

@@ -2,7 +2,7 @@ use super::{Matrix, Point, Vector};
 
 /// A Ray represents a geometric vector with a specific origin point and
 /// pointing in some direction.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct Ray {
     pub origin: Point,
     pub direction: Vector,

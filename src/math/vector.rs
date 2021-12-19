@@ -4,7 +4,7 @@ use std::ops::{
 
 /// A Vector is a representation of a geometric vector, pointing in a given
 /// direction and with a magnitude.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct Vector {
     pub x: f64,
     pub y: f64,

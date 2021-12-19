@@ -3,7 +3,7 @@ use super::Colour;
 /// The Canvas represents the area we are going to be drawing images onto. This
 /// will be a basic implementation and will probably need to be refactored later
 /// on if we want to use parallel rendering or different image formats.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub struct Canvas {
     width: usize,
     height: usize,

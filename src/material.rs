@@ -5,7 +5,7 @@ use crate::{
 
 /// Material represents what a given object is made up of including what colour
 /// it is and how it reacts to light.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct Material {
     pub colour: Colour,
     pub ambient: f64,
