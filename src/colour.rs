@@ -1,10 +1,14 @@
-use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
+use std::ops::{Mul, MulAssign};
 
-use derive_more::Constructor;
+use derive_more::{
+    Add, AddAssign, Constructor, Mul, MulAssign, Sub, SubAssign,
+};
 
 /// A Colour represents an RGB colour in the image, values generally range from
 /// 0.0..1.0 but can go outside this range before final processing.
+#[rustfmt::skip] // Don't merge these derives or we get a huge vertical list
 #[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd, Constructor)]
+#[derive(Add, AddAssign, Mul, MulAssign, Sub, SubAssign)]
 pub struct Colour {
     pub r: f64,
     pub g: f64,
@@ -16,46 +20,6 @@ impl Colour {
         let convert = |c: f64| (c.clamp(0.0, 1.0) * 255.0) as u8;
 
         (convert(self.r), convert(self.g), convert(self.b))
-    }
-}
-
-impl Add for Colour {
-    type Output = Self;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        Self::Output::new(self.r + rhs.r, self.g + rhs.g, self.b + rhs.b)
-    }
-}
-
-impl AddAssign for Colour {
-    fn add_assign(&mut self, rhs: Self) {
-        self.r += rhs.r;
-        self.g += rhs.g;
-        self.b += rhs.b;
-    }
-}
-
-impl Sub for Colour {
-    type Output = Self;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        Self::Output::new(self.r - rhs.r, self.g - rhs.g, self.b - rhs.b)
-    }
-}
-
-impl SubAssign for Colour {
-    fn sub_assign(&mut self, rhs: Self) {
-        self.r -= rhs.r;
-        self.g -= rhs.g;
-        self.b -= rhs.b;
-    }
-}
-
-impl Mul<f64> for Colour {
-    type Output = Self;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Self::Output::new(self.r * rhs, self.g * rhs, self.b * rhs)
     }
 }
 
@@ -72,14 +36,6 @@ impl Mul for Colour {
 
     fn mul(self, rhs: Self) -> Self::Output {
         Self::Output::new(self.r * rhs.r, self.g * rhs.g, self.b * rhs.b)
-    }
-}
-
-impl MulAssign<f64> for Colour {
-    fn mul_assign(&mut self, rhs: f64) {
-        self.r *= rhs;
-        self.g *= rhs;
-        self.b *= rhs;
     }
 }
 

@@ -1,12 +1,15 @@
-use std::ops::{
-    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign,
-};
+use std::ops::Mul;
 
-use derive_more::Constructor;
+use derive_more::{
+    Add, AddAssign, Constructor, Div, DivAssign, Mul, MulAssign, Neg, Sub,
+    SubAssign,
+};
 
 /// A Vector is a representation of a geometric vector, pointing in a given
 /// direction and with a magnitude.
+#[rustfmt::skip] // Don't merge these derives or we get a huge vertical list
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
+#[derive(Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign)]
 pub struct Vector {
     pub x: f64,
     pub y: f64,
@@ -44,83 +47,11 @@ impl Vector {
     }
 }
 
-impl Add for Vector {
-    type Output = Self;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        Self::Output::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
-    }
-}
-
-impl AddAssign for Vector {
-    fn add_assign(&mut self, rhs: Self) {
-        self.x += rhs.x;
-        self.y += rhs.y;
-        self.z += rhs.z;
-    }
-}
-
-impl Div<f64> for Vector {
-    type Output = Self;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Self::Output::new(self.x / rhs, self.y / rhs, self.z / rhs)
-    }
-}
-
-impl DivAssign<f64> for Vector {
-    fn div_assign(&mut self, rhs: f64) {
-        self.x /= rhs;
-        self.y /= rhs;
-        self.z /= rhs;
-    }
-}
-
-impl Mul<f64> for Vector {
-    type Output = Self;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Self::Output::new(self.x * rhs, self.y * rhs, self.z * rhs)
-    }
-}
-
 impl Mul<Vector> for f64 {
     type Output = Vector;
 
     fn mul(self, rhs: Vector) -> Self::Output {
         rhs * self
-    }
-}
-
-impl MulAssign<f64> for Vector {
-    fn mul_assign(&mut self, rhs: f64) {
-        self.x *= rhs;
-        self.y *= rhs;
-        self.z *= rhs;
-    }
-}
-
-impl Neg for Vector {
-    type Output = Self;
-
-    fn neg(self) -> Self::Output {
-        Self::Output::new(-self.x, -self.y, -self.z)
-    }
-}
-
-impl Sub for Vector {
-    type Output = Self;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        Self::Output::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
-    }
-}
-
-impl SubAssign for Vector {
-    fn sub_assign(&mut self, rhs: Self) {
-        self.x -= rhs.x;
-        self.y -= rhs.y;
-        self.z -= rhs.z;
     }
 }
 
