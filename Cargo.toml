@@ -2,7 +2,7 @@
 name = "raytracer"
 version = "0.1.0"
 authors = ["Megan Pycroft <megan.pycroft@gmail.com>"]
-edition = "2018"
+edition = "2021"
 description = "A ray tracer written in Rust."
 license = "BSD-3-Clause"
 
