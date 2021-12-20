@@ -30,14 +30,14 @@ impl Material {
 
         let ambient = effective_colour * self.ambient;
 
-        let light_dot_normal = light_vector.dot(*normal);
+        let light_dot_normal = light_vector.dot(normal);
         let (diffuse, specular) = if light_dot_normal < 0.0 {
             (Colour::new(0.0, 0.0, 0.0), Colour::new(0.0, 0.0, 0.0))
         } else {
             let diffuse = effective_colour * self.diffuse * light_dot_normal;
 
             let reflect_vector = -light_vector.reflect(normal);
-            let reflect_dot_eye = reflect_vector.dot(*eye);
+            let reflect_dot_eye = reflect_vector.dot(eye);
 
             let specular = if reflect_dot_eye <= 0.0 {
                 Colour::new(0.0, 0.0, 0.0)

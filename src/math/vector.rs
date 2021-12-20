@@ -17,7 +17,7 @@ pub struct Vector {
 }
 
 impl Vector {
-    pub fn cross(&self, rhs: Self) -> Self {
+    pub fn cross(&self, rhs: &Self) -> Self {
         Self::new(
             self.y * rhs.z - self.z * rhs.y,
             self.z * rhs.x - self.x * rhs.z,
@@ -25,12 +25,12 @@ impl Vector {
         )
     }
 
-    pub fn dot(&self, rhs: Self) -> f64 {
+    pub fn dot(&self, rhs: &Self) -> f64 {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
 
     pub fn magnitude(&self) -> f64 {
-        self.dot(*self).sqrt()
+        self.dot(self).sqrt()
     }
 
     pub fn normalise(&self) -> Self {
@@ -43,7 +43,7 @@ impl Vector {
     }
 
     pub fn reflect(&self, normal: &Self) -> Self {
-        *self - *normal * 2.0 * self.dot(*normal)
+        *self - *normal * 2.0 * self.dot(normal)
     }
 }
 
@@ -79,14 +79,14 @@ mod tests {
         let v1 = Vector::new(1.0, 2.0, 3.0);
         let v2 = Vector::new(2.0, 3.0, 4.0);
 
-        assert_relative_eq!(v1.cross(v2), Vector::new(-1.0, 2.0, -1.0));
-        assert_relative_eq!(v2.cross(v1), Vector::new(1.0, -2.0, 1.0));
+        assert_relative_eq!(v1.cross(&v2), Vector::new(-1.0, 2.0, -1.0));
+        assert_relative_eq!(v2.cross(&v1), Vector::new(1.0, -2.0, 1.0));
     }
 
     #[test]
     fn dot() {
         assert_float_relative_eq!(
-            Vector::new(1.0, 2.0, 3.0).dot(Vector::new(2.0, 3.0, 4.0)),
+            Vector::new(1.0, 2.0, 3.0).dot(&Vector::new(2.0, 3.0, 4.0)),
             20.0
         );
     }
