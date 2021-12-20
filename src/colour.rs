@@ -16,6 +16,26 @@ pub struct Colour {
 }
 
 impl Colour {
+    pub fn black() -> Self {
+        Self::new(0.0, 0.0, 0.0)
+    }
+
+    pub fn white() -> Self {
+        Self::new(1.0, 1.0, 1.0)
+    }
+
+    pub fn red() -> Self {
+        Self::new(1.0, 0.0, 0.0)
+    }
+
+    pub fn green() -> Self {
+        Self::new(0.0, 1.0, 0.0)
+    }
+
+    pub fn blue() -> Self {
+        Self::new(0.0, 0.0, 1.0)
+    }
+
     pub fn to_rgb(&self) -> (u8, u8, u8) {
         let convert = |c: f64| (c.clamp(0.0, 1.0) * 255.0) as u8;
 
@@ -62,6 +82,31 @@ mod tests {
         assert_float_relative_eq!(c.r, -0.5);
         assert_float_relative_eq!(c.g, 0.4);
         assert_float_relative_eq!(c.b, 1.7);
+    }
+
+    #[test]
+    fn black() {
+        assert_relative_eq!(Colour::black(), Colour::new(0.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn white() {
+        assert_relative_eq!(Colour::white(), Colour::new(1.0, 1.0, 1.0));
+    }
+
+    #[test]
+    fn red() {
+        assert_relative_eq!(Colour::red(), Colour::new(1.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn green() {
+        assert_relative_eq!(Colour::green(), Colour::new(0.0, 1.0, 0.0));
+    }
+
+    #[test]
+    fn blue() {
+        assert_relative_eq!(Colour::blue(), Colour::new(0.0, 0.0, 1.0));
     }
 
     #[test]

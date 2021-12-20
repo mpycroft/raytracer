@@ -32,7 +32,7 @@ impl Material {
 
         let light_dot_normal = light_vector.dot(normal);
         let (diffuse, specular) = if light_dot_normal < 0.0 {
-            (Colour::new(0.0, 0.0, 0.0), Colour::new(0.0, 0.0, 0.0))
+            (Colour::black(), Colour::black())
         } else {
             let diffuse = effective_colour * self.diffuse * light_dot_normal;
 
@@ -40,7 +40,7 @@ impl Material {
             let reflect_dot_eye = reflect_vector.dot(eye);
 
             let specular = if reflect_dot_eye <= 0.0 {
-                Colour::new(0.0, 0.0, 0.0)
+                Colour::black()
             } else {
                 let factor = reflect_dot_eye.powf(self.shininess);
                 light.intensity * self.specular * factor
@@ -55,7 +55,7 @@ impl Material {
 
 impl Default for Material {
     fn default() -> Self {
-        Self::new(Colour::new(1.0, 1.0, 1.0), 0.1, 0.9, 0.9, 200.0)
+        Self::new(Colour::white(), 0.1, 0.9, 0.9, 200.0)
     }
 }
 
@@ -85,7 +85,7 @@ mod tests {
     fn default() {
         let m = Material::default();
 
-        assert_relative_eq!(m.colour, Colour::new(1.0, 1.0, 1.0));
+        assert_relative_eq!(m.colour, Colour::white());
         assert_float_relative_eq!(m.ambient, 0.1);
         assert_float_relative_eq!(m.diffuse, 0.9);
         assert_float_relative_eq!(m.specular, 0.9);
@@ -96,10 +96,10 @@ mod tests {
     fn lighting() {
         let p = Point::origin();
         let m = Material::default();
-        let c = Colour::new(1.0, 1.0, 1.0);
+        let c = Colour::white();
 
         let behind = PointLight::new(c, Point::new(0.0, 0.0, -10.0));
-        let neg_z = Vector::new(0.0, 0.0, -1.0);
+        let neg_z = -Vector::z_axis();
 
         assert_relative_eq!(
             m.lighting(&behind, &p, &neg_z, &neg_z,),
@@ -113,7 +113,7 @@ mod tests {
                 &Vector::new(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2),
                 &neg_z
             ),
-            Colour::new(1.0, 1.0, 1.0)
+            Colour::white()
         );
 
         let above_left = PointLight::new(c, Point::new(0.0, 10.0, -10.0));

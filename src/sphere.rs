@@ -90,7 +90,7 @@ mod tests {
     #[test]
     fn intersect() {
         let s = Sphere::default();
-        let v = Vector::new(0.0, 0.0, 1.0);
+        let v = Vector::z_axis();
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), v);
 
         let i = s.intersect(&r).unwrap();

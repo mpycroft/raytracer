@@ -47,7 +47,7 @@ impl<const T: usize> Matrix<T> {
 // solution; a general function and only implement it for Matrix<3/4> since that
 // is all we actually need.
 #[inline(always)]
-fn sub_matrix<const T: usize, const U: usize>(
+fn calc_sub_matrix<const T: usize, const U: usize>(
     matrix: &Matrix<T>,
     row: usize,
     col: usize,
@@ -98,7 +98,7 @@ macro_rules! calc_cofactor {
     }};
 }
 
-macro_rules! determinant {
+macro_rules! calc_determinant {
     ($self:ident, $size:expr) => {{
         let mut det = 0.0;
 
@@ -185,7 +185,7 @@ impl Matrix<4> {
     }
 
     pub fn determinant(&self) -> f64 {
-        determinant!(self, 4)
+        calc_determinant!(self, 4)
     }
 
     pub fn invert(&self) -> Result<Self> {
@@ -211,7 +211,7 @@ impl Matrix<4> {
     }
 
     pub fn sub_matrix(&self, row: usize, col: usize) -> Matrix<3> {
-        sub_matrix(self, row, col)
+        calc_sub_matrix(self, row, col)
     }
 }
 
@@ -221,7 +221,7 @@ impl Matrix<3> {
     }
 
     pub fn determinant(&self) -> f64 {
-        determinant!(self, 3)
+        calc_determinant!(self, 3)
     }
 
     pub fn minor(&self, row: usize, col: usize) -> f64 {
@@ -229,7 +229,7 @@ impl Matrix<3> {
     }
 
     pub fn sub_matrix(&self, row: usize, col: usize) -> Matrix<2> {
-        sub_matrix(self, row, col)
+        calc_sub_matrix(self, row, col)
     }
 }
 
@@ -464,8 +464,8 @@ mod tests {
         );
 
         assert_relative_eq!(
-            Matrix::rotate_x(FRAC_PI_2) * Vector::new(0.0, 1.0, 0.0),
-            Vector::new(0.0, 0.0, 1.0)
+            Matrix::rotate_x(FRAC_PI_2) * Vector::y_axis(),
+            Vector::z_axis()
         );
 
         assert_relative_eq!(
@@ -485,8 +485,8 @@ mod tests {
         );
 
         assert_relative_eq!(
-            Matrix::rotate_y(FRAC_PI_2) * Vector::new(0.0, 0.0, 1.0),
-            Vector::new(1.0, 0.0, 0.0)
+            Matrix::rotate_y(FRAC_PI_2) * Vector::z_axis(),
+            Vector::x_axis()
         );
 
         assert_relative_eq!(
@@ -506,8 +506,8 @@ mod tests {
         );
 
         assert_relative_eq!(
-            Matrix::rotate_z(FRAC_PI_2) * Vector::new(0.0, 1.0, 0.0),
-            Vector::new(-1.0, 0.0, 0.0)
+            Matrix::rotate_z(FRAC_PI_2) * Vector::y_axis(),
+            -Vector::x_axis()
         );
 
         assert_relative_eq!(

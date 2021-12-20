@@ -24,10 +24,7 @@ fn main() {
         Material::new(Colour::new(1.0, 0.2, 1.0), 0.1, 0.9, 0.9, 200.0),
     );
 
-    let light = PointLight::new(
-        Colour::new(1.0, 1.0, 1.0),
-        Point::new(10.0, 10.0, -10.0),
-    );
+    let light = PointLight::new(Colour::white(), Point::new(10.0, 10.0, -10.0));
 
     for y in 0..(canvas_pixels - 1) {
         let world_y = half - pixel_size * y as f64;

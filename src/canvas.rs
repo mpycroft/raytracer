@@ -50,14 +50,14 @@ mod tests {
         assert_eq!(c.height, 20);
 
         for p in c.pixels {
-            assert_relative_eq!(p, Colour::new(0.0, 0.0, 0.0));
+            assert_relative_eq!(p, Colour::black());
         }
     }
 
     #[test]
     fn write_pixel() {
         let mut c = Canvas::new(10, 20);
-        let red = Colour::new(1.0, 0.0, 0.0);
+        let red = Colour::red();
 
         c.write_pixel(2, 3, red);
 

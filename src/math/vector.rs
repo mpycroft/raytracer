@@ -17,6 +17,18 @@ pub struct Vector {
 }
 
 impl Vector {
+    pub fn x_axis() -> Self {
+        Self::new(1.0, 0.0, 0.0)
+    }
+
+    pub fn y_axis() -> Self {
+        Self::new(0.0, 1.0, 0.0)
+    }
+
+    pub fn z_axis() -> Self {
+        Self::new(0.0, 0.0, 1.0)
+    }
+
     pub fn cross(&self, rhs: &Self) -> Self {
         Self::new(
             self.y * rhs.z - self.z * rhs.y,
@@ -35,6 +47,7 @@ impl Vector {
 
     pub fn normalise(&self) -> Self {
         let magnitude = self.magnitude();
+
         if magnitude == 0.0 {
             return Vector::new(0.0, 0.0, 0.0);
         }
@@ -75,6 +88,21 @@ mod tests {
     }
 
     #[test]
+    fn x_axis() {
+        assert_relative_eq!(Vector::x_axis(), Vector::new(1.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn y_axis() {
+        assert_relative_eq!(Vector::y_axis(), Vector::new(0.0, 1.0, 0.0));
+    }
+
+    #[test]
+    fn z_axis() {
+        assert_relative_eq!(Vector::z_axis(), Vector::new(0.0, 0.0, 1.0));
+    }
+
+    #[test]
     fn cross() {
         let v1 = Vector::new(1.0, 2.0, 3.0);
         let v2 = Vector::new(2.0, 3.0, 4.0);
@@ -93,9 +121,9 @@ mod tests {
 
     #[test]
     fn magnitude() {
-        assert_float_relative_eq!(Vector::new(1.0, 0.0, 0.0).magnitude(), 1.0);
-        assert_float_relative_eq!(Vector::new(0.0, 1.0, 0.0).magnitude(), 1.0);
-        assert_float_relative_eq!(Vector::new(0.0, 0.0, 1.0).magnitude(), 1.0);
+        assert_float_relative_eq!(Vector::x_axis().magnitude(), 1.0);
+        assert_float_relative_eq!(Vector::y_axis().magnitude(), 1.0);
+        assert_float_relative_eq!(Vector::z_axis().magnitude(), 1.0);
 
         assert_float_relative_eq!(
             Vector::new(1.0, 2.0, 3.0).magnitude(),
@@ -111,7 +139,7 @@ mod tests {
     fn normalise() {
         assert_relative_eq!(
             Vector::new(4.0, 0.0, 0.0).normalise(),
-            Vector::new(1.0, 0.0, 0.0)
+            Vector::x_axis()
         );
 
         assert_relative_eq!(
@@ -133,7 +161,7 @@ mod tests {
     #[test]
     fn reflect() {
         assert_relative_eq!(
-            Vector::new(1.0, -1.0, 0.0).reflect(&Vector::new(0.0, 1.0, 0.0)),
+            Vector::new(1.0, -1.0, 0.0).reflect(&Vector::y_axis()),
             Vector::new(1.0, 1.0, 0.0)
         );
 

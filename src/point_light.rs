@@ -20,7 +20,7 @@ mod tests {
 
     #[test]
     fn new() {
-        let c = Colour::new(1.0, 1.0, 1.0);
+        let c = Colour::white();
         let p = Point::origin();
         let l = PointLight::new(c, p);
 
