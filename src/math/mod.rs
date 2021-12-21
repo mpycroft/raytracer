@@ -10,7 +10,8 @@ mod ray;
 mod transform;
 mod vector;
 
-pub use matrix::Matrix;
+use matrix::Matrix;
 pub use point::Point;
 pub use ray::Ray;
+pub use transform::{Transform, Transformable};
 pub use vector::Vector;

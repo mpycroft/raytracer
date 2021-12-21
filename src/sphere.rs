@@ -2,30 +2,30 @@ use derive_more::Constructor;
 
 use crate::{
     intersect::{Intersectable, Intersection, IntersectionList},
-    math::{Matrix, Point, Ray, Vector},
+    math::{Point, Ray, Transform, Vector},
     Material,
 };
 
 /// A Sphere is a unit sphere centred at the origin (0, 0, 0).
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
 pub struct Sphere {
-    pub transform: Matrix<4>,
+    pub transform: Transform,
     pub material: Material,
 }
 
 impl Sphere {
     pub fn normal_at(&self, point: &Point) -> Vector {
-        let inv_matrix = self.transform.invert().unwrap();
-        let object_point = inv_matrix * *point;
+        let inv_matrix = self.transform.invert();
+        let object_point = inv_matrix.apply(point);
         let object_normal = object_point - Point::origin();
 
-        (inv_matrix.transpose() * object_normal).normalise()
+        inv_matrix.transpose().apply(&object_normal).normalise()
     }
 }
 
 impl Intersectable for Sphere {
     fn intersect(&self, ray: &Ray) -> Option<IntersectionList> {
-        let ray = ray.transform(&self.transform.invert().unwrap());
+        let ray = self.transform.invert().apply(ray);
 
         let sphere_to_ray = ray.origin - Point::origin();
 
@@ -53,7 +53,7 @@ impl Intersectable for Sphere {
 
 impl Default for Sphere {
     fn default() -> Self {
-        Self { transform: Matrix::identity(), material: Material::default() }
+        Self { transform: Transform::new(), material: Material::default() }
     }
 }
 
@@ -70,7 +70,7 @@ mod tests {
 
     #[test]
     fn new() {
-        let transform = Matrix::translate(2.0, 3.0, 4.0);
+        let transform = Transform::new().translate(2.0, 3.0, 4.0);
         let m = Material::new(Colour::new(0.0, 1.0, 0.3), 0.1, 0.4, 0.6, 42.0);
 
         let s = Sphere::new(transform, m);
@@ -83,7 +83,7 @@ mod tests {
     fn default() {
         let s = Sphere::default();
 
-        assert_relative_eq!(s.transform, Matrix::identity());
+        assert_relative_eq!(s.transform, Transform::new());
         assert_relative_eq!(s.material, Material::default());
     }
 
@@ -123,15 +123,20 @@ mod tests {
         assert_float_relative_eq!(i[0].t, -6.0);
         assert_float_relative_eq!(i[1].t, -4.0);
 
-        let s = Sphere::new(Matrix::scale(2.0, 2.0, 2.0), Material::default());
+        let s = Sphere::new(
+            Transform::new().scale(2.0, 2.0, 2.0),
+            Material::default(),
+        );
         let i = s.intersect(&r).unwrap();
 
         assert_eq!(i.len(), 2);
         assert_float_relative_eq!(i[0].t, 3.0);
         assert_float_relative_eq!(i[1].t, 7.0);
 
-        let s =
-            Sphere::new(Matrix::translate(5.0, 0.0, 0.0), Material::default());
+        let s = Sphere::new(
+            Transform::new().translate(5.0, 0.0, 0.0),
+            Material::default(),
+        );
         assert!(s.intersect(&r).is_none());
     }
 
@@ -159,18 +164,21 @@ mod tests {
         assert_relative_eq!(n, n.normalise());
 
         assert_relative_eq!(
-            Sphere::new(Matrix::translate(0.0, 1.0, 0.0), Material::default())
-                .normal_at(&Point::new(
-                    0.0,
-                    1.0 + FRAC_1_SQRT_2,
-                    -FRAC_1_SQRT_2
-                )),
+            Sphere::new(
+                Transform::new().translate(0.0, 1.0, 0.0),
+                Material::default()
+            )
+            .normal_at(&Point::new(
+                0.0,
+                1.0 + FRAC_1_SQRT_2,
+                -FRAC_1_SQRT_2
+            )),
             Vector::new(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2)
         );
 
         assert_relative_eq!(
             Sphere::new(
-                Matrix::scale(1.0, 0.5, 1.0) * Matrix::rotate_z(PI / 5.0),
+                Transform::new().rotate_z(PI / 5.0).scale(1.0, 0.5, 1.0),
                 Material::default()
             )
             .normal_at(&Point::new(0.0, 0.577_35, -0.577_35)),
@@ -181,15 +189,15 @@ mod tests {
     #[test]
     fn approx() {
         let s1 = Sphere::new(
-            Matrix::rotate_y(1.5),
+            Transform::new().rotate_y(1.5),
             Material::new(Colour::new(0.7, 0.7, 0.1), 0.3, 0.45, 0.07, 157.8),
         );
         let s2 = Sphere::new(
-            Matrix::rotate_y(1.5),
+            Transform::new().rotate_y(1.5),
             Material::new(Colour::new(0.7, 0.7, 0.1), 0.3, 0.45, 0.07, 157.8),
         );
         let s3 = Sphere::new(
-            Matrix::translate(0.0, 1.5, 2.3),
+            Transform::new().translate(0.0, 1.5, 2.3),
             Material::new(Colour::new(0.701, 0.7, 0.1), 0.3, 0.45, 0.07, 157.2),
         );
 

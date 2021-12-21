@@ -1,7 +1,7 @@
 use std::fs::write;
 
 use raytracer::{
-    math::{Matrix, Point, Ray},
+    math::{Point, Ray, Transform},
     Canvas, Colour, Intersectable, Material, PointLight, Sphere,
 };
 
@@ -18,9 +18,10 @@ fn main() {
     let half = wall_size / 2.0;
 
     let sphere = Sphere::new(
-        Matrix::shear(1.0, 0.0, 0.0, 0.0, 0.0, 0.0)
-            * Matrix::rotate_z(0.7)
-            * Matrix::scale(0.5, 1.0, 1.0),
+        Transform::new()
+            .scale(0.5, 1.0, 1.0)
+            .rotate_z(0.7)
+            .shear(1.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         Material::new(Colour::new(1.0, 0.2, 1.0), 0.1, 0.9, 0.9, 200.0),
     );
 

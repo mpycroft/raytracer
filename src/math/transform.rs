@@ -108,6 +108,12 @@ impl Transform {
     }
 }
 
+impl Default for Transform {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 add_approx_traits!(Transform { data });
 
 #[cfg(test)]
