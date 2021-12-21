@@ -56,6 +56,13 @@ impl Transform {
         )
     }
 
+    /// The transpose function, much like invert, is not meant for chaining with
+    /// other transforms but to produce a new Transform object that contains a
+    /// transpose of the current object.
+    pub fn transpose(&self) -> Self {
+        Self::from_matrix(self.data.transpose())
+    }
+
     pub fn rotate_x(&mut self, radians: f64) -> Self {
         self.data = Matrix::rotate_x(radians) * self.data;
 
@@ -155,6 +162,19 @@ mod tests {
         ]))
         .invert()
         .apply(&Point::origin());
+    }
+
+    #[test]
+    fn transpose() {
+        assert_relative_eq!(
+            Transform::new().translate(2.5, 3.1, -1.0).transpose().data,
+            Matrix::new([
+                [1.0, 0.0, 0.0, 0.0],
+                [0.0, 1.0, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 0.0],
+                [2.5, 3.1, -1.0, 1.0]
+            ])
+        );
     }
 
     #[test]

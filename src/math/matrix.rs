@@ -696,6 +696,27 @@ mod tests {
     }
 
     #[test]
+    fn transpose() {
+        assert_relative_eq!(
+            Matrix::new([
+                [0.0, 9.0, 3.0, 0.0],
+                [9.0, 8.0, 0.0, 8.0],
+                [1.0, 8.0, 5.0, 3.0],
+                [0.0, 0.0, 5.0, 8.0]
+            ])
+            .transpose(),
+            Matrix::new([
+                [0.0, 9.0, 1.0, 0.0],
+                [9.0, 8.0, 8.0, 0.0],
+                [3.0, 0.0, 5.0, 5.0],
+                [0.0, 8.0, 3.0, 8.0]
+            ])
+        );
+
+        assert_relative_eq!(Matrix::identity().transpose(), Matrix::identity());
+    }
+
+    #[test]
     fn chaining_transforms() {
         let point = Point::new(1.0, 0.0, 1.0);
         let final_point = Point::new(15.0, 0.0, 7.0);
@@ -794,27 +815,6 @@ mod tests {
                 [-7.0, -1.0, 1.0]
             ])
         );
-    }
-
-    #[test]
-    fn transpose() {
-        assert_relative_eq!(
-            Matrix::new([
-                [0.0, 9.0, 3.0, 0.0],
-                [9.0, 8.0, 0.0, 8.0],
-                [1.0, 8.0, 5.0, 3.0],
-                [0.0, 0.0, 5.0, 8.0]
-            ])
-            .transpose(),
-            Matrix::new([
-                [0.0, 9.0, 1.0, 0.0],
-                [9.0, 8.0, 8.0, 0.0],
-                [3.0, 0.0, 5.0, 5.0],
-                [0.0, 8.0, 3.0, 8.0]
-            ])
-        );
-
-        assert_relative_eq!(Matrix::identity().transpose(), Matrix::identity());
     }
 
     #[test]
