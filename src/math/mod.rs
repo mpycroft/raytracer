@@ -7,6 +7,7 @@ pub mod approx;
 mod matrix;
 mod point;
 mod ray;
+mod transform;
 mod vector;
 
 pub use matrix::Matrix;
