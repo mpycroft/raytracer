@@ -34,11 +34,26 @@ pub struct Transform {
 
 impl Transform {
     pub fn new() -> Self {
-        Self { data: Matrix::identity() }
+        Self::from_matrix(Matrix::identity())
+    }
+
+    fn from_matrix(data: Matrix<4>) -> Self {
+        Self { data }
     }
 
     pub fn apply<'a, T: Transformable<'a>>(&self, object: &'a T) -> T {
         object.apply(self)
+    }
+
+    /// The invert function returns a new transformation rather than changing
+    /// the internal data and allowing chaining as other functions do. Panics if
+    /// the transformation cannot be inverted.
+    pub fn invert(&self) -> Self {
+        Self::from_matrix(
+            self.data
+                .invert()
+                .expect("Transformation matrix could not be inverted"),
+        )
     }
 
     pub fn rotate_x(&mut self, radians: f64) -> Self {
@@ -114,6 +129,32 @@ mod tests {
             t.scale(1.0, 1.0, 2.0).apply(&p),
             Point::new(1.0, 2.0, 6.0)
         );
+    }
+
+    #[test]
+    fn invert() {
+        let v = Vector::new(5.1, -2.3, 9.52);
+
+        let t = Transform::new()
+            .rotate_x(1.5)
+            .scale(1.0, 2.0, 4.3)
+            .translate(0.0, 1.0, 2.3)
+            .rotate_y(1.0);
+
+        assert_relative_eq!(t.invert().apply(&t.apply(&v)), v);
+    }
+
+    #[test]
+    #[should_panic]
+    fn invert_panic() {
+        let _ = Transform::from_matrix(Matrix::new([
+            [12.0, 1.0, 2.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0],
+            [-2.0, 0.0, 1.0, 0.0],
+            [-1.5, 9.3, 0.0, 2.0],
+        ]))
+        .invert()
+        .apply(&Point::origin());
     }
 
     #[test]
