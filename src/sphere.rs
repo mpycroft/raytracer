@@ -70,7 +70,7 @@ mod tests {
 
     #[test]
     fn new() {
-        let transform = Transform::new().translate(2.0, 3.0, 4.0);
+        let transform = Transform::from_translate(2.0, 3.0, 4.0);
         let m = Material::new(Colour::new(0.0, 1.0, 0.3), 0.1, 0.4, 0.6, 42.0);
 
         let s = Sphere::new(transform, m);
@@ -124,7 +124,7 @@ mod tests {
         assert_float_relative_eq!(i[1].t, -4.0);
 
         let s = Sphere::new(
-            Transform::new().scale(2.0, 2.0, 2.0),
+            Transform::from_scale(2.0, 2.0, 2.0),
             Material::default(),
         );
         let i = s.intersect(&r).unwrap();
@@ -134,7 +134,7 @@ mod tests {
         assert_float_relative_eq!(i[1].t, 7.0);
 
         let s = Sphere::new(
-            Transform::new().translate(5.0, 0.0, 0.0),
+            Transform::from_translate(5.0, 0.0, 0.0),
             Material::default(),
         );
         assert!(s.intersect(&r).is_none());
@@ -165,7 +165,7 @@ mod tests {
 
         assert_relative_eq!(
             Sphere::new(
-                Transform::new().translate(0.0, 1.0, 0.0),
+                Transform::from_translate(0.0, 1.0, 0.0),
                 Material::default()
             )
             .normal_at(&Point::new(
@@ -178,7 +178,7 @@ mod tests {
 
         assert_relative_eq!(
             Sphere::new(
-                Transform::new().rotate_z(PI / 5.0).scale(1.0, 0.5, 1.0),
+                Transform::from_rotate_z(PI / 5.0).scale(1.0, 0.5, 1.0),
                 Material::default()
             )
             .normal_at(&Point::new(0.0, 0.577_35, -0.577_35)),
@@ -189,15 +189,15 @@ mod tests {
     #[test]
     fn approx() {
         let s1 = Sphere::new(
-            Transform::new().rotate_y(1.5),
+            Transform::from_rotate_y(1.5),
             Material::new(Colour::new(0.7, 0.7, 0.1), 0.3, 0.45, 0.07, 157.8),
         );
         let s2 = Sphere::new(
-            Transform::new().rotate_y(1.5),
+            Transform::from_rotate_y(1.5),
             Material::new(Colour::new(0.7, 0.7, 0.1), 0.3, 0.45, 0.07, 157.8),
         );
         let s3 = Sphere::new(
-            Transform::new().translate(0.0, 1.5, 2.3),
+            Transform::from_translate(0.0, 1.5, 2.3),
             Material::new(Colour::new(0.701, 0.7, 0.1), 0.3, 0.45, 0.07, 157.2),
         );
 

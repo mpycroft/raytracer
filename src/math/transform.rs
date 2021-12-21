@@ -1,5 +1,7 @@
 use std::ops::Mul;
 
+use paste::paste;
+
 use super::Matrix;
 
 /// The Transformable trait describes how to apply a Transform to any given
@@ -30,6 +32,24 @@ where
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct Transform {
     data: Matrix<4>,
+}
+
+/// This macro adds a function to create a new transform directly (prefixed with
+/// from_) and to perform the transform on an already existing Transform object.
+macro_rules! add_transform_fns {
+    ($name:ident($($arg:ident: $type:ty),+ $(,)?)) => {
+        paste! {
+            pub fn [<from_ $name>]($($arg: $type),+) -> Self {
+                Self::from_matrix(Matrix::$name($($arg),+))
+            }
+
+            pub fn $name(&mut self, $($arg: $type),+) -> Self {
+                self.data = Matrix::$name($($arg),+) * self.data;
+
+                *self
+            }
+        }
+    };
 }
 
 impl Transform {
@@ -63,49 +83,22 @@ impl Transform {
         Self::from_matrix(self.data.transpose())
     }
 
-    pub fn rotate_x(&mut self, radians: f64) -> Self {
-        self.data = Matrix::rotate_x(radians) * self.data;
+    add_transform_fns!(rotate_x(radians: f64));
+    add_transform_fns!(rotate_y(radians: f64));
+    add_transform_fns!(rotate_z(radians: f64));
 
-        *self
-    }
+    add_transform_fns!(scale(x: f64, y: f64, z: f64));
 
-    pub fn rotate_y(&mut self, radians: f64) -> Self {
-        self.data = Matrix::rotate_y(radians) * self.data;
-
-        *self
-    }
-
-    pub fn rotate_z(&mut self, radians: f64) -> Self {
-        self.data = Matrix::rotate_z(radians) * self.data;
-
-        *self
-    }
-
-    pub fn scale(&mut self, x: f64, y: f64, z: f64) -> Self {
-        self.data = Matrix::scale(x, y, z) * self.data;
-
-        *self
-    }
-
-    pub fn shear(
-        &mut self,
+    add_transform_fns!(shear(
         xy: f64,
         xz: f64,
         yx: f64,
         yz: f64,
         zx: f64,
         zy: f64,
-    ) -> Self {
-        self.data = Matrix::shear(xy, xz, yx, yz, zx, zy) * self.data;
+    ));
 
-        *self
-    }
-
-    pub fn translate(&mut self, x: f64, y: f64, z: f64) -> Self {
-        self.data = Matrix::translate(x, y, z) * self.data;
-
-        *self
-    }
+    add_transform_fns!(translate(x: f64, y: f64, z: f64));
 }
 
 impl Default for Transform {
@@ -118,7 +111,7 @@ add_approx_traits!(Transform { data });
 
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::FRAC_PI_2;
+    use std::f64::consts::{FRAC_PI_2, FRAC_PI_3};
 
     use approx::*;
 
@@ -134,12 +127,10 @@ mod tests {
     fn apply() {
         let p = Point::new(1.0, 2.0, 3.0);
 
-        let mut t = Transform::new();
-
-        assert_relative_eq!(t.apply(&p), p);
+        assert_relative_eq!(Transform::new().apply(&p), p);
 
         assert_relative_eq!(
-            t.scale(1.0, 1.0, 2.0).apply(&p),
+            Transform::from_scale(1.0, 1.0, 2.0).apply(&p),
             Point::new(1.0, 2.0, 6.0)
         );
     }
@@ -148,8 +139,7 @@ mod tests {
     fn invert() {
         let v = Vector::new(5.1, -2.3, 9.52);
 
-        let t = Transform::new()
-            .rotate_x(1.5)
+        let t = Transform::from_rotate_x(1.5)
             .scale(1.0, 2.0, 4.3)
             .translate(0.0, 1.0, 2.3)
             .rotate_y(1.0);
@@ -173,13 +163,21 @@ mod tests {
     #[test]
     fn transpose() {
         assert_relative_eq!(
-            Transform::new().translate(2.5, 3.1, -1.0).transpose().data,
+            Transform::from_translate(2.5, 3.1, -1.0).transpose().data,
             Matrix::new([
                 [1.0, 0.0, 0.0, 0.0],
                 [0.0, 1.0, 0.0, 0.0],
                 [0.0, 0.0, 1.0, 0.0],
                 [2.5, 3.1, -1.0, 1.0]
             ])
+        );
+    }
+
+    #[test]
+    fn from_rotate_x() {
+        assert_relative_eq!(
+            Transform::from_rotate_x(0.95).data,
+            Matrix::rotate_x(0.95)
         );
     }
 
@@ -194,12 +192,28 @@ mod tests {
     }
 
     #[test]
+    fn from_rotate_y() {
+        assert_relative_eq!(
+            Transform::from_rotate_y(FRAC_PI_3).data,
+            Matrix::rotate_y(FRAC_PI_3)
+        );
+    }
+
+    #[test]
     fn rotate_y() {
         assert_relative_eq!(
             Transform::new()
                 .rotate_y(FRAC_PI_2)
                 .apply(&Point::new(0.0, 0.0, 1.0)),
             Point::new(1.0, 0.0, 0.0)
+        );
+    }
+
+    #[test]
+    fn from_rotate_z() {
+        assert_relative_eq!(
+            Transform::from_rotate_z(2.15).data,
+            Matrix::rotate_z(2.15)
         );
     }
 
@@ -214,6 +228,14 @@ mod tests {
     }
 
     #[test]
+    fn from_scale() {
+        assert_relative_eq!(
+            Transform::from_scale(1.0, 2.5, 0.5).data,
+            Matrix::scale(1.0, 2.5, 0.5)
+        );
+    }
+
+    #[test]
     fn scale() {
         assert_relative_eq!(
             Transform::new()
@@ -224,12 +246,28 @@ mod tests {
     }
 
     #[test]
+    fn from_shear() {
+        assert_relative_eq!(
+            Transform::from_shear(1.0, 2.0, 1.0, 3.0, 2.0, 0.5).data,
+            Matrix::shear(1.0, 2.0, 1.0, 3.0, 2.0, 0.5)
+        );
+    }
+
+    #[test]
     fn shear() {
         assert_relative_eq!(
             Transform::new()
                 .shear(1.0, 2.0, 0.0, 1.0, 1.0, 0.0)
                 .apply(&Point::new(1.0, 1.0, 1.0)),
             Point::new(4.0, 2.0, 2.0)
+        );
+    }
+
+    #[test]
+    fn from_translate() {
+        assert_relative_eq!(
+            Transform::from_translate(0.0, -1.5, 2.0).data,
+            Matrix::translate(0.0, -1.5, 2.0)
         );
     }
 
@@ -246,8 +284,7 @@ mod tests {
     #[test]
     fn chaining_transforms() {
         assert_relative_eq!(
-            Transform::new()
-                .rotate_y(FRAC_PI_2)
+            Transform::from_rotate_y(FRAC_PI_2)
                 .translate(1.0, 1.0, 1.0)
                 .scale(2.5, 2.5, 2.5)
                 .translate(-2.0, 3.0, 9.5)
@@ -258,9 +295,9 @@ mod tests {
 
     #[test]
     fn approx() {
-        let t1 = Transform::new().translate(1.0, 2.5, 0.9);
-        let t2 = Transform::new().translate(1.0, 2.5, 0.9);
-        let t3 = Transform::new().rotate_x(1.8);
+        let t1 = Transform::from_translate(1.0, 2.5, 0.9);
+        let t2 = Transform::from_translate(1.0, 2.5, 0.9);
+        let t3 = Transform::from_rotate_x(1.8);
 
         assert_abs_diff_eq!(t1, t2);
         assert_abs_diff_ne!(t1, t3);

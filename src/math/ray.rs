@@ -61,12 +61,12 @@ mod tests {
         let r = Ray::new(Point::new(1.0, 2.0, 3.0), v);
 
         assert_relative_eq!(
-            Transform::new().translate(3.0, 4.0, 5.0).apply(&r),
+            Transform::from_translate(3.0, 4.0, 5.0).apply(&r),
             Ray::new(Point::new(4.0, 6.0, 8.0), v)
         );
 
         assert_relative_eq!(
-            Transform::new().scale(2.0, 3.0, 4.0).apply(&r),
+            Transform::from_scale(2.0, 3.0, 4.0).apply(&r),
             Ray::new(Point::new(2.0, 6.0, 12.0), Vector::new(0.0, 3.0, 0.0))
         );
     }
