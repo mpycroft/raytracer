@@ -3,6 +3,7 @@ use std::ops::Mul;
 use derive_more::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign,
 };
+use paste::paste;
 
 /// An Angle represents a geometric angle, it is simply a wrapper around a value
 /// in radians but by using it rather than raw f64's we get some safety between
@@ -12,6 +13,28 @@ use derive_more::{
 #[derive(Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign)]
 pub struct Angle {
     radians: f64,
+}
+
+/// Add both trigonometric functions (sin, etc.) that operate on an Angle and
+/// return a raw f64 ratio and inverse (asin, etc.) functions that work on a
+/// ratio and return an Angle.
+macro_rules! add_trigonometric_fns {
+    (@impl $func:ident, $inv_func:ident) => {
+        pub fn $func(&self) -> f64 {
+            self.radians.$func()
+        }
+
+        pub fn $inv_func(ratio: f64) -> Angle {
+            Angle::from_radians(ratio.$inv_func())
+        }
+    };
+    ($($op:ident),+) => {
+        $(
+            paste! {
+                add_trigonometric_fns!(@impl $op, [<a $op>]);
+            }
+        )+
+    };
 }
 
 impl Angle {
@@ -29,6 +52,16 @@ impl Angle {
 
     pub fn to_degrees(self) -> f64 {
         self.radians.to_degrees()
+    }
+
+    add_trigonometric_fns!(sin, cos, tan);
+
+    pub fn sin_cos(&self) -> (f64, f64) {
+        self.radians.sin_cos()
+    }
+
+    pub fn atan2(y: f64, x: f64) -> Angle {
+        Angle::from_radians(y.atan2(x))
     }
 }
 
@@ -74,6 +107,71 @@ mod tests {
     #[test]
     fn to_degrees() {
         assert_float_relative_eq!(Angle::from_degrees(25.0).to_degrees(), 25.0);
+    }
+
+    #[test]
+    fn sin() {
+        assert_float_relative_eq!(
+            Angle::from_radians(0.851).sin(),
+            0.851f64.sin()
+        );
+    }
+
+    #[test]
+    fn cos() {
+        assert_float_relative_eq!(
+            Angle::from_radians(2.41).cos(),
+            2.41f64.cos()
+        );
+    }
+
+    #[test]
+    fn tan() {
+        assert_float_relative_eq!(
+            Angle::from_radians(FRAC_PI_3).tan(),
+            FRAC_PI_3.tan()
+        );
+    }
+
+    #[test]
+    fn sin_cos() {
+        let (s1, c1) = Angle::from_degrees(43.1).sin_cos();
+        let (s2, c2) = 43.1f64.to_radians().sin_cos();
+
+        assert_float_relative_eq!(s1, s2);
+        assert_float_relative_eq!(c1, c2);
+    }
+
+    #[test]
+    fn asin() {
+        assert_relative_eq!(
+            Angle::asin(0.3),
+            Angle::from_radians(0.3f64.asin())
+        );
+    }
+
+    #[test]
+    fn acos() {
+        assert_relative_eq!(
+            Angle::acos(0.915),
+            Angle::from_radians(0.915f64.acos())
+        );
+    }
+
+    #[test]
+    fn atan() {
+        assert_relative_eq!(
+            Angle::atan(0.72),
+            Angle::from_radians(0.72f64.atan())
+        );
+    }
+
+    #[test]
+    fn atan2() {
+        assert_relative_eq!(
+            Angle::atan2(2.0, -1.5),
+            Angle::from_radians(2.0f64.atan2(-1.5))
+        );
     }
 
     #[test]
