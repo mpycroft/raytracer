@@ -4,6 +4,7 @@
 #[macro_use]
 pub mod approx;
 
+mod angle;
 mod matrix;
 mod point;
 mod ray;
