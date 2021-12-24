@@ -1,0 +1,127 @@
+use crate::{
+    math::{Point, Transform},
+    Colour, Material, PointLight, Sphere,
+};
+
+/// World represents all the objects and light sources in a given scene that we
+/// are rendering.
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
+pub struct World {
+    pub objects: Vec<Sphere>,
+    pub lights: Vec<PointLight>,
+}
+
+impl World {
+    pub fn new() -> Self {
+        World { objects: Vec::new(), lights: Vec::new() }
+    }
+
+    pub fn push_object(&mut self, object: Sphere) {
+        self.objects.push(object);
+    }
+
+    pub fn push_light(&mut self, light: PointLight) {
+        self.lights.push(light);
+    }
+}
+
+impl Default for World {
+    fn default() -> Self {
+        let mut world = World::new();
+
+        world.push_object(Sphere::new(
+            Transform::new(),
+            Material::new(Colour::new(0.8, 1.0, 0.6), 0.0, 0.7, 0.2, 0.0),
+        ));
+        world.push_object(Sphere::new(
+            Transform::from_scale(0.5, 0.5, 0.5),
+            Material::default(),
+        ));
+
+        world.push_light(PointLight::new(
+            Colour::white(),
+            Point::new(-10.0, 10.0, -10.0),
+        ));
+
+        world
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use approx::*;
+
+    use super::*;
+
+    #[test]
+    fn new() {
+        let w = World::new();
+
+        assert_eq!(w.objects.len(), 0);
+        assert_eq!(w.lights.len(), 0);
+    }
+
+    #[test]
+    fn push_object() {
+        let mut w = World::new();
+
+        let s = Sphere::default();
+        w.push_object(s);
+
+        assert_eq!(w.objects.len(), 1);
+        assert_relative_eq!(w.objects[0], s);
+
+        let s = Sphere::new(
+            Transform::from_translate(-1.0, 2.3, 4.0),
+            Material::default(),
+        );
+        w.push_object(s);
+
+        assert_eq!(w.objects.len(), 2);
+        assert_relative_eq!(w.objects[1], s);
+    }
+
+    #[test]
+    fn push_light() {
+        let mut w = World::new();
+
+        let l = PointLight::new(Colour::red(), Point::origin());
+        w.push_light(l);
+
+        assert_eq!(w.lights.len(), 1);
+        assert_relative_eq!(w.lights[0], l);
+
+        let l = PointLight::new(Colour::green(), Point::new(1.0, 2.0, 3.0));
+        w.push_light(l);
+
+        assert_eq!(w.lights.len(), 2);
+        assert_relative_eq!(w.lights[1], l);
+    }
+
+    #[test]
+    fn default() {
+        let w = World::default();
+
+        assert_eq!(w.objects.len(), 2);
+        assert_relative_eq!(
+            w.objects[0],
+            Sphere::new(
+                Transform::new(),
+                Material::new(Colour::new(0.8, 1.0, 0.6), 0.0, 0.7, 0.2, 0.0)
+            )
+        );
+        assert_relative_eq!(
+            w.objects[1],
+            Sphere::new(
+                Transform::from_scale(0.5, 0.5, 0.5),
+                Material::default()
+            )
+        );
+
+        assert_eq!(w.lights.len(), 1);
+        assert_relative_eq!(
+            w.lights[0],
+            PointLight::new(Colour::white(), Point::new(-10.0, 10.0, -10.0))
+        );
+    }
+}

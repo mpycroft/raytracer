@@ -12,6 +12,7 @@ mod intersect;
 mod material;
 mod point_light;
 mod sphere;
+mod world;
 
 pub use canvas::Canvas;
 pub use colour::Colour;
