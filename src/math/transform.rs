@@ -2,7 +2,7 @@ use std::ops::Mul;
 
 use paste::paste;
 
-use super::Matrix;
+use super::{Angle, Matrix};
 
 /// The Transformable trait describes how to apply a Transform to any given
 /// object, implementing this allows us to .apply() a Transform to an object via
@@ -83,9 +83,9 @@ impl Transform {
         Self::from_matrix(self.data.transpose())
     }
 
-    add_transform_fns!(rotate_x(radians: f64));
-    add_transform_fns!(rotate_y(radians: f64));
-    add_transform_fns!(rotate_z(radians: f64));
+    add_transform_fns!(rotate_x(angle: Angle));
+    add_transform_fns!(rotate_y(angle: Angle));
+    add_transform_fns!(rotate_z(angle: Angle));
 
     add_transform_fns!(scale(x: f64, y: f64, z: f64));
 
@@ -139,10 +139,10 @@ mod tests {
     fn invert() {
         let v = Vector::new(5.1, -2.3, 9.52);
 
-        let t = Transform::from_rotate_x(1.5)
+        let t = Transform::from_rotate_x(Angle::from_radians(1.5))
             .scale(1.0, 2.0, 4.3)
             .translate(0.0, 1.0, 2.3)
-            .rotate_y(1.0);
+            .rotate_y(Angle::from_radians(1.0));
 
         assert_relative_eq!(t.invert().apply(&t.apply(&v)), v);
     }
@@ -176,8 +176,8 @@ mod tests {
     #[test]
     fn from_rotate_x() {
         assert_relative_eq!(
-            Transform::from_rotate_x(0.95).data,
-            Matrix::rotate_x(0.95)
+            Transform::from_rotate_x(Angle::from_radians(0.95)).data,
+            Matrix::rotate_x(Angle::from_radians(0.95))
         );
     }
 
@@ -185,7 +185,7 @@ mod tests {
     fn rotate_x() {
         assert_relative_eq!(
             Transform::new()
-                .rotate_x(FRAC_PI_2)
+                .rotate_x(Angle::from_degrees(90.0))
                 .apply(&Point::new(0.0, 1.0, 0.0)),
             Point::new(0.0, 0.0, 1.0)
         );
@@ -194,8 +194,8 @@ mod tests {
     #[test]
     fn from_rotate_y() {
         assert_relative_eq!(
-            Transform::from_rotate_y(FRAC_PI_3).data,
-            Matrix::rotate_y(FRAC_PI_3)
+            Transform::from_rotate_y(Angle::from_radians(FRAC_PI_3)).data,
+            Matrix::rotate_y(Angle::from_degrees(60.0))
         );
     }
 
@@ -203,7 +203,7 @@ mod tests {
     fn rotate_y() {
         assert_relative_eq!(
             Transform::new()
-                .rotate_y(FRAC_PI_2)
+                .rotate_y(Angle::from_radians(FRAC_PI_2))
                 .apply(&Point::new(0.0, 0.0, 1.0)),
             Point::new(1.0, 0.0, 0.0)
         );
@@ -212,8 +212,8 @@ mod tests {
     #[test]
     fn from_rotate_z() {
         assert_relative_eq!(
-            Transform::from_rotate_z(2.15).data,
-            Matrix::rotate_z(2.15)
+            Transform::from_rotate_z(Angle::from_radians(2.15)).data,
+            Matrix::rotate_z(Angle::from_radians(2.15))
         );
     }
 
@@ -221,7 +221,7 @@ mod tests {
     fn rotate_z() {
         assert_relative_eq!(
             Transform::new()
-                .rotate_z(FRAC_PI_2)
+                .rotate_z(Angle::from_radians(FRAC_PI_2))
                 .apply(&Point::new(1.0, 0.0, 0.0)),
             Point::new(0.0, 1.0, 0.0)
         );
@@ -284,7 +284,7 @@ mod tests {
     #[test]
     fn chaining_transforms() {
         assert_relative_eq!(
-            Transform::from_rotate_y(FRAC_PI_2)
+            Transform::from_rotate_y(Angle::from_radians(FRAC_PI_2))
                 .translate(1.0, 1.0, 1.0)
                 .scale(2.5, 2.5, 2.5)
                 .translate(-2.0, 3.0, 9.5)
@@ -297,7 +297,7 @@ mod tests {
     fn approx() {
         let t1 = Transform::from_translate(1.0, 2.5, 0.9);
         let t2 = Transform::from_translate(1.0, 2.5, 0.9);
-        let t3 = Transform::from_rotate_x(1.8);
+        let t3 = Transform::from_rotate_x(Angle::from_radians(1.8));
 
         assert_abs_diff_eq!(t1, t2);
         assert_abs_diff_ne!(t1, t3);

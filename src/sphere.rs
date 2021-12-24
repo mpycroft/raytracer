@@ -61,12 +61,12 @@ add_approx_traits!(Sphere { transform });
 
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::{FRAC_1_SQRT_2, PI};
+    use std::f64::consts::FRAC_1_SQRT_2;
 
     use approx::*;
 
     use super::*;
-    use crate::Colour;
+    use crate::{math::Angle, Colour};
 
     #[test]
     fn new() {
@@ -178,7 +178,8 @@ mod tests {
 
         assert_relative_eq!(
             Sphere::new(
-                Transform::from_rotate_z(PI / 5.0).scale(1.0, 0.5, 1.0),
+                Transform::from_rotate_z(Angle::from_degrees(36.0))
+                    .scale(1.0, 0.5, 1.0),
                 Material::default()
             )
             .normal_at(&Point::new(0.0, 0.577_35, -0.577_35)),
@@ -189,11 +190,11 @@ mod tests {
     #[test]
     fn approx() {
         let s1 = Sphere::new(
-            Transform::from_rotate_y(1.5),
+            Transform::from_rotate_y(Angle::from_radians(1.5)),
             Material::new(Colour::new(0.7, 0.7, 0.1), 0.3, 0.45, 0.07, 157.8),
         );
         let s2 = Sphere::new(
-            Transform::from_rotate_y(1.5),
+            Transform::from_rotate_y(Angle::from_radians(1.5)),
             Material::new(Colour::new(0.7, 0.7, 0.1), 0.3, 0.45, 0.07, 157.8),
         );
         let s3 = Sphere::new(

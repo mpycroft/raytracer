@@ -1,7 +1,7 @@
 use std::fs::write;
 
 use raytracer::{
-    math::{Point, Ray, Transform},
+    math::{Angle, Point, Ray, Transform},
     Canvas, Colour, Intersectable, Material, PointLight, Sphere,
 };
 
@@ -19,7 +19,7 @@ fn main() {
 
     let sphere = Sphere::new(
         Transform::from_scale(0.5, 1.0, 1.0)
-            .rotate_z(0.7)
+            .rotate_z(Angle::from_radians(0.7))
             .shear(1.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         Material::new(Colour::new(1.0, 0.2, 1.0), 0.1, 0.9, 0.9, 200.0),
     );

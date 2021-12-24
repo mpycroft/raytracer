@@ -6,7 +6,7 @@ use derive_more::Constructor;
 
 use super::{
     approx::{FLOAT_EPSILON, FLOAT_ULPS},
-    Point, Vector,
+    Angle, Point, Vector,
 };
 
 /// A Matrix is a square matrix of size T, stored in row major order. Due to the
@@ -138,8 +138,8 @@ impl Matrix<4> {
         Ok(matrix)
     }
 
-    pub fn rotate_x(radians: f64) -> Self {
-        let (sin, cos) = radians.sin_cos();
+    pub fn rotate_x(angle: Angle) -> Self {
+        let (sin, cos) = angle.sin_cos();
 
         Self::new([
             [1.0, 0.0, 0.0, 0.0],
@@ -149,8 +149,8 @@ impl Matrix<4> {
         ])
     }
 
-    pub fn rotate_y(radians: f64) -> Self {
-        let (sin, cos) = radians.sin_cos();
+    pub fn rotate_y(angle: Angle) -> Self {
+        let (sin, cos) = angle.sin_cos();
 
         Self::new([
             [cos, 0.0, sin, 0.0],
@@ -160,8 +160,8 @@ impl Matrix<4> {
         ])
     }
 
-    pub fn rotate_z(radians: f64) -> Self {
-        let (sin, cos) = radians.sin_cos();
+    pub fn rotate_z(angle: Angle) -> Self {
+        let (sin, cos) = angle.sin_cos();
 
         Self::new([
             [cos, -sin, 0.0, 0.0],
@@ -558,7 +558,7 @@ mod tests {
     #[test]
     fn rotate_x() {
         let p = Point::new(0.0, 1.0, 0.0);
-        let m = Matrix::rotate_x(FRAC_PI_4);
+        let m = Matrix::rotate_x(Angle::from_radians(FRAC_PI_4));
 
         assert_relative_eq!(
             m * p,
@@ -566,7 +566,7 @@ mod tests {
         );
 
         assert_relative_eq!(
-            Matrix::rotate_x(FRAC_PI_2) * Vector::y_axis(),
+            Matrix::rotate_x(Angle::from_radians(FRAC_PI_2)) * Vector::y_axis(),
             Vector::z_axis()
         );
 
@@ -579,7 +579,7 @@ mod tests {
     #[test]
     fn rotate_y() {
         let p = Point::new(0.0, 0.0, 1.0);
-        let m = Matrix::rotate_y(FRAC_PI_4);
+        let m = Matrix::rotate_y(Angle::from_degrees(45.0));
 
         assert_relative_eq!(
             m * p,
@@ -587,7 +587,7 @@ mod tests {
         );
 
         assert_relative_eq!(
-            Matrix::rotate_y(FRAC_PI_2) * Vector::z_axis(),
+            Matrix::rotate_y(Angle::from_radians(FRAC_PI_2)) * Vector::z_axis(),
             Vector::x_axis()
         );
 
@@ -600,7 +600,7 @@ mod tests {
     #[test]
     fn rotate_z() {
         let p = Point::new(0.0, 1.0, 0.0);
-        let m = Matrix::rotate_z(FRAC_PI_4);
+        let m = Matrix::rotate_z(Angle::from_radians(FRAC_PI_4));
 
         assert_relative_eq!(
             m * p,
@@ -608,7 +608,7 @@ mod tests {
         );
 
         assert_relative_eq!(
-            Matrix::rotate_z(FRAC_PI_2) * Vector::y_axis(),
+            Matrix::rotate_z(Angle::from_degrees(90.0)) * Vector::y_axis(),
             -Vector::x_axis()
         );
 
@@ -721,7 +721,7 @@ mod tests {
         let point = Point::new(1.0, 0.0, 1.0);
         let final_point = Point::new(15.0, 0.0, 7.0);
 
-        let rotate = Matrix::rotate_x(FRAC_PI_2);
+        let rotate = Matrix::rotate_x(Angle::from_radians(FRAC_PI_2));
         let scale = Matrix::scale(5.0, 5.0, 5.0);
         let translate = Matrix::translate(10.0, 5.0, 7.0);
 

@@ -11,6 +11,7 @@ mod ray;
 mod transform;
 mod vector;
 
+pub use angle::Angle;
 use matrix::Matrix;
 pub use point::Point;
 pub use ray::Ray;
