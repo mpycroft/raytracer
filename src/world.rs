@@ -1,6 +1,7 @@
 use crate::{
-    math::{Point, Transform},
-    Colour, Material, PointLight, Sphere,
+    intersect::IntersectionList,
+    math::{Point, Ray, Transform},
+    Colour, Intersectable, Material, PointLight, Sphere,
 };
 
 /// World represents all the objects and light sources in a given scene that we
@@ -22,6 +23,25 @@ impl World {
 
     pub fn push_light(&mut self, light: PointLight) {
         self.lights.push(light);
+    }
+}
+
+impl Intersectable for World {
+    fn intersect(&self, ray: &Ray) -> Option<IntersectionList> {
+        let mut list = IntersectionList::new();
+
+        for obj in &self.objects {
+            if let Some(mut new_list) = obj.intersect(ray) {
+                list.append(&mut *new_list);
+            }
+        }
+
+        if list.is_empty() {
+            None
+        } else {
+            list.sort_by(|a, b| a.t.partial_cmp(&b.t).unwrap());
+            Some(list)
+        }
     }
 }
 
@@ -52,6 +72,7 @@ mod tests {
     use approx::*;
 
     use super::*;
+    use crate::math::Vector;
 
     #[test]
     fn new() {
@@ -96,6 +117,22 @@ mod tests {
 
         assert_eq!(w.lights.len(), 2);
         assert_relative_eq!(w.lights[1], l);
+    }
+
+    #[test]
+    fn intersect() {
+        let w = World::default();
+
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
+
+        let list = w.intersect(&r);
+        assert!(list.is_some());
+
+        let list = list.unwrap();
+        assert_float_relative_eq!(list[0].t, 4.0);
+        assert_float_relative_eq!(list[1].t, 4.5);
+        assert_float_relative_eq!(list[2].t, 5.5);
+        assert_float_relative_eq!(list[3].t, 6.0);
     }
 
     #[test]
