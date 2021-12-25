@@ -39,6 +39,18 @@ impl World {
 
         colour
     }
+
+    pub fn colour_at(&self, ray: &Ray) -> Colour {
+        if let Some(intersections) = self.intersect(ray) {
+            if let Some(hit) = intersections.hit() {
+                let computations = hit.prepare_computations(ray);
+
+                return self.shade_hit(&computations);
+            }
+        }
+
+        Colour::black()
+    }
 }
 
 impl Intersectable for World {
@@ -160,6 +172,28 @@ mod tests {
             w.shade_hit(&c),
             Colour::new(0.904_984, 0.904_984, 0.904_984)
         );
+    }
+
+    #[test]
+    fn colour_at() {
+        let mut w = World::default();
+        let mut r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::y_axis());
+
+        assert_relative_eq!(w.colour_at(&r), Colour::black());
+
+        r.direction = Vector::z_axis();
+
+        assert_relative_eq!(
+            w.colour_at(&r),
+            Colour::new(0.380_661, 0.475_826, 0.285_496)
+        );
+
+        w.objects[0].material.ambient = 1.0;
+        w.objects[1].material.ambient = 1.0;
+
+        let r = Ray::new(Point::new(0.0, 0.0, 0.75), -Vector::z_axis());
+
+        assert_relative_eq!(w.colour_at(&r), w.objects[1].material.colour);
     }
 
     #[test]
