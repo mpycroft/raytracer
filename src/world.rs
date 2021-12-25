@@ -1,5 +1,5 @@
 use crate::{
-    intersect::IntersectionList,
+    intersect::{Computations, IntersectionList},
     math::{Point, Ray, Transform},
     Colour, Intersectable, Material, PointLight, Sphere,
 };
@@ -23,6 +23,21 @@ impl World {
 
     pub fn push_light(&mut self, light: PointLight) {
         self.lights.push(light);
+    }
+
+    pub fn shade_hit(&self, computations: &Computations) -> Colour {
+        let mut colour = Colour::black();
+
+        for light in &self.lights {
+            colour += computations.object.material.lighting(
+                light,
+                &computations.point,
+                &computations.eye,
+                &computations.normal,
+            );
+        }
+
+        colour
     }
 }
 
@@ -51,7 +66,7 @@ impl Default for World {
 
         world.push_object(Sphere::new(
             Transform::new(),
-            Material::new(Colour::new(0.8, 1.0, 0.6), 0.0, 0.7, 0.2, 0.0),
+            Material::new(Colour::new(0.8, 1.0, 0.6), 0.1, 0.7, 0.2, 200.0),
         ));
         world.push_object(Sphere::new(
             Transform::from_scale(0.5, 0.5, 0.5),
@@ -72,7 +87,7 @@ mod tests {
     use approx::*;
 
     use super::*;
-    use crate::math::Vector;
+    use crate::{intersect::Intersection, math::Vector};
 
     #[test]
     fn new() {
@@ -117,6 +132,34 @@ mod tests {
 
         assert_eq!(w.lights.len(), 2);
         assert_relative_eq!(w.lights[1], l);
+    }
+
+    #[test]
+    fn shade_hit() {
+        let mut w = World::default();
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
+        let i = Intersection::new(&w.objects[0], 4.0);
+        let c = i.prepare_computations(&r);
+
+        assert_relative_eq!(
+            w.shade_hit(&c),
+            Colour::new(0.380_661, 0.475_826, 0.285_496)
+        );
+
+        w.lights.clear();
+        w.push_light(PointLight::new(
+            Colour::white(),
+            Point::new(0.0, 0.25, 0.0),
+        ));
+
+        let r = Ray::new(Point::origin(), Vector::z_axis());
+        let i = Intersection::new(&w.objects[1], 0.5);
+        let c = i.prepare_computations(&r);
+
+        assert_relative_eq!(
+            w.shade_hit(&c),
+            Colour::new(0.904_984, 0.904_984, 0.904_984)
+        );
     }
 
     #[test]
