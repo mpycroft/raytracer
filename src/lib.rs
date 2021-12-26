@@ -6,6 +6,7 @@
 #[macro_use]
 pub mod math;
 
+mod camera;
 mod canvas;
 mod colour;
 mod intersect;
