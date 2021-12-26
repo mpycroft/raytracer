@@ -1,4 +1,4 @@
-use crate::math::Transform;
+use crate::math::{Point, Ray, Transform};
 
 /// The Camera struct holds the data representing our camera view into the
 /// scene.
@@ -39,15 +39,31 @@ impl Camera {
             half_height,
         }
     }
+
+    pub fn ray_for_pixel(&self, x: usize, y: usize) -> Ray {
+        let x_offset = (x as f64 + 0.5) * self.pixel_size;
+        let y_offset = (y as f64 + 0.5) * self.pixel_size;
+
+        let world_x = self.half_width - x_offset;
+        let world_y = self.half_height - y_offset;
+
+        let inverse = self.transform.invert();
+        let pixel = inverse.apply(&Point::new(world_x, world_y, -1.0));
+        let origin = inverse.apply(&Point::origin());
+        let direction = (pixel - origin).normalise();
+
+        Ray::new(origin, direction)
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::FRAC_PI_2;
+    use std::f64::consts::{FRAC_PI_2, FRAC_PI_4, SQRT_2};
 
     use approx::*;
 
     use super::*;
+    use crate::math::{Angle, Vector};
 
     #[test]
     fn new() {
@@ -64,5 +80,34 @@ mod tests {
 
         let c = Camera::new(125, 200, FRAC_PI_2, Transform::new());
         assert_float_relative_eq!(c.pixel_size, 0.01);
+    }
+
+    #[test]
+    fn ray_for_pixel() {
+        let mut c = Camera::new(201, 101, FRAC_PI_2, Transform::new());
+
+        assert_relative_eq!(
+            c.ray_for_pixel(100, 50),
+            Ray::new(Point::origin(), -Vector::z_axis())
+        );
+
+        assert_relative_eq!(
+            c.ray_for_pixel(0, 0),
+            Ray::new(
+                Point::origin(),
+                Vector::new(0.665_186, 0.332_593, -0.668_512)
+            )
+        );
+
+        c.transform = Transform::from_translate(0.0, -2.0, 5.0)
+            .rotate_y(Angle::from_radians(FRAC_PI_4));
+
+        assert_relative_eq!(
+            c.ray_for_pixel(100, 50),
+            Ray::new(
+                Point::new(0.0, 2.0, -5.0),
+                Vector::new(SQRT_2 / 2.0, 0.0, -SQRT_2 / 2.0)
+            )
+        );
     }
 }
