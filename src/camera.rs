@@ -1,4 +1,8 @@
-use crate::math::{Point, Ray, Transform};
+use crate::{
+    math::{Point, Ray, Transform},
+    world::World,
+    Canvas,
+};
 
 /// The Camera struct holds the data representing our camera view into the
 /// scene.
@@ -54,6 +58,21 @@ impl Camera {
 
         Ray::new(origin, direction)
     }
+
+    pub fn render(&self, world: &World) -> Canvas {
+        let mut image = Canvas::new(self.horizontal, self.vertical);
+
+        for y in 0..(self.vertical - 1) {
+            for x in 0..(self.horizontal - 1) {
+                let ray = self.ray_for_pixel(x, y);
+                let colour = world.colour_at(&ray);
+
+                image.write_pixel(x, y, colour);
+            }
+        }
+
+        image
+    }
 }
 
 #[cfg(test)]
@@ -63,7 +82,10 @@ mod tests {
     use approx::*;
 
     use super::*;
-    use crate::math::{Angle, Vector};
+    use crate::{
+        math::{Angle, Vector},
+        Colour,
+    };
 
     #[test]
     fn new() {
@@ -108,6 +130,28 @@ mod tests {
                 Point::new(0.0, 2.0, -5.0),
                 Vector::new(SQRT_2 / 2.0, 0.0, -SQRT_2 / 2.0)
             )
+        );
+    }
+
+    #[test]
+    fn render() {
+        let w = World::default();
+        let c = Camera::new(
+            11,
+            11,
+            FRAC_PI_2,
+            Transform::view_transform(
+                &Point::new(0.0, 0.0, -5.0),
+                &Point::origin(),
+                &Vector::y_axis(),
+            ),
+        );
+
+        let i = c.render(&w);
+
+        assert_relative_eq!(
+            i.get_pixel(5, 5),
+            Colour::new(0.380_661, 0.475_826, 0.285_496)
         );
     }
 }

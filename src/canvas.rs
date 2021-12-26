@@ -15,6 +15,10 @@ impl Canvas {
         Self { width, height, pixels: vec![Colour::default(); width * height] }
     }
 
+    pub fn get_pixel(&self, x: usize, y: usize) -> Colour {
+        self.pixels[y * self.width + x]
+    }
+
     pub fn write_pixel(&mut self, x: usize, y: usize, colour: Colour) {
         self.pixels[y * self.width + x] = colour;
     }
@@ -52,6 +56,27 @@ mod tests {
         for p in c.pixels {
             assert_relative_eq!(p, Colour::black());
         }
+    }
+
+    #[test]
+    fn get_pixel() {
+        let width = 10;
+        let height = 10;
+        let mut c = Canvas::new(width, height);
+
+        for x in 0..width {
+            for y in 0..height {
+                c.write_pixel(
+                    x,
+                    y,
+                    Colour::new(x as f64 * 0.1, y as f64 * 0.1, 0.0),
+                );
+            }
+        }
+
+        assert_relative_eq!(c.get_pixel(0, 0), Colour::black());
+        assert_relative_eq!(c.get_pixel(3, 2), Colour::new(0.3, 0.2, 0.0));
+        assert_relative_eq!(c.get_pixel(9, 9), Colour::new(0.9, 0.9, 0.0));
     }
 
     #[test]
