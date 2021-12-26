@@ -23,12 +23,17 @@ impl Material {
         point: &Point,
         eye: &Vector,
         normal: &Vector,
+        in_shadow: bool,
     ) -> Colour {
         let effective_colour = self.colour * light.intensity;
 
-        let light_vector = (light.position - *point).normalise();
-
         let ambient = effective_colour * self.ambient;
+
+        if in_shadow {
+            return ambient;
+        }
+
+        let light_vector = (light.position - *point).normalise();
 
         let light_dot_normal = light_vector.dot(normal);
         let (diffuse, specular) = if light_dot_normal < 0.0 {
@@ -102,7 +107,7 @@ mod tests {
         let neg_z = -Vector::z_axis();
 
         assert_relative_eq!(
-            m.lighting(&behind, &p, &neg_z, &neg_z,),
+            m.lighting(&behind, &p, &neg_z, &neg_z, false),
             Colour::new(1.9, 1.9, 1.9)
         );
 
@@ -111,7 +116,8 @@ mod tests {
                 &behind,
                 &p,
                 &Vector::new(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2),
-                &neg_z
+                &neg_z,
+                false
             ),
             Colour::white()
         );
@@ -119,7 +125,7 @@ mod tests {
         let above_left = PointLight::new(c, Point::new(0.0, 10.0, -10.0));
 
         assert_relative_eq!(
-            m.lighting(&above_left, &p, &neg_z, &neg_z),
+            m.lighting(&above_left, &p, &neg_z, &neg_z, false),
             Colour::new(0.736_396, 0.736_396, 0.736_396)
         );
 
@@ -128,7 +134,8 @@ mod tests {
                 &above_left,
                 &p,
                 &Vector::new(0.0, -FRAC_1_SQRT_2, -FRAC_1_SQRT_2),
-                &neg_z
+                &neg_z,
+                false
             ),
             Colour::new(1.636_396, 1.636_396, 1.636_396)
         );
@@ -138,8 +145,14 @@ mod tests {
                 &PointLight::new(c, Point::new(0.0, 0.0, 10.0)),
                 &p,
                 &neg_z,
-                &neg_z
+                &neg_z,
+                false
             ),
+            Colour::new(0.1, 0.1, 0.1)
+        );
+
+        assert_relative_eq!(
+            m.lighting(&behind, &p, &neg_z, &neg_z, true),
             Colour::new(0.1, 0.1, 0.1)
         );
     }

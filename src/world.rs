@@ -34,6 +34,7 @@ impl World {
                 &computations.point,
                 &computations.eye,
                 &computations.normal,
+                false,
             );
         }
 
