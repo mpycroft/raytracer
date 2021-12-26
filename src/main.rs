@@ -1,57 +1,69 @@
-use std::fs::write;
+use std::{
+    f64::consts::{FRAC_PI_2, FRAC_PI_3, FRAC_PI_4},
+    fs::write,
+};
 
 use raytracer::{
-    math::{Angle, Point, Ray, Transform},
-    Canvas, Colour, Intersectable, Material, PointLight, Sphere,
+    math::{Angle, Point, Transform, Vector},
+    Camera, Colour, Material, PointLight, Sphere, World,
 };
 
 fn main() {
-    let canvas_pixels = 250;
-    let mut canvas = Canvas::new(canvas_pixels, canvas_pixels);
+    let mut world = World::new();
 
-    let origin = Point::new(0.0, 0.0, -5.0);
+    let floor_material =
+        Material::new(Colour::new(1.0, 0.9, 0.9), 0.1, 0.9, 0.0, 200.0);
 
-    let wall_size = 7.0;
-    let wall_z = 10.0;
+    let mut floor_transform = Transform::from_scale(10.0, 0.01, 10.0);
+    world.push_object(Sphere::new(floor_transform, floor_material));
 
-    let pixel_size = wall_size / canvas_pixels as f64;
-    let half = wall_size / 2.0;
+    let mut wall_transform =
+        floor_transform.rotate_x(Angle::from_radians(FRAC_PI_2));
 
-    let sphere = Sphere::new(
-        Transform::from_scale(0.5, 1.0, 1.0)
-            .rotate_z(Angle::from_radians(0.7))
-            .shear(1.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        Material::new(Colour::new(1.0, 0.2, 1.0), 0.1, 0.9, 0.9, 200.0),
+    world.push_object(Sphere::new(
+        wall_transform
+            .clone()
+            .rotate_y(Angle::from_radians(-FRAC_PI_4))
+            .translate(0.0, 0.0, 5.0),
+        floor_material,
+    ));
+    world.push_object(Sphere::new(
+        wall_transform
+            .rotate_y(Angle::from_radians(FRAC_PI_4))
+            .translate(0.0, 0.0, 5.0),
+        floor_material,
+    ));
+
+    world.push_object(Sphere::new(
+        Transform::from_translate(-0.5, 1.0, 0.5),
+        Material::new(Colour::new(0.1, 1.0, 0.5), 0.1, 0.7, 0.3, 200.0),
+    ));
+    world.push_object(Sphere::new(
+        Transform::from_scale(0.5, 0.5, 0.5).translate(1.5, 0.5, -0.5),
+        Material::new(Colour::new(0.5, 1.0, 0.1), 0.1, 0.7, 0.3, 200.0),
+    ));
+    world.push_object(Sphere::new(
+        Transform::from_scale(0.33, 0.33, 0.33).translate(-1.5, 0.33, -0.75),
+        Material::new(Colour::new(1.0, 0.8, 0.1), 0.1, 0.7, 0.3, 200.0),
+    ));
+
+    world.push_light(PointLight::new(
+        Colour::white(),
+        Point::new(-10.0, 10.0, -10.0),
+    ));
+
+    let camera = Camera::new(
+        1000,
+        500,
+        FRAC_PI_3,
+        Transform::view_transform(
+            &Point::new(0.0, 1.5, -5.0),
+            &Point::new(0.0, 1.0, 0.0),
+            &Vector::y_axis(),
+        ),
     );
 
-    let light = PointLight::new(Colour::white(), Point::new(10.0, 10.0, -10.0));
+    let image = camera.render(&world);
 
-    for y in 0..(canvas_pixels - 1) {
-        let world_y = half - pixel_size * y as f64;
-
-        for x in 0..(canvas_pixels - 1) {
-            let world_x = -half + pixel_size * x as f64;
-
-            let position = Point::new(world_x, world_y, wall_z);
-
-            let ray = Ray::new(origin, (position - origin).normalise());
-
-            if let Some(list) = sphere.intersect(&ray) {
-                if let Some(hit) = list.hit() {
-                    let point = ray.position(hit.t);
-                    let normal = hit.object.normal_at(&point);
-                    let eye = -ray.direction;
-
-                    let colour = hit
-                        .object
-                        .material
-                        .lighting(&light, &point, &eye, &normal);
-
-                    canvas.write_pixel(x, y, colour);
-                }
-            }
-        }
-    }
-
-    write("image.ppm", canvas.to_ppm()).unwrap();
+    write("image.ppm", image.to_ppm()).unwrap();
 }
