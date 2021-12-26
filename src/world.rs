@@ -52,6 +52,24 @@ impl World {
 
         Colour::black()
     }
+
+    pub fn is_shadowed(&self, light: &PointLight, point: &Point) -> bool {
+        let v = light.position - *point;
+        let distance = v.magnitude();
+        let direction = v.normalise();
+
+        let ray = Ray::new(*point, direction);
+
+        if let Some(intersections) = self.intersect(&ray) {
+            if let Some(hit) = intersections.hit() {
+                if hit.t < distance {
+                    return true;
+                }
+            }
+        }
+
+        false
+    }
 }
 
 impl Intersectable for World {
@@ -195,6 +213,19 @@ mod tests {
         let r = Ray::new(Point::new(0.0, 0.0, 0.75), -Vector::z_axis());
 
         assert_relative_eq!(w.colour_at(&r), w.objects[1].material.colour);
+    }
+
+    #[test]
+    fn is_shadowed() {
+        let w = World::default();
+
+        assert!(!w.is_shadowed(&w.lights[0], &Point::new(0.0, 10.0, 0.0)));
+
+        assert!(w.is_shadowed(&w.lights[0], &Point::new(10.0, -10.0, 10.0)));
+
+        assert!(!w.is_shadowed(&w.lights[0], &Point::new(-20.0, 20.0, -20.0)));
+
+        assert!(!w.is_shadowed(&w.lights[0], &Point::new(-2.0, 2.0, -2.0)));
     }
 
     #[test]
