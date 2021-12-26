@@ -31,10 +31,10 @@ impl World {
         for light in &self.lights {
             colour += computations.object.material.lighting(
                 light,
-                &computations.point,
+                &computations.over_point,
                 &computations.eye,
                 &computations.normal,
-                false,
+                self.is_shadowed(light, &computations.over_point),
             );
         }
 
@@ -191,6 +191,26 @@ mod tests {
             w.shade_hit(&c),
             Colour::new(0.904_984, 0.904_984, 0.904_984)
         );
+
+        let mut w = World::new();
+
+        w.push_light(PointLight::new(
+            Colour::white(),
+            Point::new(0.0, 0.0, -10.0),
+        ));
+
+        w.push_object(Sphere::default());
+
+        w.push_object(Sphere::new(
+            Transform::from_translate(0.0, 0.0, 10.0),
+            Material::default(),
+        ));
+
+        let r = Ray::new(Point::new(0.0, 0.0, 5.0), Vector::z_axis());
+        let i = Intersection::new(&w.objects[1], 4.0);
+        let c = i.prepare_computations(&r);
+
+        assert_relative_eq!(w.shade_hit(&c), Colour::new(0.1, 0.1, 0.1));
     }
 
     #[test]

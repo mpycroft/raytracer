@@ -3,7 +3,7 @@ use std::ops::{Deref, DerefMut};
 use derive_more::Constructor;
 
 use crate::{
-    math::{Point, Ray, Vector},
+    math::{approx::FLOAT_EPSILON, Point, Ray, Vector},
     Sphere,
 };
 
@@ -35,7 +35,17 @@ impl<'a> Intersection<'a> {
             false
         };
 
-        Computations::new(self.object, self.t, point, eye, normal, inside)
+        let over_point = point + normal * FLOAT_EPSILON;
+
+        Computations::new(
+            self.object,
+            self.t,
+            point,
+            eye,
+            normal,
+            inside,
+            over_point,
+        )
     }
 }
 
@@ -101,6 +111,7 @@ pub struct Computations<'a> {
     pub eye: Vector,
     pub normal: Vector,
     pub inside: bool,
+    pub over_point: Point,
 }
 
 #[cfg(test)]
@@ -108,6 +119,7 @@ mod tests {
     use approx::*;
 
     use super::*;
+    use crate::{math::Transform, Material};
 
     #[test]
     fn intersection_new() {
@@ -143,6 +155,18 @@ mod tests {
         assert_relative_eq!(c.eye, -Vector::z_axis());
         assert_relative_eq!(c.normal, -Vector::z_axis());
         assert!(c.inside);
+
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
+        let s = Sphere::new(
+            Transform::from_translate(0.0, 0.0, 1.0),
+            Material::default(),
+        );
+        let i = Intersection::new(&s, 5.0);
+
+        let c = i.prepare_computations(&r);
+
+        assert!(c.over_point.z < -(FLOAT_EPSILON / 2.0));
+        assert!(c.point.z > c.over_point.z);
     }
 
     #[test]
