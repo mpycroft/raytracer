@@ -2,7 +2,7 @@ use std::ops::Mul;
 
 use paste::paste;
 
-use super::{Angle, Matrix};
+use super::{Angle, Matrix, Point, Vector};
 
 /// The Transformable trait describes how to apply a Transform to any given
 /// object, implementing this allows us to .apply() a Transform to an object via
@@ -55,6 +55,10 @@ macro_rules! add_transform_fns {
 impl Transform {
     pub fn new() -> Self {
         Self::from_matrix(Matrix::identity())
+    }
+
+    pub fn view_transform(from: &Point, to: &Point, up: &Vector) -> Self {
+        Self::from_matrix(Matrix::view_transform(from, to, up))
     }
 
     fn from_matrix(data: Matrix<4>) -> Self {
@@ -116,11 +120,22 @@ mod tests {
     use approx::*;
 
     use super::*;
-    use crate::math::{Point, Vector};
 
     #[test]
     fn new() {
         assert_relative_eq!(Transform::new().data, Matrix::identity());
+    }
+
+    #[test]
+    fn view_transform() {
+        let from = Point::new(2.0, 3.0, 4.0);
+        let to = Point::new(-1.0, 0.0, 5.0);
+        let up = Vector::new(1.0, 0.3, -0.3);
+
+        assert_relative_eq!(
+            Transform::view_transform(&from, &to, &up).data,
+            Matrix::view_transform(&from, &to, &up)
+        );
     }
 
     #[test]

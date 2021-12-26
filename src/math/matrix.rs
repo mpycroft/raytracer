@@ -120,6 +120,22 @@ impl Matrix<4> {
         ])
     }
 
+    pub fn view_transform(from: &Point, to: &Point, up: &Vector) -> Self {
+        let forward = (*to - *from).normalise();
+        let up = up.normalise();
+        let left = forward.cross(&up);
+        let true_up = left.cross(&forward);
+
+        let orientation = Matrix::new([
+            [left.x, left.y, left.z, 0.0],
+            [true_up.x, true_up.y, true_up.z, 0.0],
+            [-forward.x, -forward.y, -forward.z, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ]);
+
+        orientation * Matrix::translate(-from.x, -from.y, -from.z)
+    }
+
     pub fn invert(&self) -> Result<Self> {
         let det = self.determinant();
 
@@ -451,6 +467,50 @@ mod tests {
         let v = Vector::new(-3.5, 0.0, 1.8);
 
         assert_relative_eq!(identity * v, v);
+    }
+
+    #[test]
+    fn view_transform() {
+        assert_relative_eq!(
+            Matrix::view_transform(
+                &Point::origin(),
+                &Point::new(0.0, 0.0, -1.0),
+                &Vector::y_axis()
+            ),
+            Matrix::identity()
+        );
+
+        assert_relative_eq!(
+            Matrix::view_transform(
+                &Point::origin(),
+                &Point::new(0.0, 0.0, 1.0),
+                &Vector::y_axis()
+            ),
+            Matrix::scale(-1.0, 1.0, -1.0)
+        );
+
+        assert_relative_eq!(
+            Matrix::view_transform(
+                &Point::new(0.0, 0.0, 8.0),
+                &Point::origin(),
+                &Vector::y_axis()
+            ),
+            Matrix::translate(0.0, 0.0, -8.0)
+        );
+
+        assert_relative_eq!(
+            Matrix::view_transform(
+                &Point::new(1.0, 3.0, 2.0),
+                &Point::new(4.0, -2.0, 8.0),
+                &Vector::new(1.0, 1.0, 0.0)
+            ),
+            Matrix::new([
+                [-0.507_093, 0.507_093, 0.676_123, -2.366_432],
+                [0.767_716, 0.606_092, 0.121_218, -2.828_427],
+                [-0.358_569, 0.597_614, -0.717_137, 0.0],
+                [0.0, 0.0, 0.0, 1.0]
+            ])
+        );
     }
 
     #[test]
