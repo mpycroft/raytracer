@@ -1,14 +1,14 @@
 use crate::{
-    intersect::{Computations, Intersection, IntersectionList},
+    intersect::{Computations, Intersectable, Intersection, IntersectionList},
     math::{Point, Ray, Transform},
-    Colour, Intersectable, Material, PointLight, Sphere,
+    Colour, Material, Object, PointLight,
 };
 
 /// World represents all the objects and light sources in a given scene that we
 /// are rendering.
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub struct World {
-    pub objects: Vec<Sphere>,
+    pub objects: Vec<Object>,
     pub lights: Vec<PointLight>,
 }
 
@@ -17,7 +17,7 @@ impl World {
         World { objects: Vec::new(), lights: Vec::new() }
     }
 
-    pub fn push_object(&mut self, object: Sphere) {
+    pub fn push_object(&mut self, object: Object) {
         self.objects.push(object);
     }
 
@@ -95,11 +95,11 @@ impl Default for World {
     fn default() -> Self {
         let mut world = World::new();
 
-        world.push_object(Sphere::new(
+        world.push_object(Object::new_sphere(
             Transform::new(),
             Material::new(Colour::new(0.8, 1.0, 0.6), 0.1, 0.7, 0.2, 200.0),
         ));
-        world.push_object(Sphere::new(
+        world.push_object(Object::new_sphere(
             Transform::from_scale(0.5, 0.5, 0.5),
             Material::default(),
         ));
@@ -132,20 +132,20 @@ mod tests {
     fn push_object() {
         let mut w = World::new();
 
-        let s = Sphere::default();
-        w.push_object(s);
+        let o = Object::default_sphere();
+        w.push_object(o.clone());
 
         assert_eq!(w.objects.len(), 1);
-        assert_relative_eq!(w.objects[0], s);
+        assert_relative_eq!(w.objects[0], o);
 
-        let s = Sphere::new(
+        let o = Object::new_sphere(
             Transform::from_translate(-1.0, 2.3, 4.0),
             Material::default(),
         );
-        w.push_object(s);
+        w.push_object(o.clone());
 
         assert_eq!(w.objects.len(), 2);
-        assert_relative_eq!(w.objects[1], s);
+        assert_relative_eq!(w.objects[1], o);
     }
 
     #[test]
@@ -199,9 +199,9 @@ mod tests {
             Point::new(0.0, 0.0, -10.0),
         ));
 
-        w.push_object(Sphere::default());
+        w.push_object(Object::default_sphere());
 
-        w.push_object(Sphere::new(
+        w.push_object(Object::new_sphere(
             Transform::from_translate(0.0, 0.0, 10.0),
             Material::default(),
         ));
@@ -277,14 +277,14 @@ mod tests {
         assert_eq!(w.objects.len(), 2);
         assert_relative_eq!(
             w.objects[0],
-            Sphere::new(
+            Object::new_sphere(
                 Transform::new(),
-                Material::new(Colour::new(0.8, 1.0, 0.6), 0.0, 0.7, 0.2, 0.0)
+                Material::new(Colour::new(0.8, 1.0, 0.6), 0.1, 0.7, 0.2, 200.0)
             )
         );
         assert_relative_eq!(
             w.objects[1],
-            Sphere::new(
+            Object::new_sphere(
                 Transform::from_scale(0.5, 0.5, 0.5),
                 Material::default()
             )

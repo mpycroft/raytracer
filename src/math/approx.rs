@@ -34,6 +34,7 @@ macro_rules! add_approx_traits {
                 crate::math::approx::FLOAT_EPSILON
             }
 
+            #[allow(unused_variables)]
             fn abs_diff_eq(
                 &self,
                 other: &Self,
@@ -48,6 +49,7 @@ macro_rules! add_approx_traits {
                 crate::math::approx::FLOAT_EPSILON
             }
 
+            #[allow(unused_variables)]
             fn relative_eq(
                 &self,
                 other: &Self,
@@ -65,6 +67,7 @@ macro_rules! add_approx_traits {
                 crate::math::approx::FLOAT_ULPS
             }
 
+            #[allow(unused_variables)]
             fn ulps_eq(
                 &self,
                 other: &Self,

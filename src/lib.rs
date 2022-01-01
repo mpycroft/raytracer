@@ -5,15 +5,14 @@
 
 #[macro_use]
 pub mod math;
-pub mod object;
 
 mod camera;
 mod canvas;
 mod colour;
 mod intersect;
 mod material;
+mod object;
 mod point_light;
-mod sphere;
 mod world;
 
 pub use camera::Camera;
@@ -21,6 +20,6 @@ pub use canvas::Canvas;
 pub use colour::Colour;
 pub use intersect::Intersectable;
 pub use material::Material;
+pub use object::Object;
 pub use point_light::PointLight;
-pub use sphere::Sphere;
 pub use world::World;

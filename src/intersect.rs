@@ -4,7 +4,7 @@ use derive_more::Constructor;
 
 use crate::{
     math::{approx::FLOAT_EPSILON, Point, Ray, Vector},
-    Sphere,
+    Object,
 };
 
 /// A trait that objects need to implement if they can be intersected in a
@@ -37,7 +37,7 @@ impl Deref for IntersectionPoints {
 /// reference to the object that was intersected.
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
 pub struct Intersection<'a> {
-    pub object: &'a Sphere,
+    pub object: &'a Object,
     pub t: f64,
 }
 
@@ -119,7 +119,7 @@ impl<'a> DerefMut for IntersectionList<'a> {
 /// about an intersection.
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
 pub struct Computations<'a> {
-    pub object: &'a Sphere,
+    pub object: &'a Object,
     pub t: f64,
     pub point: Point,
     pub eye: Vector,
@@ -146,19 +146,19 @@ mod tests {
 
     #[test]
     fn intersection_new() {
-        let s = Sphere::default();
+        let o = Object::default_sphere();
 
-        let i = Intersection::new(&s, 3.5);
+        let i = Intersection::new(&o, 3.5);
 
-        assert_relative_eq!(*i.object, s);
+        assert_relative_eq!(*i.object, o);
         assert_float_relative_eq!(i.t, 3.5);
     }
 
     #[test]
     fn prepare_computations() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
-        let s = Sphere::default();
-        let i = Intersection::new(&s, 4.0);
+        let o = Object::default_sphere();
+        let i = Intersection::new(&o, 4.0);
 
         let c = i.prepare_computations(&r);
 
@@ -170,7 +170,7 @@ mod tests {
         assert!(!c.inside);
 
         let r = Ray::new(Point::origin(), Vector::z_axis());
-        let i = Intersection::new(&s, 1.0);
+        let i = Intersection::new(&o, 1.0);
 
         let c = i.prepare_computations(&r);
 
@@ -180,11 +180,11 @@ mod tests {
         assert!(c.inside);
 
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
-        let s = Sphere::new(
+        let o = Object::new_sphere(
             Transform::from_translate(0.0, 0.0, 1.0),
             Material::default(),
         );
-        let i = Intersection::new(&s, 5.0);
+        let i = Intersection::new(&o, 5.0);
 
         let c = i.prepare_computations(&r);
 
@@ -194,18 +194,18 @@ mod tests {
 
     #[test]
     fn intersection_list_new() {
-        let s = Sphere::default();
+        let o = Object::default_sphere();
 
         let mut list = IntersectionList::new();
         assert_eq!(list.len(), 0);
 
-        list.push(Intersection::new(&s, 0.0));
+        list.push(Intersection::new(&o, 0.0));
         assert_eq!(list.len(), 1);
-        assert_relative_eq!(*list[0].object, s);
+        assert_relative_eq!(*list[0].object, o);
         assert_float_relative_eq!(list[0].t, 0.0);
 
-        let i1 = Intersection::new(&s, 1.0);
-        let i2 = Intersection::new(&s, 2.0);
+        let i1 = Intersection::new(&o, 1.0);
+        let i2 = Intersection::new(&o, 2.0);
 
         let list = IntersectionList::from(vec![i1, i2]);
 
@@ -216,30 +216,30 @@ mod tests {
 
     #[test]
     fn hit() {
-        let s = Sphere::default();
+        let o = Object::default_sphere();
 
-        let i1 = Intersection::new(&s, 1.0);
-        let i2 = Intersection::new(&s, 2.0);
+        let i1 = Intersection::new(&o, 1.0);
+        let i2 = Intersection::new(&o, 2.0);
         let list = IntersectionList::from(vec![i1, i2]);
 
         assert_eq!(list.hit().unwrap(), &i1);
 
-        let i1 = Intersection::new(&s, -1.0);
-        let i2 = Intersection::new(&s, 1.0);
+        let i1 = Intersection::new(&o, -1.0);
+        let i2 = Intersection::new(&o, 1.0);
         let list = IntersectionList::from(vec![i1, i2]);
 
         assert_eq!(list.hit().unwrap(), &i2);
 
-        let i1 = Intersection::new(&s, -2.0);
-        let i2 = Intersection::new(&s, -1.0);
+        let i1 = Intersection::new(&o, -2.0);
+        let i2 = Intersection::new(&o, -1.0);
         let list = IntersectionList::from(vec![i1, i2]);
 
         assert!(list.hit().is_none());
 
-        let i1 = Intersection::new(&s, 5.0);
-        let i2 = Intersection::new(&s, 7.0);
-        let i3 = Intersection::new(&s, -3.0);
-        let i4 = Intersection::new(&s, 2.0);
+        let i1 = Intersection::new(&o, 5.0);
+        let i2 = Intersection::new(&o, 7.0);
+        let i3 = Intersection::new(&o, -3.0);
+        let i4 = Intersection::new(&o, 2.0);
         let list = IntersectionList::from(vec![i1, i2, i3, i4]);
 
         assert_eq!(list.hit().unwrap(), &i4);

@@ -1,8 +1,10 @@
+mod sphere;
 #[cfg(test)]
 mod test;
 
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
+use self::sphere::Sphere;
 #[cfg(test)]
 use self::test::Test;
 use crate::{
@@ -17,9 +19,9 @@ use crate::{
 /// An Object represents some entity in the scene that can be rendered.
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub struct Object {
-    transform: Transform,
-    material: Material,
-    shape: Shape,
+    pub transform: Transform,
+    pub material: Material,
+    pub shape: Shape,
 }
 
 impl Object {
@@ -29,6 +31,14 @@ impl Object {
 
     fn default(shape: Shape) -> Self {
         Self::new(Transform::default(), Material::default(), shape)
+    }
+
+    pub fn new_sphere(transform: Transform, material: Material) -> Self {
+        Self::new(transform, material, Shape::Sphere(Sphere))
+    }
+
+    pub fn default_sphere() -> Self {
+        Self::default(Shape::Sphere(Sphere))
     }
 
     #[cfg(test)]
@@ -63,6 +73,7 @@ add_approx_traits!(Object { transform, material, shape });
 /// Shape is a list of the various geometries that can be rendered.
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub enum Shape {
+    Sphere(Sphere),
     #[cfg(test)]
     Test(Test),
 }
@@ -70,17 +81,17 @@ pub enum Shape {
 impl Intersectable for Shape {
     fn intersect(&self, ray: &Ray) -> Option<IntersectionPoints> {
         match self {
+            Shape::Sphere(sphere) => sphere.intersect(ray),
             #[cfg(test)]
             Shape::Test(test) => test.intersect(ray),
-            _ => todo!(),
         }
     }
 
     fn normal_at(&self, point: &Point) -> Vector {
         match self {
+            Shape::Sphere(sphere) => sphere.normal_at(point),
             #[cfg(test)]
             Shape::Test(test) => test.normal_at(point),
-            _ => todo!(),
         }
     }
 }
@@ -94,6 +105,9 @@ impl AbsDiffEq for Shape {
 
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
         match (self, other) {
+            (Shape::Sphere(lhs), Shape::Sphere(rhs)) => {
+                lhs.abs_diff_eq(rhs, epsilon)
+            }
             #[cfg(test)]
             (Shape::Test(lhs), Shape::Test(rhs)) => {
                 lhs.abs_diff_eq(rhs, epsilon)
@@ -115,6 +129,9 @@ impl RelativeEq for Shape {
         max_relative: Self::Epsilon,
     ) -> bool {
         match (self, other) {
+            (Shape::Sphere(lhs), Shape::Sphere(rhs)) => {
+                lhs.relative_eq(rhs, epsilon, max_relative)
+            }
             #[cfg(test)]
             (Shape::Test(lhs), Shape::Test(rhs)) => {
                 lhs.relative_eq(rhs, epsilon, max_relative)
@@ -136,6 +153,9 @@ impl UlpsEq for Shape {
         max_ulps: u32,
     ) -> bool {
         match (self, other) {
+            (Shape::Sphere(lhs), Shape::Sphere(rhs)) => {
+                lhs.ulps_eq(rhs, epsilon, max_ulps)
+            }
             #[cfg(test)]
             (Shape::Test(lhs), Shape::Test(rhs)) => {
                 lhs.ulps_eq(rhs, epsilon, max_ulps)
@@ -179,6 +199,27 @@ mod tests {
     }
 
     #[test]
+    fn new_sphere() {
+        let t = Transform::from_shear(0.0, 1.0, 1.0, 0.0, 0.0, 0.0);
+        let m = Material::default();
+
+        let o = Object::new_sphere(t, m);
+
+        assert_relative_eq!(o.transform, t);
+        assert_relative_eq!(o.material, m);
+        assert_relative_eq!(o.shape, Shape::Sphere(Sphere));
+    }
+
+    #[test]
+    fn default_sphere() {
+        let o = Object::default_sphere();
+
+        assert_relative_eq!(o.transform, Transform::default());
+        assert_relative_eq!(o.material, Material::default());
+        assert_relative_eq!(o.shape, Shape::Sphere(Sphere));
+    }
+
+    #[test]
     fn new_test() {
         let t = Transform::from_scale(1.0, 0.5, 1.0);
         let m = Material::default();
@@ -210,7 +251,11 @@ mod tests {
 
         o.intersect(&r);
 
-        let Shape::Test(test) = o.shape;
+        let test = match o.shape {
+            Shape::Test(test) => test,
+            _ => unreachable!(),
+        };
+
         assert_relative_eq!(
             test.ray.get().unwrap(),
             Ray::new(Point::new(0.0, 0.0, -2.5), Vector::new(0.0, 0.0, 0.5))
@@ -223,7 +268,11 @@ mod tests {
 
         o.intersect(&r);
 
-        let Shape::Test(test) = o.shape;
+        let test = match o.shape {
+            Shape::Test(test) => test,
+            _ => unreachable!(),
+        };
+
         assert_relative_eq!(
             test.ray.get().unwrap(),
             Ray::new(Point::new(-5.0, 0.0, -5.0), Vector::z_axis())
@@ -272,7 +321,7 @@ mod tests {
             Material::default(),
             Shape::Test(Test::default()),
         );
-        let o3 = Object::default_test();
+        let o3 = Object::default_sphere();
 
         assert_abs_diff_eq!(o1, o2);
         assert_abs_diff_ne!(o1, o3);
