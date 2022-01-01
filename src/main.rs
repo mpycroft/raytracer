@@ -1,5 +1,5 @@
 use std::{
-    f64::consts::{FRAC_PI_2, FRAC_PI_3, FRAC_PI_4},
+    f64::consts::{FRAC_PI_3, FRAC_PI_4},
     fs::write,
 };
 
@@ -14,21 +14,19 @@ fn main() {
     let floor_material =
         Material::new(Colour::new(1.0, 0.9, 0.9), 0.1, 0.9, 0.0, 200.0);
 
-    let mut floor_transform = Transform::from_scale(10.0, 0.01, 10.0);
-    world.push_object(Object::new_sphere(floor_transform, floor_material));
+    world.push_object(Object::new_plane(Transform::default(), floor_material));
 
-    let mut wall_transform =
-        floor_transform.rotate_x(Angle::from_radians(FRAC_PI_2));
-
-    world.push_object(Object::new_sphere(
+    let wall_transform = Transform::from_rotate_x(Angle::from_degrees(90.0));
+    world.push_object(Object::new_plane(
         wall_transform
             .clone()
             .rotate_y(Angle::from_radians(-FRAC_PI_4))
             .translate(0.0, 0.0, 5.0),
         floor_material,
     ));
-    world.push_object(Object::new_sphere(
+    world.push_object(Object::new_plane(
         wall_transform
+            .clone()
             .rotate_y(Angle::from_radians(FRAC_PI_4))
             .translate(0.0, 0.0, 5.0),
         floor_material,
