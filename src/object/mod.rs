@@ -6,7 +6,7 @@ use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 #[cfg(test)]
 use self::test::Test;
 use crate::{
-    intersect::{Intersectable, IntersectionList},
+    intersect::{Intersectable, IntersectionPoints},
     math::{
         approx::{FLOAT_EPSILON, FLOAT_ULPS},
         Point, Ray, Transform, Vector,
@@ -43,7 +43,7 @@ impl Object {
 }
 
 impl Intersectable for Object {
-    fn intersect(&self, ray: &Ray) -> Option<IntersectionList> {
+    fn intersect(&self, ray: &Ray) -> Option<IntersectionPoints> {
         let local_ray = self.transform.invert().apply(ray);
 
         self.shape.intersect(&local_ray)
@@ -68,7 +68,7 @@ pub enum Shape {
 }
 
 impl Intersectable for Shape {
-    fn intersect(&self, ray: &Ray) -> Option<IntersectionList> {
+    fn intersect(&self, ray: &Ray) -> Option<IntersectionPoints> {
         match self {
             #[cfg(test)]
             Shape::Test(test) => test.intersect(ray),
@@ -151,9 +151,8 @@ mod tests {
 
     use approx::*;
 
-    use crate::math::Angle;
-
     use super::*;
+    use crate::math::Angle;
 
     #[test]
     fn new() {

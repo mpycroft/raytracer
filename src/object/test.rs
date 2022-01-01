@@ -3,8 +3,11 @@ use std::cell::Cell;
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
 use crate::{
-    intersect::{Intersectable, IntersectionList},
-    math::{approx::{FLOAT_EPSILON, FLOAT_ULPS}, Point, Ray, Vector},
+    intersect::{Intersectable, IntersectionPoints},
+    math::{
+        approx::{FLOAT_EPSILON, FLOAT_ULPS},
+        Point, Ray, Vector,
+    },
 };
 
 /// Test is a shape intended purely for testing functions on Object.
@@ -20,7 +23,7 @@ impl Test {
 }
 
 impl Intersectable for Test {
-    fn intersect(&self, ray: &Ray) -> Option<IntersectionList> {
+    fn intersect(&self, ray: &Ray) -> Option<IntersectionPoints> {
         self.ray.set(Some(*ray));
 
         None

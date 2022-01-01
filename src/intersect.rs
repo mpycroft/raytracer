@@ -8,10 +8,29 @@ use crate::{
 };
 
 /// A trait that objects need to implement if they can be intersected in a
-/// scene, returns a vector of intersection t values.
+/// scene, returns a list of the intersection points.
 pub trait Intersectable {
-    fn intersect(&self, ray: &Ray) -> Option<IntersectionList>;
+    fn intersect(&self, ray: &Ray) -> Option<IntersectionPoints>;
     fn normal_at(&self, point: &Point) -> Vector;
+}
+
+/// A list of intersection point (t values) where intersections occur for a
+/// given object.
+#[derive(Clone, Debug, Default, PartialEq, PartialOrd)]
+pub struct IntersectionPoints(Vec<f64>);
+
+impl From<Vec<f64>> for IntersectionPoints {
+    fn from(vec: Vec<f64>) -> Self {
+        Self(vec)
+    }
+}
+
+impl Deref for IntersectionPoints {
+    type Target = Vec<f64>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 /// An Intersection stores both the t value of the intersection but also a
@@ -53,12 +72,12 @@ impl<'a> Intersection<'a> {
 /// An IntersectionList is a simple wrapper around a vector of Intersections, it
 /// gives us type safety over using a plain Vec and makes it obvious what we are
 /// doing.
-#[derive(Clone, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Default, PartialEq, PartialOrd)]
 pub struct IntersectionList<'a>(Vec<Intersection<'a>>);
 
 impl<'a> IntersectionList<'a> {
     pub fn new() -> Self {
-        Self(Vec::new())
+        Self::default()
     }
 
     pub fn hit(&self) -> Option<&Intersection> {
@@ -73,12 +92,6 @@ impl<'a> IntersectionList<'a> {
         }
 
         intersection
-    }
-}
-
-impl<'a> Default for IntersectionList<'a> {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
@@ -121,6 +134,15 @@ mod tests {
 
     use super::*;
     use crate::{math::Transform, Material};
+
+    #[test]
+    fn intersection_points_from() {
+        let i = IntersectionPoints::from(vec![1.0, 4.5]);
+
+        assert_eq!(i.len(), 2);
+        assert_float_relative_eq!(i[0], 1.0);
+        assert_float_relative_eq!(i[1], 4.5);
+    }
 
     #[test]
     fn intersection_new() {

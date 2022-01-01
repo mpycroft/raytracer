@@ -1,5 +1,5 @@
 use crate::{
-    intersect::{Computations, IntersectionList},
+    intersect::{Computations, Intersection, IntersectionList},
     math::{Point, Ray, Transform},
     Colour, Intersectable, Material, PointLight, Sphere,
 };
@@ -75,8 +75,10 @@ impl World {
         let mut list = IntersectionList::new();
 
         for obj in &self.objects {
-            if let Some(mut new_list) = obj.intersect(ray) {
-                list.append(&mut *new_list);
+            if let Some(new_list) = obj.intersect(ray) {
+                for t in new_list.iter() {
+                    list.push(Intersection::new(obj, *t));
+                }
             }
         }
 
@@ -116,7 +118,7 @@ mod tests {
     use approx::*;
 
     use super::*;
-    use crate::{intersect::Intersection, math::Vector};
+    use crate::math::Vector;
 
     #[test]
     fn new() {
@@ -257,9 +259,15 @@ mod tests {
 
         let list = list.unwrap();
         assert_float_relative_eq!(list[0].t, 4.0);
+        assert_relative_eq!(*list[0].object, w.objects[0]);
+
         assert_float_relative_eq!(list[1].t, 4.5);
+        assert_relative_eq!(*list[1].object, w.objects[1]);
         assert_float_relative_eq!(list[2].t, 5.5);
+        assert_relative_eq!(*list[2].object, w.objects[1]);
+
         assert_float_relative_eq!(list[3].t, 6.0);
+        assert_relative_eq!(*list[3].object, w.objects[0]);
     }
 
     #[test]

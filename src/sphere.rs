@@ -1,7 +1,7 @@
 use derive_more::Constructor;
 
 use crate::{
-    intersect::{Intersectable, Intersection, IntersectionList},
+    intersect::{Intersectable, IntersectionPoints},
     math::{Point, Ray, Transform, Vector},
     Material,
 };
@@ -14,7 +14,7 @@ pub struct Sphere {
 }
 
 impl Intersectable for Sphere {
-    fn intersect(&self, ray: &Ray) -> Option<IntersectionList> {
+    fn intersect(&self, ray: &Ray) -> Option<IntersectionPoints> {
         let ray = self.transform.invert().apply(ray);
 
         let sphere_to_ray = ray.origin - Point::origin();
@@ -34,10 +34,7 @@ impl Intersectable for Sphere {
         let t1 = (-b - discriminant) / a;
         let t2 = (-b + discriminant) / a;
 
-        Some(IntersectionList::from(vec![
-            Intersection::new(self, t1),
-            Intersection::new(self, t2),
-        ]))
+        Some(IntersectionPoints::from(vec![t1, t2]))
     }
 
     fn normal_at(&self, point: &Point) -> Vector {
@@ -94,16 +91,14 @@ mod tests {
         let i = s.intersect(&r).unwrap();
 
         assert_eq!(i.len(), 2);
-        assert_relative_eq!(*i[0].object, s);
-        assert_float_relative_eq!(i[0].t, 4.0);
-        assert_relative_eq!(*i[1].object, s);
-        assert_float_relative_eq!(i[1].t, 6.0);
+        assert_float_relative_eq!(i[0], 4.0);
+        assert_float_relative_eq!(i[1], 6.0);
 
         let i = s.intersect(&Ray::new(Point::new(0.0, 1.0, -5.0), v)).unwrap();
 
         assert_eq!(i.len(), 2);
-        assert_float_relative_eq!(i[0].t, 5.0);
-        assert_float_relative_eq!(i[1].t, 5.0);
+        assert_float_relative_eq!(i[0], 5.0);
+        assert_float_relative_eq!(i[1], 5.0);
 
         let i = s.intersect(&Ray::new(Point::new(0.0, 2.0, -5.0), v));
 
@@ -112,14 +107,14 @@ mod tests {
         let i = s.intersect(&Ray::new(Point::origin(), v)).unwrap();
 
         assert_eq!(i.len(), 2);
-        assert_float_relative_eq!(i[0].t, -1.0);
-        assert_float_relative_eq!(i[1].t, 1.0);
+        assert_float_relative_eq!(i[0], -1.0);
+        assert_float_relative_eq!(i[1], 1.0);
 
         let i = s.intersect(&Ray::new(Point::new(0.0, 0.0, 5.0), v)).unwrap();
 
         assert_eq!(i.len(), 2);
-        assert_float_relative_eq!(i[0].t, -6.0);
-        assert_float_relative_eq!(i[1].t, -4.0);
+        assert_float_relative_eq!(i[0], -6.0);
+        assert_float_relative_eq!(i[1], -4.0);
 
         let s = Sphere::new(
             Transform::from_scale(2.0, 2.0, 2.0),
@@ -128,8 +123,8 @@ mod tests {
         let i = s.intersect(&r).unwrap();
 
         assert_eq!(i.len(), 2);
-        assert_float_relative_eq!(i[0].t, 3.0);
-        assert_float_relative_eq!(i[1].t, 7.0);
+        assert_float_relative_eq!(i[0], 3.0);
+        assert_float_relative_eq!(i[1], 7.0);
 
         let s = Sphere::new(
             Transform::from_translate(5.0, 0.0, 0.0),
