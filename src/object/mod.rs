@@ -6,9 +6,10 @@ use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 #[cfg(test)]
 use self::test::Test;
 use crate::{
+    intersect::{Intersectable, IntersectionList},
     math::{
         approx::{FLOAT_EPSILON, FLOAT_ULPS},
-        Transform,
+        Ray, Transform,
     },
     Material,
 };
@@ -31,8 +32,21 @@ impl Object {
     }
 
     #[cfg(test)]
+    pub fn new_test(transform: Transform, material: Material) -> Self {
+        Self::new(transform, material, Shape::Test(Test::default()))
+    }
+
+    #[cfg(test)]
     pub fn default_test() -> Self {
         Self::default(Shape::Test(Test::default()))
+    }
+}
+
+impl Intersectable for Object {
+    fn intersect(&self, ray: &Ray) -> Option<IntersectionList> {
+        let local_ray = self.transform.invert().apply(ray);
+
+        self.shape.intersect(&local_ray)
     }
 }
 
@@ -43,6 +57,16 @@ add_approx_traits!(Object { transform, material, shape });
 pub enum Shape {
     #[cfg(test)]
     Test(Test),
+}
+
+impl Intersectable for Shape {
+    fn intersect(&self, ray: &Ray) -> Option<IntersectionList> {
+        match self {
+            #[cfg(test)]
+            Shape::Test(test) => test.intersect(ray),
+            _ => todo!(),
+        }
+    }
 }
 
 impl AbsDiffEq for Shape {
@@ -109,6 +133,8 @@ impl UlpsEq for Shape {
 mod tests {
     use approx::*;
 
+    use crate::math::{Point, Vector};
+
     use super::*;
 
     #[test]
@@ -136,12 +162,55 @@ mod tests {
     }
 
     #[test]
+    fn new_test() {
+        let t = Transform::from_scale(1.0, 0.5, 1.0);
+        let m = Material::default();
+
+        let o = Object::new_test(t, m);
+
+        assert_relative_eq!(o.transform, t);
+        assert_relative_eq!(o.material, m);
+        assert_relative_eq!(o.shape, Shape::Test(Test::default()));
+    }
+
+    #[test]
     fn default_test() {
         let o = Object::default_test();
 
         assert_relative_eq!(o.transform, Transform::default());
         assert_relative_eq!(o.material, Material::default());
         assert_relative_eq!(o.shape, Shape::Test(Test::default()));
+    }
+
+    #[test]
+    fn intersect() {
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
+
+        let o = Object::new_test(
+            Transform::from_scale(2.0, 2.0, 2.0),
+            Material::default(),
+        );
+
+        o.intersect(&r);
+
+        let Shape::Test(test) = o.shape;
+        assert_relative_eq!(
+            test.ray.get().unwrap(),
+            Ray::new(Point::new(0.0, 0.0, -2.5), Vector::new(0.0, 0.0, 0.5))
+        );
+
+        let o = Object::new_test(
+            Transform::from_translate(5.0, 0.0, 0.0),
+            Material::default(),
+        );
+
+        o.intersect(&r);
+
+        let Shape::Test(test) = o.shape;
+        assert_relative_eq!(
+            test.ray.get().unwrap(),
+            Ray::new(Point::new(-5.0, 0.0, -5.0), Vector::z_axis())
+        );
     }
 
     #[test]

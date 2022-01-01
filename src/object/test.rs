@@ -2,9 +2,12 @@ use std::cell::Cell;
 
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
-use crate::math::{
-    approx::{FLOAT_EPSILON, FLOAT_ULPS},
-    Ray,
+use crate::{
+    intersect::{Intersectable, IntersectionList},
+    math::{
+        approx::{FLOAT_EPSILON, FLOAT_ULPS},
+        Ray,
+    },
 };
 
 /// Test is a shape intended purely for testing functions on Object.
@@ -16,6 +19,14 @@ pub struct Test {
 impl Test {
     pub fn new(ray: Option<Ray>) -> Self {
         Self { ray: Cell::new(ray) }
+    }
+}
+
+impl Intersectable for Test {
+    fn intersect(&self, ray: &Ray) -> Option<IntersectionList> {
+        self.ray.set(Some(*ray));
+
+        None
     }
 }
 
@@ -92,6 +103,18 @@ mod tests {
     #[test]
     fn default() {
         assert!(Test::default().ray.get().is_none());
+    }
+
+    #[test]
+    fn intersect() {
+        let r = Ray::new(Point::new(0.5, 1.0, 1.5), Vector::new(1.0, 1.0, 0.0));
+
+        let t = Test::default();
+
+        let i = t.intersect(&r);
+
+        assert!(i.is_none());
+        assert_relative_eq!(t.ray.get().unwrap(), r);
     }
 
     #[test]
