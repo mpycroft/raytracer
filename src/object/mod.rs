@@ -1,10 +1,11 @@
+mod plane;
 mod sphere;
 #[cfg(test)]
 mod test;
 
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
-use self::sphere::Sphere;
+use self::{sphere::Sphere, plane::Plane};
 #[cfg(test)]
 use self::test::Test;
 use crate::{
@@ -41,6 +42,14 @@ impl Object {
         Self::default(Shape::Sphere(Sphere))
     }
 
+    pub fn new_plane(transform: Transform, material: Material) -> Self {
+        Self::new(transform, material, Shape::Plane(Plane))
+    }
+
+    pub fn default_plane() -> Self {
+        Self::default(Shape::Plane(Plane))
+    }
+
     #[cfg(test)]
     pub fn new_test(transform: Transform, material: Material) -> Self {
         Self::new(transform, material, Shape::Test(Test::default()))
@@ -74,6 +83,7 @@ add_approx_traits!(Object { transform, material, shape });
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub enum Shape {
     Sphere(Sphere),
+    Plane(Plane),
     #[cfg(test)]
     Test(Test),
 }
@@ -82,6 +92,7 @@ impl Intersectable for Shape {
     fn intersect(&self, ray: &Ray) -> Option<IntersectionPoints> {
         match self {
             Shape::Sphere(sphere) => sphere.intersect(ray),
+            Shape::Plane(plane) => plane.intersect(ray),
             #[cfg(test)]
             Shape::Test(test) => test.intersect(ray),
         }
@@ -90,6 +101,7 @@ impl Intersectable for Shape {
     fn normal_at(&self, point: &Point) -> Vector {
         match self {
             Shape::Sphere(sphere) => sphere.normal_at(point),
+            Shape::Plane(plane) => plane.normal_at(point),
             #[cfg(test)]
             Shape::Test(test) => test.normal_at(point),
         }
@@ -106,6 +118,9 @@ impl AbsDiffEq for Shape {
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
         match (self, other) {
             (Shape::Sphere(lhs), Shape::Sphere(rhs)) => {
+                lhs.abs_diff_eq(rhs, epsilon)
+            }
+            (Shape::Plane(lhs), Shape::Plane(rhs)) => {
                 lhs.abs_diff_eq(rhs, epsilon)
             }
             #[cfg(test)]
@@ -132,6 +147,9 @@ impl RelativeEq for Shape {
             (Shape::Sphere(lhs), Shape::Sphere(rhs)) => {
                 lhs.relative_eq(rhs, epsilon, max_relative)
             }
+            (Shape::Plane(lhs), Shape::Plane(rhs)) => {
+                lhs.relative_eq(rhs, epsilon, max_relative)
+            }
             #[cfg(test)]
             (Shape::Test(lhs), Shape::Test(rhs)) => {
                 lhs.relative_eq(rhs, epsilon, max_relative)
@@ -154,6 +172,9 @@ impl UlpsEq for Shape {
     ) -> bool {
         match (self, other) {
             (Shape::Sphere(lhs), Shape::Sphere(rhs)) => {
+                lhs.ulps_eq(rhs, epsilon, max_ulps)
+            }
+            (Shape::Plane(lhs), Shape::Plane(rhs)) => {
                 lhs.ulps_eq(rhs, epsilon, max_ulps)
             }
             #[cfg(test)]
@@ -217,6 +238,27 @@ mod tests {
         assert_relative_eq!(o.transform, Transform::default());
         assert_relative_eq!(o.material, Material::default());
         assert_relative_eq!(o.shape, Shape::Sphere(Sphere));
+    }
+
+    #[test]
+    fn new_plane() {
+        let t = Transform::from_rotate_x(Angle::from_degrees(30.0));
+        let m = Material::default();
+
+        let o = Object::new_plane(t, m);
+
+        assert_relative_eq!(o.transform, t);
+        assert_relative_eq!(o.material, m);
+        assert_relative_eq!(o.shape, Shape::Plane(Plane));
+    }
+
+    #[test]
+    fn default_plane() {
+        let o = Object::default_plane();
+
+        assert_relative_eq!(o.transform, Transform::default());
+        assert_relative_eq!(o.material, Material::default());
+        assert_relative_eq!(o.shape, Shape::Plane(Plane));
     }
 
     #[test]
