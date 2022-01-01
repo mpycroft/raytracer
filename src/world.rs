@@ -70,9 +70,7 @@ impl World {
 
         false
     }
-}
 
-impl Intersectable for World {
     fn intersect(&self, ray: &Ray) -> Option<IntersectionList> {
         let mut list = IntersectionList::new();
 

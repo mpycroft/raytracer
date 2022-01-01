@@ -11,6 +11,7 @@ use crate::{
 /// scene, returns a vector of intersection t values.
 pub trait Intersectable {
     fn intersect(&self, ray: &Ray) -> Option<IntersectionList>;
+    fn normal_at(&self, point: &Point) -> Vector;
 }
 
 /// An Intersection stores both the t value of the intersection but also a

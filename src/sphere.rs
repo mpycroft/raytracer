@@ -13,16 +13,6 @@ pub struct Sphere {
     pub material: Material,
 }
 
-impl Sphere {
-    pub fn normal_at(&self, point: &Point) -> Vector {
-        let inv_matrix = self.transform.invert();
-        let object_point = inv_matrix.apply(point);
-        let object_normal = object_point - Point::origin();
-
-        inv_matrix.transpose().apply(&object_normal).normalise()
-    }
-}
-
 impl Intersectable for Sphere {
     fn intersect(&self, ray: &Ray) -> Option<IntersectionList> {
         let ray = self.transform.invert().apply(ray);
@@ -48,6 +38,14 @@ impl Intersectable for Sphere {
             Intersection::new(self, t1),
             Intersection::new(self, t2),
         ]))
+    }
+
+    fn normal_at(&self, point: &Point) -> Vector {
+        let inv_matrix = self.transform.invert();
+        let object_point = inv_matrix.apply(point);
+        let object_normal = object_point - Point::origin();
+
+        inv_matrix.transpose().apply(&object_normal).normalise()
     }
 }
 

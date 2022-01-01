@@ -4,10 +4,7 @@ use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
 use crate::{
     intersect::{Intersectable, IntersectionList},
-    math::{
-        approx::{FLOAT_EPSILON, FLOAT_ULPS},
-        Ray,
-    },
+    math::{approx::{FLOAT_EPSILON, FLOAT_ULPS}, Point, Ray, Vector},
 };
 
 /// Test is a shape intended purely for testing functions on Object.
@@ -27,6 +24,10 @@ impl Intersectable for Test {
         self.ray.set(Some(*ray));
 
         None
+    }
+
+    fn normal_at(&self, point: &Point) -> Vector {
+        todo!()
     }
 }
 
@@ -91,7 +92,6 @@ mod tests {
     use approx::*;
 
     use super::*;
-    use crate::math::{Point, Vector};
 
     #[test]
     fn new() {

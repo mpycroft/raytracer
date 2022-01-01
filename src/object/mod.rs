@@ -9,7 +9,7 @@ use crate::{
     intersect::{Intersectable, IntersectionList},
     math::{
         approx::{FLOAT_EPSILON, FLOAT_ULPS},
-        Ray, Transform,
+        Point, Ray, Transform, Vector,
     },
     Material,
 };
@@ -48,6 +48,10 @@ impl Intersectable for Object {
 
         self.shape.intersect(&local_ray)
     }
+
+    fn normal_at(&self, point: &Point) -> Vector {
+        todo!()
+    }
 }
 
 add_approx_traits!(Object { transform, material, shape });
@@ -66,6 +70,10 @@ impl Intersectable for Shape {
             Shape::Test(test) => test.intersect(ray),
             _ => todo!(),
         }
+    }
+
+    fn normal_at(&self, point: &Point) -> Vector {
+        todo!()
     }
 }
 
@@ -132,8 +140,6 @@ impl UlpsEq for Shape {
 #[cfg(test)]
 mod tests {
     use approx::*;
-
-    use crate::math::{Point, Vector};
 
     use super::*;
 
