@@ -6,10 +6,27 @@ pub const FLOAT_EPSILON: f64 = 0.000_001;
 pub const FLOAT_ULPS: u32 = 6;
 
 /// Add the approx AbsDiffEq, RelativeEq and UlpsEq traits to a struct. This
-/// handles the very simple of cases of a series of struct members that are
-/// tested in order.
+/// handles the very simple case of a series of struct members that are tested
+/// in order. It can also generate a test that always returns true - primarily
+/// for unit structs.
 macro_rules! add_approx_traits {
-    ($type:ty { $init:ident $(, $var:ident)* }) => {
+    (@add_cmp { true }, $fn:ident, $args:tt) => {
+        true
+    };
+    // Unpack the arguments to the function, we can't do this with unpacking the
+    // variables since we can't nest different repetition operators.
+    (@add_single_cmp $var:ident, $fn:ident, ($self:ident, $other:ident,
+        $($rest:ident),+)
+    ) => {
+        $self.$var.$fn(&$other.$var, $($rest),+)
+    };
+    // Unpack the variables but keep the arguments as a tt.
+    (@add_cmp { $init:ident $(, $var:ident)* }, $fn:ident, $args:tt) => {
+        add_approx_traits!(@add_single_cmp $init, $fn, $args)
+            $(&& add_approx_traits!(@add_single_cmp $var, $fn, $args))*
+
+    };
+    (@add $type:ty, $rest:tt) => {
         impl approx::AbsDiffEq for $type {
             type Epsilon = f64;
 
@@ -22,8 +39,7 @@ macro_rules! add_approx_traits {
                 other: &Self,
                 epsilon: Self::Epsilon,
             ) -> bool {
-                self.$init.abs_diff_eq(&other.$init, epsilon)
-                    $(&& self.$var.abs_diff_eq(&other.$var, epsilon))*
+                add_approx_traits!(@add_cmp $rest, abs_diff_eq, (self, other, epsilon))
             }
         }
 
@@ -38,12 +54,9 @@ macro_rules! add_approx_traits {
                 epsilon: Self::Epsilon,
                 max_relative: Self::Epsilon,
             ) -> bool {
-                self.$init.relative_eq(&other.$init, epsilon, max_relative)
-                    $(&& self.$var.relative_eq(
-                        &other.$var,
-                        epsilon,
-                        max_relative
-                    ))*
+                add_approx_traits!(
+                    @add_cmp $rest, relative_eq, (self, other, epsilon, max_relative)
+                )
             }
         }
 
@@ -58,10 +71,14 @@ macro_rules! add_approx_traits {
                 epsilon: Self::Epsilon,
                 max_ulps: u32,
             ) -> bool {
-                self.$init.ulps_eq(&other.$init, epsilon, max_ulps)
-                    $(&& self.$var.ulps_eq(&other.$var, epsilon, max_ulps))*
+                add_approx_traits!(
+                    @add_cmp $rest, ulps_eq, (self, other, epsilon, max_ulps)
+                )
             }
         }
+    };
+    ($type:ty { $init:ident $(, $var:ident)* }) => {
+        add_approx_traits!(@add $type, { $init $(, $var)* });
     };
 }
 
