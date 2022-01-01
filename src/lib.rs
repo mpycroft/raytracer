@@ -5,6 +5,7 @@
 
 #[macro_use]
 pub mod math;
+pub mod object;
 
 mod camera;
 mod canvas;
