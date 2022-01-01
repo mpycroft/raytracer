@@ -50,7 +50,11 @@ impl Intersectable for Object {
     }
 
     fn normal_at(&self, point: &Point) -> Vector {
-        todo!()
+        let local_point = self.transform.invert().apply(point);
+
+        let local_normal = self.shape.normal_at(&local_point);
+
+        self.transform.invert().transpose().apply(&local_normal).normalise()
     }
 }
 
@@ -73,7 +77,11 @@ impl Intersectable for Shape {
     }
 
     fn normal_at(&self, point: &Point) -> Vector {
-        todo!()
+        match self {
+            #[cfg(test)]
+            Shape::Test(test) => test.normal_at(point),
+            _ => todo!(),
+        }
     }
 }
 
@@ -139,7 +147,11 @@ impl UlpsEq for Shape {
 
 #[cfg(test)]
 mod tests {
+    use std::f64::consts::{FRAC_1_SQRT_2, PI, SQRT_2};
+
     use approx::*;
+
+    use crate::math::Angle;
 
     use super::*;
 
@@ -216,6 +228,36 @@ mod tests {
         assert_relative_eq!(
             test.ray.get().unwrap(),
             Ray::new(Point::new(-5.0, 0.0, -5.0), Vector::z_axis())
+        );
+    }
+
+    #[test]
+    fn normal_at() {
+        assert_relative_eq!(
+            Object::new_test(
+                Transform::from_translate(0.0, 1.0, 0.0),
+                Material::default(),
+            )
+            .normal_at(&Point::new(
+                0.0,
+                FRAC_1_SQRT_2 + 1.0,
+                -FRAC_1_SQRT_2
+            )),
+            Vector::new(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2)
+        );
+
+        assert_relative_eq!(
+            Object::new_test(
+                Transform::from_rotate_z(Angle::from_radians(PI / 5.0))
+                    .scale(1.0, 0.5, 1.0),
+                Material::default()
+            )
+            .normal_at(&Point::new(
+                0.0,
+                SQRT_2 / 2.0,
+                -SQRT_2 / 2.0
+            )),
+            Vector::new(0.0, 0.970_143, -0.242_536)
         );
     }
 

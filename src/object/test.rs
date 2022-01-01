@@ -27,7 +27,7 @@ impl Intersectable for Test {
     }
 
     fn normal_at(&self, point: &Point) -> Vector {
-        todo!()
+        Vector::new(point.x, point.y, point.z)
     }
 }
 
@@ -115,6 +115,16 @@ mod tests {
 
         assert!(i.is_none());
         assert_relative_eq!(t.ray.get().unwrap(), r);
+    }
+
+    #[test]
+    fn normal_at() {
+        let t = Test::default();
+
+        assert_relative_eq!(
+            t.normal_at(&Point::new(2.0, 1.0, 0.0)),
+            Vector::new(2.0, 1.0, 0.0)
+        );
     }
 
     #[test]
