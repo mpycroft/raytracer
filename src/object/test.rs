@@ -17,8 +17,8 @@ pub struct Test {
 }
 
 impl Test {
-    pub fn new(ray: Option<Ray>) -> Self {
-        Self { ray: Cell::new(ray) }
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 
@@ -98,9 +98,7 @@ mod tests {
 
     #[test]
     fn new() {
-        let r = Ray::new(Point::new(1.0, 2.0, 3.0), Vector::x_axis());
-
-        assert_relative_eq!(Test::new(Some(r)).ray.get().unwrap(), r);
+        assert!(Test::new().ray.get().is_none());
     }
 
     #[test]
@@ -132,8 +130,10 @@ mod tests {
 
     #[test]
     fn approx() {
-        let t1 = Test::new(Some(Ray::new(Point::origin(), Vector::y_axis())));
-        let t2 = Test::new(Some(Ray::new(Point::origin(), Vector::y_axis())));
+        let t1 = Test::new();
+        t1.ray.set(Some(Ray::new(Point::origin(), Vector::y_axis())));
+        let t2 = Test::new();
+        t2.ray.set(Some(Ray::new(Point::origin(), Vector::y_axis())));
         let t3 = Test::default();
 
         assert_abs_diff_eq!(t1, t2);

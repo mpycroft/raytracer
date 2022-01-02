@@ -4,8 +4,14 @@ use crate::{
 };
 
 /// A Sphere is a unit sphere centred at the origin (0, 0, 0).
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
 pub struct Sphere;
+
+impl Sphere {
+    pub fn new() -> Self {
+        Self
+    }
+}
 
 impl Intersectable for Sphere {
     fn intersect(&self, ray: &Ray) -> Option<IntersectionPoints> {

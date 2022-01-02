@@ -5,8 +5,14 @@ use crate::{
 };
 
 /// A Plane is an infinitely large plane situated along the x and z axes.
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
 pub struct Plane;
+
+impl Plane {
+    pub fn new() -> Self {
+        Self
+    }
+}
 
 impl Intersectable for Plane {
     fn intersect(&self, ray: &Ray) -> Option<IntersectionPoints> {

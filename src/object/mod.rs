@@ -4,10 +4,11 @@ mod sphere;
 mod test;
 
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
+use paste::paste;
 
-use self::{sphere::Sphere, plane::Plane};
 #[cfg(test)]
 use self::test::Test;
+use self::{plane::Plane, sphere::Sphere};
 use crate::{
     intersect::{Intersectable, IntersectionPoints},
     math::{
@@ -25,6 +26,29 @@ pub struct Object {
     pub shape: Shape,
 }
 
+macro_rules! add_shape_fns {
+    (@add $fn_new:ident, $fn_default:ident, $shape:ident) => {
+        pub fn $fn_new(transform: Transform, material: Material) -> Self {
+            Self::new(transform, material, Shape::$shape($shape::new()))
+        }
+
+        pub fn $fn_default() -> Self {
+            Self::default(Shape::$shape($shape::default()))
+        }
+    };
+    ($($shape:ident),+) => {
+        $(
+            paste! {
+                add_shape_fns!(
+                    @add [<new_ $shape:snake>],
+                    [<default_ $shape:snake>],
+                    $shape
+                );
+            }
+        )+
+    };
+}
+
 impl Object {
     fn new(transform: Transform, material: Material, shape: Shape) -> Self {
         Self { transform, material, shape }
@@ -34,31 +58,10 @@ impl Object {
         Self::new(Transform::default(), Material::default(), shape)
     }
 
-    pub fn new_sphere(transform: Transform, material: Material) -> Self {
-        Self::new(transform, material, Shape::Sphere(Sphere))
-    }
-
-    pub fn default_sphere() -> Self {
-        Self::default(Shape::Sphere(Sphere))
-    }
-
-    pub fn new_plane(transform: Transform, material: Material) -> Self {
-        Self::new(transform, material, Shape::Plane(Plane))
-    }
-
-    pub fn default_plane() -> Self {
-        Self::default(Shape::Plane(Plane))
-    }
+    add_shape_fns!(Sphere, Plane);
 
     #[cfg(test)]
-    pub fn new_test(transform: Transform, material: Material) -> Self {
-        Self::new(transform, material, Shape::Test(Test::default()))
-    }
-
-    #[cfg(test)]
-    pub fn default_test() -> Self {
-        Self::default(Shape::Test(Test::default()))
-    }
+    add_shape_fns!(Test);
 }
 
 impl Intersectable for Object {
