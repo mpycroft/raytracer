@@ -84,7 +84,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn from_radians() {
+    fn creating_an_angle_from_radians() {
         assert_float_relative_eq!(
             Angle::from_radians(FRAC_PI_2).radians,
             FRAC_PI_2
@@ -92,12 +92,12 @@ mod tests {
     }
 
     #[test]
-    fn from_degrees() {
+    fn creating_an_angle_from_degrees() {
         assert_float_relative_eq!(Angle::from_degrees(90.0).radians, FRAC_PI_2);
     }
 
     #[test]
-    fn to_radians() {
+    fn converting_an_angle_to_radians() {
         assert_float_relative_eq!(
             Angle::from_radians(FRAC_PI_2).to_radians(),
             FRAC_PI_2
@@ -105,36 +105,27 @@ mod tests {
     }
 
     #[test]
-    fn to_degrees() {
+    fn converting_an_angle_to_degrees() {
         assert_float_relative_eq!(Angle::from_degrees(25.0).to_degrees(), 25.0);
     }
 
     #[test]
-    fn sin() {
+    fn standard_trigonometric_functions_are_passed_through() {
         assert_float_relative_eq!(
             Angle::from_radians(0.851).sin(),
             0.851f64.sin()
         );
-    }
 
-    #[test]
-    fn cos() {
         assert_float_relative_eq!(
             Angle::from_radians(2.41).cos(),
             2.41f64.cos()
         );
-    }
 
-    #[test]
-    fn tan() {
         assert_float_relative_eq!(
             Angle::from_radians(FRAC_PI_3).tan(),
             FRAC_PI_3.tan()
         );
-    }
 
-    #[test]
-    fn sin_cos() {
         let (s1, c1) = Angle::from_degrees(43.1).sin_cos();
         let (s2, c2) = 43.1f64.to_radians().sin_cos();
 
@@ -143,31 +134,22 @@ mod tests {
     }
 
     #[test]
-    fn asin() {
+    fn inverse_trigonometric_functions_are_passed_through() {
         assert_relative_eq!(
             Angle::asin(0.3),
             Angle::from_radians(0.3f64.asin())
         );
-    }
 
-    #[test]
-    fn acos() {
         assert_relative_eq!(
             Angle::acos(0.915),
             Angle::from_radians(0.915f64.acos())
         );
-    }
 
-    #[test]
-    fn atan() {
         assert_relative_eq!(
             Angle::atan(0.72),
             Angle::from_radians(0.72f64.atan())
         );
-    }
 
-    #[test]
-    fn atan2() {
         assert_relative_eq!(
             Angle::atan2(2.0, -1.5),
             Angle::from_radians(2.0f64.atan2(-1.5))
@@ -175,15 +157,12 @@ mod tests {
     }
 
     #[test]
-    fn add() {
+    fn adding_two_angles() {
         assert_relative_eq!(
             Angle::from_radians(FRAC_PI_2) + Angle::from_degrees(90.0),
             Angle::from_radians(PI)
         );
-    }
 
-    #[test]
-    fn add_assign() {
         let mut a = Angle::from_degrees(20.3);
         a += Angle::from_degrees(0.7);
 
@@ -191,15 +170,12 @@ mod tests {
     }
 
     #[test]
-    fn div() {
+    fn dividing_an_angle_by_a_scaler() {
         assert_relative_eq!(
             Angle::from_radians(PI) / 2.0,
             Angle::from_radians(FRAC_PI_2)
         );
-    }
 
-    #[test]
-    fn div_assign() {
         let mut a = Angle::from_radians(2.0 * PI);
         a /= 3.0;
 
@@ -207,7 +183,7 @@ mod tests {
     }
 
     #[test]
-    fn mul() {
+    fn multiplying_an_angle_by_a_scaler() {
         assert_relative_eq!(
             Angle::from_radians(FRAC_PI_3) * 3.0,
             Angle::from_radians(PI)
@@ -217,10 +193,7 @@ mod tests {
             1.5 * Angle::from_radians(PI),
             Angle::from_degrees(270.0)
         );
-    }
 
-    #[test]
-    fn mul_assign() {
         let mut a = Angle::from_radians(FRAC_PI_3);
         a *= 3.0;
 
@@ -228,7 +201,7 @@ mod tests {
     }
 
     #[test]
-    fn neg() {
+    fn negating_an_angle() {
         assert_relative_eq!(
             -Angle::from_degrees(20.3),
             Angle::from_degrees(-20.3)
@@ -236,15 +209,12 @@ mod tests {
     }
 
     #[test]
-    fn sub() {
+    fn subtracting_two_angles() {
         assert_relative_eq!(
             Angle::from_degrees(90.0) - Angle::from_radians(FRAC_PI_4),
             Angle::from_degrees(45.0)
         );
-    }
 
-    #[test]
-    fn sub_assign() {
         let mut a = Angle::from_radians(FRAC_PI_2);
         a -= Angle::from_radians(FRAC_PI_3);
 
@@ -252,7 +222,7 @@ mod tests {
     }
 
     #[test]
-    fn approx() {
+    fn angles_are_approximately_equal() {
         let a1 = Angle::from_radians(FRAC_PI_3);
         let a2 = Angle::from_degrees(60.0);
         let a3 = Angle::from_radians(FRAC_PI_2);

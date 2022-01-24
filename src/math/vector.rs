@@ -79,7 +79,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn new() {
+    fn creating_a_vector() {
         let v = Vector::new(4.3, -4.2, 3.1);
 
         assert_float_relative_eq!(v.x, 4.3);
@@ -88,43 +88,25 @@ mod tests {
     }
 
     #[test]
-    fn x_axis() {
+    fn creating_a_vector_along_an_axis() {
         assert_relative_eq!(Vector::x_axis(), Vector::new(1.0, 0.0, 0.0));
-    }
 
-    #[test]
-    fn y_axis() {
         assert_relative_eq!(Vector::y_axis(), Vector::new(0.0, 1.0, 0.0));
-    }
 
-    #[test]
-    fn z_axis() {
         assert_relative_eq!(Vector::z_axis(), Vector::new(0.0, 0.0, 1.0));
     }
 
     #[test]
-    fn cross() {
-        let v1 = Vector::new(1.0, 2.0, 3.0);
-        let v2 = Vector::new(2.0, 3.0, 4.0);
-
-        assert_relative_eq!(v1.cross(&v2), Vector::new(-1.0, 2.0, -1.0));
-        assert_relative_eq!(v2.cross(&v1), Vector::new(1.0, -2.0, 1.0));
-    }
-
-    #[test]
-    fn dot() {
-        assert_float_relative_eq!(
-            Vector::new(1.0, 2.0, 3.0).dot(&Vector::new(2.0, 3.0, 4.0)),
-            20.0
-        );
-    }
-
-    #[test]
-    fn magnitude() {
+    fn computing_the_magnitude_of_an_axis_vector() {
         assert_float_relative_eq!(Vector::x_axis().magnitude(), 1.0);
-        assert_float_relative_eq!(Vector::y_axis().magnitude(), 1.0);
-        assert_float_relative_eq!(Vector::z_axis().magnitude(), 1.0);
 
+        assert_float_relative_eq!(Vector::y_axis().magnitude(), 1.0);
+
+        assert_float_relative_eq!(Vector::z_axis().magnitude(), 1.0);
+    }
+
+    #[test]
+    fn computing_the_magnitude_of_a_vector() {
         assert_float_relative_eq!(
             Vector::new(1.0, 2.0, 3.0).magnitude(),
             3.741_657
@@ -136,7 +118,7 @@ mod tests {
     }
 
     #[test]
-    fn normalise() {
+    fn normalising_a_vector() {
         assert_relative_eq!(
             Vector::new(4.0, 0.0, 0.0).normalise(),
             Vector::x_axis()
@@ -146,7 +128,10 @@ mod tests {
             Vector::new(1.0, 2.0, 3.0).normalise(),
             Vector::new(0.267_261, 0.534_522, 0.801_784)
         );
+    }
 
+    #[test]
+    fn magnitude_of_a_normalised_vector() {
         assert_float_relative_eq!(
             Vector::new(1.0, 2.0, 3.0).normalise().magnitude(),
             1.0
@@ -159,12 +144,32 @@ mod tests {
     }
 
     #[test]
-    fn reflect() {
+    fn dot_product_of_two_vectors() {
+        assert_float_relative_eq!(
+            Vector::new(1.0, 2.0, 3.0).dot(&Vector::new(2.0, 3.0, 4.0)),
+            20.0
+        );
+    }
+
+    #[test]
+    fn cross_product_of_two_vectors() {
+        let v1 = Vector::new(1.0, 2.0, 3.0);
+        let v2 = Vector::new(2.0, 3.0, 4.0);
+
+        assert_relative_eq!(v1.cross(&v2), Vector::new(-1.0, 2.0, -1.0));
+        assert_relative_eq!(v2.cross(&v1), Vector::new(1.0, -2.0, 1.0));
+    }
+
+    #[test]
+    fn reflecting_a_vector_approaching_at_45_degrees() {
         assert_relative_eq!(
             Vector::new(1.0, -1.0, 0.0).reflect(&Vector::y_axis()),
             Vector::new(1.0, 1.0, 0.0)
         );
+    }
 
+    #[test]
+    fn reflecting_a_vector_off_a_slanted_surface() {
         assert_relative_eq!(
             Vector::new(0.0, -1.0, 0.0).reflect(&Vector::new(
                 FRAC_1_SQRT_2,
@@ -176,15 +181,12 @@ mod tests {
     }
 
     #[test]
-    fn add() {
+    fn adding_two_vectors() {
         assert_relative_eq!(
             Vector::new(1.3, 2.6, 0.9) + Vector::new(0.0, -1.3, 3.1),
             Vector::new(1.3, 1.3, 4.0)
         );
-    }
 
-    #[test]
-    fn add_assign() {
         let mut v = Vector::new(2.5, 0.3, 1.5);
         v += Vector::new(1.3, 1.6, 0.0);
 
@@ -192,65 +194,12 @@ mod tests {
     }
 
     #[test]
-    fn div() {
-        assert_relative_eq!(
-            Vector::new(1.0, -2.0, 3.0) / 2.0,
-            Vector::new(0.5, -1.0, 1.5)
-        );
-    }
-
-    #[test]
-    fn div_assign() {
-        let mut v = Vector::new(2.3, 0.0, 1.5);
-        v /= 0.8;
-
-        assert_relative_eq!(v, Vector::new(2.875, 0.0, 1.875));
-    }
-
-    #[test]
-    fn mul() {
-        assert_relative_eq!(
-            Vector::new(1.0, -2.0, 3.0) * 3.5,
-            Vector::new(3.5, -7.0, 10.5)
-        );
-
-        assert_relative_eq!(
-            0.5 * Vector::new(1.0, -2.0, 3.0),
-            Vector::new(0.5, -1.0, 1.5)
-        );
-    }
-
-    #[test]
-    fn mul_assign() {
-        let mut v = Vector::new(0.0, -2.3, 4.1);
-        v *= 1.3;
-
-        assert_relative_eq!(v, Vector::new(0.0, -2.99, 5.33));
-    }
-
-    #[test]
-    fn neg() {
-        assert_relative_eq!(
-            -Vector::new(1.0, -2.0, 3.0),
-            Vector::new(-1.0, 2.0, -3.0)
-        );
-    }
-
-    #[test]
-    fn sub() {
+    fn subtracting_two_vectors() {
         assert_relative_eq!(
             Vector::new(3.0, 2.0, 1.0) - Vector::new(5.0, 6.0, 7.0),
             Vector::new(-2.0, -4.0, -6.0)
         );
 
-        assert_relative_eq!(
-            Vector::new(0.0, 0.0, 0.0) - Vector::new(1.0, -2.0, 3.0),
-            Vector::new(-1.0, 2.0, -3.0)
-        );
-    }
-
-    #[test]
-    fn sub_assign() {
         let mut v = Vector::new(0.0, 1.5, 0.9);
         v -= Vector::new(1.3, 0.9, 0.1);
 
@@ -258,7 +207,62 @@ mod tests {
     }
 
     #[test]
-    fn approx() {
+    fn subtracting_a_vector_from_the_zero_vector() {
+        assert_relative_eq!(
+            Vector::new(0.0, 0.0, 0.0) - Vector::new(1.0, -2.0, 3.0),
+            Vector::new(-1.0, 2.0, -3.0)
+        );
+    }
+
+    #[test]
+    fn negating_a_vector() {
+        assert_relative_eq!(
+            -Vector::new(1.0, -2.0, 3.0),
+            Vector::new(-1.0, 2.0, -3.0)
+        );
+    }
+
+    #[test]
+    fn multiplying_a_vector_by_a_scaler() {
+        assert_relative_eq!(
+            Vector::new(1.0, -2.0, 3.0) * 3.5,
+            Vector::new(3.5, -7.0, 10.5)
+        );
+
+        assert_relative_eq!(
+            -4.1 * Vector::new(2.0, 4.0, 8.0),
+            Vector::new(-8.2, -16.4, -32.8)
+        );
+
+        let mut v = Vector::new(0.0, -2.3, 4.1);
+        v *= 1.3;
+
+        assert_relative_eq!(v, Vector::new(0.0, -2.99, 5.33));
+    }
+
+    #[test]
+    fn multiplying_a_vector_by_a_fraction() {
+        assert_relative_eq!(
+            Vector::new(1.0, -2.0, 3.0) * 0.5,
+            Vector::new(0.5, -1.0, 1.5)
+        );
+    }
+
+    #[test]
+    fn dividing_a_vector_by_a_scaler() {
+        assert_relative_eq!(
+            Vector::new(1.0, -2.0, 3.0) / 2.0,
+            Vector::new(0.5, -1.0, 1.5)
+        );
+
+        let mut v = Vector::new(2.3, 0.0, 1.5);
+        v /= 0.8;
+
+        assert_relative_eq!(v, Vector::new(2.875, 0.0, 1.875));
+    }
+
+    #[test]
+    fn vectors_are_approximately_equal() {
         let v1 = Vector::new(0.004, 126.610_1, 9.61);
         let v2 = Vector::new(0.004, 126.610_1, 9.61);
         let v3 = Vector::new(0.004_1, 126.610_1, 9.22);
