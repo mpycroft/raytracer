@@ -249,6 +249,22 @@ mod tests {
     }
 
     #[test]
+    fn intersect_sets_the_object_on_the_intersection() {
+        let mut w = World::new();
+
+        let o = Object::default_sphere();
+        w.push_object(o.clone());
+
+        let i = w
+            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()))
+            .unwrap();
+
+        assert_eq!(i.len(), 2);
+        assert_relative_eq!(i[0].object, &o);
+        assert_relative_eq!(i[1].object, &o);
+    }
+
+    #[test]
     fn intersect() {
         let w = World::default();
 

@@ -34,7 +34,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn new() {
+    fn creating_and_querying_a_ray() {
         let p = Point::new(1.0, 2.0, 3.0);
         let v = Vector::new(4.0, 5.0, 6.0);
 
@@ -45,7 +45,7 @@ mod tests {
     }
 
     #[test]
-    fn position() {
+    fn computing_a_point_from_a_distance() {
         let p = Point::new(2.0, 3.0, 4.0);
         let r = Ray::new(p, Vector::new(1.0, 0.0, 0.0));
 
@@ -56,23 +56,29 @@ mod tests {
     }
 
     #[test]
-    fn transform() {
+    fn translating_a_ray() {
         let v = Vector::new(0.0, 1.0, 0.0);
-        let r = Ray::new(Point::new(1.0, 2.0, 3.0), v);
 
         assert_relative_eq!(
-            Transform::from_translate(3.0, 4.0, 5.0).apply(&r),
+            Transform::from_translate(3.0, 4.0, 5.0)
+                .apply(&Ray::new(Point::new(1.0, 2.0, 3.0), v)),
             Ray::new(Point::new(4.0, 6.0, 8.0), v)
         );
+    }
 
+    #[test]
+    fn scaling_a_ray() {
         assert_relative_eq!(
-            Transform::from_scale(2.0, 3.0, 4.0).apply(&r),
+            Transform::from_scale(2.0, 3.0, 4.0).apply(&Ray::new(
+                Point::new(1.0, 2.0, 3.0),
+                Vector::new(0.0, 1.0, 0.0)
+            )),
             Ray::new(Point::new(2.0, 6.0, 12.0), Vector::new(0.0, 3.0, 0.0))
         );
     }
 
     #[test]
-    fn approx() {
+    fn rays_are_approximately_equal() {
         let r1 =
             Ray::new(Point::new(0.0, 1.5, -2.3), Vector::new(9.5, 0.1, 0.5));
         let r2 =

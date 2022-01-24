@@ -136,7 +136,7 @@ mod tests {
     use crate::{math::Transform, Material};
 
     #[test]
-    fn intersection_points_from() {
+    fn creating_intersection_points_from_a_vector() {
         let i = IntersectionPoints::from(vec![1.0, 4.5]);
 
         assert_eq!(i.len(), 2);
@@ -145,7 +145,7 @@ mod tests {
     }
 
     #[test]
-    fn intersection_new() {
+    fn an_intersection_encapsulates_t_and_object() {
         let o = Object::default_sphere();
 
         let i = Intersection::new(&o, 3.5);
@@ -193,7 +193,7 @@ mod tests {
     }
 
     #[test]
-    fn intersection_list_new() {
+    fn creating_a_new_intersection_list() {
         let o = Object::default_sphere();
 
         let mut list = IntersectionList::new();
@@ -203,6 +203,11 @@ mod tests {
         assert_eq!(list.len(), 1);
         assert_relative_eq!(*list[0].object, o);
         assert_float_relative_eq!(list[0].t, 0.0);
+    }
+
+    #[test]
+    fn aggregating_intersections() {
+        let o = Object::default_sphere();
 
         let i1 = Intersection::new(&o, 1.0);
         let i2 = Intersection::new(&o, 2.0);
@@ -215,7 +220,7 @@ mod tests {
     }
 
     #[test]
-    fn hit() {
+    fn the_hit_when_all_intersections_have_positive_t() {
         let o = Object::default_sphere();
 
         let i1 = Intersection::new(&o, 1.0);
@@ -223,18 +228,33 @@ mod tests {
         let list = IntersectionList::from(vec![i1, i2]);
 
         assert_eq!(list.hit().unwrap(), &i1);
+    }
+
+    #[test]
+    fn the_hit_when_some_intersections_have_negative_t() {
+        let o = Object::default_sphere();
 
         let i1 = Intersection::new(&o, -1.0);
         let i2 = Intersection::new(&o, 1.0);
         let list = IntersectionList::from(vec![i1, i2]);
 
         assert_eq!(list.hit().unwrap(), &i2);
+    }
+
+    #[test]
+    fn the_hit_when_all_intersections_have_negative_t() {
+        let o = Object::default_sphere();
 
         let i1 = Intersection::new(&o, -2.0);
         let i2 = Intersection::new(&o, -1.0);
         let list = IntersectionList::from(vec![i1, i2]);
 
         assert!(list.hit().is_none());
+    }
+
+    #[test]
+    fn the_hit_is_always_the_lowest_non_negative_intersection() {
+        let o = Object::default_sphere();
 
         let i1 = Intersection::new(&o, 5.0);
         let i2 = Intersection::new(&o, 7.0);

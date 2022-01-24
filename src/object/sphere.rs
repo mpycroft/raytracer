@@ -49,34 +49,51 @@ mod tests {
     use super::*;
 
     #[test]
-    fn intersect() {
-        let s = Sphere;
-        let v = Vector::z_axis();
-        let r = Ray::new(Point::new(0.0, 0.0, -5.0), v);
-
-        let i = s.intersect(&r).unwrap();
+    fn a_ray_intersects_a_sphere_at_two_points() {
+        let i = Sphere::new()
+            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()))
+            .unwrap();
 
         assert_eq!(i.len(), 2);
         assert_float_relative_eq!(i[0], 4.0);
         assert_float_relative_eq!(i[1], 6.0);
+    }
 
-        let i = s.intersect(&Ray::new(Point::new(0.0, 1.0, -5.0), v)).unwrap();
+    #[test]
+    fn a_ray_intersects_a_sphere_at_a_tangent() {
+        let i = Sphere::new()
+            .intersect(&Ray::new(Point::new(0.0, 1.0, -5.0), Vector::z_axis()))
+            .unwrap();
 
         assert_eq!(i.len(), 2);
         assert_float_relative_eq!(i[0], 5.0);
         assert_float_relative_eq!(i[1], 5.0);
+    }
 
-        let i = s.intersect(&Ray::new(Point::new(0.0, 2.0, -5.0), v));
+    #[test]
+    fn a_ray_misses_a_sphere() {
+        let i = Sphere::new()
+            .intersect(&Ray::new(Point::new(0.0, 2.0, -5.0), Vector::z_axis()));
 
         assert!(i.is_none());
+    }
 
-        let i = s.intersect(&Ray::new(Point::origin(), v)).unwrap();
+    #[test]
+    fn a_ray_originates_inside_a_sphere() {
+        let i = Sphere::new()
+            .intersect(&Ray::new(Point::origin(), Vector::z_axis()))
+            .unwrap();
 
         assert_eq!(i.len(), 2);
         assert_float_relative_eq!(i[0], -1.0);
         assert_float_relative_eq!(i[1], 1.0);
+    }
 
-        let i = s.intersect(&Ray::new(Point::new(0.0, 0.0, 5.0), v)).unwrap();
+    #[test]
+    fn a_sphere_is_behind_a_ray() {
+        let i = Sphere::new()
+            .intersect(&Ray::new(Point::new(0.0, 0.0, 5.0), Vector::z_axis()))
+            .unwrap();
 
         assert_eq!(i.len(), 2);
         assert_float_relative_eq!(i[0], -6.0);
@@ -84,32 +101,49 @@ mod tests {
     }
 
     #[test]
-    fn normal_at() {
-        let s = Sphere;
-
+    fn the_normal_on_a_sphere_at_a_point_on_the_x_axis() {
         assert_relative_eq!(
-            s.normal_at(&Point::new(1.0, 0.0, 0.0)),
+            Sphere::new().normal_at(&Point::new(1.0, 0.0, 0.0)),
             Vector::new(1.0, 0.0, 0.0)
         );
+    }
 
+    #[test]
+    fn the_normal_on_a_sphere_at_a_point_on_the_y_axis() {
         assert_relative_eq!(
-            s.normal_at(&Point::new(0.0, 1.0, 0.0)),
+            Sphere::new().normal_at(&Point::new(0.0, 1.0, 0.0)),
             Vector::new(0.0, 1.0, 0.0)
         );
+    }
 
+    #[test]
+    fn the_normal_on_a_sphere_at_a_point_on_the_z_axis() {
         assert_relative_eq!(
-            s.normal_at(&Point::new(0.0, 0.0, 1.0)),
+            Sphere::new().normal_at(&Point::new(0.0, 0.0, 1.0)),
             Vector::new(0.0, 0.0, 1.0)
         );
+    }
 
-        let n = s.normal_at(&Point::new(0.577_35, 0.577_35, 0.577_35));
+    #[test]
+    fn the_normal_on_a_sphere_at_a_non_axial_point() {
+        let n =
+            Sphere::new().normal_at(&Point::new(0.577_35, 0.577_35, 0.577_35));
+
         assert_relative_eq!(n, Vector::new(0.577_35, 0.577_35, 0.577_35));
         assert_relative_eq!(n, n.normalise());
     }
 
     #[test]
-    fn approx() {
-        let s1 = Sphere;
+    fn the_normal_isa_normalised_vector() {
+        let n =
+            Sphere::new().normal_at(&Point::new(0.577_35, 0.577_35, 0.577_35));
+
+        assert_relative_eq!(n, n.normalise());
+    }
+
+    #[test]
+    fn spheres_are_approximately_equal() {
+        let s1 = Sphere::new();
         let s2 = Sphere;
 
         assert_abs_diff_eq!(s1, s2);

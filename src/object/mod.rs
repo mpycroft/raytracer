@@ -199,7 +199,7 @@ mod tests {
     use crate::math::Angle;
 
     #[test]
-    fn new() {
+    fn creating_a_new_object() {
         let t = Transform::from_scale(1.0, 2.0, 2.0);
         let m = Material::default();
         let s = Shape::Test(Test::default());
@@ -212,7 +212,7 @@ mod tests {
     }
 
     #[test]
-    fn default() {
+    fn an_objects_default_transformation_and_material() {
         let s = Shape::Test(Test::default());
 
         let o = Object::default(s.clone());
@@ -286,7 +286,7 @@ mod tests {
     }
 
     #[test]
-    fn intersect() {
+    fn intersecting_a_scaled_object_with_a_ray() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
 
         let o = Object::new_test(
@@ -305,6 +305,11 @@ mod tests {
             test.ray.get().unwrap(),
             Ray::new(Point::new(0.0, 0.0, -2.5), Vector::new(0.0, 0.0, 0.5))
         );
+    }
+
+    #[test]
+    fn intersecting_a_translated_object_with_a_ray() {
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
 
         let o = Object::new_test(
             Transform::from_translate(5.0, 0.0, 0.0),
@@ -325,7 +330,7 @@ mod tests {
     }
 
     #[test]
-    fn normal_at() {
+    fn computing_the_normal_on_a_translated_object() {
         assert_relative_eq!(
             Object::new_test(
                 Transform::from_translate(0.0, 1.0, 0.0),
@@ -338,7 +343,10 @@ mod tests {
             )),
             Vector::new(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2)
         );
+    }
 
+    #[test]
+    fn computing_the_normal_on_a_transformed_object() {
         assert_relative_eq!(
             Object::new_test(
                 Transform::from_rotate_z(Angle::from_radians(PI / 5.0))
