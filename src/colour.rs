@@ -76,7 +76,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn new() {
+    fn creating_a_colour() {
         let c = Colour::new(-0.5, 0.4, 1.7);
 
         assert_float_relative_eq!(c.r, -0.5);
@@ -85,46 +85,31 @@ mod tests {
     }
 
     #[test]
-    fn black() {
+    fn creating_a_named_colour() {
         assert_relative_eq!(Colour::black(), Colour::new(0.0, 0.0, 0.0));
-    }
 
-    #[test]
-    fn white() {
         assert_relative_eq!(Colour::white(), Colour::new(1.0, 1.0, 1.0));
-    }
 
-    #[test]
-    fn red() {
         assert_relative_eq!(Colour::red(), Colour::new(1.0, 0.0, 0.0));
-    }
 
-    #[test]
-    fn green() {
         assert_relative_eq!(Colour::green(), Colour::new(0.0, 1.0, 0.0));
-    }
 
-    #[test]
-    fn blue() {
         assert_relative_eq!(Colour::blue(), Colour::new(0.0, 0.0, 1.0));
     }
 
     #[test]
-    fn to_rgb() {
+    fn convert_a_colour_to_rgb_tuple() {
         assert_eq!(Colour::new(0.0, 0.5, 1.0).to_rgb(), (0, 127, 255));
         assert_eq!(Colour::new(0.4, 1.6, -2.3).to_rgb(), (102, 255, 0));
     }
 
     #[test]
-    fn add() {
+    fn adding_two_colours() {
         assert_relative_eq!(
             Colour::new(0.9, 0.6, 0.75) + Colour::new(0.7, 0.1, 0.25),
             Colour::new(1.6, 0.7, 1.0)
         );
-    }
 
-    #[test]
-    fn add_assign() {
         let mut c = Colour::new(0.0, -1.3, 5.9);
         c += Colour::new(0.6, 0.0, 2.1);
 
@@ -132,7 +117,20 @@ mod tests {
     }
 
     #[test]
-    fn mul() {
+    fn subtracting_two_colours() {
+        assert_relative_eq!(
+            Colour::new(0.9, 0.6, 0.75) - Colour::new(0.7, 0.1, 0.25),
+            Colour::new(0.2, 0.5, 0.5)
+        );
+
+        let mut c = Colour::new(0.8, 0.1, 5.2);
+        c -= Colour::new(0.2, 1.0, -0.2);
+
+        assert_relative_eq!(c, Colour::new(0.6, -0.9, 5.4));
+    }
+
+    #[test]
+    fn multiplying_a_colour_by_a_scaler() {
         assert_relative_eq!(
             Colour::new(0.2, 0.3, 0.4) * 2.0,
             Colour::new(0.4, 0.6, 0.8)
@@ -143,42 +141,27 @@ mod tests {
             Colour::new(-1.35, 0.0, 2.07)
         );
 
-        assert_relative_eq!(
-            Colour::new(1.0, 0.2, 0.4) * Colour::new(0.9, 1.0, 0.1),
-            Colour::new(0.9, 0.2, 0.04)
-        );
-    }
-
-    #[test]
-    fn mul_assign() {
         let mut c = Colour::new(1.0, 1.5, 0.11);
         c *= -2.35;
 
         assert_relative_eq!(c, Colour::new(-2.35, -3.525, -0.258_5));
+    }
 
+    #[test]
+    fn multiplying_two_colours() {
+        assert_relative_eq!(
+            Colour::new(1.0, 0.2, 0.4) * Colour::new(0.9, 1.0, 0.1),
+            Colour::new(0.9, 0.2, 0.04)
+        );
+
+        let mut c = Colour::new(2.74, -1.0, 1.5);
         c *= Colour::new(1.0, 0.25, 0.0);
 
-        assert_relative_eq!(c, Colour::new(-2.35, -0.881_25, 0.0));
+        assert_relative_eq!(c, Colour::new(2.74, -0.25, 0.0));
     }
 
     #[test]
-    fn sub() {
-        assert_relative_eq!(
-            Colour::new(0.9, 0.6, 0.75) - Colour::new(0.7, 0.1, 0.25),
-            Colour::new(0.2, 0.5, 0.5)
-        );
-    }
-
-    #[test]
-    fn sub_assign() {
-        let mut c = Colour::new(0.8, 0.1, 5.2);
-        c -= Colour::new(0.2, 1.0, -0.2);
-
-        assert_relative_eq!(c, Colour::new(0.6, -0.9, 5.4));
-    }
-
-    #[test]
-    fn approx() {
+    fn colours_are_approximately_equal() {
         let c1 = Colour::new(-10.531, 0.851, 1.5681);
         let c2 = Colour::new(-10.531, 0.851, 1.5681);
         let c3 = Colour::new(-10.532, 0.851_05, 1.5681);

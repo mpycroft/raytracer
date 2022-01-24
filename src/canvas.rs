@@ -47,7 +47,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn new() {
+    fn creating_a_canvas() {
         let c = Canvas::new(10, 20);
 
         assert_eq!(c.width, 10);
@@ -59,7 +59,17 @@ mod tests {
     }
 
     #[test]
-    fn get_pixel() {
+    fn writing_pixels_to_a_canvas() {
+        let mut c = Canvas::new(10, 20);
+        let red = Colour::red();
+
+        c.write_pixel(2, 3, red);
+
+        assert_relative_eq!(c.pixels[32], red);
+    }
+
+    #[test]
+    fn reading_pixels_from_a_canvas() {
         let width = 10;
         let height = 10;
         let mut c = Canvas::new(width, height);
@@ -80,29 +90,35 @@ mod tests {
     }
 
     #[test]
-    fn write_pixel() {
-        let mut c = Canvas::new(10, 20);
-        let red = Colour::red();
+    fn constructing_the_ppm_header() {
+        let c = Canvas::new(5, 3);
 
-        c.write_pixel(2, 3, red);
+        let ppm = c.to_ppm();
+        let ppm = ppm.lines().take(3).collect::<Vec<_>>().join("\n");
 
-        assert_relative_eq!(c.pixels[32], red);
+        assert_eq!(
+            ppm,
+            "\
+P3
+5 3
+255"
+        );
     }
 
     #[test]
-    fn to_ppm() {
+    fn constructing_the_ppm_pixel_data() {
         let mut c = Canvas::new(5, 3);
 
         c.write_pixel(0, 0, Colour::new(1.5, 0.0, 0.0));
         c.write_pixel(2, 1, Colour::new(0.0, 0.5, 0.0));
         c.write_pixel(4, 2, Colour::new(-0.5, 0.0, 1.0));
 
+        let ppm = c.to_ppm();
+        let ppm = ppm.lines().skip(3).collect::<Vec<_>>().join("\n");
+
         assert_eq!(
-            c.to_ppm(),
+            ppm,
             "\
-P3
-5 3
-255
 255 0 0
 0 0 0
 0 0 0
@@ -117,8 +133,14 @@ P3
 0 0 0
 0 0 0
 0 0 0
-0 0 255
-"
+0 0 255"
         )
+    }
+
+    #[test]
+    fn constructed_ppm_is_terminated_by_a_newline() {
+        let c = Canvas::new(5, 3);
+
+        assert_eq!(c.to_ppm().chars().last(), Some('\n'));
     }
 }
