@@ -416,7 +416,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn new() {
+    fn constructing_and_inspecting_a_4x4_matrix() {
         let m = Matrix::new([
             [1.0, 2.0, 3.0, 4.0],
             [5.5, 6.5, 7.5, 8.5],
@@ -431,14 +431,20 @@ mod tests {
         assert_float_relative_eq!(m[2][2], 11.0);
         assert_float_relative_eq!(m[3][0], 13.5);
         assert_float_relative_eq!(m[3][2], 15.5);
+    }
 
+    #[test]
+    fn constructing_and_inspecting_a_2x2_matrix() {
         let m = Matrix::new([[-3.0, 5.0], [1.0, -2.0]]);
 
         assert_float_relative_eq!(m[0][0], -3.0);
         assert_float_relative_eq!(m[0][1], 5.0);
         assert_float_relative_eq!(m[1][0], 1.0);
         assert_float_relative_eq!(m[1][1], -2.0);
+    }
 
+    #[test]
+    fn constructing_and_inspecting_a_3x3_matrix() {
         let m =
             Matrix::new([[-3.0, 5.0, 0.0], [1.0, -2.0, -7.0], [0.0, 1.0, 1.0]]);
 
@@ -448,9 +454,7 @@ mod tests {
     }
 
     #[test]
-    fn identity() {
-        let identity = Matrix::identity();
-
+    fn multiplying_a_matrix_by_the_identity_matrix() {
         let m = Matrix::new([
             [0.0, 1.0, 2.0, 4.0],
             [1.0, 2.0, 4.0, 8.0],
@@ -458,63 +462,51 @@ mod tests {
             [4.0, 8.0, 16.0, 32.0],
         ]);
 
-        assert_relative_eq!(m * identity, m);
-
-        let p = Point::new(1.3, 4.5, 0.9);
-
-        assert_relative_eq!(identity * p, p);
-
-        let v = Vector::new(-3.5, 0.0, 1.8);
-
-        assert_relative_eq!(identity * v, v);
+        assert_relative_eq!(m * Matrix::identity(), m);
     }
 
     #[test]
-    fn view_transform() {
-        assert_relative_eq!(
-            Matrix::view_transform(
-                &Point::origin(),
-                &Point::new(0.0, 0.0, -1.0),
-                &Vector::y_axis()
-            ),
-            Matrix::identity()
-        );
+    fn multiplying_the_identity_matrix_by_a_point() {
+        let p = Point::new(1.3, 4.5, 0.9);
 
-        assert_relative_eq!(
-            Matrix::view_transform(
-                &Point::origin(),
-                &Point::new(0.0, 0.0, 1.0),
-                &Vector::y_axis()
-            ),
-            Matrix::scale(-1.0, 1.0, -1.0)
-        );
+        assert_relative_eq!(Matrix::identity() * p, p);
+    }
 
-        assert_relative_eq!(
-            Matrix::view_transform(
-                &Point::new(0.0, 0.0, 8.0),
-                &Point::origin(),
-                &Vector::y_axis()
-            ),
-            Matrix::translate(0.0, 0.0, -8.0)
-        );
+    #[test]
+    fn multiplying_the_identity_matrix_by_a_vector() {
+        let v = Vector::new(-3.5, 0.0, 1.8);
 
+        assert_relative_eq!(Matrix::identity() * v, v);
+    }
+
+    #[test]
+    fn transposing_a_matrix() {
         assert_relative_eq!(
-            Matrix::view_transform(
-                &Point::new(1.0, 3.0, 2.0),
-                &Point::new(4.0, -2.0, 8.0),
-                &Vector::new(1.0, 1.0, 0.0)
-            ),
             Matrix::new([
-                [-0.507_093, 0.507_093, 0.676_123, -2.366_432],
-                [0.767_716, 0.606_092, 0.121_218, -2.828_427],
-                [-0.358_569, 0.597_614, -0.717_137, 0.0],
-                [0.0, 0.0, 0.0, 1.0]
+                [0.0, 9.0, 3.0, 0.0],
+                [9.0, 8.0, 0.0, 8.0],
+                [1.0, 8.0, 5.0, 3.0],
+                [0.0, 0.0, 5.0, 8.0]
+            ])
+            .transpose(),
+            Matrix::new([
+                [0.0, 9.0, 1.0, 0.0],
+                [9.0, 8.0, 8.0, 0.0],
+                [3.0, 0.0, 5.0, 5.0],
+                [0.0, 8.0, 3.0, 8.0]
             ])
         );
     }
 
     #[test]
-    fn invert() {
+    fn transposing_the_identity_matrix() {
+        let m = Matrix::identity();
+
+        assert_relative_eq!(m.transpose(), m);
+    }
+
+    #[test]
+    fn testing_an_invertible_matrix_for_invertibility() {
         let m = Matrix::new([
             [6.0, 4.0, 4.0, 4.0],
             [5.0, 5.0, 7.0, 6.0],
@@ -524,7 +516,10 @@ mod tests {
 
         assert_float_relative_eq!(m.determinant(), -2120.0);
         assert!(m.invert().is_ok());
+    }
 
+    #[test]
+    fn testing_a_non_invertible_matrix_for_invertibility() {
         let m = Matrix::new([
             [-4.0, 2.0, -2.0, -3.0],
             [9.0, 6.0, 2.0, 6.0],
@@ -534,7 +529,10 @@ mod tests {
 
         assert_float_relative_eq!(m.determinant(), 0.0);
         assert!(m.invert().is_err());
+    }
 
+    #[test]
+    fn calculating_the_inverse_of_a_matrix() {
         let m = Matrix::new([
             [-5.0, 2.0, 6.0, -8.0],
             [1.0, -5.0, 1.0, 8.0],
@@ -595,7 +593,10 @@ mod tests {
                 [0.177_778, 0.066_667, -0.266_667, 0.333_333]
             ])
         );
+    }
 
+    #[test]
+    fn multiplying_a_product_by_its_inverse() {
         let m1 = Matrix::new([
             [3.0, -9.0, 7.0, 3.0],
             [3.0, -8.0, 2.0, -9.0],
@@ -616,85 +617,56 @@ mod tests {
     }
 
     #[test]
-    fn rotate_x() {
-        let p = Point::new(0.0, 1.0, 0.0);
-        let m = Matrix::rotate_x(Angle::from_radians(FRAC_PI_4));
-
+    fn multiplying_by_a_translation_matrix() {
         assert_relative_eq!(
-            m * p,
-            Point::new(0.0, FRAC_1_SQRT_2, FRAC_1_SQRT_2)
-        );
-
-        assert_relative_eq!(
-            Matrix::rotate_x(Angle::from_radians(FRAC_PI_2)) * Vector::y_axis(),
-            Vector::z_axis()
-        );
-
-        assert_relative_eq!(
-            m.invert().unwrap() * p,
-            Point::new(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2)
+            Matrix::translate(5.0, -3.0, 2.0) * Point::new(-3.0, 4.0, 5.0),
+            Point::new(2.0, 1.0, 7.0)
         );
     }
 
     #[test]
-    fn rotate_y() {
-        let p = Point::new(0.0, 0.0, 1.0);
-        let m = Matrix::rotate_y(Angle::from_degrees(45.0));
-
+    fn multiplying_by_the_inverse_of_a_translation_matrix() {
         assert_relative_eq!(
-            m * p,
-            Point::new(FRAC_1_SQRT_2, 0.0, FRAC_1_SQRT_2)
-        );
-
-        assert_relative_eq!(
-            Matrix::rotate_y(Angle::from_radians(FRAC_PI_2)) * Vector::z_axis(),
-            Vector::x_axis()
-        );
-
-        assert_relative_eq!(
-            m.invert().unwrap() * p,
-            Point::new(-FRAC_1_SQRT_2, 0.0, FRAC_1_SQRT_2)
+            Matrix::translate(5.0, -3.0, 2.0).invert().unwrap()
+                * Point::new(-3.0, 4.0, 5.0),
+            Point::new(-8.0, 7.0, 3.0)
         );
     }
 
     #[test]
-    fn rotate_z() {
-        let p = Point::new(0.0, 1.0, 0.0);
-        let m = Matrix::rotate_z(Angle::from_radians(FRAC_PI_4));
+    fn translation_does_not_affect_vectors() {
+        let v = Vector::new(-3.0, 4.0, 5.0);
 
-        assert_relative_eq!(
-            m * p,
-            Point::new(-FRAC_1_SQRT_2, FRAC_1_SQRT_2, 0.0)
-        );
-
-        assert_relative_eq!(
-            Matrix::rotate_z(Angle::from_degrees(90.0)) * Vector::y_axis(),
-            -Vector::x_axis()
-        );
-
-        assert_relative_eq!(
-            m.invert().unwrap() * p,
-            Point::new(FRAC_1_SQRT_2, FRAC_1_SQRT_2, 0.0)
-        );
+        assert_relative_eq!(Matrix::translate(5.0, -3.0, 2.0) * v, v);
     }
 
     #[test]
-    fn scale() {
-        let m = Matrix::scale(2.0, 3.0, 4.0);
-
+    fn a_scaling_matrix_applied_to_a_point() {
         assert_relative_eq!(
-            m * Point::new(-4.0, 6.0, 8.0),
+            Matrix::scale(2.0, 3.0, 4.0) * Point::new(-4.0, 6.0, 8.0),
             Point::new(-8.0, 18.0, 32.0)
         );
+    }
 
-        let v = Vector::new(-4.0, 6.0, 8.0);
-        assert_relative_eq!(m * v, Vector::new(-8.0, 18.0, 32.0));
-
+    #[test]
+    fn a_scaling_matrix_applied_to_a_vector() {
         assert_relative_eq!(
-            m.invert().unwrap() * v,
+            Matrix::scale(2.0, 3.0, 4.0) * Vector::new(-4.0, 6.0, 8.0),
+            Vector::new(-8.0, 18.0, 32.0)
+        );
+    }
+
+    #[test]
+    fn multiplying_by_the_inverse_of_a_scaling_matrix() {
+        assert_relative_eq!(
+            Matrix::scale(2.0, 3.0, 4.0).invert().unwrap()
+                * Vector::new(-4.0, 6.0, 8.0),
             Vector::new(-2.0, 2.0, 2.0)
         );
+    }
 
+    #[test]
+    fn reflection_is_scaling_by_a_negative_value() {
         assert_relative_eq!(
             Matrix::scale(-1.0, 1.0, 1.0) * Point::new(2.0, 3.0, 4.0),
             Point::new(-2.0, 3.0, 4.0)
@@ -702,165 +674,225 @@ mod tests {
     }
 
     #[test]
-    fn shear() {
-        let p = Point::new(2.0, 3.0, 4.0);
+    fn rotating_a_point_around_the_x_axis() {
+        assert_relative_eq!(
+            Matrix::rotate_x(Angle::from_radians(FRAC_PI_4))
+                * Point::new(0.0, 1.0, 0.0),
+            Point::new(0.0, FRAC_1_SQRT_2, FRAC_1_SQRT_2)
+        );
 
         assert_relative_eq!(
-            Matrix::shear(1.0, 0.0, 0.0, 0.0, 0.0, 0.0) * p,
+            Matrix::rotate_x(Angle::from_radians(FRAC_PI_2)) * Vector::y_axis(),
+            Vector::z_axis()
+        );
+    }
+
+    #[test]
+    fn the_inverse_of_an_x_rotation_rotates_in_the_opposite_direction() {
+        assert_relative_eq!(
+            Matrix::rotate_x(Angle::from_radians(FRAC_PI_4)).invert().unwrap()
+                * Point::new(0.0, 1.0, 0.0),
+            Point::new(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2)
+        );
+    }
+
+    #[test]
+    fn rotating_a_point_around_the_y_axis() {
+        assert_relative_eq!(
+            Matrix::rotate_y(Angle::from_degrees(45.0))
+                * Point::new(0.0, 0.0, 1.0),
+            Point::new(FRAC_1_SQRT_2, 0.0, FRAC_1_SQRT_2)
+        );
+
+        assert_relative_eq!(
+            Matrix::rotate_y(Angle::from_radians(FRAC_PI_2)) * Vector::z_axis(),
+            Vector::x_axis()
+        );
+    }
+
+    #[test]
+    fn the_inverse_of_an_y_rotation_rotates_in_the_opposite_direction() {
+        assert_relative_eq!(
+            Matrix::rotate_y(Angle::from_degrees(45.0)).invert().unwrap()
+                * Point::new(0.0, 0.0, 1.0),
+            Point::new(-FRAC_1_SQRT_2, 0.0, FRAC_1_SQRT_2)
+        );
+    }
+
+    #[test]
+    fn rotating_a_point_around_the_z_axis() {
+        assert_relative_eq!(
+            Matrix::rotate_z(Angle::from_radians(FRAC_PI_4))
+                * Point::new(0.0, 1.0, 0.0),
+            Point::new(-FRAC_1_SQRT_2, FRAC_1_SQRT_2, 0.0)
+        );
+
+        assert_relative_eq!(
+            Matrix::rotate_z(Angle::from_degrees(90.0)) * Vector::y_axis(),
+            -Vector::x_axis()
+        );
+    }
+
+    #[test]
+    fn the_inverse_of_an_z_rotation_rotates_in_the_opposite_direction() {
+        assert_relative_eq!(
+            Matrix::rotate_z(Angle::from_radians(FRAC_PI_4)).invert().unwrap()
+                * Point::new(0.0, 1.0, 0.0),
+            Point::new(FRAC_1_SQRT_2, FRAC_1_SQRT_2, 0.0)
+        );
+    }
+
+    #[test]
+    fn a_shearing_transformation_moves_x_in_proportion_to_y() {
+        assert_relative_eq!(
+            Matrix::shear(1.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+                * Point::new(2.0, 3.0, 4.0),
             Point::new(5.0, 3.0, 4.0)
         );
+    }
+
+    #[test]
+    fn a_shearing_transformation_moves_x_in_proportion_to_z() {
         assert_relative_eq!(
-            Matrix::shear(0.0, 1.0, 0.0, 0.0, 0.0, 0.0) * p,
+            Matrix::shear(0.0, 1.0, 0.0, 0.0, 0.0, 0.0)
+                * Point::new(2.0, 3.0, 4.0),
             Point::new(6.0, 3.0, 4.0)
         );
+    }
 
+    #[test]
+    fn a_shearing_transformation_moves_y_in_proportion_to_x() {
         assert_relative_eq!(
-            Matrix::shear(0.0, 0.0, 1.0, 0.0, 0.0, 0.0) * p,
+            Matrix::shear(0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
+                * Point::new(2.0, 3.0, 4.0),
             Point::new(2.0, 5.0, 4.0)
         );
+    }
+
+    #[test]
+    fn a_shearing_transformation_moves_y_in_proportion_to_z() {
         assert_relative_eq!(
-            Matrix::shear(0.0, 0.0, 0.0, 1.0, 0.0, 0.0) * p,
+            Matrix::shear(0.0, 0.0, 0.0, 1.0, 0.0, 0.0)
+                * Point::new(2.0, 3.0, 4.0),
             Point::new(2.0, 7.0, 4.0)
         );
+    }
 
+    #[test]
+    fn a_shearing_transformation_moves_z_in_proportion_to_x() {
         assert_relative_eq!(
-            Matrix::shear(0.0, 0.0, 0.0, 0.0, 1.0, 0.0) * p,
+            Matrix::shear(0.0, 0.0, 0.0, 0.0, 1.0, 0.0)
+                * Point::new(2.0, 3.0, 4.0),
             Point::new(2.0, 3.0, 6.0)
         );
+    }
+
+    #[test]
+    fn a_shearing_transformation_moves_z_in_proportion_to_y() {
         assert_relative_eq!(
-            Matrix::shear(0.0, 0.0, 0.0, 0.0, 0.0, 1.0) * p,
+            Matrix::shear(0.0, 0.0, 0.0, 0.0, 0.0, 1.0)
+                * Point::new(2.0, 3.0, 4.0),
             Point::new(2.0, 3.0, 7.0)
         );
-
-        let m = Matrix::shear(1.0, 2.9, 0.0, 1.0, 2.5, 5.2);
-        assert_relative_eq!(m.invert().unwrap() * m * p, p);
     }
 
     #[test]
-    fn translate() {
-        let m = Matrix::translate(5.0, -3.0, 2.0);
-
-        assert_relative_eq!(
-            m * Point::new(-3.0, 4.0, 5.0),
-            Point::new(2.0, 1.0, 7.0)
-        );
-
-        assert_relative_eq!(
-            m.invert().unwrap() * Point::new(-3.0, 4.0, 5.0),
-            Point::new(-8.0, 7.0, 3.0)
-        );
-
-        let v = Vector::new(-3.0, 4.0, 5.0);
-
-        assert_relative_eq!(m * v, v);
-    }
-
-    #[test]
-    fn transpose() {
-        assert_relative_eq!(
-            Matrix::new([
-                [0.0, 9.0, 3.0, 0.0],
-                [9.0, 8.0, 0.0, 8.0],
-                [1.0, 8.0, 5.0, 3.0],
-                [0.0, 0.0, 5.0, 8.0]
-            ])
-            .transpose(),
-            Matrix::new([
-                [0.0, 9.0, 1.0, 0.0],
-                [9.0, 8.0, 8.0, 0.0],
-                [3.0, 0.0, 5.0, 5.0],
-                [0.0, 8.0, 3.0, 8.0]
-            ])
-        );
-
-        assert_relative_eq!(Matrix::identity().transpose(), Matrix::identity());
-    }
-
-    #[test]
-    fn chaining_transforms() {
-        let point = Point::new(1.0, 0.0, 1.0);
-        let final_point = Point::new(15.0, 0.0, 7.0);
-
-        let rotate = Matrix::rotate_x(Angle::from_radians(FRAC_PI_2));
-        let scale = Matrix::scale(5.0, 5.0, 5.0);
-        let translate = Matrix::translate(10.0, 5.0, 7.0);
-
-        let mut p = rotate * point;
+    fn individual_transformations_are_applied_in_sequence() {
+        let mut p = Matrix::rotate_x(Angle::from_radians(FRAC_PI_2))
+            * Point::new(1.0, 0.0, 1.0);
         assert_relative_eq!(p, Point::new(1.0, -1.0, 0.0));
 
-        p = scale * p;
+        p = Matrix::scale(5.0, 5.0, 5.0) * p;
         assert_relative_eq!(p, Point::new(5.0, -5.0, 0.0));
 
-        p = translate * p;
-        assert_relative_eq!(p, final_point);
-
-        let chain = translate * scale * rotate;
-
-        assert_relative_eq!(chain * point, final_point);
-
-        assert_relative_eq!(chain.invert().unwrap() * final_point, point);
+        p = Matrix::translate(10.0, 5.0, 7.0) * p;
+        assert_relative_eq!(p, Point::new(15.0, 0.0, 7.0));
     }
 
     #[test]
-    fn cofactor() {
-        let m =
-            Matrix::new([[3.0, 5.0, 0.0], [2.0, -1.0, -7.0], [6.0, -1.0, 5.0]]);
+    fn chained_transformations_must_be_applied_in_reverse_order() {
+        let chain = Matrix::translate(10.0, 5.0, 7.0)
+            * Matrix::scale(5.0, 5.0, 5.0)
+            * Matrix::rotate_x(Angle::from_radians(FRAC_PI_2));
 
-        assert_float_relative_eq!(m.minor(0, 0), -12.0);
-        assert_float_relative_eq!(m.cofactor(0, 0), -12.0);
-
-        assert_float_relative_eq!(m.minor(1, 0), 25.0);
-        assert_float_relative_eq!(m.cofactor(1, 0), -25.0);
+        assert_relative_eq!(
+            chain * Point::new(1.0, 0.0, 1.0),
+            Point::new(15.0, 0.0, 7.0)
+        );
     }
 
     #[test]
-    fn determinant() {
+    fn the_transformation_matrix_for_the_default_orientation() {
+        assert_relative_eq!(
+            Matrix::view_transform(
+                &Point::origin(),
+                &Point::new(0.0, 0.0, -1.0),
+                &Vector::y_axis()
+            ),
+            Matrix::identity()
+        );
+    }
+
+    #[test]
+    fn a_view_transformation_matrix_looking_in_the_positive_z_direction() {
+        assert_relative_eq!(
+            Matrix::view_transform(
+                &Point::origin(),
+                &Point::new(0.0, 0.0, 1.0),
+                &Vector::y_axis()
+            ),
+            Matrix::scale(-1.0, 1.0, -1.0)
+        );
+    }
+
+    #[test]
+    fn the_view_transformation_moves_the_world() {
+        assert_relative_eq!(
+            Matrix::view_transform(
+                &Point::new(0.0, 0.0, 8.0),
+                &Point::origin(),
+                &Vector::y_axis()
+            ),
+            Matrix::translate(0.0, 0.0, -8.0)
+        );
+    }
+
+    #[test]
+    fn an_arbitrary_view_transformation() {
+        assert_relative_eq!(
+            Matrix::view_transform(
+                &Point::new(1.0, 3.0, 2.0),
+                &Point::new(4.0, -2.0, 8.0),
+                &Vector::new(1.0, 1.0, 0.0)
+            ),
+            Matrix::new([
+                [-0.507_093, 0.507_093, 0.676_123, -2.366_432],
+                [0.767_716, 0.606_092, 0.121_218, -2.828_427],
+                [-0.358_569, 0.597_614, -0.717_137, 0.0],
+                [0.0, 0.0, 0.0, 1.0]
+            ])
+        );
+    }
+
+    #[test]
+    fn calculating_the_determinant_of_a_2x2_matrix() {
         assert_float_relative_eq!(
             Matrix::new([[1.0, 5.0], [-3.0, 2.0]]).determinant(),
             17.0
         );
-
-        let m =
-            Matrix::new([[1.0, 2.0, 6.0], [-5.0, 8.0, -4.0], [2.0, 6.0, 4.0]]);
-
-        assert_float_relative_eq!(m.cofactor(0, 0), 56.0);
-        assert_float_relative_eq!(m.cofactor(0, 1), 12.0);
-        assert_float_relative_eq!(m.cofactor(0, 2), -46.0);
-
-        assert_float_relative_eq!(m.determinant(), -196.0);
-
-        let m = Matrix::new([
-            [-2.0, -8.0, 3.0, 5.0],
-            [-3.0, 1.0, 7.0, 3.0],
-            [1.0, 2.0, -9.0, 6.0],
-            [-6.0, 7.0, 7.0, -9.0],
-        ]);
-
-        assert_float_relative_eq!(m.cofactor(0, 0), 690.0);
-        assert_float_relative_eq!(m.cofactor(0, 1), 447.0);
-        assert_float_relative_eq!(m.cofactor(0, 2), 210.0);
-        assert_float_relative_eq!(m.cofactor(0, 3), 51.0);
-
-        assert_float_relative_eq!(m.determinant(), -4071.0);
     }
 
     #[test]
-    fn minor() {
-        let m =
-            Matrix::new([[3.0, 5.0, 0.0], [2.0, -1.0, -7.0], [6.0, -1.0, 5.0]]);
-
-        assert_float_relative_eq!(m.sub_matrix(1, 0).determinant(), 25.0);
-        assert_float_relative_eq!(m.minor(1, 0), 25.0);
-    }
-
-    #[test]
-    fn sub_matrix() {
+    fn a_sub_matrix_of_a_3x3_matrix_is_a_2x2_matrix() {
         assert_relative_eq!(
             Matrix::new([[1.0, 5.0, 0.0], [-3.0, 2.0, 7.0], [0.0, 6.0, -3.0]])
                 .sub_matrix(0, 2),
             Matrix::new([[-3.0, 2.0], [0.0, 6.0]])
         );
+    }
 
+    #[test]
+    fn a_sub_matrix_of_a_4x4_matrix_is_a_3x3_matrix() {
         assert_relative_eq!(
             Matrix::new([
                 [-6.0, 1.0, 1.0, 6.0],
@@ -878,7 +910,57 @@ mod tests {
     }
 
     #[test]
-    fn mul() {
+    fn calculating_a_minor_of_a_3x3_matrix() {
+        let m =
+            Matrix::new([[3.0, 5.0, 0.0], [2.0, -1.0, -7.0], [6.0, -1.0, 5.0]]);
+
+        assert_float_relative_eq!(m.sub_matrix(1, 0).determinant(), 25.0);
+        assert_float_relative_eq!(m.minor(1, 0), 25.0);
+    }
+
+    #[test]
+    fn calculating_a_cofactor_of_a_3x3_matrix() {
+        let m =
+            Matrix::new([[3.0, 5.0, 0.0], [2.0, -1.0, -7.0], [6.0, -1.0, 5.0]]);
+
+        assert_float_relative_eq!(m.minor(0, 0), -12.0);
+        assert_float_relative_eq!(m.cofactor(0, 0), -12.0);
+
+        assert_float_relative_eq!(m.minor(1, 0), 25.0);
+        assert_float_relative_eq!(m.cofactor(1, 0), -25.0);
+    }
+
+    #[test]
+    fn calculating_the_determinant_of_a_3x3_matrix() {
+        let m =
+            Matrix::new([[1.0, 2.0, 6.0], [-5.0, 8.0, -4.0], [2.0, 6.0, 4.0]]);
+
+        assert_float_relative_eq!(m.cofactor(0, 0), 56.0);
+        assert_float_relative_eq!(m.cofactor(0, 1), 12.0);
+        assert_float_relative_eq!(m.cofactor(0, 2), -46.0);
+
+        assert_float_relative_eq!(m.determinant(), -196.0);
+    }
+
+    #[test]
+    fn calculating_the_determinant_of_a_4x4_matrix() {
+        let m = Matrix::new([
+            [-2.0, -8.0, 3.0, 5.0],
+            [-3.0, 1.0, 7.0, 3.0],
+            [1.0, 2.0, -9.0, 6.0],
+            [-6.0, 7.0, 7.0, -9.0],
+        ]);
+
+        assert_float_relative_eq!(m.cofactor(0, 0), 690.0);
+        assert_float_relative_eq!(m.cofactor(0, 1), 447.0);
+        assert_float_relative_eq!(m.cofactor(0, 2), 210.0);
+        assert_float_relative_eq!(m.cofactor(0, 3), 51.0);
+
+        assert_float_relative_eq!(m.determinant(), -4071.0);
+    }
+
+    #[test]
+    fn multiplying_two_matrices() {
         assert_relative_eq!(
             Matrix::new([
                 [1.0, 2.0, 3.0, 4.0],
@@ -899,29 +981,6 @@ mod tests {
             ])
         );
 
-        assert_relative_eq!(
-            Matrix::new([
-                [1.0, 2.0, 3.0, 4.0],
-                [2.0, 4.0, 4.0, 2.0],
-                [8.0, 6.0, 4.0, 1.0],
-                [0.0, 0.0, 0.0, 1.0]
-            ]) * Point::new(1.0, 2.0, 3.0),
-            Point::new(18.0, 24.0, 33.0)
-        );
-
-        assert_relative_eq!(
-            Matrix::new([
-                [1.0, 2.0, -2.0, 3.0],
-                [0.0, 2.5, 0.1, 0.8],
-                [2.4, 4.8, 0.112, -2.5],
-                [1.7, 0.6, 2.3, 1.5]
-            ]) * Vector::new(1.5, 2.5, 4.0),
-            Vector::new(-1.5, 6.65, 16.048)
-        );
-    }
-
-    #[test]
-    fn mul_assign() {
         let mut m = Matrix::new([
             [1.3, 0.5, 3.4, 12.0],
             [0.0, 0.9, 0.8, 2.11],
@@ -947,7 +1006,33 @@ mod tests {
     }
 
     #[test]
-    fn approx() {
+    fn matrix_multiplied_by_a_point() {
+        assert_relative_eq!(
+            Matrix::new([
+                [1.0, 2.0, 3.0, 4.0],
+                [2.0, 4.0, 4.0, 2.0],
+                [8.0, 6.0, 4.0, 1.0],
+                [0.0, 0.0, 0.0, 1.0]
+            ]) * Point::new(1.0, 2.0, 3.0),
+            Point::new(18.0, 24.0, 33.0)
+        );
+    }
+
+    #[test]
+    fn matrix_multiplied_by_a_vector() {
+        assert_relative_eq!(
+            Matrix::new([
+                [1.0, 2.0, -2.0, 3.0],
+                [0.0, 2.5, 0.1, 0.8],
+                [2.4, 4.8, 0.112, -2.5],
+                [1.7, 0.6, 2.3, 1.5]
+            ]) * Vector::new(1.5, 2.5, 4.0),
+            Vector::new(-1.5, 6.65, 16.048)
+        );
+    }
+
+    #[test]
+    fn matrices_are_approximately_equal() {
         let m1 = Matrix::new([
             [1.0, 2.0, 3.0, 4.0],
             [5.0, 6.0, 7.0, 8.0],
