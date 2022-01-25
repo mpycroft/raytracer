@@ -3,30 +3,31 @@ use std::ops::{Deref, DerefMut};
 use derive_more::Constructor;
 
 use crate::{
-    math::{approx::FLOAT_EPSILON, Point, Ray, Vector},
+    math::{Point, Ray, Vector},
+    util::{approx::FLOAT_EPSILON, float::Float},
     Object,
 };
 
 /// A trait that objects need to implement if they can be intersected in a
 /// scene, returns a list of the intersection points.
-pub trait Intersectable {
-    fn intersect(&self, ray: &Ray) -> Option<IntersectionPoints>;
-    fn normal_at(&self, point: &Point) -> Vector;
+pub trait Intersectable<T: Float> {
+    fn intersect(&self, ray: &Ray<T>) -> Option<IntersectionPoints<T>>;
+    fn normal_at(&self, point: &Point<T>) -> Vector<T>;
 }
 
 /// A list of intersection point (t values) where intersections occur for a
 /// given object.
 #[derive(Clone, Debug, Default, PartialEq, PartialOrd)]
-pub struct IntersectionPoints(Vec<f64>);
+pub struct IntersectionPoints<T: Float>(Vec<T>);
 
-impl From<Vec<f64>> for IntersectionPoints {
-    fn from(vec: Vec<f64>) -> Self {
+impl<T: Float> From<Vec<T>> for IntersectionPoints<T> {
+    fn from(vec: Vec<T>) -> Self {
         Self(vec)
     }
 }
 
-impl Deref for IntersectionPoints {
-    type Target = Vec<f64>;
+impl<T: Float> Deref for IntersectionPoints<T> {
+    type Target = Vec<T>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -36,18 +37,18 @@ impl Deref for IntersectionPoints {
 /// An Intersection stores both the t value of the intersection but also a
 /// reference to the object that was intersected.
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
-pub struct Intersection<'a> {
-    pub object: &'a Object,
-    pub t: f64,
+pub struct Intersection<'a, T: Float> {
+    pub object: &'a Object<T>,
+    pub t: T,
 }
 
-impl<'a> Intersection<'a> {
-    pub fn prepare_computations(&self, ray: &Ray) -> Computations<'a> {
+impl<'a, T: Float> Intersection<'a, T> {
+    pub fn prepare_computations(&self, ray: &Ray<T>) -> Computations<'a, T> {
         let point = ray.position(self.t);
         let eye = -ray.direction;
         let mut normal = self.object.normal_at(&point);
 
-        let inside = if eye.dot(&normal) < 0.0 {
+        let inside = if eye.dot(&normal) < T::zero() {
             normal = -normal;
 
             true
@@ -55,7 +56,7 @@ impl<'a> Intersection<'a> {
             false
         };
 
-        let over_point = point + normal * FLOAT_EPSILON;
+        let over_point = point + normal * T::from(FLOAT_EPSILON).unwrap();
 
         Computations::new(
             self.object,
@@ -73,19 +74,19 @@ impl<'a> Intersection<'a> {
 /// gives us type safety over using a plain Vec and makes it obvious what we are
 /// doing.
 #[derive(Clone, Debug, Default, PartialEq, PartialOrd)]
-pub struct IntersectionList<'a>(Vec<Intersection<'a>>);
+pub struct IntersectionList<'a, T: Float>(Vec<Intersection<'a, T>>);
 
-impl<'a> IntersectionList<'a> {
+impl<'a, T: Float> IntersectionList<'a, T> {
     pub fn new() -> Self {
         Self::default()
     }
 
-    pub fn hit(&self) -> Option<&Intersection> {
+    pub fn hit(&self) -> Option<&Intersection<T>> {
         let mut intersection = None;
-        let mut smallest = f64::INFINITY;
+        let mut smallest = T::infinity();
 
         for i in &self.0 {
-            if i.t < smallest && i.t >= 0.0 {
+            if i.t < smallest && i.t >= T::zero() {
                 smallest = i.t;
                 intersection = Some(i);
             }
@@ -95,21 +96,21 @@ impl<'a> IntersectionList<'a> {
     }
 }
 
-impl<'a> From<Vec<Intersection<'a>>> for IntersectionList<'a> {
-    fn from(vec: Vec<Intersection<'a>>) -> Self {
+impl<'a, T: Float> From<Vec<Intersection<'a, T>>> for IntersectionList<'a, T> {
+    fn from(vec: Vec<Intersection<'a, T>>) -> Self {
         Self(vec)
     }
 }
 
-impl<'a> Deref for IntersectionList<'a> {
-    type Target = Vec<Intersection<'a>>;
+impl<'a, T: Float> Deref for IntersectionList<'a, T> {
+    type Target = Vec<Intersection<'a, T>>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl<'a> DerefMut for IntersectionList<'a> {
+impl<'a, T: Float> DerefMut for IntersectionList<'a, T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
@@ -118,14 +119,14 @@ impl<'a> DerefMut for IntersectionList<'a> {
 /// The Computations struct is a helper structure to store precomputed values
 /// about an intersection.
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
-pub struct Computations<'a> {
-    pub object: &'a Object,
-    pub t: f64,
-    pub point: Point,
-    pub eye: Vector,
-    pub normal: Vector,
+pub struct Computations<'a, T: Float> {
+    pub object: &'a Object<T>,
+    pub t: T,
+    pub point: Point<T>,
+    pub eye: Vector<T>,
+    pub normal: Vector<T>,
     pub inside: bool,
-    pub over_point: Point,
+    pub over_point: Point<T>,
 }
 
 #[cfg(test)]

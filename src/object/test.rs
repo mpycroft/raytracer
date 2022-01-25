@@ -1,44 +1,50 @@
 use std::cell::Cell;
 
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
+use num_traits::FromPrimitive;
 
 use crate::{
     intersect::{Intersectable, IntersectionPoints},
-    math::{
+    math::{Point, Ray, Vector},
+    util::{
         approx::{FLOAT_EPSILON, FLOAT_ULPS},
-        Point, Ray, Vector,
+        float::Float,
     },
 };
 
 /// Test is a shape intended purely for testing functions on Object.
 #[derive(Clone, Debug, Default, PartialEq, PartialOrd)]
-pub struct Test {
-    pub ray: Cell<Option<Ray>>,
+pub struct Test<T: Float> {
+    pub ray: Cell<Option<Ray<T>>>,
 }
 
-impl Test {
+impl<T: Float> Test<T> {
     pub fn new() -> Self {
         Self::default()
     }
 }
 
-impl Intersectable for Test {
-    fn intersect(&self, ray: &Ray) -> Option<IntersectionPoints> {
+impl<T: Float> Intersectable<T> for Test<T> {
+    fn intersect(&self, ray: &Ray<T>) -> Option<IntersectionPoints<T>> {
         self.ray.set(Some(*ray));
 
         None
     }
 
-    fn normal_at(&self, point: &Point) -> Vector {
+    fn normal_at(&self, point: &Point<T>) -> Vector<T> {
         Vector::new(point.x, point.y, point.z)
     }
 }
 
-impl AbsDiffEq for Test {
-    type Epsilon = f64;
+impl<T> AbsDiffEq for Test<T>
+where
+    T: Float + AbsDiffEq,
+    T::Epsilon: FromPrimitive + Copy,
+{
+    type Epsilon = T::Epsilon;
 
     fn default_epsilon() -> Self::Epsilon {
-        FLOAT_EPSILON
+        FromPrimitive::from_f64(FLOAT_EPSILON).unwrap()
     }
 
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
@@ -50,9 +56,13 @@ impl AbsDiffEq for Test {
     }
 }
 
-impl RelativeEq for Test {
+impl<T> RelativeEq for Test<T>
+where
+    T: Float + RelativeEq,
+    T::Epsilon: FromPrimitive + Copy,
+{
     fn default_max_relative() -> Self::Epsilon {
-        FLOAT_EPSILON
+        FromPrimitive::from_f64(FLOAT_EPSILON).unwrap()
     }
 
     fn relative_eq(
@@ -71,7 +81,11 @@ impl RelativeEq for Test {
     }
 }
 
-impl UlpsEq for Test {
+impl<T: Float> UlpsEq for Test<T>
+where
+    T: Float + UlpsEq,
+    T::Epsilon: FromPrimitive + Copy,
+{
     fn default_max_ulps() -> u32 {
         FLOAT_ULPS
     }
@@ -98,7 +112,7 @@ mod tests {
 
     #[test]
     fn creating_a_test_object() {
-        assert!(Test::new().ray.get().is_none());
+        assert!(Test::<f64>::new().ray.get().is_none());
     }
 
     #[test]
@@ -125,7 +139,7 @@ mod tests {
 
     #[test]
     fn test_objects_are_approximately_equal() {
-        let t1 = Test::new();
+        let t1 = Test::<f64>::new();
         t1.ray.set(Some(Ray::new(Point::origin(), Vector::y_axis())));
         let t2 = Test::new();
         t2.ray.set(Some(Ray::new(Point::origin(), Vector::y_axis())));

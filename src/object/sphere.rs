@@ -1,33 +1,38 @@
+use std::marker::PhantomData;
+
 use crate::{
     intersect::{Intersectable, IntersectionPoints},
     math::{Point, Ray, Vector},
+    util::float::Float,
 };
 
 /// A Sphere is a unit sphere centred at the origin (0, 0, 0).
 #[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
-pub struct Sphere;
+pub struct Sphere<T: Float> {
+    _phantom: PhantomData<T>,
+}
 
-impl Sphere {
+impl<T: Float> Sphere<T> {
     pub fn new() -> Self {
         Self::default()
     }
 }
 
-impl Intersectable for Sphere {
-    fn intersect(&self, ray: &Ray) -> Option<IntersectionPoints> {
+impl<T: Float> Intersectable<T> for Sphere<T> {
+    fn intersect(&self, ray: &Ray<T>) -> Option<IntersectionPoints<T>> {
         let sphere_to_ray = ray.origin - Point::origin();
 
         let a = ray.direction.dot(&ray.direction);
-        let b = 2.0 * ray.direction.dot(&sphere_to_ray);
-        let c = sphere_to_ray.dot(&sphere_to_ray) - 1.0;
+        let b = T::from(2.0f64).unwrap() * ray.direction.dot(&sphere_to_ray);
+        let c = sphere_to_ray.dot(&sphere_to_ray) - T::one();
 
-        let discriminant = b * b - 4.0 * a * c;
-        if discriminant < 0.0 {
+        let discriminant = b * b - T::from(4.0f64).unwrap() * a * c;
+        if discriminant < T::zero() {
             return None;
         }
 
         let discriminant = discriminant.sqrt();
-        let a = 2.0 * a;
+        let a = T::from(2.0f64).unwrap() * a;
 
         let t1 = (-b - discriminant) / a;
         let t2 = (-b + discriminant) / a;
@@ -35,12 +40,12 @@ impl Intersectable for Sphere {
         Some(vec![t1, t2].into())
     }
 
-    fn normal_at(&self, point: &Point) -> Vector {
+    fn normal_at(&self, point: &Point<T>) -> Vector<T> {
         *point - Point::origin()
     }
 }
 
-add_approx_traits!(Sphere { true });
+add_approx_traits!(Sphere<T> { true });
 
 #[cfg(test)]
 mod tests {
@@ -80,7 +85,7 @@ mod tests {
 
     #[test]
     fn a_ray_originates_inside_a_sphere() {
-        let i = Sphere::new()
+        let i = Sphere::<f64>::new()
             .intersect(&Ray::new(Point::origin(), Vector::z_axis()))
             .unwrap();
 
@@ -143,7 +148,7 @@ mod tests {
 
     #[test]
     fn spheres_are_approximately_equal() {
-        let s1 = Sphere::new();
+        let s1 = Sphere::<f64>::new();
         let s2 = Sphere::new();
 
         assert_abs_diff_eq!(s1, s2);

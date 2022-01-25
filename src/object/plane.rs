@@ -1,34 +1,39 @@
+use std::marker::PhantomData;
+
 use crate::{
     intersect::IntersectionPoints,
-    math::{approx::FLOAT_EPSILON, Point, Ray, Vector},
+    math::{Point, Ray, Vector},
+    util::{approx::FLOAT_EPSILON, float::Float},
     Intersectable,
 };
 
 /// A Plane is an infinitely large plane situated along the x and z axes.
 #[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
-pub struct Plane;
+pub struct Plane<T: Float> {
+    _phantom: PhantomData<T>,
+}
 
-impl Plane {
+impl<T: Float> Plane<T> {
     pub fn new() -> Self {
         Self::default()
     }
 }
 
-impl Intersectable for Plane {
-    fn intersect(&self, ray: &Ray) -> Option<IntersectionPoints> {
-        if ray.direction.y.abs() < FLOAT_EPSILON {
+impl<T: Float> Intersectable<T> for Plane<T> {
+    fn intersect(&self, ray: &Ray<T>) -> Option<IntersectionPoints<T>> {
+        if ray.direction.y.abs() < T::from(FLOAT_EPSILON).unwrap() {
             return None;
         }
 
         Some(vec![-ray.origin.y / ray.direction.y].into())
     }
 
-    fn normal_at(&self, _point: &Point) -> Vector {
+    fn normal_at(&self, _point: &Point<T>) -> Vector<T> {
         Vector::y_axis()
     }
 }
 
-add_approx_traits!(Plane { true });
+add_approx_traits!(Plane<T> { true });
 
 #[cfg(test)]
 mod tests {
@@ -87,7 +92,7 @@ mod tests {
 
     #[test]
     fn planes_are_approximately_equal() {
-        let p1 = Plane::new();
+        let p1 = Plane::<f64>::new();
         let p2 = Plane::new();
 
         assert_abs_diff_eq!(p1, p2);

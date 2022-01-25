@@ -4,6 +4,7 @@ mod sphere;
 mod test;
 
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
+use num_traits::FromPrimitive;
 use paste::paste;
 
 #[cfg(test)]
@@ -11,24 +12,25 @@ use self::test::Test;
 use self::{plane::Plane, sphere::Sphere};
 use crate::{
     intersect::{Intersectable, IntersectionPoints},
-    math::{
+    math::{Point, Ray, Transform, Vector},
+    util::{
         approx::{FLOAT_EPSILON, FLOAT_ULPS},
-        Point, Ray, Transform, Vector,
+        float::Float,
     },
     Material,
 };
 
 /// An Object represents some entity in the scene that can be rendered.
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
-pub struct Object {
-    pub transform: Transform,
-    pub material: Material,
-    pub shape: Shape,
+pub struct Object<T: Float> {
+    pub transform: Transform<T>,
+    pub material: Material<T>,
+    pub shape: Shape<T>,
 }
 
 macro_rules! add_shape_fns {
     (@add $fn_new:ident, $fn_default:ident, $shape:ident) => {
-        pub fn $fn_new(transform: Transform, material: Material) -> Self {
+        pub fn $fn_new(transform: Transform<T>, material: Material<T>) -> Self {
             Self::new(transform, material, Shape::$shape($shape::new()))
         }
 
@@ -49,12 +51,16 @@ macro_rules! add_shape_fns {
     };
 }
 
-impl Object {
-    fn new(transform: Transform, material: Material, shape: Shape) -> Self {
+impl<T: Float> Object<T> {
+    fn new(
+        transform: Transform<T>,
+        material: Material<T>,
+        shape: Shape<T>,
+    ) -> Self {
         Self { transform, material, shape }
     }
 
-    fn default(shape: Shape) -> Self {
+    fn default(shape: Shape<T>) -> Self {
         Self::new(Transform::default(), Material::default(), shape)
     }
 
@@ -64,14 +70,14 @@ impl Object {
     add_shape_fns!(Test);
 }
 
-impl Intersectable for Object {
-    fn intersect(&self, ray: &Ray) -> Option<IntersectionPoints> {
+impl<T: Float> Intersectable<T> for Object<T> {
+    fn intersect(&self, ray: &Ray<T>) -> Option<IntersectionPoints<T>> {
         let local_ray = self.transform.invert().apply(ray);
 
         self.shape.intersect(&local_ray)
     }
 
-    fn normal_at(&self, point: &Point) -> Vector {
+    fn normal_at(&self, point: &Point<T>) -> Vector<T> {
         let local_point = self.transform.invert().apply(point);
 
         let local_normal = self.shape.normal_at(&local_point);
@@ -80,19 +86,19 @@ impl Intersectable for Object {
     }
 }
 
-add_approx_traits!(Object { transform, material, shape });
+add_approx_traits!(Object<T> { transform, material, shape });
 
 /// Shape is a list of the various geometries that can be rendered.
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
-pub enum Shape {
-    Sphere(Sphere),
-    Plane(Plane),
+pub enum Shape<T: Float> {
+    Sphere(Sphere<T>),
+    Plane(Plane<T>),
     #[cfg(test)]
-    Test(Test),
+    Test(Test<T>),
 }
 
-impl Intersectable for Shape {
-    fn intersect(&self, ray: &Ray) -> Option<IntersectionPoints> {
+impl<T: Float> Intersectable<T> for Shape<T> {
+    fn intersect(&self, ray: &Ray<T>) -> Option<IntersectionPoints<T>> {
         match self {
             Shape::Sphere(sphere) => sphere.intersect(ray),
             Shape::Plane(plane) => plane.intersect(ray),
@@ -101,7 +107,7 @@ impl Intersectable for Shape {
         }
     }
 
-    fn normal_at(&self, point: &Point) -> Vector {
+    fn normal_at(&self, point: &Point<T>) -> Vector<T> {
         match self {
             Shape::Sphere(sphere) => sphere.normal_at(point),
             Shape::Plane(plane) => plane.normal_at(point),
@@ -111,11 +117,15 @@ impl Intersectable for Shape {
     }
 }
 
-impl AbsDiffEq for Shape {
-    type Epsilon = f64;
+impl<T> AbsDiffEq for Shape<T>
+where
+    T: Float + AbsDiffEq,
+    T::Epsilon: FromPrimitive + Copy,
+{
+    type Epsilon = T::Epsilon;
 
     fn default_epsilon() -> Self::Epsilon {
-        FLOAT_EPSILON
+        FromPrimitive::from_f64(FLOAT_EPSILON).unwrap()
     }
 
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
@@ -135,9 +145,13 @@ impl AbsDiffEq for Shape {
     }
 }
 
-impl RelativeEq for Shape {
+impl<T> RelativeEq for Shape<T>
+where
+    T: Float + RelativeEq,
+    T::Epsilon: FromPrimitive + Copy,
+{
     fn default_max_relative() -> Self::Epsilon {
-        FLOAT_EPSILON
+        FromPrimitive::from_f64(FLOAT_EPSILON).unwrap()
     }
 
     fn relative_eq(
@@ -162,7 +176,11 @@ impl RelativeEq for Shape {
     }
 }
 
-impl UlpsEq for Shape {
+impl<T> UlpsEq for Shape<T>
+where
+    T: Float + UlpsEq,
+    T::Epsilon: FromPrimitive + Copy,
+{
     fn default_max_ulps() -> u32 {
         FLOAT_ULPS
     }
@@ -213,7 +231,7 @@ mod tests {
 
     #[test]
     fn an_objects_default_transformation_and_material() {
-        let s = Shape::Test(Test::default());
+        let s = Shape::<f64>::Test(Test::default());
 
         let o = Object::default(s.clone());
 
@@ -224,44 +242,44 @@ mod tests {
 
     #[test]
     fn creating_a_new_sphere() {
-        let t = Transform::from_shear(0.0, 1.0, 1.0, 0.0, 0.0, 0.0);
+        let t = Transform::<f64>::from_shear(0.0, 1.0, 1.0, 0.0, 0.0, 0.0);
         let m = Material::default();
 
         let o = Object::new_sphere(t, m);
 
         assert_relative_eq!(o.transform, t);
         assert_relative_eq!(o.material, m);
-        assert_relative_eq!(o.shape, Shape::Sphere(Sphere));
+        assert_relative_eq!(o.shape, Shape::Sphere(Sphere::new()));
     }
 
     #[test]
     fn creating_a_default_sphere() {
-        let o = Object::default_sphere();
+        let o = Object::<f64>::default_sphere();
 
         assert_relative_eq!(o.transform, Transform::default());
         assert_relative_eq!(o.material, Material::default());
-        assert_relative_eq!(o.shape, Shape::Sphere(Sphere));
+        assert_relative_eq!(o.shape, Shape::Sphere(Sphere::default()));
     }
 
     #[test]
     fn creating_a_new_plane() {
-        let t = Transform::from_rotate_x(Angle::from_degrees(30.0));
+        let t = Transform::from_rotate_x(Angle::from_degrees(30.0f64));
         let m = Material::default();
 
         let o = Object::new_plane(t, m);
 
         assert_relative_eq!(o.transform, t);
         assert_relative_eq!(o.material, m);
-        assert_relative_eq!(o.shape, Shape::Plane(Plane));
+        assert_relative_eq!(o.shape, Shape::Plane(Plane::new()));
     }
 
     #[test]
     fn creating_a_default_plane() {
-        let o = Object::default_plane();
+        let o = Object::<f64>::default_plane();
 
         assert_relative_eq!(o.transform, Transform::default());
         assert_relative_eq!(o.material, Material::default());
-        assert_relative_eq!(o.shape, Shape::Plane(Plane));
+        assert_relative_eq!(o.shape, Shape::Plane(Plane::default()));
     }
 
     #[test]
@@ -273,12 +291,12 @@ mod tests {
 
         assert_relative_eq!(o.transform, t);
         assert_relative_eq!(o.material, m);
-        assert_relative_eq!(o.shape, Shape::Test(Test::default()));
+        assert_relative_eq!(o.shape, Shape::Test(Test::new()));
     }
 
     #[test]
     fn creating_a_default_test_object() {
-        let o = Object::default_test();
+        let o = Object::<f64>::default_test();
 
         assert_relative_eq!(o.transform, Transform::default());
         assert_relative_eq!(o.material, Material::default());
