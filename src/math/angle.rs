@@ -1,5 +1,3 @@
-use std::ops::Mul;
-
 use derive_more::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign,
 };
@@ -66,13 +64,7 @@ impl<T: Float> Angle<T> {
     }
 }
 
-impl<T: Float> Mul<Angle<T>> for f64 {
-    type Output = Angle<T>;
-
-    fn mul(self, rhs: Angle<T>) -> Self::Output {
-        rhs * T::from(self).unwrap()
-    }
-}
+add_left_mul_scaler!(Angle<T>);
 
 add_approx_traits!(Angle<T> { radians });
 

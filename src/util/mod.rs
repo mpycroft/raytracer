@@ -3,3 +3,5 @@
 
 #[macro_use]
 pub mod approx;
+#[macro_use]
+pub mod operator;

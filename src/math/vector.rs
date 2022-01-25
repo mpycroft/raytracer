@@ -1,5 +1,3 @@
-use std::ops::Mul;
-
 use derive_more::{
     Add, AddAssign, Constructor, Div, DivAssign, Mul, MulAssign, Neg, Sub,
     SubAssign,
@@ -61,13 +59,7 @@ impl<T: Float> Vector<T> {
     }
 }
 
-impl<T: Float> Mul<Vector<T>> for f64 {
-    type Output = Vector<T>;
-
-    fn mul(self, rhs: Vector<T>) -> Self::Output {
-        rhs * T::from(self).unwrap()
-    }
-}
+add_left_mul_scaler!(Vector<T>);
 
 add_approx_traits!(Vector<T> { x, y, z });
 
