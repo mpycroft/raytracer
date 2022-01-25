@@ -82,6 +82,7 @@ dependencies = [
  "anyhow",
  "approx",
  "derive_more",
+ "num-traits",
  "paste",
 ]
 
