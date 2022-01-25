@@ -8,7 +8,13 @@ use std::{
 /// makes our types more restrictive than needed it doesn't matter for our use
 /// case.
 pub trait Float:
-    num_traits::Float + AddAssign + DivAssign + MulAssign + SubAssign + Debug
+    num_traits::Float
+    + AddAssign
+    + DivAssign
+    + MulAssign
+    + SubAssign
+    + Debug
+    + Default
 {
 }
 
@@ -20,5 +26,6 @@ impl<T> Float for T where
         + MulAssign
         + SubAssign
         + Debug
+        + Default
 {
 }

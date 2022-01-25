@@ -1,16 +1,16 @@
 use derive_more::Constructor;
 
-use crate::{math::Point, Colour};
+use crate::{math::Point, util::float::Float, Colour};
 
 /// A PointLight is a light source that has no size and radiates light in all
 /// directions equally.
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
-pub struct PointLight {
-    pub intensity: Colour,
-    pub position: Point,
+pub struct PointLight<T: Float> {
+    pub intensity: Colour<T>,
+    pub position: Point<T>,
 }
 
-add_approx_traits!(PointLight { intensity, position });
+add_approx_traits!(PointLight<T> { intensity, position });
 
 #[cfg(test)]
 mod tests {
@@ -20,7 +20,7 @@ mod tests {
 
     #[test]
     fn a_point_light_has_a_position_and_intensity() {
-        let c = Colour::white();
+        let c = Colour::<f64>::white();
         let p = Point::origin();
         let l = PointLight::new(c, p);
 

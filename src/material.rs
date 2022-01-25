@@ -2,29 +2,30 @@ use derive_more::Constructor;
 
 use crate::{
     math::{Point, Vector},
+    util::float::Float,
     Colour, PointLight,
 };
 
 /// Material represents what a given object is made up of including what colour
 /// it is and how it reacts to light.
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
-pub struct Material {
-    pub colour: Colour,
-    pub ambient: f64,
-    pub diffuse: f64,
-    pub specular: f64,
-    pub shininess: f64,
+pub struct Material<T: Float> {
+    pub colour: Colour<T>,
+    pub ambient: T,
+    pub diffuse: T,
+    pub specular: T,
+    pub shininess: T,
 }
 
-impl Material {
+impl<T: Float> Material<T> {
     pub fn lighting(
         &self,
-        light: &PointLight,
-        point: &Point,
-        eye: &Vector,
-        normal: &Vector,
+        light: &PointLight<T>,
+        point: &Point<T>,
+        eye: &Vector<T>,
+        normal: &Vector<T>,
         in_shadow: bool,
-    ) -> Colour {
+    ) -> Colour<T> {
         let effective_colour = self.colour * light.intensity;
 
         let ambient = effective_colour * self.ambient;
@@ -36,7 +37,7 @@ impl Material {
         let light_vector = (light.position - *point).normalise();
 
         let light_dot_normal = light_vector.dot(normal);
-        let (diffuse, specular) = if light_dot_normal < 0.0 {
+        let (diffuse, specular) = if light_dot_normal < T::zero() {
             (Colour::black(), Colour::black())
         } else {
             let diffuse = effective_colour * self.diffuse * light_dot_normal;
@@ -44,7 +45,7 @@ impl Material {
             let reflect_vector = -light_vector.reflect(normal);
             let reflect_dot_eye = reflect_vector.dot(eye);
 
-            let specular = if reflect_dot_eye <= 0.0 {
+            let specular = if reflect_dot_eye <= T::zero() {
                 Colour::black()
             } else {
                 let factor = reflect_dot_eye.powf(self.shininess);
@@ -58,13 +59,19 @@ impl Material {
     }
 }
 
-impl Default for Material {
+impl<T: Float> Default for Material<T> {
     fn default() -> Self {
-        Self::new(Colour::white(), 0.1, 0.9, 0.9, 200.0)
+        Self::new(
+            Colour::white(),
+            T::from(0.1f64).unwrap(),
+            T::from(0.9f64).unwrap(),
+            T::from(0.9f64).unwrap(),
+            T::from(200.0f64).unwrap(),
+        )
     }
 }
 
-add_approx_traits!(Material { colour, ambient, diffuse, specular, shininess });
+add_approx_traits!(Material<T> { colour, ambient, diffuse, specular, shininess });
 
 #[cfg(test)]
 mod tests {
@@ -88,7 +95,7 @@ mod tests {
 
     #[test]
     fn the_default_material() {
-        let m = Material::default();
+        let m = Material::<f64>::default();
 
         assert_relative_eq!(m.colour, Colour::white());
         assert_float_relative_eq!(m.ambient, 0.1);

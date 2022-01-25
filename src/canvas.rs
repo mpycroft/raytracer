@@ -1,25 +1,26 @@
 use super::Colour;
+use crate::util::float::Float;
 
 /// The Canvas represents the area we are going to be drawing images onto. This
 /// will be a basic implementation and will probably need to be refactored later
 /// on if we want to use parallel rendering or different image formats.
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
-pub struct Canvas {
+pub struct Canvas<T: Float> {
     width: usize,
     height: usize,
-    pixels: Vec<Colour>,
+    pixels: Vec<Colour<T>>,
 }
 
-impl Canvas {
+impl<T: Float> Canvas<T> {
     pub fn new(width: usize, height: usize) -> Self {
         Self { width, height, pixels: vec![Colour::default(); width * height] }
     }
 
-    pub fn get_pixel(&self, x: usize, y: usize) -> Colour {
+    pub fn get_pixel(&self, x: usize, y: usize) -> Colour<T> {
         self.pixels[y * self.width + x]
     }
 
-    pub fn write_pixel(&mut self, x: usize, y: usize, colour: Colour) {
+    pub fn write_pixel(&mut self, x: usize, y: usize, colour: Colour<T>) {
         self.pixels[y * self.width + x] = colour;
     }
 
@@ -48,7 +49,7 @@ mod tests {
 
     #[test]
     fn creating_a_canvas() {
-        let c = Canvas::new(10, 20);
+        let c = Canvas::<f64>::new(10, 20);
 
         assert_eq!(c.width, 10);
         assert_eq!(c.height, 20);
@@ -60,7 +61,7 @@ mod tests {
 
     #[test]
     fn writing_pixels_to_a_canvas() {
-        let mut c = Canvas::new(10, 20);
+        let mut c = Canvas::<f64>::new(10, 20);
         let red = Colour::red();
 
         c.write_pixel(2, 3, red);
@@ -91,7 +92,7 @@ mod tests {
 
     #[test]
     fn constructing_the_ppm_header() {
-        let c = Canvas::new(5, 3);
+        let c = Canvas::<f64>::new(5, 3);
 
         let ppm = c.to_ppm();
         let ppm = ppm.lines().take(3).collect::<Vec<_>>().join("\n");
@@ -139,6 +140,9 @@ P3
 
     #[test]
     fn constructed_ppm_is_terminated_by_a_newline() {
-        assert_eq!(Canvas::new(5, 3).to_ppm().chars().last(), Some('\n'));
+        assert_eq!(
+            Canvas::<f64>::new(5, 3).to_ppm().chars().last(),
+            Some('\n')
+        );
     }
 }
