@@ -9,7 +9,7 @@ pub mod util;
 mod math;
 // mod camera;
 // mod canvas;
-// mod colour;
+mod colour;
 // mod intersect;
 // mod material;
 // mod object;
@@ -18,7 +18,7 @@ mod math;
 
 // pub use camera::Camera;
 // pub use canvas::Canvas;
-// pub use colour::Colour;
+pub use colour::Colour;
 // pub use intersect::Intersectable;
 // pub use material::Material;
 // pub use object::Object;

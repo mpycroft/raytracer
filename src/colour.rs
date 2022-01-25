@@ -3,71 +3,75 @@ use std::ops::{Mul, MulAssign};
 use derive_more::{
     Add, AddAssign, Constructor, Mul, MulAssign, Sub, SubAssign,
 };
+use num_traits::{clamp, ToPrimitive};
+
+use crate::util::float::Float;
 
 /// A Colour represents an RGB colour in the image, values generally range from
 /// 0.0..1.0 but can go outside this range before final processing.
 #[rustfmt::skip] // Don't merge these derives or we get a huge vertical list
 #[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd, Constructor)]
 #[derive(Add, AddAssign, Mul, MulAssign, Sub, SubAssign)]
-pub struct Colour {
-    pub r: f64,
-    pub g: f64,
-    pub b: f64,
+#[mul(forward)]
+#[mul_assign(forward)]
+pub struct Colour<T: Float> {
+    pub r: T,
+    pub g: T,
+    pub b: T,
 }
 
-impl Colour {
+impl<T: Float> Colour<T> {
     pub fn black() -> Self {
-        Self::new(0.0, 0.0, 0.0)
+        Self::new(T::zero(), T::zero(), T::zero())
     }
 
     pub fn white() -> Self {
-        Self::new(1.0, 1.0, 1.0)
+        Self::new(T::one(), T::one(), T::one())
     }
 
     pub fn red() -> Self {
-        Self::new(1.0, 0.0, 0.0)
+        Self::new(T::one(), T::zero(), T::zero())
     }
 
     pub fn green() -> Self {
-        Self::new(0.0, 1.0, 0.0)
+        Self::new(T::zero(), T::one(), T::zero())
     }
 
     pub fn blue() -> Self {
-        Self::new(0.0, 0.0, 1.0)
+        Self::new(T::zero(), T::zero(), T::one())
     }
 
-    pub fn to_rgb(&self) -> (u8, u8, u8) {
-        let convert = |c: f64| (c.clamp(0.0, 1.0) * 255.0) as u8;
+    pub fn to_rgb(self) -> (u8, u8, u8) {
+        let convert = |c: T| {
+            ToPrimitive::to_u8(
+                &(clamp(c, T::zero(), T::one()) * T::from(255.0f64).unwrap()),
+            )
+            .unwrap()
+        };
 
         (convert(self.r), convert(self.g), convert(self.b))
     }
 }
 
-impl Mul<Colour> for f64 {
-    type Output = Colour;
-
-    fn mul(self, rhs: Colour) -> Self::Output {
-        rhs * self
-    }
-}
-
-impl Mul for Colour {
+impl<T: Float> Mul<T> for Colour<T> {
     type Output = Self;
 
-    fn mul(self, rhs: Self) -> Self::Output {
-        Self::Output::new(self.r * rhs.r, self.g * rhs.g, self.b * rhs.b)
+    fn mul(self, rhs: T) -> Self::Output {
+        Self::Output::new(self.r * rhs, self.g * rhs, self.b * rhs)
     }
 }
 
-impl MulAssign for Colour {
-    fn mul_assign(&mut self, rhs: Self) {
-        self.r *= rhs.r;
-        self.g *= rhs.g;
-        self.b *= rhs.b;
+impl<T: Float> MulAssign<T> for Colour<T> {
+    fn mul_assign(&mut self, rhs: T) {
+        self.r *= rhs;
+        self.g *= rhs;
+        self.b *= rhs;
     }
 }
 
-add_approx_traits!(Colour { r, g, b });
+add_left_mul_scaler!(Colour<T>);
+
+add_approx_traits!(Colour<T> { r, g, b });
 
 #[cfg(test)]
 mod tests {
