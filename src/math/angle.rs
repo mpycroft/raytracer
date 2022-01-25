@@ -3,6 +3,7 @@ use std::ops::Mul;
 use derive_more::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign,
 };
+use num_traits::Float;
 use paste::paste;
 
 /// An Angle represents a geometric angle, it is simply a wrapper around a value
@@ -11,8 +12,8 @@ use paste::paste;
 #[rustfmt::skip] // Don't merge these derives or we get a huge vertical list
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 #[derive(Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign)]
-pub struct Angle {
-    radians: f64,
+pub struct Angle<T:Float> {
+    radians: T,
 }
 
 /// Add both trigonometric functions (sin, etc.) that operate on an Angle and
@@ -20,11 +21,11 @@ pub struct Angle {
 /// ratio and return an Angle.
 macro_rules! add_trigonometric_fns {
     (@impl $func:ident, $inv_func:ident) => {
-        pub fn $func(&self) -> f64 {
+        pub fn $func(&self) -> T {
             self.radians.$func()
         }
 
-        pub fn $inv_func(ratio: f64) -> Angle {
+        pub fn $inv_func(ratio: T) -> Angle<T> {
             Angle::from_radians(ratio.$inv_func())
         }
     };
@@ -37,43 +38,43 @@ macro_rules! add_trigonometric_fns {
     };
 }
 
-impl Angle {
-    pub fn from_radians(radians: f64) -> Self {
+impl<T: Float> Angle<T> {
+    pub fn from_radians(radians: T) -> Self {
         Angle { radians }
     }
 
-    pub fn from_degrees(degrees: f64) -> Self {
+    pub fn from_degrees(degrees: T) -> Self {
         Angle { radians: degrees.to_radians() }
     }
 
-    pub fn to_radians(self) -> f64 {
+    pub fn to_radians(self) -> T {
         self.radians
     }
 
-    pub fn to_degrees(self) -> f64 {
+    pub fn to_degrees(self) -> T {
         self.radians.to_degrees()
     }
 
     add_trigonometric_fns!(sin, cos, tan);
 
-    pub fn sin_cos(&self) -> (f64, f64) {
+    pub fn sin_cos(&self) -> (T, T) {
         self.radians.sin_cos()
     }
 
-    pub fn atan2(y: f64, x: f64) -> Angle {
+    pub fn atan2(y: T, x: T) -> Angle<T> {
         Angle::from_radians(y.atan2(x))
     }
 }
 
-impl Mul<Angle> for f64 {
-    type Output = Angle;
+impl<T: Float> Mul<Angle<T>> for f64 {
+    type Output = Angle<T>;
 
-    fn mul(self, rhs: Angle) -> Self::Output {
-        rhs * self
+    fn mul(self, rhs: Angle<T>) -> Self::Output {
+        rhs * T::from(self).unwrap()
     }
 }
 
-add_approx_traits!(Angle { radians });
+add_approx_traits!(Angle<T> { radians });
 
 #[cfg(test)]
 mod tests {

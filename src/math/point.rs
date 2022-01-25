@@ -1,73 +1,74 @@
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
 use derive_more::Constructor;
+use num_traits::Float;
 
 use super::Vector;
 
 /// A Point is a representation of a geometric position within the 3 dimensional
 /// scene we are working on.
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
-pub struct Point {
-    pub x: f64,
-    pub y: f64,
-    pub z: f64,
+pub struct Point<T: Float> {
+    pub x: T,
+    pub y: T,
+    pub z: T,
 }
 
-impl Point {
+impl<T: Float> Point<T> {
     pub fn origin() -> Self {
-        Self::new(0.0, 0.0, 0.0)
+        Self::new(T::zero(), T::zero(), T::zero())
     }
 }
 
-impl Add<Vector> for Point {
+impl<T: Float> Add<Vector<T>> for Point<T> {
     type Output = Self;
 
-    fn add(self, rhs: Vector) -> Self::Output {
+    fn add(self, rhs: Vector<T>) -> Self::Output {
         Self::Output::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
     }
 }
 
-impl Add<Point> for Vector {
-    type Output = Point;
+impl<T: Float> Add<Point<T>> for Vector<T> {
+    type Output = Point<T>;
 
-    fn add(self, rhs: Point) -> Self::Output {
+    fn add(self, rhs: Point<T>) -> Self::Output {
         Self::Output::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
     }
 }
 
-impl AddAssign<Vector> for Point {
-    fn add_assign(&mut self, rhs: Vector) {
+impl<T: Float + AddAssign> AddAssign<Vector<T>> for Point<T> {
+    fn add_assign(&mut self, rhs: Vector<T>) {
         self.x += rhs.x;
         self.y += rhs.y;
         self.z += rhs.z;
     }
 }
 
-impl Sub for Point {
-    type Output = Vector;
+impl<T: Float> Sub for Point<T> {
+    type Output = Vector<T>;
 
     fn sub(self, rhs: Self) -> Self::Output {
         Self::Output::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
     }
 }
 
-impl Sub<Vector> for Point {
-    type Output = Point;
+impl<T: Float> Sub<Vector<T>> for Point<T> {
+    type Output = Point<T>;
 
-    fn sub(self, rhs: Vector) -> Self::Output {
+    fn sub(self, rhs: Vector<T>) -> Self::Output {
         Self::Output::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
     }
 }
 
-impl SubAssign<Vector> for Point {
-    fn sub_assign(&mut self, rhs: Vector) {
+impl<T: Float + SubAssign> SubAssign<Vector<T>> for Point<T> {
+    fn sub_assign(&mut self, rhs: Vector<T>) {
         self.x -= rhs.x;
         self.y -= rhs.y;
         self.z -= rhs.z;
     }
 }
 
-add_approx_traits!(Point { x, y, z });
+add_approx_traits!(Point<T> { x, y, z });
 
 #[cfg(test)]
 mod tests {
