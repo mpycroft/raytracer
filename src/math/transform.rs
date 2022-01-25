@@ -3,23 +3,24 @@ use std::ops::Mul;
 use paste::paste;
 
 use super::{Angle, Matrix, Point, Vector};
+use crate::util::float::Float;
 
 /// The Transformable trait describes how to apply a Transform to any given
 /// object, implementing this allows us to .apply() a Transform to an object via
 /// this trait. This is really just some syntactic sugar so we always apply
 /// Transform's to objects rather than transform objects with a given Transform.
-pub trait Transformable<'a> {
-    fn apply(&'a self, transform: &Transform) -> Self;
+pub trait Transformable<'a, T: Float> {
+    fn apply(&'a self, transform: &Transform<T>) -> Self;
 }
 
 /// Blanket implementation of Transformable for objects that can be multiplied
 /// by a matrix e.g. Points and Vectors.
-impl<'a, T> Transformable<'a> for T
+impl<'a, T: Float, U> Transformable<'a, T> for U
 where
-    Matrix<4>: Mul<T, Output = T>,
-    T: 'a + Copy,
+    Matrix<T, 4>: Mul<U, Output = U>,
+    U: 'a + Copy,
 {
-    fn apply(&'a self, transform: &Transform) -> Self {
+    fn apply(&'a self, transform: &Transform<T>) -> Self {
         transform.data * *self
     }
 }
@@ -30,8 +31,8 @@ where
 /// will perform the multiplications in reverse order as expected e.g. scale *
 /// rotate_x.
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct Transform {
-    data: Matrix<4>,
+pub struct Transform<T: Float> {
+    data: Matrix<T, 4>,
 }
 
 /// This macro adds a function to create a new transform directly (prefixed with
@@ -52,20 +53,24 @@ macro_rules! add_transform_fns {
     };
 }
 
-impl Transform {
+impl<T: Float> Transform<T> {
     pub fn new() -> Self {
         Self::from_matrix(Matrix::identity())
     }
 
-    pub fn view_transform(from: &Point, to: &Point, up: &Vector) -> Self {
+    pub fn view_transform(
+        from: &Point<T>,
+        to: &Point<T>,
+        up: &Vector<T>,
+    ) -> Self {
         Self::from_matrix(Matrix::view_transform(from, to, up))
     }
 
-    fn from_matrix(data: Matrix<4>) -> Self {
+    fn from_matrix(data: Matrix<T, 4>) -> Self {
         Self { data }
     }
 
-    pub fn apply<'a, T: Transformable<'a>>(&self, object: &'a T) -> T {
+    pub fn apply<'a, U: Transformable<'a, T>>(&self, object: &'a U) -> U {
         object.apply(self)
     }
 
@@ -87,31 +92,24 @@ impl Transform {
         Self::from_matrix(self.data.transpose())
     }
 
-    add_transform_fns!(rotate_x(angle: Angle));
-    add_transform_fns!(rotate_y(angle: Angle));
-    add_transform_fns!(rotate_z(angle: Angle));
+    add_transform_fns!(rotate_x(angle: Angle<T>));
+    add_transform_fns!(rotate_y(angle: Angle<T>));
+    add_transform_fns!(rotate_z(angle: Angle<T>));
 
-    add_transform_fns!(scale(x: f64, y: f64, z: f64));
+    add_transform_fns!(scale(x: T, y: T, z: T));
 
-    add_transform_fns!(shear(
-        xy: f64,
-        xz: f64,
-        yx: f64,
-        yz: f64,
-        zx: f64,
-        zy: f64,
-    ));
+    add_transform_fns!(shear(xy: T, xz: T, yx: T, yz: T, zx: T, zy: T,));
 
-    add_transform_fns!(translate(x: f64, y: f64, z: f64));
+    add_transform_fns!(translate(x: T, y: T, z: T));
 }
 
-impl Default for Transform {
+impl<T: Float> Default for Transform<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-add_approx_traits!(Transform { data });
+add_approx_traits!(Transform<T> { data });
 
 #[cfg(test)]
 mod tests {
@@ -123,12 +121,12 @@ mod tests {
 
     #[test]
     fn a_new_transform_is_the_identity_transformation() {
-        assert_relative_eq!(Transform::new().data, Matrix::identity());
+        assert_relative_eq!(Transform::<f64>::new().data, Matrix::identity());
     }
 
     #[test]
     fn a_default_transform_is_the_identity_transformation() {
-        assert_relative_eq!(Transform::new(), Transform::default());
+        assert_relative_eq!(Transform::<f64>::new(), Transform::default());
     }
 
     #[test]

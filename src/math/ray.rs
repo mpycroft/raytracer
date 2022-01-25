@@ -1,23 +1,25 @@
 use derive_more::Constructor;
 
+use crate::util::float::Float;
+
 use super::{Point, Transform, Transformable, Vector};
 
 /// A Ray represents a geometric vector with a specific origin point and
 /// pointing in some direction.
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
-pub struct Ray {
-    pub origin: Point,
-    pub direction: Vector,
+pub struct Ray<T: Float> {
+    pub origin: Point<T>,
+    pub direction: Vector<T>,
 }
 
-impl Ray {
-    pub fn position(&self, t: f64) -> Point {
+impl<T: Float> Ray<T> {
+    pub fn position(&self, t: T) -> Point<T> {
         self.origin + self.direction * t
     }
 }
 
-impl<'a> Transformable<'a> for Ray {
-    fn apply(&'a self, transform: &Transform) -> Self {
+impl<'a, T: Float> Transformable<'a, T> for Ray<T> {
+    fn apply(&'a self, transform: &Transform<T>) -> Self {
         Self::new(
             transform.apply(&self.origin),
             transform.apply(&self.direction),
@@ -25,7 +27,7 @@ impl<'a> Transformable<'a> for Ray {
     }
 }
 
-add_approx_traits!(Ray { origin, direction });
+add_approx_traits!(Ray<T> { origin, direction });
 
 #[cfg(test)]
 mod tests {
