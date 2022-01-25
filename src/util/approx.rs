@@ -97,24 +97,6 @@ macro_rules! add_approx_traits {
     };
 }
 
-/// Compare if two floating point values are equal.
-macro_rules! float_relative_eq {
-    ($lhs:expr, $rhs:expr) => {
-        approx::relative_eq!(
-            $lhs,
-            $rhs,
-            epsilon = num_traits::FromPrimitive::from_f64(
-                crate::util::approx::FLOAT_EPSILON
-            )
-            .unwrap(),
-            max_relative = num_traits::FromPrimitive::from_f64(
-                crate::util::approx::FLOAT_EPSILON
-            )
-            .unwrap()
-        )
-    };
-}
-
 /// Assert that two floating point values are equal.
 #[cfg(test)]
 macro_rules! assert_float_relative_eq {

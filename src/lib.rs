@@ -5,13 +5,13 @@
 
 #[macro_use]
 pub mod util;
+pub mod math;
 
 mod camera;
 mod canvas;
 mod colour;
 mod intersect;
 mod material;
-mod math;
 mod object;
 mod point_light;
 mod world;
