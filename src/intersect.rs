@@ -155,12 +155,14 @@ mod tests {
     }
 
     #[test]
-    fn prepare_computations() {
-        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
+    fn precomputing_the_state_when_an_intersection_occurs_on_the_outside() {
         let o = Object::default_sphere();
         let i = Intersection::new(&o, 4.0);
 
-        let c = i.prepare_computations(&r);
+        let c = i.prepare_computations(&Ray::new(
+            Point::new(0.0, 0.0, -5.0),
+            Vector::z_axis(),
+        ));
 
         assert_float_relative_eq!(c.t, i.t);
         assert_relative_eq!(c.object, i.object);
@@ -168,25 +170,32 @@ mod tests {
         assert_relative_eq!(c.eye, -Vector::z_axis());
         assert_relative_eq!(c.normal, -Vector::z_axis());
         assert!(!c.inside);
+    }
 
-        let r = Ray::new(Point::origin(), Vector::z_axis());
+    #[test]
+    fn precomputing_the_state_when_an_intersection_occurs_on_the_inside() {
+        let o = Object::default_sphere();
         let i = Intersection::new(&o, 1.0);
 
-        let c = i.prepare_computations(&r);
+        let c = i
+            .prepare_computations(&Ray::new(Point::origin(), Vector::z_axis()));
 
         assert_relative_eq!(c.point, Point::new(0.0, 0.0, 1.0));
         assert_relative_eq!(c.eye, -Vector::z_axis());
         assert_relative_eq!(c.normal, -Vector::z_axis());
         assert!(c.inside);
+    }
 
-        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
+    #[test]
+    fn the_hit_should_offset_the_point() {
         let o = Object::new_sphere(
             Transform::from_translate(0.0, 0.0, 1.0),
             Material::default(),
         );
-        let i = Intersection::new(&o, 5.0);
-
-        let c = i.prepare_computations(&r);
+        let c = Intersection::new(&o, 5.0).prepare_computations(&Ray::new(
+            Point::new(0.0, 0.0, -5.0),
+            Vector::z_axis(),
+        ));
 
         assert!(c.over_point.z < -(FLOAT_EPSILON / 2.0));
         assert!(c.point.z > c.over_point.z);

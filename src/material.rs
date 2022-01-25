@@ -75,7 +75,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn new() {
+    fn creating_a_new_material() {
         let c = Colour::new(0.5, 0.3, 0.0);
         let m = Material::new(c, 0.5, 1.0, 0.6, 100.0);
 
@@ -87,7 +87,7 @@ mod tests {
     }
 
     #[test]
-    fn default() {
+    fn the_default_material() {
         let m = Material::default();
 
         assert_relative_eq!(m.colour, Colour::white());
@@ -98,67 +98,99 @@ mod tests {
     }
 
     #[test]
-    fn lighting() {
-        let p = Point::origin();
-        let m = Material::default();
-        let c = Colour::white();
-
-        let behind = PointLight::new(c, Point::new(0.0, 0.0, -10.0));
+    fn lighting_with_the_eye_between_the_light_and_surface() {
         let neg_z = -Vector::z_axis();
 
         assert_relative_eq!(
-            m.lighting(&behind, &p, &neg_z, &neg_z, false),
+            Material::default().lighting(
+                &PointLight::new(Colour::white(), Point::new(0.0, 0.0, -10.0)),
+                &Point::origin(),
+                &neg_z,
+                &neg_z,
+                false
+            ),
             Colour::new(1.9, 1.9, 1.9)
         );
+    }
 
+    #[test]
+    fn lighting_with_the_eye_between_light_and_surface_eye_offset_45_degrees() {
         assert_relative_eq!(
-            m.lighting(
-                &behind,
-                &p,
+            Material::default().lighting(
+                &PointLight::new(Colour::white(), Point::new(0.0, 0.0, -10.0)),
+                &Point::origin(),
                 &Vector::new(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2),
-                &neg_z,
+                &-Vector::z_axis(),
                 false
             ),
             Colour::white()
         );
+    }
 
-        let above_left = PointLight::new(c, Point::new(0.0, 10.0, -10.0));
+    #[test]
+    fn lighting_with_eye_opposite_surface_light_offset_45_degrees() {
+        let neg_z = -Vector::z_axis();
 
         assert_relative_eq!(
-            m.lighting(&above_left, &p, &neg_z, &neg_z, false),
+            Material::default().lighting(
+                &PointLight::new(Colour::white(), Point::new(0.0, 10.0, -10.0)),
+                &Point::origin(),
+                &neg_z,
+                &neg_z,
+                false
+            ),
             Colour::new(0.736_396, 0.736_396, 0.736_396)
         );
+    }
 
+    #[test]
+    fn lighting_with_eye_in_the_path_of_the_reflection_vector() {
         assert_relative_eq!(
-            m.lighting(
-                &above_left,
-                &p,
+            Material::default().lighting(
+                &PointLight::new(Colour::white(), Point::new(0.0, 10.0, -10.0)),
+                &Point::origin(),
                 &Vector::new(0.0, -FRAC_1_SQRT_2, -FRAC_1_SQRT_2),
-                &neg_z,
+                &-Vector::z_axis(),
                 false
             ),
             Colour::new(1.636_396, 1.636_396, 1.636_396)
         );
+    }
+
+    #[test]
+    fn lighting_with_the_light_behind_the_surface() {
+        let neg_z = -Vector::z_axis();
 
         assert_relative_eq!(
-            m.lighting(
-                &PointLight::new(c, Point::new(0.0, 0.0, 10.0)),
-                &p,
+            Material::default().lighting(
+                &PointLight::new(Colour::white(), Point::new(0.0, 0.0, 10.0)),
+                &Point::origin(),
                 &neg_z,
                 &neg_z,
                 false
             ),
-            Colour::new(0.1, 0.1, 0.1)
-        );
-
-        assert_relative_eq!(
-            m.lighting(&behind, &p, &neg_z, &neg_z, true),
             Colour::new(0.1, 0.1, 0.1)
         );
     }
 
     #[test]
-    fn approx() {
+    fn lighting_with_the_surface_in_shadow() {
+        let neg_z = -Vector::z_axis();
+
+        assert_relative_eq!(
+            Material::default().lighting(
+                &PointLight::new(Colour::white(), Point::new(0.0, 0.0, -10.0)),
+                &Point::origin(),
+                &neg_z,
+                &neg_z,
+                true
+            ),
+            Colour::new(0.1, 0.1, 0.1)
+        );
+    }
+
+    #[test]
+    fn materials_are_approximately_equal() {
         let m1 =
             Material::new(Colour::new(0.3, 0.4, 1.0), 0.2, 0.4, 0.3, 150.0);
         let m2 =

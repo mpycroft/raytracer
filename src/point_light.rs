@@ -19,7 +19,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn new() {
+    fn a_point_light_has_a_position_and_intensity() {
         let c = Colour::white();
         let p = Point::origin();
         let l = PointLight::new(c, p);
@@ -29,7 +29,7 @@ mod tests {
     }
 
     #[test]
-    fn approx() {
+    fn point_lights_are_approximately_equal() {
         let l1 = PointLight::new(
             Colour::new(0.9, 0.5, 1.5),
             Point::new(0.1, -2.5, 3.65),

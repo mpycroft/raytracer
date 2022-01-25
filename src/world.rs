@@ -121,7 +121,7 @@ mod tests {
     use crate::math::Vector;
 
     #[test]
-    fn new() {
+    fn creating_a_world() {
         let w = World::new();
 
         assert_eq!(w.objects.len(), 0);
@@ -129,7 +129,7 @@ mod tests {
     }
 
     #[test]
-    fn push_object() {
+    fn adding_objects_to_a_world() {
         let mut w = World::new();
 
         let o = Object::default_sphere();
@@ -149,7 +149,7 @@ mod tests {
     }
 
     #[test]
-    fn push_light() {
+    fn adding_lights_to_a_world() {
         let mut w = World::new();
 
         let l = PointLight::new(Colour::red(), Point::origin());
@@ -166,16 +166,21 @@ mod tests {
     }
 
     #[test]
-    fn shade_hit() {
-        let mut w = World::default();
-        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
-        let i = Intersection::new(&w.objects[0], 4.0);
-        let c = i.prepare_computations(&r);
+    fn shading_an_intersection() {
+        let w = World::default();
+        let c = Intersection::new(&w.objects[0], 4.0).prepare_computations(
+            &Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()),
+        );
 
         assert_relative_eq!(
             w.shade_hit(&c),
             Colour::new(0.380_661, 0.475_826, 0.285_496)
         );
+    }
+
+    #[test]
+    fn shading_an_intersection_from_the_inside() {
+        let mut w = World::default();
 
         w.lights.clear();
         w.push_light(PointLight::new(
@@ -183,15 +188,17 @@ mod tests {
             Point::new(0.0, 0.25, 0.0),
         ));
 
-        let r = Ray::new(Point::origin(), Vector::z_axis());
-        let i = Intersection::new(&w.objects[1], 0.5);
-        let c = i.prepare_computations(&r);
+        let c = Intersection::new(&w.objects[1], 0.5)
+            .prepare_computations(&Ray::new(Point::origin(), Vector::z_axis()));
 
         assert_relative_eq!(
             w.shade_hit(&c),
             Colour::new(0.904_984, 0.904_984, 0.904_984)
         );
+    }
 
+    #[test]
+    fn shade_hit_is_given_an_intersection_in_shadow() {
         let mut w = World::new();
 
         w.push_light(PointLight::new(
@@ -206,44 +213,78 @@ mod tests {
             Material::default(),
         ));
 
-        let r = Ray::new(Point::new(0.0, 0.0, 5.0), Vector::z_axis());
-        let i = Intersection::new(&w.objects[1], 4.0);
-        let c = i.prepare_computations(&r);
-
-        assert_relative_eq!(w.shade_hit(&c), Colour::new(0.1, 0.1, 0.1));
+        assert_relative_eq!(
+            w.shade_hit(
+                &Intersection::new(&w.objects[1], 4.0).prepare_computations(
+                    &Ray::new(Point::new(0.0, 0.0, 5.0), Vector::z_axis()),
+                )
+            ),
+            Colour::new(0.1, 0.1, 0.1)
+        );
     }
 
     #[test]
-    fn colour_at() {
-        let mut w = World::default();
-        let mut r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::y_axis());
-
-        assert_relative_eq!(w.colour_at(&r), Colour::black());
-
-        r.direction = Vector::z_axis();
-
+    fn the_colour_when_a_ray_misses() {
         assert_relative_eq!(
-            w.colour_at(&r),
+            World::default().colour_at(&Ray::new(
+                Point::new(0.0, 0.0, -5.0),
+                Vector::y_axis()
+            )),
+            Colour::black()
+        );
+    }
+
+    #[test]
+    fn the_colour_when_a_ray_hits() {
+        assert_relative_eq!(
+            World::default().colour_at(&Ray::new(
+                Point::new(0.0, 0.0, -5.0),
+                Vector::z_axis()
+            )),
             Colour::new(0.380_661, 0.475_826, 0.285_496)
         );
+    }
+
+    #[test]
+    fn the_colour_with_an_intersection_behind_the_ray() {
+        let mut w = World::default();
 
         w.objects[0].material.ambient = 1.0;
         w.objects[1].material.ambient = 1.0;
 
-        let r = Ray::new(Point::new(0.0, 0.0, 0.75), -Vector::z_axis());
-
-        assert_relative_eq!(w.colour_at(&r), w.objects[1].material.colour);
+        assert_relative_eq!(
+            w.colour_at(&Ray::new(
+                Point::new(0.0, 0.0, 0.75),
+                -Vector::z_axis()
+            )),
+            w.objects[1].material.colour
+        );
     }
 
     #[test]
-    fn is_shadowed() {
+    fn there_is_no_shadow_when_nothing_is_collinear_with_point_and_light() {
         let w = World::default();
 
         assert!(!w.is_shadowed(&w.lights[0], &Point::new(0.0, 10.0, 0.0)));
+    }
+
+    #[test]
+    fn the_shadow_when_an_object_is_between_the_point_and_the_light() {
+        let w = World::default();
 
         assert!(w.is_shadowed(&w.lights[0], &Point::new(10.0, -10.0, 10.0)));
+    }
+
+    #[test]
+    fn there_is_no_shadow_when_an_object_is_behind_the_light() {
+        let w = World::default();
 
         assert!(!w.is_shadowed(&w.lights[0], &Point::new(-20.0, 20.0, -20.0)));
+    }
+
+    #[test]
+    fn there_is_no_shadow_when_an_object_is_behind_the_point() {
+        let w = World::default();
 
         assert!(!w.is_shadowed(&w.lights[0], &Point::new(-2.0, 2.0, -2.0)));
     }
@@ -265,7 +306,7 @@ mod tests {
     }
 
     #[test]
-    fn intersect() {
+    fn intersect_a_world_with_a_ray() {
         let w = World::default();
 
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
@@ -287,7 +328,7 @@ mod tests {
     }
 
     #[test]
-    fn default() {
+    fn the_default_world() {
         let w = World::default();
 
         assert_eq!(w.objects.len(), 2);

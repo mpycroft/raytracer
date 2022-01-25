@@ -88,7 +88,7 @@ mod tests {
     };
 
     #[test]
-    fn new() {
+    fn constructing_a_camera() {
         let c = Camera::new(160, 120, FRAC_PI_2, Transform::new());
 
         assert_eq!(c.horizontal, 160);
@@ -96,36 +96,52 @@ mod tests {
         assert_float_relative_eq!(c.field_of_view, FRAC_PI_2);
         assert_relative_eq!(c.transform, Transform::new());
         assert_float_relative_eq!(c.pixel_size, 0.012_5);
+    }
 
+    #[test]
+    fn the_pixel_size_for_a_horizontal_canvas() {
         let c = Camera::new(200, 125, FRAC_PI_2, Transform::new());
         assert_float_relative_eq!(c.pixel_size, 0.01);
+    }
 
+    #[test]
+    fn the_pixel_size_for_a_vertical_canvas() {
         let c = Camera::new(125, 200, FRAC_PI_2, Transform::new());
         assert_float_relative_eq!(c.pixel_size, 0.01);
     }
 
     #[test]
-    fn ray_for_pixel() {
-        let mut c = Camera::new(201, 101, FRAC_PI_2, Transform::new());
-
+    fn constructing_a_ray_through_the_center_of_the_canvas() {
         assert_relative_eq!(
-            c.ray_for_pixel(100, 50),
+            Camera::new(201, 101, FRAC_PI_2, Transform::new())
+                .ray_for_pixel(100, 50),
             Ray::new(Point::origin(), -Vector::z_axis())
         );
+    }
 
+    #[test]
+    fn constructing_a_ray_through_a_corner_of_the_canvas() {
         assert_relative_eq!(
-            c.ray_for_pixel(0, 0),
+            Camera::new(201, 101, FRAC_PI_2, Transform::new())
+                .ray_for_pixel(0, 0),
             Ray::new(
                 Point::origin(),
                 Vector::new(0.665_186, 0.332_593, -0.668_512)
             )
         );
+    }
 
-        c.transform = Transform::from_translate(0.0, -2.0, 5.0)
-            .rotate_y(Angle::from_radians(FRAC_PI_4));
-
+    #[test]
+    fn constructing_a_ray_when_the_camera_is_transformed() {
         assert_relative_eq!(
-            c.ray_for_pixel(100, 50),
+            Camera::new(
+                201,
+                101,
+                FRAC_PI_2,
+                Transform::from_translate(0.0, -2.0, 5.0)
+                    .rotate_y(Angle::from_radians(FRAC_PI_4)),
+            )
+            .ray_for_pixel(100, 50),
             Ray::new(
                 Point::new(0.0, 2.0, -5.0),
                 Vector::new(SQRT_2 / 2.0, 0.0, -SQRT_2 / 2.0)
@@ -134,23 +150,20 @@ mod tests {
     }
 
     #[test]
-    fn render() {
-        let w = World::default();
-        let c = Camera::new(
-            11,
-            11,
-            FRAC_PI_2,
-            Transform::view_transform(
-                &Point::new(0.0, 0.0, -5.0),
-                &Point::origin(),
-                &Vector::y_axis(),
-            ),
-        );
-
-        let i = c.render(&w);
-
+    fn rendering_a_world_with_a_camera() {
         assert_relative_eq!(
-            i.get_pixel(5, 5),
+            Camera::new(
+                11,
+                11,
+                FRAC_PI_2,
+                Transform::view_transform(
+                    &Point::new(0.0, 0.0, -5.0),
+                    &Point::origin(),
+                    &Vector::y_axis(),
+                ),
+            )
+            .render(&World::default())
+            .get_pixel(5, 5),
             Colour::new(0.380_661, 0.475_826, 0.285_496)
         );
     }
