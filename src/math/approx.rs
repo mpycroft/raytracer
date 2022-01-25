@@ -103,8 +103,14 @@ macro_rules! float_relative_eq {
         approx::relative_eq!(
             $lhs,
             $rhs,
-            epsilon = crate::math::approx::FLOAT_EPSILON,
-            max_relative = crate::math::approx::FLOAT_EPSILON
+            epsilon = num_traits::FromPrimitive::from_f64(
+                crate::math::approx::FLOAT_EPSILON
+            )
+            .unwrap(),
+            max_relative = num_traits::FromPrimitive::from_f64(
+                crate::math::approx::FLOAT_EPSILON
+            )
+            .unwrap()
         )
     };
 }

@@ -1,8 +1,12 @@
-use std::ops::{Index, IndexMut, Mul, MulAssign};
+use std::{
+    fmt::Debug,
+    ops::{AddAssign, Index, IndexMut, Mul, MulAssign},
+};
 
 use anyhow::{bail, Result};
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use derive_more::Constructor;
+use num_traits::{Float, FromPrimitive};
 
 use super::{
     approx::{FLOAT_EPSILON, FLOAT_ULPS},
@@ -15,20 +19,20 @@ use super::{
 /// arbitrary matrices but determinants, sub matrices, cofactors, etc. are only
 /// implemented enough for what we need to work.
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
-pub struct Matrix<const T: usize> {
-    data: [[f64; T]; T],
+pub struct Matrix<T: Float, const S: usize> {
+    data: [[T; S]; S],
 }
 
-impl<const T: usize> Matrix<T> {
+impl<T: Float, const S: usize> Matrix<T, S> {
     fn zero() -> Self {
-        Self::new([[0.0; T]; T])
+        Self::new([[T::zero(); S]; S])
     }
 
     pub fn transpose(&self) -> Self {
         let mut matrix = Self::zero();
 
-        for row in 0..T {
-            for col in 0..T {
+        for row in 0..S {
+            for col in 0..S {
                 matrix[row][col] = self[col][row];
             }
         }
@@ -47,21 +51,21 @@ impl<const T: usize> Matrix<T> {
 // solution; a general function and only implement it for Matrix<3/4> since that
 // is all we actually need.
 #[inline(always)]
-fn calc_sub_matrix<const T: usize, const U: usize>(
-    matrix: &Matrix<T>,
+fn calc_sub_matrix<T: Float, const S: usize, const R: usize>(
+    matrix: &Matrix<T, S>,
     row: usize,
     col: usize,
-) -> Matrix<U> {
+) -> Matrix<T, R> {
     let mut sub_matrix = Matrix::zero();
 
     let mut new_row = 0;
-    for cur_row in 0..T {
+    for cur_row in 0..S {
         if cur_row == row {
             continue;
         }
 
         let mut new_col = 0;
-        for cur_col in 0..T {
+        for cur_col in 0..S {
             if cur_col == col {
                 continue;
             }
@@ -91,7 +95,7 @@ macro_rules! calc_cofactor {
         let minor = $self.minor($row, $col);
 
         if ($row + $col) % 2 != 0 {
-            return minor * -1.0;
+            return minor * -T::one();
         }
 
         minor
@@ -100,7 +104,7 @@ macro_rules! calc_cofactor {
 
 macro_rules! calc_determinant {
     ($self:ident, $size:expr) => {{
-        let mut det = 0.0;
+        let mut det = T::zero();
 
         for col in 0..$size {
             det += $self[0][col] * $self.cofactor(0, col);
@@ -110,27 +114,35 @@ macro_rules! calc_determinant {
     }};
 }
 
-impl Matrix<4> {
+impl<T> Matrix<T, 4>
+where
+    T: Float + AddAssign + Debug + RelativeEq,
+    T::Epsilon: FromPrimitive + Copy,
+{
     pub fn identity() -> Self {
         Self::new([
-            [1.0, 0.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0, 0.0],
-            [0.0, 0.0, 1.0, 0.0],
-            [0.0, 0.0, 0.0, 1.0],
+            [T::one(), T::zero(), T::zero(), T::zero()],
+            [T::zero(), T::one(), T::zero(), T::zero()],
+            [T::zero(), T::zero(), T::one(), T::zero()],
+            [T::zero(), T::zero(), T::zero(), T::one()],
         ])
     }
 
-    pub fn view_transform(from: &Point, to: &Point, up: &Vector) -> Self {
+    pub fn view_transform(
+        from: &Point<T>,
+        to: &Point<T>,
+        up: &Vector<T>,
+    ) -> Self {
         let forward = (*to - *from).normalise();
         let up = up.normalise();
         let left = forward.cross(&up);
         let true_up = left.cross(&forward);
 
         let orientation = Matrix::new([
-            [left.x, left.y, left.z, 0.0],
-            [true_up.x, true_up.y, true_up.z, 0.0],
-            [-forward.x, -forward.y, -forward.z, 0.0],
-            [0.0, 0.0, 0.0, 1.0],
+            [left.x, left.y, left.z, T::zero()],
+            [true_up.x, true_up.y, true_up.z, T::zero()],
+            [-forward.x, -forward.y, -forward.z, T::zero()],
+            [T::zero(), T::zero(), T::zero(), T::one()],
         ]);
 
         orientation * Matrix::translate(-from.x, -from.y, -from.z)
@@ -139,7 +151,7 @@ impl Matrix<4> {
     pub fn invert(&self) -> Result<Self> {
         let det = self.determinant();
 
-        if float_relative_eq!(det, 0.0) {
+        if float_relative_eq!(det, T::zero()) {
             bail!("Tried to invert a non invertible matrix - {:?}", self);
         }
 
@@ -154,129 +166,129 @@ impl Matrix<4> {
         Ok(matrix)
     }
 
-    pub fn rotate_x(angle: Angle) -> Self {
+    pub fn rotate_x(angle: Angle<T>) -> Self {
         let (sin, cos) = angle.sin_cos();
 
         Self::new([
-            [1.0, 0.0, 0.0, 0.0],
-            [0.0, cos, -sin, 0.0],
-            [0.0, sin, cos, 0.0],
-            [0.0, 0.0, 0.0, 1.0],
+            [T::one(), T::zero(), T::zero(), T::zero()],
+            [T::zero(), cos, -sin, T::zero()],
+            [T::zero(), sin, cos, T::zero()],
+            [T::zero(), T::zero(), T::zero(), T::one()],
         ])
     }
 
-    pub fn rotate_y(angle: Angle) -> Self {
+    pub fn rotate_y(angle: Angle<T>) -> Self {
         let (sin, cos) = angle.sin_cos();
 
         Self::new([
-            [cos, 0.0, sin, 0.0],
-            [0.0, 1.0, 0.0, 0.0],
-            [-sin, 0.0, cos, 0.0],
-            [0.0, 0.0, 0.0, 1.0],
+            [cos, T::zero(), sin, T::zero()],
+            [T::zero(), T::one(), T::zero(), T::zero()],
+            [-sin, T::zero(), cos, T::zero()],
+            [T::zero(), T::zero(), T::zero(), T::one()],
         ])
     }
 
-    pub fn rotate_z(angle: Angle) -> Self {
+    pub fn rotate_z(angle: Angle<T>) -> Self {
         let (sin, cos) = angle.sin_cos();
 
         Self::new([
-            [cos, -sin, 0.0, 0.0],
-            [sin, cos, 0.0, 0.0],
-            [0.0, 0.0, 1.0, 0.0],
-            [0.0, 0.0, 0.0, 1.0],
+            [cos, -sin, T::zero(), T::zero()],
+            [sin, cos, T::zero(), T::zero()],
+            [T::zero(), T::zero(), T::one(), T::zero()],
+            [T::zero(), T::zero(), T::zero(), T::one()],
         ])
     }
 
-    pub fn scale(x: f64, y: f64, z: f64) -> Self {
+    pub fn scale(x: T, y: T, z: T) -> Self {
         Self::new([
-            [x, 0.0, 0.0, 0.0],
-            [0.0, y, 0.0, 0.0],
-            [0.0, 0.0, z, 0.0],
-            [0.0, 0.0, 0.0, 1.0],
+            [x, T::zero(), T::zero(), T::zero()],
+            [T::zero(), y, T::zero(), T::zero()],
+            [T::zero(), T::zero(), z, T::zero()],
+            [T::zero(), T::zero(), T::zero(), T::one()],
         ])
     }
 
-    pub fn shear(xy: f64, xz: f64, yx: f64, yz: f64, zx: f64, zy: f64) -> Self {
+    pub fn shear(xy: T, xz: T, yx: T, yz: T, zx: T, zy: T) -> Self {
         Self::new([
-            [1.0, xy, xz, 0.0],
-            [yx, 1.0, yz, 0.0],
-            [zx, zy, 1.0, 0.0],
-            [0.0, 0.0, 0.0, 1.0],
+            [T::one(), xy, xz, T::zero()],
+            [yx, T::one(), yz, T::zero()],
+            [zx, zy, T::one(), T::zero()],
+            [T::zero(), T::zero(), T::zero(), T::one()],
         ])
     }
 
-    pub fn translate(x: f64, y: f64, z: f64) -> Self {
+    pub fn translate(x: T, y: T, z: T) -> Self {
         Self::new([
-            [1.0, 0.0, 0.0, x],
-            [0.0, 1.0, 0.0, y],
-            [0.0, 0.0, 1.0, z],
-            [0.0, 0.0, 0.0, 1.0],
+            [T::one(), T::zero(), T::zero(), x],
+            [T::zero(), T::one(), T::zero(), y],
+            [T::zero(), T::zero(), T::one(), z],
+            [T::zero(), T::zero(), T::zero(), T::one()],
         ])
     }
 
-    pub fn cofactor(&self, row: usize, col: usize) -> f64 {
+    pub fn cofactor(&self, row: usize, col: usize) -> T {
         calc_cofactor!(self, row, col)
     }
 
-    pub fn determinant(&self) -> f64 {
+    pub fn determinant(&self) -> T {
         calc_determinant!(self, 4)
     }
 
-    pub fn minor(&self, row: usize, col: usize) -> f64 {
+    pub fn minor(&self, row: usize, col: usize) -> T {
         calc_minor!(self, row, col)
     }
 
-    pub fn sub_matrix(&self, row: usize, col: usize) -> Matrix<3> {
+    pub fn sub_matrix(&self, row: usize, col: usize) -> Matrix<T, 3> {
         calc_sub_matrix(self, row, col)
     }
 }
 
-impl Matrix<3> {
-    pub fn cofactor(&self, row: usize, col: usize) -> f64 {
+impl<T: Float + AddAssign> Matrix<T, 3> {
+    pub fn cofactor(&self, row: usize, col: usize) -> T {
         calc_cofactor!(self, row, col)
     }
 
-    pub fn determinant(&self) -> f64 {
+    pub fn determinant(&self) -> T {
         calc_determinant!(self, 3)
     }
 
-    pub fn minor(&self, row: usize, col: usize) -> f64 {
+    pub fn minor(&self, row: usize, col: usize) -> T {
         calc_minor!(self, row, col)
     }
 
-    pub fn sub_matrix(&self, row: usize, col: usize) -> Matrix<2> {
+    pub fn sub_matrix(&self, row: usize, col: usize) -> Matrix<T, 2> {
         calc_sub_matrix(self, row, col)
     }
 }
 
-impl Matrix<2> {
-    pub fn determinant(&self) -> f64 {
+impl<T: Float> Matrix<T, 2> {
+    pub fn determinant(&self) -> T {
         self[0][0] * self[1][1] - self[0][1] * self[1][0]
     }
 }
 
-impl<const T: usize> Index<usize> for Matrix<T> {
-    type Output = [f64; T];
+impl<T: Float, const S: usize> Index<usize> for Matrix<T, S> {
+    type Output = [T; S];
 
     fn index(&self, index: usize) -> &Self::Output {
         self.data.index(index)
     }
 }
 
-impl<const T: usize> IndexMut<usize> for Matrix<T> {
+impl<T: Float, const S: usize> IndexMut<usize> for Matrix<T, S> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         self.data.index_mut(index)
     }
 }
 
-impl<const T: usize> Mul for Matrix<T> {
+impl<T: Float, const S: usize> Mul for Matrix<T, S> {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        let mut matrix = Self::Output::new([[0.0; T]; T]);
+        let mut matrix = Self::Output::new([[T::zero(); S]; S]);
 
-        for row in 0..T {
-            for col in 0..T {
+        for row in 0..S {
+            for col in 0..S {
                 matrix[row][col] = self[row][0] * rhs[0][col]
                     + self[row][1] * rhs[1][col]
                     + self[row][2] * rhs[2][col]
@@ -288,10 +300,10 @@ impl<const T: usize> Mul for Matrix<T> {
     }
 }
 
-impl Mul<Point> for Matrix<4> {
-    type Output = Point;
+impl<T: Float> Mul<Point<T>> for Matrix<T, 4> {
+    type Output = Point<T>;
 
-    fn mul(self, rhs: Point) -> Self::Output {
+    fn mul(self, rhs: Point<T>) -> Self::Output {
         Point::new(
             self[0][0] * rhs.x
                 + self[0][1] * rhs.y
@@ -309,10 +321,10 @@ impl Mul<Point> for Matrix<4> {
     }
 }
 
-impl Mul<Vector> for Matrix<4> {
-    type Output = Vector;
+impl<T: Float> Mul<Vector<T>> for Matrix<T, 4> {
+    type Output = Vector<T>;
 
-    fn mul(self, rhs: Vector) -> Self::Output {
+    fn mul(self, rhs: Vector<T>) -> Self::Output {
         Vector::new(
             self[0][0] * rhs.x + self[0][1] * rhs.y + self[0][2] * rhs.z,
             self[1][0] * rhs.x + self[1][1] * rhs.y + self[1][2] * rhs.z,
@@ -321,12 +333,12 @@ impl Mul<Vector> for Matrix<4> {
     }
 }
 
-impl<const T: usize> MulAssign for Matrix<T> {
+impl<T: Float, const S: usize> MulAssign for Matrix<T, S> {
     fn mul_assign(&mut self, rhs: Self) {
         let lhs = *self;
 
-        for row in 0..T {
-            for col in 0..T {
+        for row in 0..S {
+            for col in 0..S {
                 self[row][col] = lhs[row][0] * rhs[0][col]
                     + lhs[row][1] * rhs[1][col]
                     + lhs[row][2] * rhs[2][col]
@@ -336,16 +348,20 @@ impl<const T: usize> MulAssign for Matrix<T> {
     }
 }
 
-impl<const T: usize> AbsDiffEq for Matrix<T> {
-    type Epsilon = f64;
+impl<T, const S: usize> AbsDiffEq for Matrix<T, S>
+where
+    T: Float + AbsDiffEq,
+    T::Epsilon: FromPrimitive + Copy,
+{
+    type Epsilon = T::Epsilon;
 
     fn default_epsilon() -> Self::Epsilon {
-        FLOAT_EPSILON
+        FromPrimitive::from_f64(FLOAT_EPSILON).unwrap()
     }
 
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
-        for row in 0..T {
-            for col in 0..T {
+        for row in 0..S {
+            for col in 0..S {
                 if !self[row][col].abs_diff_eq(&other[row][col], epsilon) {
                     return false;
                 }
@@ -356,9 +372,13 @@ impl<const T: usize> AbsDiffEq for Matrix<T> {
     }
 }
 
-impl<const T: usize> RelativeEq for Matrix<T> {
+impl<T, const S: usize> RelativeEq for Matrix<T, S>
+where
+    T: Float + RelativeEq,
+    T::Epsilon: FromPrimitive + Copy,
+{
     fn default_max_relative() -> Self::Epsilon {
-        FLOAT_EPSILON
+        FromPrimitive::from_f64(FLOAT_EPSILON).unwrap()
     }
 
     fn relative_eq(
@@ -367,8 +387,8 @@ impl<const T: usize> RelativeEq for Matrix<T> {
         epsilon: Self::Epsilon,
         max_relative: Self::Epsilon,
     ) -> bool {
-        for row in 0..T {
-            for col in 0..T {
+        for row in 0..S {
+            for col in 0..S {
                 if !self[row][col].relative_eq(
                     &other[row][col],
                     epsilon,
@@ -383,7 +403,11 @@ impl<const T: usize> RelativeEq for Matrix<T> {
     }
 }
 
-impl<const T: usize> UlpsEq for Matrix<T> {
+impl<T, const S: usize> UlpsEq for Matrix<T, S>
+where
+    T: Float + UlpsEq,
+    T::Epsilon: FromPrimitive + Copy,
+{
     fn default_max_ulps() -> u32 {
         FLOAT_ULPS
     }
@@ -394,8 +418,8 @@ impl<const T: usize> UlpsEq for Matrix<T> {
         epsilon: Self::Epsilon,
         max_ulps: u32,
     ) -> bool {
-        for row in 0..T {
-            for col in 0..T {
+        for row in 0..S {
+            for col in 0..S {
                 if !self[row][col].ulps_eq(&other[row][col], epsilon, max_ulps)
                 {
                     return false;
@@ -500,7 +524,7 @@ mod tests {
 
     #[test]
     fn transposing_the_identity_matrix() {
-        let m = Matrix::identity();
+        let m = Matrix::<f64, 4>::identity();
 
         assert_relative_eq!(m.transpose(), m);
     }

@@ -5,14 +5,14 @@
 pub mod approx;
 
 mod angle;
-// mod matrix;
+mod matrix;
 mod point;
 // mod ray;
 // mod transform;
 mod vector;
 
 pub use angle::Angle;
-// use matrix::Matrix;
+use matrix::Matrix;
 pub use point::Point;
 // pub use ray::Ray;
 // pub use transform::{Transform, Transformable};
