@@ -287,14 +287,12 @@ mod tests {
 
     #[test]
     fn intersecting_a_scaled_object_with_a_ray() {
-        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
-
         let o = Object::new_test(
             Transform::from_scale(2.0, 2.0, 2.0),
             Material::default(),
         );
 
-        o.intersect(&r);
+        o.intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()));
 
         let test = match o.shape {
             Shape::Test(test) => test,
@@ -309,14 +307,12 @@ mod tests {
 
     #[test]
     fn intersecting_a_translated_object_with_a_ray() {
-        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
-
         let o = Object::new_test(
             Transform::from_translate(5.0, 0.0, 0.0),
             Material::default(),
         );
 
-        o.intersect(&r);
+        o.intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()));
 
         let test = match o.shape {
             Shape::Test(test) => test,

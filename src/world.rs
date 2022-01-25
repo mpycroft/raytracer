@@ -168,12 +168,13 @@ mod tests {
     #[test]
     fn shading_an_intersection() {
         let w = World::default();
-        let c = Intersection::new(&w.objects[0], 4.0).prepare_computations(
-            &Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()),
-        );
 
         assert_relative_eq!(
-            w.shade_hit(&c),
+            w.shade_hit(
+                &Intersection::new(&w.objects[0], 4.0).prepare_computations(
+                    &Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()),
+                )
+            ),
             Colour::new(0.380_661, 0.475_826, 0.285_496)
         );
     }
@@ -188,17 +189,18 @@ mod tests {
             Point::new(0.0, 0.25, 0.0),
         ));
 
-        let c = Intersection::new(&w.objects[1], 0.5)
-            .prepare_computations(&Ray::new(Point::origin(), Vector::z_axis()));
-
         assert_relative_eq!(
-            w.shade_hit(&c),
+            w.shade_hit(
+                &Intersection::new(&w.objects[1], 0.5).prepare_computations(
+                    &Ray::new(Point::origin(), Vector::z_axis())
+                )
+            ),
             Colour::new(0.904_984, 0.904_984, 0.904_984)
         );
     }
 
     #[test]
-    fn shade_hit_is_given_an_intersection_in_shadow() {
+    fn shading_an_intersection_in_shadow() {
         let mut w = World::new();
 
         w.push_light(PointLight::new(
@@ -309,9 +311,8 @@ mod tests {
     fn intersect_a_world_with_a_ray() {
         let w = World::default();
 
-        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
-
-        let list = w.intersect(&r);
+        let list = w
+            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()));
         assert!(list.is_some());
 
         let list = list.unwrap();

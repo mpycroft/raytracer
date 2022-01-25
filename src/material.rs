@@ -128,7 +128,7 @@ mod tests {
     }
 
     #[test]
-    fn lighting_with_eye_opposite_surface_light_offset_45_degrees() {
+    fn lighting_with_the_eye_opposite_surface_light_offset_45_degrees() {
         let neg_z = -Vector::z_axis();
 
         assert_relative_eq!(
@@ -144,7 +144,7 @@ mod tests {
     }
 
     #[test]
-    fn lighting_with_eye_in_the_path_of_the_reflection_vector() {
+    fn lighting_with_the_eye_in_the_path_of_the_reflection_vector() {
         assert_relative_eq!(
             Material::default().lighting(
                 &PointLight::new(Colour::white(), Point::new(0.0, 10.0, -10.0)),

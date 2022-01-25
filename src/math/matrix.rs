@@ -20,7 +20,7 @@ pub struct Matrix<const T: usize> {
 }
 
 impl<const T: usize> Matrix<T> {
-    pub fn zero() -> Self {
+    fn zero() -> Self {
         Self::new([[0.0; T]; T])
     }
 
@@ -434,16 +434,6 @@ mod tests {
     }
 
     #[test]
-    fn constructing_and_inspecting_a_2x2_matrix() {
-        let m = Matrix::new([[-3.0, 5.0], [1.0, -2.0]]);
-
-        assert_float_relative_eq!(m[0][0], -3.0);
-        assert_float_relative_eq!(m[0][1], 5.0);
-        assert_float_relative_eq!(m[1][0], 1.0);
-        assert_float_relative_eq!(m[1][1], -2.0);
-    }
-
-    #[test]
     fn constructing_and_inspecting_a_3x3_matrix() {
         let m =
             Matrix::new([[-3.0, 5.0, 0.0], [1.0, -2.0, -7.0], [0.0, 1.0, 1.0]]);
@@ -451,6 +441,16 @@ mod tests {
         assert_float_relative_eq!(m[0][0], -3.0);
         assert_float_relative_eq!(m[1][1], -2.0);
         assert_float_relative_eq!(m[2][2], 1.0);
+    }
+
+    #[test]
+    fn constructing_and_inspecting_a_2x2_matrix() {
+        let m = Matrix::new([[-3.0, 5.0], [1.0, -2.0]]);
+
+        assert_float_relative_eq!(m[0][0], -3.0);
+        assert_float_relative_eq!(m[0][1], 5.0);
+        assert_float_relative_eq!(m[1][0], 1.0);
+        assert_float_relative_eq!(m[1][1], -2.0);
     }
 
     #[test]

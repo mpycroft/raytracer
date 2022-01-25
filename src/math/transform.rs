@@ -127,6 +127,11 @@ mod tests {
     }
 
     #[test]
+    fn a_default_transform_is_the_identity_transformation() {
+        assert_relative_eq!(Transform::new(), Transform::default());
+    }
+
+    #[test]
     fn creating_a_transform_from_a_view_transformation() {
         let from = Point::new(2.0, 3.0, 4.0);
         let to = Point::new(-1.0, 0.0, 5.0);
@@ -189,7 +194,7 @@ mod tests {
     }
 
     #[test]
-    fn creating_a_transform_from_an_x_rotation() {
+    fn creating_a_transform_from_a_x_rotation() {
         assert_relative_eq!(
             Transform::from_rotate_x(Angle::from_radians(0.95)).data,
             Matrix::rotate_x(Angle::from_radians(0.95))
@@ -207,7 +212,7 @@ mod tests {
     }
 
     #[test]
-    fn creating_a_transform_from_an_y_rotation() {
+    fn creating_a_transform_from_a_y_rotation() {
         assert_relative_eq!(
             Transform::from_rotate_y(Angle::from_radians(FRAC_PI_3)).data,
             Matrix::rotate_y(Angle::from_degrees(60.0))
@@ -225,7 +230,7 @@ mod tests {
     }
 
     #[test]
-    fn creating_a_transform_from_an_z_rotation() {
+    fn creating_a_transform_from_a_z_rotation() {
         assert_relative_eq!(
             Transform::from_rotate_z(Angle::from_radians(2.15)).data,
             Matrix::rotate_z(Angle::from_radians(2.15))
@@ -297,7 +302,7 @@ mod tests {
     }
 
     #[test]
-    fn chaining_transform_methods() {
+    fn transform_functions_can_be_chained_together() {
         assert_relative_eq!(
             Transform::from_rotate_y(Angle::from_radians(FRAC_PI_2))
                 .translate(1.0, 1.0, 1.0)

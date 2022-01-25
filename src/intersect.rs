@@ -234,9 +234,8 @@ mod tests {
 
         let i1 = Intersection::new(&o, 1.0);
         let i2 = Intersection::new(&o, 2.0);
-        let list = IntersectionList::from(vec![i1, i2]);
 
-        assert_eq!(list.hit().unwrap(), &i1);
+        assert_eq!(IntersectionList::from(vec![i1, i2]).hit().unwrap(), &i1);
     }
 
     #[test]
@@ -245,9 +244,8 @@ mod tests {
 
         let i1 = Intersection::new(&o, -1.0);
         let i2 = Intersection::new(&o, 1.0);
-        let list = IntersectionList::from(vec![i1, i2]);
 
-        assert_eq!(list.hit().unwrap(), &i2);
+        assert_eq!(IntersectionList::from(vec![i1, i2]).hit().unwrap(), &i2);
     }
 
     #[test]
@@ -256,9 +254,8 @@ mod tests {
 
         let i1 = Intersection::new(&o, -2.0);
         let i2 = Intersection::new(&o, -1.0);
-        let list = IntersectionList::from(vec![i1, i2]);
 
-        assert!(list.hit().is_none());
+        assert!(IntersectionList::from(vec![i1, i2]).hit().is_none());
     }
 
     #[test]
@@ -269,8 +266,10 @@ mod tests {
         let i2 = Intersection::new(&o, 7.0);
         let i3 = Intersection::new(&o, -3.0);
         let i4 = Intersection::new(&o, 2.0);
-        let list = IntersectionList::from(vec![i1, i2, i3, i4]);
 
-        assert_eq!(list.hit().unwrap(), &i4);
+        assert_eq!(
+            IntersectionList::from(vec![i1, i2, i3, i4]).hit().unwrap(),
+            &i4
+        );
     }
 }

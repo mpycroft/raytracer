@@ -10,7 +10,7 @@ pub struct Plane;
 
 impl Plane {
     pub fn new() -> Self {
-        Self
+        Self::default()
     }
 }
 
@@ -88,7 +88,7 @@ mod tests {
     #[test]
     fn planes_are_approximately_equal() {
         let p1 = Plane::new();
-        let p2 = Plane;
+        let p2 = Plane::new();
 
         assert_abs_diff_eq!(p1, p2);
 

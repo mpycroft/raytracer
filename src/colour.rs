@@ -98,7 +98,7 @@ mod tests {
     }
 
     #[test]
-    fn convert_a_colour_to_rgb_tuple() {
+    fn converting_a_colour_to_an_rgb_tuple() {
         assert_eq!(Colour::new(0.0, 0.5, 1.0).to_rgb(), (0, 127, 255));
         assert_eq!(Colour::new(0.4, 1.6, -2.3).to_rgb(), (102, 255, 0));
     }

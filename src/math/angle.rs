@@ -97,7 +97,7 @@ mod tests {
     }
 
     #[test]
-    fn converting_an_angle_to_radians() {
+    fn accessing_an_angle_as_radians() {
         assert_float_relative_eq!(
             Angle::from_radians(FRAC_PI_2).to_radians(),
             FRAC_PI_2
@@ -105,7 +105,7 @@ mod tests {
     }
 
     #[test]
-    fn converting_an_angle_to_degrees() {
+    fn accessing_an_angle_as_degrees() {
         assert_float_relative_eq!(Angle::from_degrees(25.0).to_degrees(), 25.0);
     }
 

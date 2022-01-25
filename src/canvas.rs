@@ -139,8 +139,6 @@ P3
 
     #[test]
     fn constructed_ppm_is_terminated_by_a_newline() {
-        let c = Canvas::new(5, 3);
-
-        assert_eq!(c.to_ppm().chars().last(), Some('\n'));
+        assert_eq!(Canvas::new(5, 3).to_ppm().chars().last(), Some('\n'));
     }
 }

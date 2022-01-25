@@ -102,11 +102,6 @@ mod tests {
     }
 
     #[test]
-    fn creating_a_default_test_object() {
-        assert!(Test::default().ray.get().is_none());
-    }
-
-    #[test]
     fn intersecting_a_test_object() {
         let r = Ray::new(Point::new(0.5, 1.0, 1.5), Vector::new(1.0, 1.0, 0.0));
 

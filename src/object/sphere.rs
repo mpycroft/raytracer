@@ -9,7 +9,7 @@ pub struct Sphere;
 
 impl Sphere {
     pub fn new() -> Self {
-        Self
+        Self::default()
     }
 }
 
@@ -134,7 +134,7 @@ mod tests {
     }
 
     #[test]
-    fn the_normal_isa_normalised_vector() {
+    fn the_normal_is_a_normalised_vector() {
         let n =
             Sphere::new().normal_at(&Point::new(0.577_35, 0.577_35, 0.577_35));
 
@@ -144,7 +144,7 @@ mod tests {
     #[test]
     fn spheres_are_approximately_equal() {
         let s1 = Sphere::new();
-        let s2 = Sphere;
+        let s2 = Sphere::new();
 
         assert_abs_diff_eq!(s1, s2);
 

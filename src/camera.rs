@@ -100,14 +100,18 @@ mod tests {
 
     #[test]
     fn the_pixel_size_for_a_horizontal_canvas() {
-        let c = Camera::new(200, 125, FRAC_PI_2, Transform::new());
-        assert_float_relative_eq!(c.pixel_size, 0.01);
+        assert_float_relative_eq!(
+            Camera::new(200, 125, FRAC_PI_2, Transform::new()).pixel_size,
+            0.01
+        );
     }
 
     #[test]
     fn the_pixel_size_for_a_vertical_canvas() {
-        let c = Camera::new(125, 200, FRAC_PI_2, Transform::new());
-        assert_float_relative_eq!(c.pixel_size, 0.01);
+        assert_float_relative_eq!(
+            Camera::new(125, 200, FRAC_PI_2, Transform::new()).pixel_size,
+            0.01
+        );
     }
 
     #[test]
