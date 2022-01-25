@@ -1,5 +1,6 @@
 use crate::{
     math::{Point, Ray, Transform},
+    util::float::Float,
     world::World,
     Canvas,
 };
@@ -7,27 +8,27 @@ use crate::{
 /// The Camera struct holds the data representing our camera view into the
 /// scene.
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
-pub struct Camera {
+pub struct Camera<T: Float> {
     pub horizontal: usize,
     pub vertical: usize,
-    pub field_of_view: f64,
-    pub transform: Transform,
-    pub pixel_size: f64,
-    pub half_width: f64,
-    pub half_height: f64,
+    pub field_of_view: T,
+    pub transform: Transform<T>,
+    pub pixel_size: T,
+    pub half_width: T,
+    pub half_height: T,
 }
 
-impl Camera {
+impl<T: Float> Camera<T> {
     pub fn new(
         horizontal: usize,
         vertical: usize,
-        field_of_view: f64,
-        transform: Transform,
+        field_of_view: T,
+        transform: Transform<T>,
     ) -> Self {
-        let half_view = (field_of_view / 2.0).tan();
-        let aspect = horizontal as f64 / vertical as f64;
+        let half_view = (field_of_view / T::from(2.0).unwrap()).tan();
+        let aspect = T::from(horizontal).unwrap() / T::from(vertical).unwrap();
 
-        let (half_width, half_height) = if aspect > 1.0 {
+        let (half_width, half_height) = if aspect > T::one() {
             (half_view, half_view / aspect)
         } else {
             (half_view * aspect, half_view)
@@ -38,28 +39,31 @@ impl Camera {
             vertical,
             field_of_view,
             transform,
-            pixel_size: half_width * 2.0 / horizontal as f64,
+            pixel_size: half_width * T::from(2.0f64).unwrap()
+                / T::from(horizontal).unwrap(),
             half_width,
             half_height,
         }
     }
 
-    pub fn ray_for_pixel(&self, x: usize, y: usize) -> Ray {
-        let x_offset = (x as f64 + 0.5) * self.pixel_size;
-        let y_offset = (y as f64 + 0.5) * self.pixel_size;
+    pub fn ray_for_pixel(&self, x: usize, y: usize) -> Ray<T> {
+        let x_offset =
+            (T::from(x).unwrap() + T::from(0.5f64).unwrap()) * self.pixel_size;
+        let y_offset =
+            (T::from(y).unwrap() + T::from(0.5f64).unwrap()) * self.pixel_size;
 
         let world_x = self.half_width - x_offset;
         let world_y = self.half_height - y_offset;
 
         let inverse = self.transform.invert();
-        let pixel = inverse.apply(&Point::new(world_x, world_y, -1.0));
+        let pixel = inverse.apply(&Point::new(world_x, world_y, -T::one()));
         let origin = inverse.apply(&Point::origin());
         let direction = (pixel - origin).normalise();
 
         Ray::new(origin, direction)
     }
 
-    pub fn render(&self, world: &World) -> Canvas {
+    pub fn render(&self, world: &World<T>) -> Canvas<T> {
         let mut image = Canvas::new(self.horizontal, self.vertical);
 
         for y in 0..(self.vertical - 1) {

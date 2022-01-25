@@ -1,31 +1,32 @@
 use crate::{
     intersect::{Computations, Intersectable, Intersection, IntersectionList},
     math::{Point, Ray, Transform},
+    util::float::Float,
     Colour, Material, Object, PointLight,
 };
 
 /// World represents all the objects and light sources in a given scene that we
 /// are rendering.
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
-pub struct World {
-    pub objects: Vec<Object>,
-    pub lights: Vec<PointLight>,
+pub struct World<T: Float> {
+    pub objects: Vec<Object<T>>,
+    pub lights: Vec<PointLight<T>>,
 }
 
-impl World {
+impl<T: Float> World<T> {
     pub fn new() -> Self {
         World { objects: Vec::new(), lights: Vec::new() }
     }
 
-    pub fn push_object(&mut self, object: Object) {
+    pub fn push_object(&mut self, object: Object<T>) {
         self.objects.push(object);
     }
 
-    pub fn push_light(&mut self, light: PointLight) {
+    pub fn push_light(&mut self, light: PointLight<T>) {
         self.lights.push(light);
     }
 
-    pub fn shade_hit(&self, computations: &Computations) -> Colour {
+    pub fn shade_hit(&self, computations: &Computations<T>) -> Colour<T> {
         let mut colour = Colour::black();
 
         for light in &self.lights {
@@ -41,7 +42,7 @@ impl World {
         colour
     }
 
-    pub fn colour_at(&self, ray: &Ray) -> Colour {
+    pub fn colour_at(&self, ray: &Ray<T>) -> Colour<T> {
         if let Some(intersections) = self.intersect(ray) {
             if let Some(hit) = intersections.hit() {
                 let computations = hit.prepare_computations(ray);
@@ -53,7 +54,7 @@ impl World {
         Colour::black()
     }
 
-    pub fn is_shadowed(&self, light: &PointLight, point: &Point) -> bool {
+    pub fn is_shadowed(&self, light: &PointLight<T>, point: &Point<T>) -> bool {
         let v = light.position - *point;
         let distance = v.magnitude();
         let direction = v.normalise();
@@ -71,7 +72,7 @@ impl World {
         false
     }
 
-    fn intersect(&self, ray: &Ray) -> Option<IntersectionList> {
+    fn intersect(&self, ray: &Ray<T>) -> Option<IntersectionList<T>> {
         let mut list = IntersectionList::new();
 
         for obj in &self.objects {
@@ -91,22 +92,40 @@ impl World {
     }
 }
 
-impl Default for World {
+impl<T: Float> Default for World<T> {
     fn default() -> Self {
         let mut world = World::new();
 
         world.push_object(Object::new_sphere(
             Transform::new(),
-            Material::new(Colour::new(0.8, 1.0, 0.6), 0.1, 0.7, 0.2, 200.0),
+            Material::new(
+                Colour::new(
+                    T::from(0.8f64).unwrap(),
+                    T::from(1.0f64).unwrap(),
+                    T::from(0.6f64).unwrap(),
+                ),
+                T::from(0.1f64).unwrap(),
+                T::from(0.7f64).unwrap(),
+                T::from(0.2f64).unwrap(),
+                T::from(200.0f64).unwrap(),
+            ),
         ));
         world.push_object(Object::new_sphere(
-            Transform::from_scale(0.5, 0.5, 0.5),
+            Transform::from_scale(
+                T::from(0.5f64).unwrap(),
+                T::from(0.5f64).unwrap(),
+                T::from(0.5f64).unwrap(),
+            ),
             Material::default(),
         ));
 
         world.push_light(PointLight::new(
             Colour::white(),
-            Point::new(-10.0, 10.0, -10.0),
+            Point::new(
+                T::from(-10.0f64).unwrap(),
+                T::from(10.0f64).unwrap(),
+                T::from(-10.0).unwrap(),
+            ),
         ));
 
         world
@@ -122,7 +141,7 @@ mod tests {
 
     #[test]
     fn creating_a_world() {
-        let w = World::new();
+        let w = World::<f64>::new();
 
         assert_eq!(w.objects.len(), 0);
         assert_eq!(w.lights.len(), 0);
