@@ -37,27 +37,32 @@ mod tests {
     use super::*;
 
     #[test]
-    fn intersect() {
-        let p = Plane;
+    fn intersect_with_a_ray_parallel_to_the_plane() {
+        assert!(Plane::new()
+            .intersect(&Ray::new(Point::new(0.0, 10.0, 0.0), Vector::z_axis()))
+            .is_none());
+    }
 
-        let i = p
-            .intersect(&Ray::new(Point::new(0.0, 10.0, 0.0), Vector::z_axis()));
+    #[test]
+    fn intersect_with_a_coplanar_ray() {
+        assert!(Plane::new()
+            .intersect(&Ray::new(Point::new(0.0, 0.0, 0.0), Vector::z_axis()))
+            .is_none());
+    }
 
-        assert!(i.is_none());
-
-        let i =
-            p.intersect(&Ray::new(Point::new(0.0, 0.0, 0.0), Vector::z_axis()));
-
-        assert!(i.is_none());
-
-        let i = p
+    #[test]
+    fn a_ray_intersecting_a_plane_from_above() {
+        let i = Plane::new()
             .intersect(&Ray::new(Point::new(0.0, 1.0, 0.0), -Vector::y_axis()))
             .unwrap();
 
         assert_eq!(i.len(), 1);
         assert_float_relative_eq!(i[0], 1.0);
+    }
 
-        let i = p
+    #[test]
+    fn a_ray_intersecting_a_plane_from_below() {
+        let i = Plane::new()
             .intersect(&Ray::new(Point::new(0.0, -1.0, 0.0), Vector::y_axis()))
             .unwrap();
 
@@ -66,8 +71,8 @@ mod tests {
     }
 
     #[test]
-    fn normal_at() {
-        let p = Plane;
+    fn the_normal_of_a_plane_is_constant_everywhere() {
+        let p = Plane::new();
 
         assert_relative_eq!(p.normal_at(&Point::origin()), Vector::y_axis());
         assert_relative_eq!(
@@ -81,8 +86,8 @@ mod tests {
     }
 
     #[test]
-    fn approx() {
-        let p1 = Plane;
+    fn planes_are_approximately_equal() {
+        let p1 = Plane::new();
         let p2 = Plane;
 
         assert_abs_diff_eq!(p1, p2);

@@ -122,12 +122,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn new() {
+    fn a_new_transform_is_the_identity_transformation() {
         assert_relative_eq!(Transform::new().data, Matrix::identity());
     }
 
     #[test]
-    fn view_transform() {
+    fn creating_a_transform_from_a_view_transformation() {
         let from = Point::new(2.0, 3.0, 4.0);
         let to = Point::new(-1.0, 0.0, 5.0);
         let up = Vector::new(1.0, 0.3, -0.3);
@@ -139,7 +139,7 @@ mod tests {
     }
 
     #[test]
-    fn apply() {
+    fn applying_a_transform_to_a_point() {
         let p = Point::new(1.0, 2.0, 3.0);
 
         assert_relative_eq!(Transform::new().apply(&p), p);
@@ -151,7 +151,7 @@ mod tests {
     }
 
     #[test]
-    fn invert() {
+    fn inverting_a_transform() {
         let v = Vector::new(5.1, -2.3, 9.52);
 
         let t = Transform::from_rotate_x(Angle::from_radians(1.5))
@@ -164,7 +164,7 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn invert_panic() {
+    fn inverting_a_non_invertible_transform_panics() {
         let _ = Transform::from_matrix(Matrix::new([
             [12.0, 1.0, 2.0, 0.0],
             [0.0, 0.0, 0.0, 0.0],
@@ -176,7 +176,7 @@ mod tests {
     }
 
     #[test]
-    fn transpose() {
+    fn transposing_a_transform() {
         assert_relative_eq!(
             Transform::from_translate(2.5, 3.1, -1.0).transpose().data,
             Matrix::new([
@@ -189,7 +189,7 @@ mod tests {
     }
 
     #[test]
-    fn from_rotate_x() {
+    fn creating_a_transform_from_an_x_rotation() {
         assert_relative_eq!(
             Transform::from_rotate_x(Angle::from_radians(0.95)).data,
             Matrix::rotate_x(Angle::from_radians(0.95))
@@ -197,7 +197,7 @@ mod tests {
     }
 
     #[test]
-    fn rotate_x() {
+    fn rotating_a_transform_around_the_x_axis() {
         assert_relative_eq!(
             Transform::new()
                 .rotate_x(Angle::from_degrees(90.0))
@@ -207,7 +207,7 @@ mod tests {
     }
 
     #[test]
-    fn from_rotate_y() {
+    fn creating_a_transform_from_an_y_rotation() {
         assert_relative_eq!(
             Transform::from_rotate_y(Angle::from_radians(FRAC_PI_3)).data,
             Matrix::rotate_y(Angle::from_degrees(60.0))
@@ -215,7 +215,7 @@ mod tests {
     }
 
     #[test]
-    fn rotate_y() {
+    fn rotating_a_transform_around_the_y_axis() {
         assert_relative_eq!(
             Transform::new()
                 .rotate_y(Angle::from_radians(FRAC_PI_2))
@@ -225,7 +225,7 @@ mod tests {
     }
 
     #[test]
-    fn from_rotate_z() {
+    fn creating_a_transform_from_an_z_rotation() {
         assert_relative_eq!(
             Transform::from_rotate_z(Angle::from_radians(2.15)).data,
             Matrix::rotate_z(Angle::from_radians(2.15))
@@ -233,7 +233,7 @@ mod tests {
     }
 
     #[test]
-    fn rotate_z() {
+    fn rotating_a_transform_around_the_z_axis() {
         assert_relative_eq!(
             Transform::new()
                 .rotate_z(Angle::from_radians(FRAC_PI_2))
@@ -243,7 +243,7 @@ mod tests {
     }
 
     #[test]
-    fn from_scale() {
+    fn creating_a_transform_from_a_scale() {
         assert_relative_eq!(
             Transform::from_scale(1.0, 2.5, 0.5).data,
             Matrix::scale(1.0, 2.5, 0.5)
@@ -251,7 +251,7 @@ mod tests {
     }
 
     #[test]
-    fn scale() {
+    fn scaling_a_transform() {
         assert_relative_eq!(
             Transform::new()
                 .scale(1.0, 0.5, 2.0)
@@ -261,7 +261,7 @@ mod tests {
     }
 
     #[test]
-    fn from_shear() {
+    fn creating_a_transform_from_a_shear() {
         assert_relative_eq!(
             Transform::from_shear(1.0, 2.0, 1.0, 3.0, 2.0, 0.5).data,
             Matrix::shear(1.0, 2.0, 1.0, 3.0, 2.0, 0.5)
@@ -269,7 +269,7 @@ mod tests {
     }
 
     #[test]
-    fn shear() {
+    fn shearing_a_transform() {
         assert_relative_eq!(
             Transform::new()
                 .shear(1.0, 2.0, 0.0, 1.0, 1.0, 0.0)
@@ -279,7 +279,7 @@ mod tests {
     }
 
     #[test]
-    fn from_translate() {
+    fn creating_a_transform_from_a_translation() {
         assert_relative_eq!(
             Transform::from_translate(0.0, -1.5, 2.0).data,
             Matrix::translate(0.0, -1.5, 2.0)
@@ -287,7 +287,7 @@ mod tests {
     }
 
     #[test]
-    fn translate() {
+    fn translating_a_transform() {
         assert_relative_eq!(
             Transform::new()
                 .translate(1.5, 2.3, 7.5)
@@ -297,7 +297,7 @@ mod tests {
     }
 
     #[test]
-    fn chaining_transforms() {
+    fn chaining_transform_methods() {
         assert_relative_eq!(
             Transform::from_rotate_y(Angle::from_radians(FRAC_PI_2))
                 .translate(1.0, 1.0, 1.0)
@@ -309,7 +309,7 @@ mod tests {
     }
 
     #[test]
-    fn approx() {
+    fn transforms_are_approximately_equal() {
         let t1 = Transform::from_translate(1.0, 2.5, 0.9);
         let t2 = Transform::from_translate(1.0, 2.5, 0.9);
         let t3 = Transform::from_rotate_x(Angle::from_radians(1.8));

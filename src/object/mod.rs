@@ -223,7 +223,7 @@ mod tests {
     }
 
     #[test]
-    fn new_sphere() {
+    fn creating_a_new_sphere() {
         let t = Transform::from_shear(0.0, 1.0, 1.0, 0.0, 0.0, 0.0);
         let m = Material::default();
 
@@ -235,7 +235,7 @@ mod tests {
     }
 
     #[test]
-    fn default_sphere() {
+    fn creating_a_default_sphere() {
         let o = Object::default_sphere();
 
         assert_relative_eq!(o.transform, Transform::default());
@@ -244,7 +244,7 @@ mod tests {
     }
 
     #[test]
-    fn new_plane() {
+    fn creating_a_new_plane() {
         let t = Transform::from_rotate_x(Angle::from_degrees(30.0));
         let m = Material::default();
 
@@ -256,7 +256,7 @@ mod tests {
     }
 
     #[test]
-    fn default_plane() {
+    fn creating_a_default_plane() {
         let o = Object::default_plane();
 
         assert_relative_eq!(o.transform, Transform::default());
@@ -265,7 +265,7 @@ mod tests {
     }
 
     #[test]
-    fn new_test() {
+    fn creating_a_new_test_object() {
         let t = Transform::from_scale(1.0, 0.5, 1.0);
         let m = Material::default();
 
@@ -277,7 +277,7 @@ mod tests {
     }
 
     #[test]
-    fn default_test() {
+    fn creating_a_default_test_object() {
         let o = Object::default_test();
 
         assert_relative_eq!(o.transform, Transform::default());
@@ -363,7 +363,7 @@ mod tests {
     }
 
     #[test]
-    fn approx() {
+    fn objects_are_approximately_equal() {
         let o1 = Object::new(
             Transform::from_translate(5.0, 4.0, 3.0),
             Material::default(),

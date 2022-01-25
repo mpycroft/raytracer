@@ -97,17 +97,17 @@ mod tests {
     use super::*;
 
     #[test]
-    fn new() {
+    fn creating_a_test_object() {
         assert!(Test::new().ray.get().is_none());
     }
 
     #[test]
-    fn default() {
+    fn creating_a_default_test_object() {
         assert!(Test::default().ray.get().is_none());
     }
 
     #[test]
-    fn intersect() {
+    fn intersecting_a_test_object() {
         let r = Ray::new(Point::new(0.5, 1.0, 1.5), Vector::new(1.0, 1.0, 0.0));
 
         let t = Test::default();
@@ -119,7 +119,7 @@ mod tests {
     }
 
     #[test]
-    fn normal_at() {
+    fn the_normal_of_a_test_object() {
         let t = Test::default();
 
         assert_relative_eq!(
@@ -129,7 +129,7 @@ mod tests {
     }
 
     #[test]
-    fn approx() {
+    fn test_objects_are_approximately_equal() {
         let t1 = Test::new();
         t1.ray.set(Some(Ray::new(Point::origin(), Vector::y_axis())));
         let t2 = Test::new();
