@@ -9,11 +9,11 @@ pub mod approx;
 // mod point;
 // mod ray;
 // mod transform;
-// mod vector;
+mod vector;
 
 // pub use angle::Angle;
 // use matrix::Matrix;
 // pub use point::Point;
 // pub use ray::Ray;
 // pub use transform::{Transform, Transformable};
-// pub use vector::Vector;
+pub use vector::Vector;

@@ -4,29 +4,30 @@ use derive_more::{
     Add, AddAssign, Constructor, Div, DivAssign, Mul, MulAssign, Neg, Sub,
     SubAssign,
 };
+use num_traits::Float;
 
 /// A Vector is a representation of a geometric vector, pointing in a given
 /// direction and with a magnitude.
 #[rustfmt::skip] // Don't merge these derives or we get a huge vertical list
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
 #[derive(Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign)]
-pub struct Vector {
-    pub x: f64,
-    pub y: f64,
-    pub z: f64,
+pub struct Vector<T:Float> {
+    pub x: T,
+    pub y: T,
+    pub z: T,
 }
 
-impl Vector {
+impl<T: Float> Vector<T> {
     pub fn x_axis() -> Self {
-        Self::new(1.0, 0.0, 0.0)
+        Self::new(T::one(), T::zero(), T::zero())
     }
 
     pub fn y_axis() -> Self {
-        Self::new(0.0, 1.0, 0.0)
+        Self::new(T::zero(), T::one(), T::zero())
     }
 
     pub fn z_axis() -> Self {
-        Self::new(0.0, 0.0, 1.0)
+        Self::new(T::zero(), T::zero(), T::one())
     }
 
     pub fn cross(&self, rhs: &Self) -> Self {
@@ -37,38 +38,38 @@ impl Vector {
         )
     }
 
-    pub fn dot(&self, rhs: &Self) -> f64 {
+    pub fn dot(&self, rhs: &Self) -> T {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
 
-    pub fn magnitude(&self) -> f64 {
+    pub fn magnitude(&self) -> T {
         self.dot(self).sqrt()
     }
 
     pub fn normalise(&self) -> Self {
         let magnitude = self.magnitude();
 
-        if magnitude == 0.0 {
-            return Vector::new(0.0, 0.0, 0.0);
+        if magnitude == T::zero() {
+            return Vector::new(T::zero(), T::zero(), T::zero());
         }
 
         Self::new(self.x / magnitude, self.y / magnitude, self.z / magnitude)
     }
 
     pub fn reflect(&self, normal: &Self) -> Self {
-        *self - *normal * 2.0 * self.dot(normal)
+        *self - *normal * T::from(2.0).unwrap() * self.dot(normal)
     }
 }
 
-impl Mul<Vector> for f64 {
-    type Output = Vector;
+impl<T: Float> Mul<Vector<T>> for f64 {
+    type Output = Vector<T>;
 
-    fn mul(self, rhs: Vector) -> Self::Output {
-        rhs * self
+    fn mul(self, rhs: Vector<T>) -> Self::Output {
+        rhs * T::from(self).unwrap()
     }
 }
 
-add_approx_traits!(Vector { x, y, z });
+add_approx_traits!(Vector<T> { x, y, z });
 
 #[cfg(test)]
 mod tests {
@@ -98,11 +99,11 @@ mod tests {
 
     #[test]
     fn computing_the_magnitude_of_an_axis_vector() {
-        assert_float_relative_eq!(Vector::x_axis().magnitude(), 1.0);
+        assert_float_relative_eq!(Vector::<f64>::x_axis().magnitude(), 1.0);
 
-        assert_float_relative_eq!(Vector::y_axis().magnitude(), 1.0);
+        assert_float_relative_eq!(Vector::<f64>::y_axis().magnitude(), 1.0);
 
-        assert_float_relative_eq!(Vector::z_axis().magnitude(), 1.0);
+        assert_float_relative_eq!(Vector::<f64>::z_axis().magnitude(), 1.0);
     }
 
     #[test]
