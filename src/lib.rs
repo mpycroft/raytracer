@@ -4,8 +4,9 @@
 //! being in a binary.
 
 #[macro_use]
-pub mod math;
+pub mod util;
 
+mod math;
 // mod camera;
 // mod canvas;
 // mod colour;

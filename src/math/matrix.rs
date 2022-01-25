@@ -8,10 +8,8 @@ use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use derive_more::Constructor;
 use num_traits::{Float, FromPrimitive};
 
-use super::{
-    approx::{FLOAT_EPSILON, FLOAT_ULPS},
-    Angle, Point, Vector,
-};
+use super::{Angle, Point, Vector};
+use crate::util::approx::{FLOAT_EPSILON, FLOAT_ULPS};
 
 /// A Matrix is a square matrix of size T, stored in row major order. Due to the
 /// limitations on current const generics the implementation is a bit haphazard.

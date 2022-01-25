@@ -35,7 +35,7 @@ macro_rules! add_approx_traits {
             type Epsilon = T::Epsilon;
 
             fn default_epsilon() -> Self::Epsilon {
-                num_traits::FromPrimitive::from_f64(crate::math::approx::FLOAT_EPSILON).unwrap()
+                num_traits::FromPrimitive::from_f64(crate::util::approx::FLOAT_EPSILON).unwrap()
             }
 
             #[allow(unused_variables)]
@@ -54,7 +54,7 @@ macro_rules! add_approx_traits {
             T::Epsilon: num_traits::FromPrimitive + Copy
         {
             fn default_max_relative() -> Self::Epsilon {
-                num_traits::FromPrimitive::from_f64(crate::math::approx::FLOAT_EPSILON).unwrap()
+                num_traits::FromPrimitive::from_f64(crate::util::approx::FLOAT_EPSILON).unwrap()
             }
 
             #[allow(unused_variables)]
@@ -76,7 +76,7 @@ macro_rules! add_approx_traits {
             T::Epsilon: num_traits::FromPrimitive + Copy
         {
             fn default_max_ulps() -> u32 {
-                crate::math::approx::FLOAT_ULPS
+                crate::util::approx::FLOAT_ULPS
             }
 
             #[allow(unused_variables)]
@@ -104,11 +104,11 @@ macro_rules! float_relative_eq {
             $lhs,
             $rhs,
             epsilon = num_traits::FromPrimitive::from_f64(
-                crate::math::approx::FLOAT_EPSILON
+                crate::util::approx::FLOAT_EPSILON
             )
             .unwrap(),
             max_relative = num_traits::FromPrimitive::from_f64(
-                crate::math::approx::FLOAT_EPSILON
+                crate::util::approx::FLOAT_EPSILON
             )
             .unwrap()
         )
@@ -122,8 +122,8 @@ macro_rules! assert_float_relative_eq {
         approx::assert_relative_eq!(
             $lhs,
             $rhs,
-            epsilon = crate::math::approx::FLOAT_EPSILON,
-            max_relative = crate::math::approx::FLOAT_EPSILON
+            epsilon = crate::util::approx::FLOAT_EPSILON,
+            max_relative = crate::util::approx::FLOAT_EPSILON
         );
     };
 }

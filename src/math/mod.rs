@@ -1,9 +1,6 @@
 //! The math module provides mathematical primitives needed throughout the ray
 //! tracer.
 
-#[macro_use]
-pub mod approx;
-
 mod angle;
 mod matrix;
 mod point;
