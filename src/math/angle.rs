@@ -1,8 +1,9 @@
 use derive_more::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign,
 };
-use num_traits::Float;
 use paste::paste;
+
+use crate::util::float::Float;
 
 /// An Angle represents a geometric angle, it is simply a wrapper around a value
 /// in radians but by using it rather than raw f64's we get some safety between
@@ -10,7 +11,7 @@ use paste::paste;
 #[rustfmt::skip] // Don't merge these derives or we get a huge vertical list
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 #[derive(Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign)]
-pub struct Angle<T:Float> {
+pub struct Angle<T: Float> {
     radians: T,
 }
 

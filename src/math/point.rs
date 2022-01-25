@@ -1,9 +1,9 @@
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
 use derive_more::Constructor;
-use num_traits::Float;
 
 use super::Vector;
+use crate::util::float::Float;
 
 /// A Point is a representation of a geometric position within the 3 dimensional
 /// scene we are working on.

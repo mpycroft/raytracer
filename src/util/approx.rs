@@ -29,7 +29,7 @@ macro_rules! add_approx_traits {
     (@add $type:ty, $rest:tt) => {
         impl<T> approx::AbsDiffEq for $type
         where
-            T: num_traits::Float + approx::AbsDiffEq,
+            T: crate::util::float::Float + approx::AbsDiffEq,
             T::Epsilon: num_traits::FromPrimitive + Copy
         {
             type Epsilon = T::Epsilon;
@@ -50,7 +50,7 @@ macro_rules! add_approx_traits {
 
         impl <T> approx::RelativeEq for $type
         where
-            T: num_traits::Float + approx::RelativeEq,
+            T: crate::util::float::Float + approx::RelativeEq,
             T::Epsilon: num_traits::FromPrimitive + Copy
         {
             fn default_max_relative() -> Self::Epsilon {
@@ -72,7 +72,7 @@ macro_rules! add_approx_traits {
 
         impl<T> approx::UlpsEq for $type
         where
-            T: num_traits::Float + approx::UlpsEq,
+            T: crate::util::float::Float + approx::UlpsEq,
             T::Epsilon: num_traits::FromPrimitive + Copy
         {
             fn default_max_ulps() -> u32 {

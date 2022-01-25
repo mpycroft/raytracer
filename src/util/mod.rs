@@ -3,5 +3,6 @@
 
 #[macro_use]
 pub mod approx;
+pub mod float;
 #[macro_use]
 pub mod operator;

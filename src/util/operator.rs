@@ -3,7 +3,7 @@
 /// for f32 and f64 (rather than a generic T) because they are foreign types.
 macro_rules! add_left_mul_scaler {
     (@impl $type:ty, $scaler:ty) => {
-        impl<T: num_traits::Float> std::ops::Mul<$type> for $scaler {
+        impl<T: crate::util::float::Float> std::ops::Mul<$type> for $scaler {
             type Output = $type;
 
             fn mul(self, rhs: $type) -> Self::Output {

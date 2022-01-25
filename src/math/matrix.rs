@@ -1,15 +1,15 @@
-use std::{
-    fmt::Debug,
-    ops::{AddAssign, Index, IndexMut, Mul, MulAssign},
-};
+use std::ops::{Index, IndexMut, Mul, MulAssign};
 
 use anyhow::{bail, Result};
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use derive_more::Constructor;
-use num_traits::{Float, FromPrimitive};
+use num_traits::FromPrimitive;
 
 use super::{Angle, Point, Vector};
-use crate::util::approx::{FLOAT_EPSILON, FLOAT_ULPS};
+use crate::util::{
+    approx::{FLOAT_EPSILON, FLOAT_ULPS},
+    float::Float,
+};
 
 /// A Matrix is a square matrix of size T, stored in row major order. Due to the
 /// limitations on current const generics the implementation is a bit haphazard.
@@ -112,11 +112,7 @@ macro_rules! calc_determinant {
     }};
 }
 
-impl<T> Matrix<T, 4>
-where
-    T: Float + AddAssign + Debug + RelativeEq,
-    T::Epsilon: FromPrimitive + Copy,
-{
+impl<T: Float> Matrix<T, 4> {
     pub fn identity() -> Self {
         Self::new([
             [T::one(), T::zero(), T::zero(), T::zero()],
@@ -149,7 +145,10 @@ where
     pub fn invert(&self) -> Result<Self> {
         let det = self.determinant();
 
-        if float_relative_eq!(det, T::zero()) {
+        // Do a manual floating point comparison of det with zero in order to
+        // avoid polluting the required traits when using invert with RelativeEq
+        // and T:Epsilon that calling relative_eq() entails.
+        if det.abs() < T::from(crate::util::approx::FLOAT_EPSILON).unwrap() {
             bail!("Tried to invert a non invertible matrix - {:?}", self);
         }
 
@@ -241,7 +240,7 @@ where
     }
 }
 
-impl<T: Float + AddAssign> Matrix<T, 3> {
+impl<T: Float> Matrix<T, 3> {
     pub fn cofactor(&self, row: usize, col: usize) -> T {
         calc_cofactor!(self, row, col)
     }

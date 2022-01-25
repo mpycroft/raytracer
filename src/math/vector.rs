@@ -2,7 +2,8 @@ use derive_more::{
     Add, AddAssign, Constructor, Div, DivAssign, Mul, MulAssign, Neg, Sub,
     SubAssign,
 };
-use num_traits::Float;
+
+use crate::util::float::Float;
 
 /// A Vector is a representation of a geometric vector, pointing in a given
 /// direction and with a magnitude.
