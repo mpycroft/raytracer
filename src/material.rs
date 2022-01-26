@@ -2,9 +2,8 @@ use derive_more::Constructor;
 
 use crate::{
     math::{Point, Vector},
-    pattern::PatternAt,
     util::float::Float,
-    Colour, Pattern, PointLight,
+    Colour, Object, Pattern, PointLight,
 };
 
 /// Material represents what a given object is made up of including what colour
@@ -22,6 +21,7 @@ pub struct Material<T: Float> {
 impl<T: Float> Material<T> {
     pub fn lighting(
         &self,
+        object: &Object<T>,
         light: &PointLight<T>,
         point: &Point<T>,
         eye: &Vector<T>,
@@ -29,7 +29,7 @@ impl<T: Float> Material<T> {
         in_shadow: bool,
     ) -> Colour<T> {
         let colour = if let Some(pattern) = self.pattern {
-            pattern.pattern_at(point)
+            pattern.pattern_at(object, point)
         } else {
             self.colour
         };
@@ -119,6 +119,7 @@ mod tests {
 
         assert_relative_eq!(
             Material::default().lighting(
+                &Object::default_sphere(),
                 &PointLight::new(Colour::white(), Point::new(0.0, 0.0, -10.0)),
                 &Point::origin(),
                 &neg_z,
@@ -133,6 +134,7 @@ mod tests {
     fn lighting_with_the_eye_between_light_and_surface_eye_offset_45_degrees() {
         assert_relative_eq!(
             Material::default().lighting(
+                &Object::default_sphere(),
                 &PointLight::new(Colour::white(), Point::new(0.0, 0.0, -10.0)),
                 &Point::origin(),
                 &Vector::new(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2),
@@ -149,6 +151,7 @@ mod tests {
 
         assert_relative_eq!(
             Material::default().lighting(
+                &Object::default_sphere(),
                 &PointLight::new(Colour::white(), Point::new(0.0, 10.0, -10.0)),
                 &Point::origin(),
                 &neg_z,
@@ -163,6 +166,7 @@ mod tests {
     fn lighting_with_the_eye_in_the_path_of_the_reflection_vector() {
         assert_relative_eq!(
             Material::default().lighting(
+                &Object::default_sphere(),
                 &PointLight::new(Colour::white(), Point::new(0.0, 10.0, -10.0)),
                 &Point::origin(),
                 &Vector::new(0.0, -FRAC_1_SQRT_2, -FRAC_1_SQRT_2),
@@ -179,6 +183,7 @@ mod tests {
 
         assert_relative_eq!(
             Material::default().lighting(
+                &Object::default_sphere(),
                 &PointLight::new(Colour::white(), Point::new(0.0, 0.0, 10.0)),
                 &Point::origin(),
                 &neg_z,
@@ -195,6 +200,7 @@ mod tests {
 
         assert_relative_eq!(
             Material::default().lighting(
+                &Object::default_sphere(),
                 &PointLight::new(Colour::white(), Point::new(0.0, 0.0, -10.0)),
                 &Point::origin(),
                 &neg_z,
@@ -207,6 +213,7 @@ mod tests {
 
     #[test]
     fn lighting_with_a_pattern_applied() {
+        let o = Object::default_sphere();
         let m = Material::new(
             Colour::red(),
             Some(Pattern::default_stripe(Colour::white(), Colour::black())),
@@ -220,11 +227,25 @@ mod tests {
         let neg_z = -Vector::z_axis();
 
         assert_relative_eq!(
-            m.lighting(&l, &Point::new(0.9, 0.0, 0.0), &neg_z, &neg_z, false),
+            m.lighting(
+                &o,
+                &l,
+                &Point::new(0.9, 0.0, 0.0),
+                &neg_z,
+                &neg_z,
+                false
+            ),
             Colour::white()
         );
         assert_relative_eq!(
-            m.lighting(&l, &Point::new(1.1, 0.0, 0.0), &neg_z, &neg_z, false),
+            m.lighting(
+                &o,
+                &l,
+                &Point::new(1.1, 0.0, 0.0),
+                &neg_z,
+                &neg_z,
+                false
+            ),
             Colour::black()
         );
     }

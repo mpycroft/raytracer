@@ -31,6 +31,7 @@ impl<T: Float> World<T> {
 
         for light in &self.lights {
             colour += computations.object.material.lighting(
+                computations.object,
                 light,
                 &computations.over_point,
                 &computations.eye,

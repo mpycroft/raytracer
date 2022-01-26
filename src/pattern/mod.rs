@@ -15,13 +15,8 @@ use crate::{
         approx::{FLOAT_EPSILON, FLOAT_ULPS},
         float::Float,
     },
-    Colour,
+    Colour, Object,
 };
-
-/// Trait that all Patterns must implement.
-pub trait PatternAt<T: Float> {
-    fn pattern_at(&self, point: &Point<T>) -> Colour<T>;
-}
 
 /// A pattern that can be applied to a given object to change how it is rendered.
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
@@ -63,15 +58,22 @@ impl<T: Float> Pattern<T> {
 
     #[cfg(test)]
     add_pattern_fns!(Test());
-}
 
-impl<T: Float> PatternAt<T> for Pattern<T> {
-    fn pattern_at(&self, point: &Point<T>) -> Colour<T> {
+    pub fn pattern_at(
+        &self,
+        object: &Object<T>,
+        point: &Point<T>,
+    ) -> Colour<T> {
         self.pattern.pattern_at(point)
     }
 }
 
 add_approx_traits!(Pattern<T> { transform, pattern });
+
+/// Trait that all Patterns must implement.
+pub trait PatternAt<T: Float> {
+    fn pattern_at(&self, point: &Point<T>) -> Colour<T>;
+}
 
 /// The set of patterns that we know how to render.
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
