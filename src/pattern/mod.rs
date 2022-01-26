@@ -1,3 +1,4 @@
+mod checker;
 mod gradient;
 mod ring;
 mod stripe;
@@ -10,7 +11,7 @@ use paste::paste;
 
 #[cfg(test)]
 use self::test::Test;
-use self::{gradient::Gradient, ring::Ring, stripe::Stripe};
+use self::{checker::Checker, gradient::Gradient, ring::Ring, stripe::Stripe};
 use crate::{
     math::{Point, Transform},
     util::{
@@ -56,6 +57,7 @@ impl<T: Float> Pattern<T> {
         Self::new(Transform::default(), pattern)
     }
 
+    add_pattern_fns!(Checker(a: Colour<T>, b: Colour<T>));
     add_pattern_fns!(Gradient(a: Colour<T>, b: Colour<T>));
     add_pattern_fns!(Ring(a: Colour<T>, b: Colour<T>));
     add_pattern_fns!(Stripe(a: Colour<T>, b: Colour<T>));
@@ -85,6 +87,7 @@ pub trait PatternAt<T: Float> {
 /// The set of patterns that we know how to render.
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub enum Patterns<T: Float> {
+    Checker(Checker<T>),
     Gradient(Gradient<T>),
     Ring(Ring<T>),
     Stripe(Stripe<T>),
@@ -95,11 +98,12 @@ pub enum Patterns<T: Float> {
 impl<T: Float> PatternAt<T> for Patterns<T> {
     fn pattern_at(&self, point: &Point<T>) -> Colour<T> {
         match self {
-            Patterns::Gradient(gradient) => gradient.pattern_at(point),
-            Patterns::Ring(ring) => ring.pattern_at(point),
-            Patterns::Stripe(stripe) => stripe.pattern_at(point),
+            Patterns::Checker(data) => data.pattern_at(point),
+            Patterns::Gradient(data) => data.pattern_at(point),
+            Patterns::Ring(data) => data.pattern_at(point),
+            Patterns::Stripe(data) => data.pattern_at(point),
             #[cfg(test)]
-            Patterns::Test(test) => test.pattern_at(point),
+            Patterns::Test(data) => data.pattern_at(point),
         }
     }
 }
@@ -117,6 +121,9 @@ where
 
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
         match (self, other) {
+            (Patterns::Checker(lhs), Patterns::Checker(rhs)) => {
+                lhs.abs_diff_eq(rhs, epsilon)
+            }
             (Patterns::Gradient(lhs), Patterns::Gradient(rhs)) => {
                 lhs.abs_diff_eq(rhs, epsilon)
             }
@@ -151,6 +158,9 @@ where
         max_relative: Self::Epsilon,
     ) -> bool {
         match (self, other) {
+            (Patterns::Checker(lhs), Patterns::Checker(rhs)) => {
+                lhs.relative_eq(rhs, epsilon, max_relative)
+            }
             (Patterns::Gradient(lhs), Patterns::Gradient(rhs)) => {
                 lhs.relative_eq(rhs, epsilon, max_relative)
             }
@@ -185,6 +195,9 @@ where
         max_ulps: u32,
     ) -> bool {
         match (self, other) {
+            (Patterns::Checker(lhs), Patterns::Checker(rhs)) => {
+                lhs.ulps_eq(rhs, epsilon, max_ulps)
+            }
             (Patterns::Gradient(lhs), Patterns::Gradient(rhs)) => {
                 lhs.ulps_eq(rhs, epsilon, max_ulps)
             }
@@ -209,6 +222,28 @@ mod tests {
 
     use super::*;
     use crate::{math::Angle, Material};
+
+    #[test]
+    fn creating_a_new_checker_pattern() {
+        let t = Transform::<f64>::new();
+        let c1 = Colour::black();
+        let c2 = Colour::green();
+
+        let p = Pattern::new_checker(t, c1, c2);
+
+        assert_relative_eq!(p.transform, t);
+        assert_relative_eq!(p.pattern, Patterns::Checker(Checker::new(c1, c2)));
+    }
+
+    #[test]
+    fn creating_a_default_checker_pattern() {
+        let c1 = Colour::red();
+        let c2 = Colour::green();
+        let p = Pattern::<f64>::default_checker(c1, c2);
+
+        assert_relative_eq!(p.transform, Transform::default());
+        assert_relative_eq!(p.pattern, Patterns::Checker(Checker::new(c1, c2)));
+    }
 
     #[test]
     fn creating_a_new_gradient_pattern() {
