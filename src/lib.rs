@@ -13,6 +13,7 @@ mod colour;
 mod intersect;
 mod material;
 mod object;
+mod pattern;
 mod point_light;
 mod world;
 
@@ -22,5 +23,6 @@ pub use colour::Colour;
 pub use intersect::Intersectable;
 pub use material::Material;
 pub use object::Object;
+pub use pattern::Pattern;
 pub use point_light::PointLight;
 pub use world::World;
