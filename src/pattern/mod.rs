@@ -4,6 +4,7 @@ mod ring;
 mod stripe;
 #[cfg(test)]
 mod test;
+mod uniform;
 
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use num_traits::FromPrimitive;
@@ -11,7 +12,10 @@ use paste::paste;
 
 #[cfg(test)]
 use self::test::Test;
-use self::{checker::Checker, gradient::Gradient, ring::Ring, stripe::Stripe};
+use self::{
+    checker::Checker, gradient::Gradient, ring::Ring, stripe::Stripe,
+    uniform::Uniform,
+};
 use crate::{
     math::{Point, Transform},
     util::{
@@ -65,6 +69,8 @@ impl<T: Float> Pattern<T> {
     #[cfg(test)]
     add_pattern_fns!(Test());
 
+    add_pattern_fns!(Uniform(colour: Colour<T>));
+
     pub fn pattern_at(
         &self,
         object: &Object<T>,
@@ -93,6 +99,7 @@ pub enum Patterns<T: Float> {
     Stripe(Stripe<T>),
     #[cfg(test)]
     Test(Test<T>),
+    Uniform(Uniform<T>),
 }
 
 impl<T: Float> PatternAt<T> for Patterns<T> {
@@ -104,6 +111,7 @@ impl<T: Float> PatternAt<T> for Patterns<T> {
             Patterns::Stripe(data) => data.pattern_at(point),
             #[cfg(test)]
             Patterns::Test(data) => data.pattern_at(point),
+            Patterns::Uniform(data) => data.pattern_at(point),
         }
     }
 }
@@ -135,6 +143,9 @@ where
             }
             #[cfg(test)]
             (Patterns::Test(lhs), Patterns::Test(rhs)) => {
+                lhs.abs_diff_eq(rhs, epsilon)
+            }
+            (Patterns::Uniform(lhs), Patterns::Uniform(rhs)) => {
                 lhs.abs_diff_eq(rhs, epsilon)
             }
             (_, _) => false,
@@ -174,6 +185,9 @@ where
             (Patterns::Test(lhs), Patterns::Test(rhs)) => {
                 lhs.relative_eq(rhs, epsilon, max_relative)
             }
+            (Patterns::Uniform(lhs), Patterns::Uniform(rhs)) => {
+                lhs.relative_eq(rhs, epsilon, max_relative)
+            }
             (_, _) => false,
         }
     }
@@ -211,6 +225,9 @@ where
             (Patterns::Test(lhs), Patterns::Test(rhs)) => {
                 lhs.ulps_eq(rhs, epsilon, max_ulps)
             }
+            (Patterns::Uniform(lhs), Patterns::Uniform(rhs)) => {
+                lhs.ulps_eq(rhs, epsilon, max_ulps)
+            }
             (_, _) => false,
         }
     }
@@ -218,6 +235,8 @@ where
 
 #[cfg(test)]
 mod tests {
+    use std::f64::consts::FRAC_PI_2;
+
     use approx::*;
 
     use super::*;
@@ -333,6 +352,26 @@ mod tests {
 
         assert_relative_eq!(p.transform, Transform::default());
         assert_relative_eq!(p.pattern, Patterns::Test(Test::new()))
+    }
+
+    #[test]
+    fn creating_a_new_uniform_pattern() {
+        let t = Transform::from_rotate_y(Angle::from_radians(FRAC_PI_2));
+        let c = Colour::black();
+
+        let p = Pattern::new_uniform(t, c);
+
+        assert_relative_eq!(p.transform, t);
+        assert_relative_eq!(p.pattern, Patterns::Uniform(Uniform::new(c)));
+    }
+
+    #[test]
+    fn creating_a_default_uniform_pattern() {
+        let c = Colour::<f64>::white();
+        let p = Pattern::default_uniform(c);
+
+        assert_relative_eq!(p.transform, Transform::default());
+        assert_relative_eq!(p.pattern, Patterns::Uniform(Uniform::new(c)));
     }
 
     #[test]

@@ -2,7 +2,7 @@ use crate::{
     intersect::{Computations, Intersectable, Intersection, IntersectionList},
     math::{Point, Ray, Transform},
     util::float::Float,
-    Colour, Material, Object, PointLight,
+    Colour, Material, Object, Pattern, PointLight,
 };
 
 /// World represents all the objects and light sources in a given scene that we
@@ -100,12 +100,11 @@ impl<T: Float> Default for World<T> {
         world.push_object(Object::new_sphere(
             Transform::new(),
             Material::new(
-                Colour::new(
+                Pattern::default_uniform(Colour::new(
                     T::from(0.8f64).unwrap(),
                     T::from(1.0f64).unwrap(),
                     T::from(0.6f64).unwrap(),
-                ),
-                None,
+                )),
                 T::from(0.1f64).unwrap(),
                 T::from(0.7f64).unwrap(),
                 T::from(0.2f64).unwrap(),
@@ -280,7 +279,7 @@ mod tests {
                 Point::new(0.0, 0.0, 0.75),
                 -Vector::z_axis()
             )),
-            w.objects[1].material.colour
+            Colour::white()
         );
     }
 
@@ -359,8 +358,7 @@ mod tests {
             Object::new_sphere(
                 Transform::new(),
                 Material::new(
-                    Colour::new(0.8, 1.0, 0.6),
-                    None,
+                    Pattern::default_uniform(Colour::new(0.8, 1.0, 0.6)),
                     0.1,
                     0.7,
                     0.2,

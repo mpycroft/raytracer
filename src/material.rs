@@ -10,8 +10,7 @@ use crate::{
 /// it is and how it reacts to light.
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
 pub struct Material<T: Float> {
-    pub colour: Colour<T>,
-    pub pattern: Option<Pattern<T>>,
+    pub pattern: Pattern<T>,
     pub ambient: T,
     pub diffuse: T,
     pub specular: T,
@@ -28,11 +27,7 @@ impl<T: Float> Material<T> {
         normal: &Vector<T>,
         in_shadow: bool,
     ) -> Colour<T> {
-        let colour = if let Some(pattern) = self.pattern {
-            pattern.pattern_at(object, point)
-        } else {
-            self.colour
-        };
+        let colour = self.pattern.pattern_at(object, point);
 
         let effective_colour = colour * light.intensity;
 
@@ -70,8 +65,7 @@ impl<T: Float> Material<T> {
 impl<T: Float> Default for Material<T> {
     fn default() -> Self {
         Self::new(
-            Colour::white(),
-            None,
+            Pattern::default_uniform(Colour::white()),
             T::from(0.1f64).unwrap(),
             T::from(0.9f64).unwrap(),
             T::from(0.9f64).unwrap(),
@@ -80,7 +74,7 @@ impl<T: Float> Default for Material<T> {
     }
 }
 
-add_approx_traits!(Material<T> { colour, ambient, diffuse, specular, shininess });
+add_approx_traits!(Material<T> { pattern, ambient, diffuse, specular, shininess });
 
 #[cfg(test)]
 mod tests {
@@ -92,10 +86,10 @@ mod tests {
 
     #[test]
     fn creating_a_new_material() {
-        let c = Colour::new(0.5, 0.3, 0.0);
-        let m = Material::new(c, None, 0.5, 1.0, 0.6, 100.0);
+        let p = Pattern::default_uniform(Colour::new(0.5, 0.3, 0.0));
+        let m = Material::new(p, 0.5, 1.0, 0.6, 100.0);
 
-        assert_relative_eq!(m.colour, c);
+        assert_relative_eq!(m.pattern, p);
         assert_float_relative_eq!(m.ambient, 0.5);
         assert_float_relative_eq!(m.diffuse, 1.0);
         assert_float_relative_eq!(m.specular, 0.6);
@@ -106,7 +100,10 @@ mod tests {
     fn the_default_material() {
         let m = Material::<f64>::default();
 
-        assert_relative_eq!(m.colour, Colour::white());
+        assert_relative_eq!(
+            m.pattern,
+            Pattern::default_uniform(Colour::white())
+        );
         assert_float_relative_eq!(m.ambient, 0.1);
         assert_float_relative_eq!(m.diffuse, 0.9);
         assert_float_relative_eq!(m.specular, 0.9);
@@ -215,8 +212,7 @@ mod tests {
     fn lighting_with_a_pattern_applied() {
         let o = Object::default_sphere();
         let m = Material::new(
-            Colour::red(),
-            Some(Pattern::default_stripe(Colour::white(), Colour::black())),
+            Pattern::default_stripe(Colour::white(), Colour::black()),
             1.0,
             0.0,
             0.0,
@@ -253,24 +249,21 @@ mod tests {
     #[test]
     fn materials_are_approximately_equal() {
         let m1 = Material::new(
-            Colour::new(0.3, 0.4, 1.0),
-            None,
+            Pattern::default_uniform(Colour::new(0.3, 0.4, 1.0)),
             0.2,
             0.4,
             0.3,
             150.0,
         );
         let m2 = Material::new(
-            Colour::new(0.3, 0.4, 1.0),
-            None,
+            Pattern::default_uniform(Colour::new(0.3, 0.4, 1.0)),
             0.2,
             0.4,
             0.3,
             150.0,
         );
         let m3 = Material::new(
-            Colour::new(0.3, 0.4, 1.000_1),
-            None,
+            Pattern::default_uniform(Colour::new(0.3, 0.4, 1.000_1)),
             0.2,
             0.400_09,
             0.3,

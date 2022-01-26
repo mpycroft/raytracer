@@ -12,8 +12,8 @@ fn main() {
     let mut world = World::new();
 
     let floor_material = Material::new(
-        Colour::new(1.0, 0.9, 0.9),
-        Some(Pattern::default_stripe(Colour::white(), Colour::green())),
+        //Colour::new(1.0, 0.9, 0.9),
+        Pattern::default_stripe(Colour::white(), Colour::green()),
         0.1,
         0.9,
         0.0,
@@ -40,15 +40,33 @@ fn main() {
 
     world.push_object(Object::new_sphere(
         Transform::from_translate(-0.5, 1.0, 0.5),
-        Material::new(Colour::new(0.1, 1.0, 0.5), None, 0.1, 0.7, 0.3, 200.0),
+        Material::new(
+            Pattern::default_uniform(Colour::new(0.1, 1.0, 0.5)),
+            0.1,
+            0.7,
+            0.3,
+            200.0,
+        ),
     ));
     world.push_object(Object::new_sphere(
         Transform::from_scale(0.5, 0.5, 0.5).translate(1.5, 0.5, -0.5),
-        Material::new(Colour::new(0.5, 1.0, 0.1), None, 0.1, 0.7, 0.3, 200.0),
+        Material::new(
+            Pattern::default_uniform(Colour::new(0.5, 1.0, 0.1)),
+            0.1,
+            0.7,
+            0.3,
+            200.0,
+        ),
     ));
     world.push_object(Object::new_sphere(
         Transform::from_scale(0.33, 0.33, 0.33).translate(-1.5, 0.33, -0.75),
-        Material::new(Colour::new(1.0, 0.8, 0.1), None, 0.1, 0.7, 0.3, 200.0),
+        Material::new(
+            Pattern::default_uniform(Colour::new(1.0, 0.8, 0.1)),
+            0.1,
+            0.7,
+            0.3,
+            200.0,
+        ),
     ));
 
     world.push_light(PointLight::new(
