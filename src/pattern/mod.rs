@@ -1,3 +1,4 @@
+mod gradient;
 mod stripe;
 #[cfg(test)]
 mod test;
@@ -6,9 +7,9 @@ use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use num_traits::FromPrimitive;
 use paste::paste;
 
-use self::stripe::Stripe;
 #[cfg(test)]
 use self::test::Test;
+use self::{gradient::Gradient, stripe::Stripe};
 use crate::{
     math::{Point, Transform},
     util::{
@@ -54,6 +55,7 @@ impl<T: Float> Pattern<T> {
         Self::new(Transform::default(), pattern)
     }
 
+    add_pattern_fns!(Gradient(a: Colour<T>, b: Colour<T>));
     add_pattern_fns!(Stripe(a: Colour<T>, b: Colour<T>));
 
     #[cfg(test)]
@@ -81,6 +83,7 @@ pub trait PatternAt<T: Float> {
 /// The set of patterns that we know how to render.
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub enum Patterns<T: Float> {
+    Gradient(Gradient<T>),
     Stripe(Stripe<T>),
     #[cfg(test)]
     Test(Test<T>),
@@ -89,6 +92,7 @@ pub enum Patterns<T: Float> {
 impl<T: Float> PatternAt<T> for Patterns<T> {
     fn pattern_at(&self, point: &Point<T>) -> Colour<T> {
         match self {
+            Patterns::Gradient(gradient) => gradient.pattern_at(point),
             Patterns::Stripe(stripe) => stripe.pattern_at(point),
             #[cfg(test)]
             Patterns::Test(test) => test.pattern_at(point),
@@ -109,6 +113,9 @@ where
 
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
         match (self, other) {
+            (Patterns::Gradient(lhs), Patterns::Gradient(rhs)) => {
+                lhs.abs_diff_eq(rhs, epsilon)
+            }
             (Patterns::Stripe(lhs), Patterns::Stripe(rhs)) => {
                 lhs.abs_diff_eq(rhs, epsilon)
             }
@@ -137,6 +144,9 @@ where
         max_relative: Self::Epsilon,
     ) -> bool {
         match (self, other) {
+            (Patterns::Gradient(lhs), Patterns::Gradient(rhs)) => {
+                lhs.relative_eq(rhs, epsilon, max_relative)
+            }
             (Patterns::Stripe(lhs), Patterns::Stripe(rhs)) => {
                 lhs.relative_eq(rhs, epsilon, max_relative)
             }
@@ -165,6 +175,9 @@ where
         max_ulps: u32,
     ) -> bool {
         match (self, other) {
+            (Patterns::Gradient(lhs), Patterns::Gradient(rhs)) => {
+                lhs.ulps_eq(rhs, epsilon, max_ulps)
+            }
             (Patterns::Stripe(lhs), Patterns::Stripe(rhs)) => {
                 lhs.ulps_eq(rhs, epsilon, max_ulps)
             }
@@ -181,12 +194,39 @@ where
 mod tests {
     use approx::*;
 
+    use super::*;
     use crate::{math::Angle, Material};
 
-    use super::*;
+    #[test]
+    fn creating_a_new_gradient_pattern() {
+        let t = Transform::<f64>::from_translate(-1.0, -1.5, -2.0);
+        let c1 = Colour::black();
+        let c2 = Colour::white();
+
+        let p = Pattern::new_gradient(t, c1, c2);
+
+        assert_relative_eq!(p.transform, t);
+        assert_relative_eq!(
+            p.pattern,
+            Patterns::Gradient(Gradient::new(c1, c2))
+        );
+    }
 
     #[test]
-    fn create_a_new_stripe_pattern() {
+    fn creating_a_default_gradient_pattern() {
+        let c1 = Colour::red();
+        let c2 = Colour::blue();
+        let p = Pattern::<f64>::default_gradient(c1, c2);
+
+        assert_relative_eq!(p.transform, Transform::default());
+        assert_relative_eq!(
+            p.pattern,
+            Patterns::Gradient(Gradient::new(c1, c2))
+        );
+    }
+
+    #[test]
+    fn creating_a_new_stripe_pattern() {
         let t = Transform::<f64>::from_scale(1.0, 2.0, 2.0);
         let c1 = Colour::white();
         let c2 = Colour::black();
@@ -208,7 +248,7 @@ mod tests {
     }
 
     #[test]
-    fn create_a_new_test_pattern() {
+    fn creating_a_new_test_pattern() {
         let t = Transform::from_rotate_x(Angle::from_degrees(30.0));
 
         let p = Pattern::new_test(t);
@@ -218,7 +258,7 @@ mod tests {
     }
 
     #[test]
-    fn create_a_default_test_pattern() {
+    fn creating_a_default_test_pattern() {
         let p = Pattern::<f64>::default_test();
 
         assert_relative_eq!(p.transform, Transform::default());
