@@ -5,8 +5,7 @@ use std::{
 
 use raytracer::{
     math::{Angle, Point, Transform, Vector},
-    Camera, Colour, Material, Object, Pattern, Patterns, PointLight, Stripe,
-    World,
+    Camera, Colour, Material, Object, Pattern, PointLight, World,
 };
 
 fn main() {
@@ -14,12 +13,7 @@ fn main() {
 
     let floor_material = Material::new(
         Colour::new(1.0, 0.9, 0.9),
-        Some(Pattern {
-            pattern: Patterns::Stripe(Stripe::new(
-                Colour::white(),
-                Colour::green(),
-            )),
-        }),
+        Some(Pattern::default_stripe(Colour::white(), Colour::green())),
         0.1,
         0.9,
         0.0,

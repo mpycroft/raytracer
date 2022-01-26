@@ -88,8 +88,6 @@ mod tests {
 
     use approx::*;
 
-    use crate::pattern::{Patterns, Stripe};
-
     use super::*;
 
     #[test]
@@ -211,12 +209,7 @@ mod tests {
     fn lighting_with_a_pattern_applied() {
         let m = Material::new(
             Colour::red(),
-            Some(Pattern {
-                pattern: Patterns::Stripe(Stripe::new(
-                    Colour::white(),
-                    Colour::black(),
-                )),
-            }),
+            Some(Pattern::default_stripe(Colour::white(), Colour::black())),
             1.0,
             0.0,
             0.0,
