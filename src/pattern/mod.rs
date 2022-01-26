@@ -3,7 +3,7 @@ mod stripe;
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use num_traits::FromPrimitive;
 
-use self::stripe::Stripe;
+pub use self::stripe::Stripe;
 use crate::{
     math::Point,
     util::{
@@ -21,7 +21,7 @@ pub trait PatternAt<T: Float> {
 /// A pattern that can be applied to a given object to change how it is rendered.
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct Pattern<T: Float> {
-    pattern: Patterns<T>,
+    pub pattern: Patterns<T>,
 }
 
 impl<T: Float> PatternAt<T> for Pattern<T> {

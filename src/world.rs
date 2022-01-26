@@ -104,6 +104,7 @@ impl<T: Float> Default for World<T> {
                     T::from(1.0f64).unwrap(),
                     T::from(0.6f64).unwrap(),
                 ),
+                None,
                 T::from(0.1f64).unwrap(),
                 T::from(0.7f64).unwrap(),
                 T::from(0.2f64).unwrap(),
@@ -356,7 +357,14 @@ mod tests {
             w.objects[0],
             Object::new_sphere(
                 Transform::new(),
-                Material::new(Colour::new(0.8, 1.0, 0.6), 0.1, 0.7, 0.2, 200.0)
+                Material::new(
+                    Colour::new(0.8, 1.0, 0.6),
+                    None,
+                    0.1,
+                    0.7,
+                    0.2,
+                    200.0
+                )
             )
         );
         assert_relative_eq!(

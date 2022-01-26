@@ -2,8 +2,9 @@ use derive_more::Constructor;
 
 use crate::{
     math::{Point, Vector},
+    pattern::PatternAt,
     util::float::Float,
-    Colour, PointLight,
+    Colour, Pattern, PointLight,
 };
 
 /// Material represents what a given object is made up of including what colour
@@ -11,6 +12,7 @@ use crate::{
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
 pub struct Material<T: Float> {
     pub colour: Colour<T>,
+    pub pattern: Option<Pattern<T>>,
     pub ambient: T,
     pub diffuse: T,
     pub specular: T,
@@ -26,7 +28,13 @@ impl<T: Float> Material<T> {
         normal: &Vector<T>,
         in_shadow: bool,
     ) -> Colour<T> {
-        let effective_colour = self.colour * light.intensity;
+        let colour = if let Some(pattern) = self.pattern {
+            pattern.pattern_at(point)
+        } else {
+            self.colour
+        };
+
+        let effective_colour = colour * light.intensity;
 
         let ambient = effective_colour * self.ambient;
 
@@ -63,6 +71,7 @@ impl<T: Float> Default for Material<T> {
     fn default() -> Self {
         Self::new(
             Colour::white(),
+            None,
             T::from(0.1f64).unwrap(),
             T::from(0.9f64).unwrap(),
             T::from(0.9f64).unwrap(),
@@ -79,12 +88,14 @@ mod tests {
 
     use approx::*;
 
+    use crate::pattern::{Patterns, Stripe};
+
     use super::*;
 
     #[test]
     fn creating_a_new_material() {
         let c = Colour::new(0.5, 0.3, 0.0);
-        let m = Material::new(c, 0.5, 1.0, 0.6, 100.0);
+        let m = Material::new(c, None, 0.5, 1.0, 0.6, 100.0);
 
         assert_relative_eq!(m.colour, c);
         assert_float_relative_eq!(m.ambient, 0.5);
@@ -197,13 +208,55 @@ mod tests {
     }
 
     #[test]
+    fn lighting_with_a_pattern_applied() {
+        let m = Material::new(
+            Colour::red(),
+            Some(Pattern {
+                pattern: Patterns::Stripe(Stripe::new(
+                    Colour::white(),
+                    Colour::black(),
+                )),
+            }),
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+        );
+
+        let l = PointLight::new(Colour::white(), Point::new(0.0, 0.0, -10.0));
+        let neg_z = -Vector::z_axis();
+
+        assert_relative_eq!(
+            m.lighting(&l, &Point::new(0.9, 0.0, 0.0), &neg_z, &neg_z, false),
+            Colour::white()
+        );
+        assert_relative_eq!(
+            m.lighting(&l, &Point::new(1.1, 0.0, 0.0), &neg_z, &neg_z, false),
+            Colour::black()
+        );
+    }
+
+    #[test]
     fn materials_are_approximately_equal() {
-        let m1 =
-            Material::new(Colour::new(0.3, 0.4, 1.0), 0.2, 0.4, 0.3, 150.0);
-        let m2 =
-            Material::new(Colour::new(0.3, 0.4, 1.0), 0.2, 0.4, 0.3, 150.0);
+        let m1 = Material::new(
+            Colour::new(0.3, 0.4, 1.0),
+            None,
+            0.2,
+            0.4,
+            0.3,
+            150.0,
+        );
+        let m2 = Material::new(
+            Colour::new(0.3, 0.4, 1.0),
+            None,
+            0.2,
+            0.4,
+            0.3,
+            150.0,
+        );
         let m3 = Material::new(
             Colour::new(0.3, 0.4, 1.000_1),
+            None,
             0.2,
             0.400_09,
             0.3,

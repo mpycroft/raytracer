@@ -23,6 +23,6 @@ pub use colour::Colour;
 pub use intersect::Intersectable;
 pub use material::Material;
 pub use object::Object;
-pub use pattern::Pattern;
+pub use pattern::{Pattern, Patterns, Stripe};
 pub use point_light::PointLight;
 pub use world::World;
