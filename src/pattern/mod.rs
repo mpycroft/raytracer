@@ -1,4 +1,5 @@
 mod gradient;
+mod ring;
 mod stripe;
 #[cfg(test)]
 mod test;
@@ -9,7 +10,7 @@ use paste::paste;
 
 #[cfg(test)]
 use self::test::Test;
-use self::{gradient::Gradient, stripe::Stripe};
+use self::{gradient::Gradient, ring::Ring, stripe::Stripe};
 use crate::{
     math::{Point, Transform},
     util::{
@@ -56,6 +57,7 @@ impl<T: Float> Pattern<T> {
     }
 
     add_pattern_fns!(Gradient(a: Colour<T>, b: Colour<T>));
+    add_pattern_fns!(Ring(a: Colour<T>, b: Colour<T>));
     add_pattern_fns!(Stripe(a: Colour<T>, b: Colour<T>));
 
     #[cfg(test)]
@@ -84,6 +86,7 @@ pub trait PatternAt<T: Float> {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub enum Patterns<T: Float> {
     Gradient(Gradient<T>),
+    Ring(Ring<T>),
     Stripe(Stripe<T>),
     #[cfg(test)]
     Test(Test<T>),
@@ -93,6 +96,7 @@ impl<T: Float> PatternAt<T> for Patterns<T> {
     fn pattern_at(&self, point: &Point<T>) -> Colour<T> {
         match self {
             Patterns::Gradient(gradient) => gradient.pattern_at(point),
+            Patterns::Ring(ring) => ring.pattern_at(point),
             Patterns::Stripe(stripe) => stripe.pattern_at(point),
             #[cfg(test)]
             Patterns::Test(test) => test.pattern_at(point),
@@ -114,6 +118,9 @@ where
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
         match (self, other) {
             (Patterns::Gradient(lhs), Patterns::Gradient(rhs)) => {
+                lhs.abs_diff_eq(rhs, epsilon)
+            }
+            (Patterns::Ring(lhs), Patterns::Ring(rhs)) => {
                 lhs.abs_diff_eq(rhs, epsilon)
             }
             (Patterns::Stripe(lhs), Patterns::Stripe(rhs)) => {
@@ -147,6 +154,9 @@ where
             (Patterns::Gradient(lhs), Patterns::Gradient(rhs)) => {
                 lhs.relative_eq(rhs, epsilon, max_relative)
             }
+            (Patterns::Ring(lhs), Patterns::Ring(rhs)) => {
+                lhs.relative_eq(rhs, epsilon, max_relative)
+            }
             (Patterns::Stripe(lhs), Patterns::Stripe(rhs)) => {
                 lhs.relative_eq(rhs, epsilon, max_relative)
             }
@@ -176,6 +186,9 @@ where
     ) -> bool {
         match (self, other) {
             (Patterns::Gradient(lhs), Patterns::Gradient(rhs)) => {
+                lhs.ulps_eq(rhs, epsilon, max_ulps)
+            }
+            (Patterns::Ring(lhs), Patterns::Ring(rhs)) => {
                 lhs.ulps_eq(rhs, epsilon, max_ulps)
             }
             (Patterns::Stripe(lhs), Patterns::Stripe(rhs)) => {
@@ -223,6 +236,28 @@ mod tests {
             p.pattern,
             Patterns::Gradient(Gradient::new(c1, c2))
         );
+    }
+
+    #[test]
+    fn creating_a_new_ring_pattern() {
+        let t = Transform::<f64>::from_translate(0.0, 1.0, 0.5);
+        let c1 = Colour::red();
+        let c2 = Colour::white();
+
+        let p = Pattern::new_ring(t, c1, c2);
+
+        assert_relative_eq!(p.transform, t);
+        assert_relative_eq!(p.pattern, Patterns::Ring(Ring::new(c1, c2)));
+    }
+
+    #[test]
+    fn creating_a_default_ring_pattern() {
+        let c1 = Colour::black();
+        let c2 = Colour::blue();
+        let p = Pattern::<f64>::default_ring(c1, c2);
+
+        assert_relative_eq!(p.transform, Transform::default());
+        assert_relative_eq!(p.pattern, Patterns::Ring(Ring::new(c1, c2)));
     }
 
     #[test]
