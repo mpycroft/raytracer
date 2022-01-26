@@ -64,7 +64,10 @@ impl<T: Float> Pattern<T> {
         object: &Object<T>,
         point: &Point<T>,
     ) -> Colour<T> {
-        self.pattern.pattern_at(point)
+        let object_point = object.transform.invert().apply(point);
+        let pattern_point = self.transform.invert().apply(&object_point);
+
+        self.pattern.pattern_at(&pattern_point)
     }
 }
 
@@ -178,7 +181,7 @@ where
 mod tests {
     use approx::*;
 
-    use crate::math::Angle;
+    use crate::{math::Angle, Material};
 
     use super::*;
 
@@ -220,6 +223,46 @@ mod tests {
 
         assert_relative_eq!(p.transform, Transform::default());
         assert_relative_eq!(p.pattern, Patterns::Test(Test::new()))
+    }
+
+    #[test]
+    fn a_pattern_with_an_object_transformation() {
+        assert_relative_eq!(
+            Pattern::default_test().pattern_at(
+                &Object::new_sphere(
+                    Transform::from_scale(2.0, 2.0, 2.0),
+                    Material::default(),
+                ),
+                &Point::new(2.0, 3.0, 4.0)
+            ),
+            Colour::new(1.0, 1.5, 2.0)
+        );
+    }
+
+    #[test]
+    fn a_pattern_with_a_pattern_transformation() {
+        assert_relative_eq!(
+            Pattern::new_test(Transform::from_scale(2.0, 2.0, 2.0)).pattern_at(
+                &Object::default_sphere(),
+                &Point::new(2.0, 3.0, 4.0)
+            ),
+            Colour::new(1.0, 1.5, 2.0)
+        );
+    }
+
+    #[test]
+    fn a_pattern_with_both_an_object_and_pattern_transformation() {
+        assert_relative_eq!(
+            Pattern::new_test(Transform::from_translate(0.5, 1.0, 1.5))
+                .pattern_at(
+                    &Object::new_sphere(
+                        Transform::from_scale(2.0, 2.0, 2.0),
+                        Material::default(),
+                    ),
+                    &Point::new(2.5, 3.0, 3.5)
+                ),
+            Colour::new(0.75, 0.5, 0.25)
+        );
     }
 
     #[test]
