@@ -1,5 +1,6 @@
 mod checker;
 mod gradient;
+mod radial_gradient;
 mod ring;
 mod stripe;
 #[cfg(test)]
@@ -13,8 +14,8 @@ use paste::paste;
 #[cfg(test)]
 use self::test::Test;
 use self::{
-    checker::Checker, gradient::Gradient, ring::Ring, stripe::Stripe,
-    uniform::Uniform,
+    checker::Checker, gradient::Gradient, radial_gradient::RadialGradient,
+    ring::Ring, stripe::Stripe, uniform::Uniform,
 };
 use crate::{
     math::{Point, Transform},
@@ -63,6 +64,7 @@ impl<T: Float> Pattern<T> {
 
     add_pattern_fns!(Checker(a: Colour<T>, b: Colour<T>));
     add_pattern_fns!(Gradient(a: Colour<T>, b: Colour<T>));
+    add_pattern_fns!(RadialGradient(a: Colour<T>, b: Colour<T>));
     add_pattern_fns!(Ring(a: Colour<T>, b: Colour<T>));
     add_pattern_fns!(Stripe(a: Colour<T>, b: Colour<T>));
 
@@ -95,6 +97,7 @@ pub trait PatternAt<T: Float> {
 pub enum Patterns<T: Float> {
     Checker(Checker<T>),
     Gradient(Gradient<T>),
+    RadialGradient(RadialGradient<T>),
     Ring(Ring<T>),
     Stripe(Stripe<T>),
     #[cfg(test)]
@@ -107,6 +110,7 @@ impl<T: Float> PatternAt<T> for Patterns<T> {
         match self {
             Patterns::Checker(data) => data.pattern_at(point),
             Patterns::Gradient(data) => data.pattern_at(point),
+            Patterns::RadialGradient(data) => data.pattern_at(point),
             Patterns::Ring(data) => data.pattern_at(point),
             Patterns::Stripe(data) => data.pattern_at(point),
             #[cfg(test)]
@@ -133,6 +137,9 @@ where
                 lhs.abs_diff_eq(rhs, epsilon)
             }
             (Patterns::Gradient(lhs), Patterns::Gradient(rhs)) => {
+                lhs.abs_diff_eq(rhs, epsilon)
+            }
+            (Patterns::RadialGradient(lhs), Patterns::RadialGradient(rhs)) => {
                 lhs.abs_diff_eq(rhs, epsilon)
             }
             (Patterns::Ring(lhs), Patterns::Ring(rhs)) => {
@@ -175,6 +182,9 @@ where
             (Patterns::Gradient(lhs), Patterns::Gradient(rhs)) => {
                 lhs.relative_eq(rhs, epsilon, max_relative)
             }
+            (Patterns::RadialGradient(lhs), Patterns::RadialGradient(rhs)) => {
+                lhs.relative_eq(rhs, epsilon, max_relative)
+            }
             (Patterns::Ring(lhs), Patterns::Ring(rhs)) => {
                 lhs.relative_eq(rhs, epsilon, max_relative)
             }
@@ -213,6 +223,9 @@ where
                 lhs.ulps_eq(rhs, epsilon, max_ulps)
             }
             (Patterns::Gradient(lhs), Patterns::Gradient(rhs)) => {
+                lhs.ulps_eq(rhs, epsilon, max_ulps)
+            }
+            (Patterns::RadialGradient(lhs), Patterns::RadialGradient(rhs)) => {
                 lhs.ulps_eq(rhs, epsilon, max_ulps)
             }
             (Patterns::Ring(lhs), Patterns::Ring(rhs)) => {
@@ -289,6 +302,34 @@ mod tests {
         assert_relative_eq!(
             p.pattern,
             Patterns::Gradient(Gradient::new(c1, c2))
+        );
+    }
+
+    #[test]
+    fn creating_a_new_radial_gradient_pattern() {
+        let t = Transform::<f64>::from_translate(-1.0, -1.0, 2.0);
+        let c1 = Colour::green();
+        let c2 = Colour::blue();
+
+        let p = Pattern::new_radial_gradient(t, c1, c2);
+
+        assert_relative_eq!(p.transform, t);
+        assert_relative_eq!(
+            p.pattern,
+            Patterns::RadialGradient(RadialGradient::new(c1, c2))
+        );
+    }
+
+    #[test]
+    fn creating_a_default_radial_gradient_pattern() {
+        let c1 = Colour::red();
+        let c2 = Colour::blue();
+        let p = Pattern::<f64>::default_radial_gradient(c1, c2);
+
+        assert_relative_eq!(p.transform, Transform::default());
+        assert_relative_eq!(
+            p.pattern,
+            Patterns::RadialGradient(RadialGradient::new(c1, c2))
         );
     }
 

@@ -13,7 +13,7 @@ fn main() {
 
     let floor_material = Material::new(
         //Colour::new(1.0, 0.9, 0.9),
-        Pattern::default_stripe(Colour::white(), Colour::green()),
+        Pattern::default_radial_gradient(Colour::white(), Colour::green()),
         0.1,
         0.9,
         0.0,
