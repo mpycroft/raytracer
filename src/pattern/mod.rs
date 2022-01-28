@@ -1,3 +1,4 @@
+mod blend;
 mod checker;
 mod gradient;
 mod radial_gradient;
@@ -14,8 +15,9 @@ use paste::paste;
 #[cfg(test)]
 use self::test::Test;
 use self::{
-    checker::Checker, gradient::Gradient, radial_gradient::RadialGradient,
-    ring::Ring, stripe::Stripe, uniform::Uniform,
+    blend::Blend, checker::Checker, gradient::Gradient,
+    radial_gradient::RadialGradient, ring::Ring, stripe::Stripe,
+    uniform::Uniform,
 };
 use crate::{
     math::{Point, Transform},
@@ -27,7 +29,7 @@ use crate::{
 };
 
 /// A pattern that can be applied to a given object to change how it is rendered.
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub struct Pattern<T: Float> {
     transform: Transform<T>,
     pattern: Patterns<T>,
@@ -62,6 +64,7 @@ impl<T: Float> Pattern<T> {
         Self::new(Transform::default(), pattern)
     }
 
+    add_pattern_fns!(Blend(a: Pattern<T>, b: Pattern<T>));
     add_pattern_fns!(Checker(a: Colour<T>, b: Colour<T>));
     add_pattern_fns!(Gradient(a: Colour<T>, b: Colour<T>));
     add_pattern_fns!(RadialGradient(a: Colour<T>, b: Colour<T>));
@@ -79,7 +82,12 @@ impl<T: Float> Pattern<T> {
         point: &Point<T>,
     ) -> Colour<T> {
         let object_point = object.transform.invert().apply(point);
-        let pattern_point = self.transform.invert().apply(&object_point);
+
+        self.sub_pattern_at(&object_point)
+    }
+
+    pub fn sub_pattern_at(&self, point: &Point<T>) -> Colour<T> {
+        let pattern_point = self.transform.invert().apply(point);
 
         self.pattern.pattern_at(&pattern_point)
     }
@@ -93,8 +101,9 @@ pub trait PatternAt<T: Float> {
 }
 
 /// The set of patterns that we know how to render.
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub enum Patterns<T: Float> {
+    Blend(Blend<T>),
     Checker(Checker<T>),
     Gradient(Gradient<T>),
     RadialGradient(RadialGradient<T>),
@@ -108,6 +117,7 @@ pub enum Patterns<T: Float> {
 impl<T: Float> PatternAt<T> for Patterns<T> {
     fn pattern_at(&self, point: &Point<T>) -> Colour<T> {
         match self {
+            Patterns::Blend(data) => data.pattern_at(point),
             Patterns::Checker(data) => data.pattern_at(point),
             Patterns::Gradient(data) => data.pattern_at(point),
             Patterns::RadialGradient(data) => data.pattern_at(point),
@@ -133,6 +143,9 @@ where
 
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
         match (self, other) {
+            (Patterns::Blend(lhs), Patterns::Blend(rhs)) => {
+                lhs.abs_diff_eq(rhs, epsilon)
+            }
             (Patterns::Checker(lhs), Patterns::Checker(rhs)) => {
                 lhs.abs_diff_eq(rhs, epsilon)
             }
@@ -176,6 +189,9 @@ where
         max_relative: Self::Epsilon,
     ) -> bool {
         match (self, other) {
+            (Patterns::Blend(lhs), Patterns::Blend(rhs)) => {
+                lhs.relative_eq(rhs, epsilon, max_relative)
+            }
             (Patterns::Checker(lhs), Patterns::Checker(rhs)) => {
                 lhs.relative_eq(rhs, epsilon, max_relative)
             }
@@ -219,6 +235,9 @@ where
         max_ulps: u32,
     ) -> bool {
         match (self, other) {
+            (Patterns::Blend(lhs), Patterns::Blend(rhs)) => {
+                lhs.ulps_eq(rhs, epsilon, max_ulps)
+            }
             (Patterns::Checker(lhs), Patterns::Checker(rhs)) => {
                 lhs.ulps_eq(rhs, epsilon, max_ulps)
             }
@@ -254,6 +273,29 @@ mod tests {
 
     use super::*;
     use crate::{math::Angle, Material};
+
+    #[test]
+    fn creating_a_new_blend_pattern() {
+        let t = Transform::<f64>::from_scale(1.0, 2.0, 3.0);
+        let p1 = Pattern::default_stripe(Colour::white(), Colour::black());
+        let p2 = Pattern::default_uniform(Colour::red());
+
+        let p = Pattern::new_blend(t, p1.clone(), p2.clone());
+
+        assert_relative_eq!(p.transform, t);
+        assert_relative_eq!(p.pattern, Patterns::Blend(Blend::new(p1, p2)));
+    }
+
+    #[test]
+    fn creating_a_default_blend_pattern() {
+        let p1 =
+            Pattern::<f64>::default_checker(Colour::blue(), Colour::black());
+        let p2 = Pattern::default_stripe(Colour::green(), Colour::white());
+        let p = Pattern::default_blend(p1.clone(), p2.clone());
+
+        assert_relative_eq!(p.transform, Transform::default());
+        assert_relative_eq!(p.pattern, Patterns::Blend(Blend::new(p1, p2)));
+    }
 
     #[test]
     fn creating_a_new_checker_pattern() {

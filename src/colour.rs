@@ -1,7 +1,7 @@
 use std::ops::{Mul, MulAssign};
 
 use derive_more::{
-    Add, AddAssign, Constructor, Mul, MulAssign, Sub, SubAssign,
+    Add, AddAssign, Constructor, Div, DivAssign, Mul, MulAssign, Sub, SubAssign,
 };
 use num_traits::{clamp, ToPrimitive};
 
@@ -11,7 +11,7 @@ use crate::util::float::Float;
 /// 0.0..1.0 but can go outside this range before final processing.
 #[rustfmt::skip] // Don't merge these derives or we get a huge vertical list
 #[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd, Constructor)]
-#[derive(Add, AddAssign, Mul, MulAssign, Sub, SubAssign)]
+#[derive(Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign)]
 #[mul(forward)]
 #[mul_assign(forward)]
 pub struct Colour<T: Float> {
@@ -162,6 +162,19 @@ mod tests {
         c *= Colour::new(1.0, 0.25, 0.0);
 
         assert_relative_eq!(c, Colour::new(2.74, -0.25, 0.0));
+    }
+
+    #[test]
+    fn dividing_a_colour_by_a_scaler() {
+        assert_relative_eq!(
+            Colour::new(1.0, 2.0, 3.0) / 2.0,
+            Colour::new(0.5, 1.0, 1.5)
+        );
+
+        let mut c = Colour::new(0.5, 0.8, 0.3);
+        c /= 1.1;
+
+        assert_relative_eq!(c, Colour::new(0.454_546, 0.727_272, 0.272_728));
     }
 
     #[test]

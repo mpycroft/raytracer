@@ -13,14 +13,24 @@ fn main() {
 
     let floor_material = Material::new(
         //Colour::new(1.0, 0.9, 0.9),
-        Pattern::default_radial_gradient(Colour::white(), Colour::green()),
+        Pattern::default_blend(
+            Pattern::default_checker(Colour::green(), Colour::white()),
+            Pattern::new_checker(
+                Transform::from_rotate_y(Angle::from_degrees(90.0)),
+                Colour::red(),
+                Colour::white(),
+            ),
+        ),
         0.1,
         0.9,
         0.0,
         200.0,
     );
 
-    world.push_object(Object::new_plane(Transform::default(), floor_material));
+    world.push_object(Object::new_plane(
+        Transform::default(),
+        floor_material.clone(),
+    ));
 
     let wall_transform = Transform::from_rotate_x(Angle::from_degrees(90.0));
     world.push_object(Object::new_plane(
@@ -28,7 +38,7 @@ fn main() {
             .clone()
             .rotate_y(Angle::from_radians(-FRAC_PI_4))
             .translate(0.0, 0.0, 5.0),
-        floor_material,
+        floor_material.clone(),
     ));
     world.push_object(Object::new_plane(
         wall_transform

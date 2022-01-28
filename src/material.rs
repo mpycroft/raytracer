@@ -8,7 +8,7 @@ use crate::{
 
 /// Material represents what a given object is made up of including what colour
 /// it is and how it reacts to light.
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
+#[derive(Clone, Debug, PartialEq, PartialOrd, Constructor)]
 pub struct Material<T: Float> {
     pub pattern: Pattern<T>,
     pub ambient: T,
@@ -87,7 +87,7 @@ mod tests {
     #[test]
     fn creating_a_new_material() {
         let p = Pattern::default_uniform(Colour::new(0.5, 0.3, 0.0));
-        let m = Material::new(p, 0.5, 1.0, 0.6, 100.0);
+        let m = Material::new(p.clone(), 0.5, 1.0, 0.6, 100.0);
 
         assert_relative_eq!(m.pattern, p);
         assert_float_relative_eq!(m.ambient, 0.5);

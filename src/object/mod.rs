@@ -222,7 +222,7 @@ mod tests {
         let m = Material::default();
         let s = Shape::Test(Test::default());
 
-        let o = Object::new(t, m, s.clone());
+        let o = Object::new(t, m.clone(), s.clone());
 
         assert_relative_eq!(o.transform, t);
         assert_relative_eq!(o.material, m);
@@ -245,7 +245,7 @@ mod tests {
         let t = Transform::<f64>::from_shear(0.0, 1.0, 1.0, 0.0, 0.0, 0.0);
         let m = Material::default();
 
-        let o = Object::new_sphere(t, m);
+        let o = Object::new_sphere(t, m.clone());
 
         assert_relative_eq!(o.transform, t);
         assert_relative_eq!(o.material, m);
@@ -266,7 +266,7 @@ mod tests {
         let t = Transform::from_rotate_x(Angle::from_degrees(30.0f64));
         let m = Material::default();
 
-        let o = Object::new_plane(t, m);
+        let o = Object::new_plane(t, m.clone());
 
         assert_relative_eq!(o.transform, t);
         assert_relative_eq!(o.material, m);
@@ -287,7 +287,7 @@ mod tests {
         let t = Transform::from_scale(1.0, 0.5, 1.0);
         let m = Material::default();
 
-        let o = Object::new_test(t, m);
+        let o = Object::new_test(t, m.clone());
 
         assert_relative_eq!(o.transform, t);
         assert_relative_eq!(o.material, m);
