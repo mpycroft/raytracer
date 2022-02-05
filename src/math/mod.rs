@@ -7,6 +7,7 @@ mod perlin_noise;
 mod point;
 mod ray;
 mod transform;
+mod util;
 mod vector;
 
 pub use angle::Angle;
@@ -15,4 +16,5 @@ pub use perlin_noise::PerlinNoise;
 pub use point::Point;
 pub use ray::Ray;
 pub use transform::{Transform, Transformable};
+pub use util::lerp;
 pub use vector::Vector;
