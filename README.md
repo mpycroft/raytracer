@@ -57,3 +57,16 @@ comparing to zero and relative difference works generally well elsewhere. A
 fairly arbitrary epsilon of 0.000_001 is used to check if two floats are the
 same or not, this should be "good enough" for the sort of accuracy we care about
 without over burdening tests with the default f64 epsilon.
+
+### Random Numbers
+
+It would be ideal to be able to reproduce images so we want to be able to seed
+whatever RNG we use with a value. This precludes using thread_rng() or similar
+from rand. Instead we will pick Xoshiro256PlusPlus as it is currently what
+SmallRng uses but SmallRng isn't guaranteed to stay the same or even be the same
+between platforms (though it likely would be fine for our usage).
+
+Primarily we want reproducibility both so that we can regenerate an image we
+like but more importantly for testing and performance reasons. Additionally work
+will be needed when we parallelise the ray tracer to ensure deterministic number
+generation across threads for any given seed.

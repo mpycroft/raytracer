@@ -3,6 +3,7 @@
 
 mod angle;
 mod matrix;
+mod perlin_noise;
 mod point;
 mod ray;
 mod transform;
@@ -10,6 +11,7 @@ mod vector;
 
 pub use angle::Angle;
 use matrix::Matrix;
+pub use perlin_noise::PerlinNoise;
 pub use point::Point;
 pub use ray::Ray;
 pub use transform::{Transform, Transformable};
