@@ -41,7 +41,19 @@ impl<T: Float> PerlinNoise<T> {
         Self { permutations, _phantom: PhantomData }
     }
 
-    pub fn noise(&self, point: &Point<T>) -> T {
+    /// Returns Perlin noise for the given 3d point but shifted to be in the
+    /// range 0..1.
+    pub fn get_noise(&self, point: &Point<T>) -> T {
+        // This is sqrt(3.0) / 2.0 but sqrt() can't be used in const contexts
+        const FACTOR: f64 = 0.866_025_403_784_438_6;
+
+        (self.raw_noise(point) / T::from(FACTOR).unwrap() + T::one())
+            / T::from(2.0f64).unwrap()
+    }
+
+    /// Return the raw Perlin noise for a given 3d point, returns values in the
+    /// range -sqrt(3)/2 to sqrt(3)/2.
+    pub fn raw_noise(&self, point: &Point<T>) -> T {
         let x0 = (ToPrimitive::to_isize(&point.x.floor()).unwrap() as usize)
             & PERMUTATION_TABLE_MASK;
         let y0 = (ToPrimitive::to_isize(&point.y.floor()).unwrap() as usize)

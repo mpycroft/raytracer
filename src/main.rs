@@ -3,23 +3,23 @@ use std::{
     fs::write,
 };
 
+use rand::SeedableRng;
+use rand_xoshiro::Xoshiro256PlusPlus;
 use raytracer::{
-    math::{Angle, Point, Transform, Vector},
+    math::{Angle, PerlinNoise, Point, Transform, Vector},
     Camera, Colour, Material, Object, Pattern, PointLight, World,
 };
 
 fn main() {
     let mut world = World::new();
 
+    let mut rng = Xoshiro256PlusPlus::seed_from_u64(1);
+
     let floor_material = Material::new(
-        //Colour::new(1.0, 0.9, 0.9),
-        Pattern::default_blend(
-            Pattern::default_checker(Colour::green(), Colour::white()),
-            Pattern::new_checker(
-                Transform::from_rotate_y(Angle::from_degrees(90.0)),
-                Colour::red(),
-                Colour::white(),
-            ),
+        Pattern::default_perlin_pattern(
+            PerlinNoise::new(&mut rng),
+            Colour::white(),
+            5.0,
         ),
         0.1,
         0.9,

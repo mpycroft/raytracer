@@ -1,6 +1,7 @@
 mod blend;
 mod checker;
 mod gradient;
+mod perlin_pattern;
 mod radial_gradient;
 mod ring;
 mod stripe;
@@ -16,11 +17,11 @@ use paste::paste;
 use self::test::Test;
 use self::{
     blend::Blend, checker::Checker, gradient::Gradient,
-    radial_gradient::RadialGradient, ring::Ring, stripe::Stripe,
-    uniform::Uniform,
+    perlin_pattern::PerlinPattern, radial_gradient::RadialGradient, ring::Ring,
+    stripe::Stripe, uniform::Uniform,
 };
 use crate::{
-    math::{Point, Transform},
+    math::{PerlinNoise, Point, Transform},
     util::{
         approx::{FLOAT_EPSILON, FLOAT_ULPS},
         float::Float,
@@ -67,13 +68,16 @@ impl<T: Float> Pattern<T> {
     add_pattern_fns!(Blend(a: Pattern<T>, b: Pattern<T>));
     add_pattern_fns!(Checker(a: Colour<T>, b: Colour<T>));
     add_pattern_fns!(Gradient(a: Colour<T>, b: Colour<T>));
+    add_pattern_fns!(PerlinPattern(
+        noise: PerlinNoise<T>,
+        colour: Colour<T>,
+        scale: T
+    ));
     add_pattern_fns!(RadialGradient(a: Colour<T>, b: Colour<T>));
     add_pattern_fns!(Ring(a: Colour<T>, b: Colour<T>));
     add_pattern_fns!(Stripe(a: Colour<T>, b: Colour<T>));
-
     #[cfg(test)]
     add_pattern_fns!(Test());
-
     add_pattern_fns!(Uniform(colour: Colour<T>));
 
     pub fn pattern_at(
@@ -106,6 +110,7 @@ pub enum Patterns<T: Float> {
     Blend(Blend<T>),
     Checker(Checker<T>),
     Gradient(Gradient<T>),
+    PerlinPattern(PerlinPattern<T>),
     RadialGradient(RadialGradient<T>),
     Ring(Ring<T>),
     Stripe(Stripe<T>),
@@ -120,6 +125,7 @@ impl<T: Float> PatternAt<T> for Patterns<T> {
             Patterns::Blend(data) => data.pattern_at(point),
             Patterns::Checker(data) => data.pattern_at(point),
             Patterns::Gradient(data) => data.pattern_at(point),
+            Patterns::PerlinPattern(data) => data.pattern_at(point),
             Patterns::RadialGradient(data) => data.pattern_at(point),
             Patterns::Ring(data) => data.pattern_at(point),
             Patterns::Stripe(data) => data.pattern_at(point),
@@ -150,6 +156,9 @@ where
                 lhs.abs_diff_eq(rhs, epsilon)
             }
             (Patterns::Gradient(lhs), Patterns::Gradient(rhs)) => {
+                lhs.abs_diff_eq(rhs, epsilon)
+            }
+            (Patterns::PerlinPattern(lhs), Patterns::PerlinPattern(rhs)) => {
                 lhs.abs_diff_eq(rhs, epsilon)
             }
             (Patterns::RadialGradient(lhs), Patterns::RadialGradient(rhs)) => {
@@ -198,6 +207,9 @@ where
             (Patterns::Gradient(lhs), Patterns::Gradient(rhs)) => {
                 lhs.relative_eq(rhs, epsilon, max_relative)
             }
+            (Patterns::PerlinPattern(lhs), Patterns::PerlinPattern(rhs)) => {
+                lhs.relative_eq(rhs, epsilon, max_relative)
+            }
             (Patterns::RadialGradient(lhs), Patterns::RadialGradient(rhs)) => {
                 lhs.relative_eq(rhs, epsilon, max_relative)
             }
@@ -244,6 +256,9 @@ where
             (Patterns::Gradient(lhs), Patterns::Gradient(rhs)) => {
                 lhs.ulps_eq(rhs, epsilon, max_ulps)
             }
+            (Patterns::PerlinPattern(lhs), Patterns::PerlinPattern(rhs)) => {
+                lhs.ulps_eq(rhs, epsilon, max_ulps)
+            }
             (Patterns::RadialGradient(lhs), Patterns::RadialGradient(rhs)) => {
                 lhs.ulps_eq(rhs, epsilon, max_ulps)
             }
@@ -267,9 +282,11 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::FRAC_PI_2;
+    use std::f64::consts::{FRAC_PI_2, PI};
 
     use approx::*;
+    use rand::SeedableRng;
+    use rand_xoshiro::Xoshiro256PlusPlus;
 
     use super::*;
     use crate::{math::Angle, Material};
@@ -344,6 +361,39 @@ mod tests {
         assert_relative_eq!(
             p.pattern,
             Patterns::Gradient(Gradient::new(c1, c2))
+        );
+    }
+
+    #[test]
+    fn creating_a_new_perlin_pattern() {
+        let t = Transform::<f64>::from_rotate_x(Angle::from_radians(PI));
+        let c = Colour::green();
+        let s = 2.61;
+
+        let mut rng = Xoshiro256PlusPlus::seed_from_u64(95);
+        let n = PerlinNoise::new(&mut rng);
+        let p = Pattern::new_perlin_pattern(t, n, c, s);
+
+        assert_relative_eq!(p.transform, t);
+        assert_relative_eq!(
+            p.pattern,
+            Patterns::PerlinPattern(PerlinPattern::new(n, c, s))
+        );
+    }
+
+    #[test]
+    fn creating_a_default_perlin_pattern() {
+        let c = Colour::blue();
+        let s = 1.6;
+
+        let mut rng = Xoshiro256PlusPlus::seed_from_u64(12);
+        let n = PerlinNoise::new(&mut rng);
+        let p = Pattern::default_perlin_pattern(n, c, s);
+
+        assert_relative_eq!(p.transform, Transform::default());
+        assert_relative_eq!(
+            p.pattern,
+            Patterns::PerlinPattern(PerlinPattern::new(n, c, s))
         );
     }
 
