@@ -1,10 +1,14 @@
 use std::marker::PhantomData;
 
-use num_traits::ToPrimitive;
+use approx::{AbsDiffEq, RelativeEq, UlpsEq};
+use num_traits::{FromPrimitive, ToPrimitive};
 use rand::Rng;
 
 use super::{lerp, Point};
-use crate::util::float::Float;
+use crate::util::{
+    approx::{FLOAT_EPSILON, FLOAT_ULPS},
+    float::Float,
+};
 
 const PERMUTATION_TABLE_SIZE: usize = 256;
 const PERMUTATION_TABLE_MASK: usize = PERMUTATION_TABLE_SIZE - 1;
@@ -142,8 +146,72 @@ impl<T: Float> PerlinNoise<T> {
     }
 }
 
+impl<T> AbsDiffEq for PerlinNoise<T>
+where
+    T: Float + AbsDiffEq,
+    T::Epsilon: FromPrimitive + Copy,
+{
+    type Epsilon = T::Epsilon;
+
+    fn default_epsilon() -> Self::Epsilon {
+        FromPrimitive::from_f64(FLOAT_EPSILON).unwrap()
+    }
+
+    fn abs_diff_eq(&self, other: &Self, _epsilon: Self::Epsilon) -> bool {
+        self.permutations
+            .iter()
+            .zip(other.permutations.iter())
+            .all(|(lhs, rhs)| lhs == rhs)
+    }
+}
+
+impl<T> RelativeEq for PerlinNoise<T>
+where
+    T: Float + RelativeEq,
+    T::Epsilon: FromPrimitive + Copy,
+{
+    fn default_max_relative() -> Self::Epsilon {
+        FromPrimitive::from_f64(FLOAT_EPSILON).unwrap()
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        _epsilon: Self::Epsilon,
+        _max_relative: Self::Epsilon,
+    ) -> bool {
+        self.permutations
+            .iter()
+            .zip(other.permutations.iter())
+            .all(|(lhs, rhs)| lhs == rhs)
+    }
+}
+
+impl<T> UlpsEq for PerlinNoise<T>
+where
+    T: Float + UlpsEq,
+    T::Epsilon: FromPrimitive + Copy,
+{
+    fn default_max_ulps() -> u32 {
+        FLOAT_ULPS
+    }
+
+    fn ulps_eq(
+        &self,
+        other: &Self,
+        _epsilon: Self::Epsilon,
+        _max_ulps: u32,
+    ) -> bool {
+        self.permutations
+            .iter()
+            .zip(other.permutations.iter())
+            .all(|(lhs, rhs)| lhs == rhs)
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use approx::*;
     use rand::SeedableRng;
     use rand_xoshiro::Xoshiro256PlusPlus;
 
@@ -224,5 +292,23 @@ mod tests {
 
         assert_float_relative_eq!(g(11), -5.0);
         assert_float_relative_eq!(g(15), -5.0);
+    }
+
+    #[test]
+    fn perlin_noises_are_approximately_equal() {
+        let mut rng = Xoshiro256PlusPlus::seed_from_u64(621);
+        let p1 = PerlinNoise::<f64>::new(&mut rng);
+        let mut rng = Xoshiro256PlusPlus::seed_from_u64(621);
+        let p2 = PerlinNoise::new(&mut rng);
+        let p3 = PerlinNoise::new(&mut rng);
+
+        assert_abs_diff_eq!(p1, p2);
+        assert_abs_diff_ne!(p1, p3);
+
+        assert_relative_eq!(p1, p2);
+        assert_relative_ne!(p1, p3);
+
+        assert_ulps_eq!(p1, p2);
+        assert_ulps_ne!(p1, p3);
     }
 }
