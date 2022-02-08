@@ -70,3 +70,14 @@ Primarily we want reproducibility both so that we can regenerate an image we
 like but more importantly for testing and performance reasons. Additionally work
 will be needed when we parallelise the ray tracer to ensure deterministic number
 generation across threads for any given seed.
+
+## Refactors
+
+* Revisit patterns as there is a huge amount of duplicated code and there should
+  be a nice way to reduce it. Both in code needed for comparisons and enum
+  dispatch (may need a proc macro) and for all the two colour patterns, all that
+  is different in the pattern function itself.
+* As above, revisit shapes use of enum and dispatch, but wait till shape
+  refactoring is complete.
+* Look again at references and standard operators (&T + T, etc.) and how they
+  interact with generics (currently seems very clunky to support them).
