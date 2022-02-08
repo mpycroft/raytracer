@@ -2,6 +2,7 @@ mod blend;
 mod checker;
 mod gradient;
 mod perlin_pattern;
+mod perturbed;
 mod radial_gradient;
 mod ring;
 mod stripe;
@@ -17,8 +18,9 @@ use paste::paste;
 use self::test::Test;
 use self::{
     blend::Blend, checker::Checker, gradient::Gradient,
-    perlin_pattern::PerlinPattern, radial_gradient::RadialGradient, ring::Ring,
-    stripe::Stripe, uniform::Uniform,
+    perlin_pattern::PerlinPattern, perturbed::Perturbed,
+    radial_gradient::RadialGradient, ring::Ring, stripe::Stripe,
+    uniform::Uniform,
 };
 use crate::{
     math::{PerlinNoise, Point, Transform},
@@ -68,6 +70,11 @@ impl<T: Float> Pattern<T> {
     add_pattern_fns!(Blend(a: Pattern<T>, b: Pattern<T>));
     add_pattern_fns!(Checker(a: Colour<T>, b: Colour<T>));
     add_pattern_fns!(Gradient(a: Colour<T>, b: Colour<T>));
+    add_pattern_fns!(Perturbed(
+        noise: PerlinNoise<T>,
+        pattern: Pattern<T>,
+        scale: T
+    ));
     add_pattern_fns!(PerlinPattern(
         noise: PerlinNoise<T>,
         colour: Colour<T>,
@@ -111,6 +118,7 @@ pub enum Patterns<T: Float> {
     Checker(Checker<T>),
     Gradient(Gradient<T>),
     PerlinPattern(PerlinPattern<T>),
+    Perturbed(Perturbed<T>),
     RadialGradient(RadialGradient<T>),
     Ring(Ring<T>),
     Stripe(Stripe<T>),
@@ -126,6 +134,7 @@ impl<T: Float> PatternAt<T> for Patterns<T> {
             Patterns::Checker(data) => data.pattern_at(point),
             Patterns::Gradient(data) => data.pattern_at(point),
             Patterns::PerlinPattern(data) => data.pattern_at(point),
+            Patterns::Perturbed(data) => data.pattern_at(point),
             Patterns::RadialGradient(data) => data.pattern_at(point),
             Patterns::Ring(data) => data.pattern_at(point),
             Patterns::Stripe(data) => data.pattern_at(point),
@@ -159,6 +168,9 @@ where
                 lhs.abs_diff_eq(rhs, epsilon)
             }
             (Patterns::PerlinPattern(lhs), Patterns::PerlinPattern(rhs)) => {
+                lhs.abs_diff_eq(rhs, epsilon)
+            }
+            (Patterns::Perturbed(lhs), Patterns::Perturbed(rhs)) => {
                 lhs.abs_diff_eq(rhs, epsilon)
             }
             (Patterns::RadialGradient(lhs), Patterns::RadialGradient(rhs)) => {
@@ -210,6 +222,9 @@ where
             (Patterns::PerlinPattern(lhs), Patterns::PerlinPattern(rhs)) => {
                 lhs.relative_eq(rhs, epsilon, max_relative)
             }
+            (Patterns::Perturbed(lhs), Patterns::Perturbed(rhs)) => {
+                lhs.relative_eq(rhs, epsilon, max_relative)
+            }
             (Patterns::RadialGradient(lhs), Patterns::RadialGradient(rhs)) => {
                 lhs.relative_eq(rhs, epsilon, max_relative)
             }
@@ -257,6 +272,9 @@ where
                 lhs.ulps_eq(rhs, epsilon, max_ulps)
             }
             (Patterns::PerlinPattern(lhs), Patterns::PerlinPattern(rhs)) => {
+                lhs.ulps_eq(rhs, epsilon, max_ulps)
+            }
+            (Patterns::Perturbed(lhs), Patterns::Perturbed(rhs)) => {
                 lhs.ulps_eq(rhs, epsilon, max_ulps)
             }
             (Patterns::RadialGradient(lhs), Patterns::RadialGradient(rhs)) => {

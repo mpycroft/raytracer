@@ -16,10 +16,10 @@ fn main() {
     let mut rng = Xoshiro256PlusPlus::seed_from_u64(1);
 
     let floor_material = Material::new(
-        Pattern::default_perlin_pattern(
+        Pattern::default_perturbed(
             PerlinNoise::new(&mut rng),
-            Colour::white(),
-            5.0,
+            Pattern::default_stripe(Colour::white(), Colour::red()),
+            0.3,
         ),
         0.1,
         0.9,
@@ -51,7 +51,15 @@ fn main() {
     world.push_object(Object::new_sphere(
         Transform::from_translate(-0.5, 1.0, 0.5),
         Material::new(
-            Pattern::default_uniform(Colour::new(0.1, 1.0, 0.5)),
+            Pattern::default_perturbed(
+                PerlinNoise::new(&mut rng),
+                Pattern::new_ring(
+                    Transform::from_scale(0.3, 0.3, 0.3),
+                    Colour::new(0.1, 1.0, 0.5),
+                    Colour::white(),
+                ),
+                0.04,
+            ),
             0.1,
             0.7,
             0.3,
