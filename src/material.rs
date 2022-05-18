@@ -15,6 +15,7 @@ pub struct Material<T: Float> {
     pub diffuse: T,
     pub specular: T,
     pub shininess: T,
+    pub reflective: T,
 }
 
 impl<T: Float> Material<T> {
@@ -70,6 +71,7 @@ impl<T: Float> Default for Material<T> {
             T::convert(0.9f64),
             T::convert(0.9f64),
             T::convert(200.0f64),
+            T::zero(),
         )
     }
 }
@@ -87,13 +89,14 @@ mod tests {
     #[test]
     fn creating_a_new_material() {
         let p = Pattern::default_uniform(Colour::new(0.5, 0.3, 0.0));
-        let m = Material::new(p.clone(), 0.5, 1.0, 0.6, 100.0);
+        let m = Material::new(p.clone(), 0.5, 1.0, 0.6, 100.0, 0.8);
 
         assert_relative_eq!(m.pattern, p);
         assert_float_relative_eq!(m.ambient, 0.5);
         assert_float_relative_eq!(m.diffuse, 1.0);
         assert_float_relative_eq!(m.specular, 0.6);
         assert_float_relative_eq!(m.shininess, 100.0);
+        assert_float_relative_eq!(m.reflective, 0.8);
     }
 
     #[test]
@@ -108,6 +111,7 @@ mod tests {
         assert_float_relative_eq!(m.diffuse, 0.9);
         assert_float_relative_eq!(m.specular, 0.9);
         assert_float_relative_eq!(m.shininess, 200.0);
+        assert_float_relative_eq!(m.reflective, 0.0);
     }
 
     #[test]
@@ -217,6 +221,7 @@ mod tests {
             0.0,
             0.0,
             0.0,
+            0.0,
         );
 
         let l = PointLight::new(Colour::white(), Point::new(0.0, 0.0, -10.0));
@@ -254,6 +259,7 @@ mod tests {
             0.4,
             0.3,
             150.0,
+            0.2,
         );
         let m2 = Material::new(
             Pattern::default_uniform(Colour::new(0.3, 0.4, 1.0)),
@@ -261,6 +267,7 @@ mod tests {
             0.4,
             0.3,
             150.0,
+            0.2,
         );
         let m3 = Material::new(
             Pattern::default_uniform(Colour::new(0.3, 0.4, 1.000_1)),
@@ -268,6 +275,7 @@ mod tests {
             0.400_09,
             0.3,
             150.01,
+            0.2,
         );
 
         assert_abs_diff_eq!(m1, m2);
