@@ -1,10 +1,10 @@
-use derive_more::Constructor;
+use derive_new::new;
 
 use super::PatternAt;
 use crate::{math::Point, util::float::Float, Colour};
 
 /// A gradient pattern that interpolates in rings.
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, new)]
 pub struct RadialGradient<T: Float> {
     a: Colour<T>,
     b: Colour<T>,

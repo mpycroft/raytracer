@@ -1,10 +1,10 @@
-use derive_more::Constructor;
+use derive_new::new;
 
 use crate::{math::Point, util::float::Float, Colour};
 
 /// A PointLight is a light source that has no size and radiates light in all
 /// directions equally.
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, new)]
 pub struct PointLight<T: Float> {
     pub intensity: Colour<T>,
     pub position: Point<T>,

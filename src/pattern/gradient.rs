@@ -1,10 +1,10 @@
-use derive_more::Constructor;
+use derive_new::new;
 
 use super::PatternAt;
 use crate::{math::Point, util::float::Float, Colour};
 
 /// A pattern that interpolates between two colours.
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, new)]
 pub struct Gradient<T: Float> {
     a: Colour<T>,
     b: Colour<T>,

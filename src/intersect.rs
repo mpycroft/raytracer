@@ -1,6 +1,6 @@
 use std::ops::{Deref, DerefMut};
 
-use derive_more::Constructor;
+use derive_new::new;
 
 use crate::{
     math::{Point, Ray, Vector},
@@ -36,7 +36,7 @@ impl<T: Float> Deref for IntersectionPoints<T> {
 
 /// An Intersection stores both the t value of the intersection but also a
 /// reference to the object that was intersected.
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, new)]
 pub struct Intersection<'a, T: Float> {
     pub object: &'a Object<T>,
     pub t: T,
@@ -118,7 +118,7 @@ impl<'a, T: Float> DerefMut for IntersectionList<'a, T> {
 
 /// The Computations struct is a helper structure to store precomputed values
 /// about an intersection.
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, new)]
 pub struct Computations<'a, T: Float> {
     pub object: &'a Object<T>,
     pub t: T,

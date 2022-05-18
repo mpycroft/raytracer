@@ -1,10 +1,10 @@
-use derive_more::Constructor;
+use derive_new::new;
 
 use super::PatternAt;
 use crate::{math::Point, util::float::Float, Colour};
 
 /// A pattern that is one solid colour.
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, new)]
 pub struct Uniform<T: Float> {
     colour: Colour<T>,
 }

@@ -1,14 +1,14 @@
 use derive_more::{
-    Add, AddAssign, Constructor, Div, DivAssign, Mul, MulAssign, Neg, Sub,
-    SubAssign,
+    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign,
 };
+use derive_new::new;
 
 use crate::util::float::Float;
 
 /// A Vector is a representation of a geometric vector, pointing in a given
 /// direction and with a magnitude.
 #[rustfmt::skip] // Don't merge these derives or we get a huge vertical list
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, new)]
 #[derive(Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign)]
 pub struct Vector<T:Float> {
     pub x: T,

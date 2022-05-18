@@ -2,7 +2,7 @@ use std::ops::{Index, IndexMut, Mul, MulAssign};
 
 use anyhow::{bail, Result};
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
-use derive_more::Constructor;
+use derive_new::new;
 use num_traits::FromPrimitive;
 
 use super::{Angle, Point, Vector};
@@ -16,7 +16,7 @@ use crate::util::{
 /// The basics like creation, transpose and multiplication should work on
 /// arbitrary matrices but determinants, sub matrices, cofactors, etc. are only
 /// implemented enough for what we need to work.
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, new)]
 pub struct Matrix<T: Float, const S: usize> {
     data: [[T; S]; S],
 }

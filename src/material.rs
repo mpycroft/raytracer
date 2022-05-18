@@ -1,4 +1,4 @@
-use derive_more::Constructor;
+use derive_new::new;
 
 use crate::{
     math::{Point, Vector},
@@ -8,7 +8,7 @@ use crate::{
 
 /// Material represents what a given object is made up of including what colour
 /// it is and how it reacts to light.
-#[derive(Clone, Debug, PartialEq, PartialOrd, Constructor)]
+#[derive(Clone, Debug, PartialEq, PartialOrd, new)]
 pub struct Material<T: Float> {
     pub pattern: Pattern<T>,
     pub ambient: T,

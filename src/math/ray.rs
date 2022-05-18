@@ -1,4 +1,4 @@
-use derive_more::Constructor;
+use derive_new::new;
 
 use crate::util::float::Float;
 
@@ -6,7 +6,7 @@ use super::{Point, Transform, Transformable, Vector};
 
 /// A Ray represents a geometric vector with a specific origin point and
 /// pointing in some direction.
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, new)]
 pub struct Ray<T: Float> {
     pub origin: Point<T>,
     pub direction: Vector<T>,

@@ -1,13 +1,13 @@
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
-use derive_more::Constructor;
+use derive_new::new;
 
 use super::Vector;
 use crate::util::float::Float;
 
 /// A Point is a representation of a geometric position within the 3 dimensional
 /// scene we are working on.
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, new)]
 pub struct Point<T: Float> {
     pub x: T,
     pub y: T,

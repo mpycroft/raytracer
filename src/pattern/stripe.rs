@@ -1,10 +1,10 @@
-use derive_more::Constructor;
+use derive_new::new;
 
 use super::PatternAt;
 use crate::{math::Point, util::float::Float, Colour};
 
 /// An alternating striped pattern that switches between two different colours.
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Constructor)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, new)]
 pub struct Stripe<T: Float> {
     a: Colour<T>,
     b: Colour<T>,
