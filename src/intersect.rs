@@ -58,6 +58,8 @@ impl<'a, T: Float> Intersection<'a, T> {
 
         let over_point = point + normal * T::convert(FLOAT_EPSILON);
 
+        let reflect = ray.direction.reflect(&normal);
+
         Computations::new(
             self.object,
             self.t,
@@ -66,6 +68,7 @@ impl<'a, T: Float> Intersection<'a, T> {
             normal,
             inside,
             over_point,
+            reflect,
         )
     }
 }
@@ -118,6 +121,7 @@ impl<'a, T: Float> DerefMut for IntersectionList<'a, T> {
 
 /// The `Computations` struct is a helper structure to store precomputed values
 /// about an intersection.
+#[allow(clippy::too_many_arguments)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, new)]
 pub struct Computations<'a, T: Float> {
     pub object: &'a Object<T>,
@@ -127,10 +131,13 @@ pub struct Computations<'a, T: Float> {
     pub normal: Vector<T>,
     pub inside: bool,
     pub over_point: Point<T>,
+    pub reflect: Vector<T>,
 }
 
 #[cfg(test)]
 mod tests {
+    use std::f64::consts::SQRT_2;
+
     use approx::*;
 
     use super::*;
@@ -200,6 +207,22 @@ mod tests {
 
         assert!(c.over_point.z < -(FLOAT_EPSILON / 2.0));
         assert!(c.point.z > c.over_point.z);
+    }
+
+    #[test]
+    fn precomputing_the_reflection_vector() {
+        let o = Object::default_plane();
+        let i = Intersection::new(&o, SQRT_2);
+
+        let c = i.prepare_computations(&Ray::new(
+            Point::new(0.0, 1.0, -1.0),
+            Vector::new(0.0, -SQRT_2 / 2.0, SQRT_2 / 2.0),
+        ));
+
+        assert_relative_eq!(
+            c.reflect,
+            Vector::new(0.0, SQRT_2 / 2.0, SQRT_2 / 2.0)
+        )
     }
 
     #[test]
