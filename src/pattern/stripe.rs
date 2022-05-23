@@ -12,7 +12,7 @@ pub struct Stripe<T: Float> {
 
 impl<T: Float> PatternAt<T> for Stripe<T> {
     fn pattern_at(&self, point: &Point<T>) -> Colour<T> {
-        if point.x.floor() % T::from(2).unwrap() == T::zero() {
+        if point.x.floor() % T::two() == T::zero() {
             self.a
         } else {
             self.b

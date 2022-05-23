@@ -23,7 +23,7 @@ impl<T: Float> Intersectable<T> for Sphere<T> {
         let sphere_to_ray = ray.origin - Point::origin();
 
         let a = ray.direction.dot(&ray.direction);
-        let b = T::from(2.0f64).unwrap() * ray.direction.dot(&sphere_to_ray);
+        let b = T::two() * ray.direction.dot(&sphere_to_ray);
         let c = sphere_to_ray.dot(&sphere_to_ray) - T::one();
 
         let discriminant = b * b - T::from(4.0f64).unwrap() * a * c;
@@ -32,7 +32,7 @@ impl<T: Float> Intersectable<T> for Sphere<T> {
         }
 
         let discriminant = discriminant.sqrt();
-        let a = T::from(2.0f64).unwrap() * a;
+        let a = T::two() * a;
 
         let t1 = (-b - discriminant) / a;
         let t2 = (-b + discriminant) / a;

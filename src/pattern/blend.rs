@@ -19,7 +19,7 @@ impl<T: Float> PatternAt<T> for Blend<T> {
         let a = self.a.sub_pattern_at(point);
         let b = self.b.sub_pattern_at(point);
 
-        (a + b) / T::from(2.0f64).unwrap()
+        (a + b) / T::two()
     }
 }
 

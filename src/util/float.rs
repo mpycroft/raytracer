@@ -16,6 +16,13 @@ pub trait Float:
     + Debug
     + Default
 {
+    fn two() -> Self {
+        Self::one() + Self::one()
+    }
+
+    fn half() -> Self {
+        Self::from(0.5f64).unwrap()
+    }
 }
 
 /// Blanket implementation of Float.

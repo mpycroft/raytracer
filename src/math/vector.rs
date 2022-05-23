@@ -56,7 +56,7 @@ impl<T: Float> Vector<T> {
     }
 
     pub fn reflect(&self, normal: &Self) -> Self {
-        *self - *normal * T::from(2.0).unwrap() * self.dot(normal)
+        *self - *normal * T::two() * self.dot(normal)
     }
 }
 

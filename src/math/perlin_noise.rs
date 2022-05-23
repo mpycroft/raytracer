@@ -44,7 +44,7 @@ impl<T: Float> PerlinNoise<T> {
     /// Returns Perlin noise for the given 3d point but shifted to be in the
     /// range 0..1.
     pub fn get_noise(&self, point: &Point<T>) -> T {
-        (self.get_noise_signed(point) + T::one()) / T::from(2.0f64).unwrap()
+        (self.get_noise_signed(point) + T::one()) / T::two()
     }
 
     /// Returns Perlin noise for the given 3d point but shifted to be in the

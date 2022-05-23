@@ -102,7 +102,7 @@ impl<T: Float> Default for World<T> {
             Material::new(
                 Pattern::default_uniform(Colour::new(
                     T::from(0.8f64).unwrap(),
-                    T::from(1.0f64).unwrap(),
+                    T::one(),
                     T::from(0.6f64).unwrap(),
                 )),
                 T::from(0.1f64).unwrap(),
@@ -112,11 +112,7 @@ impl<T: Float> Default for World<T> {
             ),
         ));
         world.push_object(Object::new_sphere(
-            Transform::from_scale(
-                T::from(0.5f64).unwrap(),
-                T::from(0.5f64).unwrap(),
-                T::from(0.5f64).unwrap(),
-            ),
+            Transform::from_scale(T::half(), T::half(), T::half()),
             Material::default(),
         ));
 

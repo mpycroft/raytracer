@@ -12,8 +12,7 @@ pub struct Ring<T: Float> {
 
 impl<T: Float> PatternAt<T> for Ring<T> {
     fn pattern_at(&self, point: &Point<T>) -> Colour<T> {
-        if (point.x * point.x + point.z * point.z).floor()
-            % T::from(2.0f64).unwrap()
+        if (point.x * point.x + point.z * point.z).floor() % T::two()
             == T::zero()
         {
             self.a
