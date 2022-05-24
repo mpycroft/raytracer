@@ -4,7 +4,6 @@ mod sphere;
 mod test;
 
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
-use num_traits::FromPrimitive;
 use paste::paste;
 
 #[cfg(test)]
@@ -93,6 +92,7 @@ add_approx_traits!(Object<T> { transform, material, shape });
 pub enum Shape<T: Float> {
     Sphere(Sphere<T>),
     Plane(Plane<T>),
+
     #[cfg(test)]
     Test(Test<T>),
 }
@@ -102,6 +102,7 @@ impl<T: Float> Intersectable<T> for Shape<T> {
         match self {
             Shape::Sphere(sphere) => sphere.intersect(ray),
             Shape::Plane(plane) => plane.intersect(ray),
+
             #[cfg(test)]
             Shape::Test(test) => test.intersect(ray),
         }
@@ -111,6 +112,7 @@ impl<T: Float> Intersectable<T> for Shape<T> {
         match self {
             Shape::Sphere(sphere) => sphere.normal_at(point),
             Shape::Plane(plane) => plane.normal_at(point),
+
             #[cfg(test)]
             Shape::Test(test) => test.normal_at(point),
         }
@@ -120,12 +122,12 @@ impl<T: Float> Intersectable<T> for Shape<T> {
 impl<T> AbsDiffEq for Shape<T>
 where
     T: Float + AbsDiffEq,
-    T::Epsilon: FromPrimitive + Copy,
+    T::Epsilon: Float,
 {
     type Epsilon = T::Epsilon;
 
     fn default_epsilon() -> Self::Epsilon {
-        FromPrimitive::from_f64(FLOAT_EPSILON).unwrap()
+        T::Epsilon::convert(FLOAT_EPSILON)
     }
 
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
@@ -136,10 +138,12 @@ where
             (Shape::Plane(lhs), Shape::Plane(rhs)) => {
                 lhs.abs_diff_eq(rhs, epsilon)
             }
+
             #[cfg(test)]
             (Shape::Test(lhs), Shape::Test(rhs)) => {
                 lhs.abs_diff_eq(rhs, epsilon)
             }
+
             (_, _) => false,
         }
     }
@@ -148,10 +152,10 @@ where
 impl<T> RelativeEq for Shape<T>
 where
     T: Float + RelativeEq,
-    T::Epsilon: FromPrimitive + Copy,
+    T::Epsilon: Float,
 {
     fn default_max_relative() -> Self::Epsilon {
-        FromPrimitive::from_f64(FLOAT_EPSILON).unwrap()
+        T::Epsilon::convert(FLOAT_EPSILON)
     }
 
     fn relative_eq(
@@ -167,10 +171,12 @@ where
             (Shape::Plane(lhs), Shape::Plane(rhs)) => {
                 lhs.relative_eq(rhs, epsilon, max_relative)
             }
+
             #[cfg(test)]
             (Shape::Test(lhs), Shape::Test(rhs)) => {
                 lhs.relative_eq(rhs, epsilon, max_relative)
             }
+
             (_, _) => false,
         }
     }
@@ -179,7 +185,7 @@ where
 impl<T> UlpsEq for Shape<T>
 where
     T: Float + UlpsEq,
-    T::Epsilon: FromPrimitive + Copy,
+    T::Epsilon: Float,
 {
     fn default_max_ulps() -> u32 {
         FLOAT_ULPS
@@ -198,10 +204,12 @@ where
             (Shape::Plane(lhs), Shape::Plane(rhs)) => {
                 lhs.ulps_eq(rhs, epsilon, max_ulps)
             }
+
             #[cfg(test)]
             (Shape::Test(lhs), Shape::Test(rhs)) => {
                 lhs.ulps_eq(rhs, epsilon, max_ulps)
             }
+
             (_, _) => false,
         }
     }

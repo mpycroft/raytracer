@@ -26,7 +26,9 @@ impl<T: Float> Camera<T> {
         transform: Transform<T>,
     ) -> Self {
         let half_view = (field_of_view / T::two()).tan();
-        let aspect = T::from(horizontal).unwrap() / T::from(vertical).unwrap();
+
+        let horizontal_t = T::convert(horizontal);
+        let aspect = horizontal_t / T::convert(vertical);
 
         let (half_width, half_height) = if aspect > T::one() {
             (half_view, half_view / aspect)
@@ -39,15 +41,15 @@ impl<T: Float> Camera<T> {
             vertical,
             field_of_view,
             transform,
-            pixel_size: half_width * T::two() / T::from(horizontal).unwrap(),
+            pixel_size: half_width * T::two() / horizontal_t,
             half_width,
             half_height,
         }
     }
 
     pub fn ray_for_pixel(&self, x: usize, y: usize) -> Ray<T> {
-        let x_offset = (T::from(x).unwrap() + T::half()) * self.pixel_size;
-        let y_offset = (T::from(y).unwrap() + T::half()) * self.pixel_size;
+        let x_offset = (T::convert(x) + T::half()) * self.pixel_size;
+        let y_offset = (T::convert(y) + T::half()) * self.pixel_size;
 
         let world_x = self.half_width - x_offset;
         let world_y = self.half_height - y_offset;

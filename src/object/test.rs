@@ -1,7 +1,6 @@
 use std::cell::Cell;
 
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
-use num_traits::FromPrimitive;
 
 use crate::{
     intersect::{Intersectable, IntersectionPoints},
@@ -39,12 +38,12 @@ impl<T: Float> Intersectable<T> for Test<T> {
 impl<T> AbsDiffEq for Test<T>
 where
     T: Float + AbsDiffEq,
-    T::Epsilon: FromPrimitive + Copy,
+    T::Epsilon: Float,
 {
     type Epsilon = T::Epsilon;
 
     fn default_epsilon() -> Self::Epsilon {
-        FromPrimitive::from_f64(FLOAT_EPSILON).unwrap()
+        T::Epsilon::convert(FLOAT_EPSILON)
     }
 
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
@@ -59,10 +58,10 @@ where
 impl<T> RelativeEq for Test<T>
 where
     T: Float + RelativeEq,
-    T::Epsilon: FromPrimitive + Copy,
+    T::Epsilon: Float,
 {
     fn default_max_relative() -> Self::Epsilon {
-        FromPrimitive::from_f64(FLOAT_EPSILON).unwrap()
+        T::Epsilon::convert(FLOAT_EPSILON)
     }
 
     fn relative_eq(
@@ -84,7 +83,7 @@ where
 impl<T> UlpsEq for Test<T>
 where
     T: Float + UlpsEq,
-    T::Epsilon: FromPrimitive + Copy,
+    T::Epsilon: Float,
 {
     fn default_max_ulps() -> u32 {
         FLOAT_ULPS

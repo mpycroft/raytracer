@@ -87,7 +87,9 @@ impl<T: Float> World<T> {
         if list.is_empty() {
             None
         } else {
-            list.sort_by(|a, b| a.t.partial_cmp(&b.t).unwrap());
+            list.sort_by(|a, b| {
+                a.t.partial_cmp(&b.t).expect("Partial comparison failed")
+            });
             Some(list)
         }
     }
@@ -101,14 +103,14 @@ impl<T: Float> Default for World<T> {
             Transform::new(),
             Material::new(
                 Pattern::default_uniform(Colour::new(
-                    T::from(0.8f64).unwrap(),
+                    T::convert(0.8f64),
                     T::one(),
-                    T::from(0.6f64).unwrap(),
+                    T::convert(0.6f64),
                 )),
-                T::from(0.1f64).unwrap(),
-                T::from(0.7f64).unwrap(),
-                T::from(0.2f64).unwrap(),
-                T::from(200.0f64).unwrap(),
+                T::convert(0.1f64),
+                T::convert(0.7f64),
+                T::convert(0.2f64),
+                T::convert(200.0f64),
             ),
         ));
         world.push_object(Object::new_sphere(
@@ -119,9 +121,9 @@ impl<T: Float> Default for World<T> {
         world.push_light(PointLight::new(
             Colour::white(),
             Point::new(
-                T::from(-10.0f64).unwrap(),
-                T::from(10.0f64).unwrap(),
-                T::from(-10.0).unwrap(),
+                T::convert(-10.0f64),
+                T::convert(10.0f64),
+                T::convert(-10.0),
             ),
         ));
 

@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
-use num_traits::{FromPrimitive, ToPrimitive};
-use rand::Rng;
+use num_traits::ToPrimitive;
+use rand::{prelude::SliceRandom, Rng};
 
 use super::{lerp, Point};
 use crate::util::{
@@ -22,21 +22,18 @@ pub struct PerlinNoise<T: Float> {
 
 impl<T: Float> PerlinNoise<T> {
     pub fn new<R: Rng>(rng: &mut R) -> Self {
+        let mut permutation_values: Vec<u8> =
+            (0..PERMUTATION_TABLE_SIZE).map(|val| val as u8).collect();
+
+        permutation_values.shuffle(rng);
+
         let mut permutations = [0u8; PERMUTATION_TABLE_SIZE * 2];
 
-        (0..PERMUTATION_TABLE_SIZE).for_each(|i| {
-            permutations[i] = i as u8;
-        });
-
-        for i in (1..PERMUTATION_TABLE_SIZE).rev() {
-            let j = rng.gen_range(0..i);
-
-            permutations.swap(i, j);
+        for (a, b) in
+            permutations.iter_mut().zip(permutation_values.repeat(2).iter())
+        {
+            *a = *b;
         }
-
-        (0..PERMUTATION_TABLE_SIZE).for_each(|i| {
-            permutations[i + PERMUTATION_TABLE_SIZE] = permutations[i];
-        });
 
         Self { permutations, _phantom: PhantomData }
     }
@@ -53,17 +50,20 @@ impl<T: Float> PerlinNoise<T> {
         // This is sqrt(3.0) / 2.0 but sqrt() can't be used in const contexts
         const FACTOR: f64 = 0.866_025_403_784_438_6;
 
-        self.raw_noise(point) / T::from(FACTOR).unwrap()
+        self.raw_noise(point) / T::convert(FACTOR)
     }
 
     /// Return the raw Perlin noise for a given 3d point, returns values in the
     /// range -sqrt(3)/2 to sqrt(3)/2.
     fn raw_noise(&self, point: &Point<T>) -> T {
-        let x0 = (ToPrimitive::to_isize(&point.x.floor()).unwrap() as usize)
+        let x0 = (ToPrimitive::to_isize(&point.x.floor())
+            .expect("Converting to isize failed") as usize)
             & PERMUTATION_TABLE_MASK;
-        let y0 = (ToPrimitive::to_isize(&point.y.floor()).unwrap() as usize)
+        let y0 = (ToPrimitive::to_isize(&point.y.floor())
+            .expect("Converting to isize failed") as usize)
             & PERMUTATION_TABLE_MASK;
-        let z0 = (ToPrimitive::to_isize(&point.z.floor()).unwrap() as usize)
+        let z0 = (ToPrimitive::to_isize(&point.z.floor())
+            .expect("Converting to isize failed") as usize)
             & PERMUTATION_TABLE_MASK;
 
         let x1 = (x0 + 1) & PERMUTATION_TABLE_MASK;
@@ -137,8 +137,8 @@ impl<T: Float> PerlinNoise<T> {
     fn fade(t: T) -> T {
         assert!(t >= T::zero() && t <= T::one());
 
-        ((T::from(6.0f64).unwrap() * t - T::from(15.0f64).unwrap()) * t
-            + T::from(10.0f64).unwrap())
+        ((T::convert(6.0f64) * t - T::convert(15.0f64)) * t
+            + T::convert(10.0f64))
             * t
             * t
             * t
@@ -166,12 +166,12 @@ impl<T: Float> PerlinNoise<T> {
 impl<T> AbsDiffEq for PerlinNoise<T>
 where
     T: Float + AbsDiffEq,
-    T::Epsilon: FromPrimitive + Copy,
+    T::Epsilon: Float,
 {
     type Epsilon = T::Epsilon;
 
     fn default_epsilon() -> Self::Epsilon {
-        FromPrimitive::from_f64(FLOAT_EPSILON).unwrap()
+        T::Epsilon::convert(FLOAT_EPSILON)
     }
 
     fn abs_diff_eq(&self, other: &Self, _epsilon: Self::Epsilon) -> bool {
@@ -185,10 +185,10 @@ where
 impl<T> RelativeEq for PerlinNoise<T>
 where
     T: Float + RelativeEq,
-    T::Epsilon: FromPrimitive + Copy,
+    T::Epsilon: Float,
 {
     fn default_max_relative() -> Self::Epsilon {
-        FromPrimitive::from_f64(FLOAT_EPSILON).unwrap()
+        T::Epsilon::convert(FLOAT_EPSILON)
     }
 
     fn relative_eq(
@@ -207,7 +207,7 @@ where
 impl<T> UlpsEq for PerlinNoise<T>
 where
     T: Float + UlpsEq,
-    T::Epsilon: FromPrimitive + Copy,
+    T::Epsilon: Float,
 {
     fn default_max_ulps() -> u32 {
         FLOAT_ULPS

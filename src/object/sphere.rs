@@ -26,7 +26,7 @@ impl<T: Float> Intersectable<T> for Sphere<T> {
         let b = T::two() * ray.direction.dot(&sphere_to_ray);
         let c = sphere_to_ray.dot(&sphere_to_ray) - T::one();
 
-        let discriminant = b * b - T::from(4.0f64).unwrap() * a * c;
+        let discriminant = b * b - T::convert(4.0f64) * a * c;
         if discriminant < T::zero() {
             return None;
         }

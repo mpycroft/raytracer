@@ -12,7 +12,6 @@ mod uniform;
 mod test;
 
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
-use num_traits::FromPrimitive;
 use paste::paste;
 
 use self::{
@@ -149,12 +148,12 @@ impl<T: Float> PatternAt<T> for Patterns<T> {
 impl<T> AbsDiffEq for Patterns<T>
 where
     T: Float + AbsDiffEq,
-    T::Epsilon: FromPrimitive + Copy,
+    T::Epsilon: Float,
 {
     type Epsilon = T::Epsilon;
 
     fn default_epsilon() -> Self::Epsilon {
-        FromPrimitive::from_f64(FLOAT_EPSILON).unwrap()
+        T::Epsilon::convert(FLOAT_EPSILON)
     }
 
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
@@ -183,13 +182,15 @@ where
             (Patterns::Stripe(lhs), Patterns::Stripe(rhs)) => {
                 lhs.abs_diff_eq(rhs, epsilon)
             }
+            (Patterns::Uniform(lhs), Patterns::Uniform(rhs)) => {
+                lhs.abs_diff_eq(rhs, epsilon)
+            }
+
             #[cfg(test)]
             (Patterns::Test(lhs), Patterns::Test(rhs)) => {
                 lhs.abs_diff_eq(rhs, epsilon)
             }
-            (Patterns::Uniform(lhs), Patterns::Uniform(rhs)) => {
-                lhs.abs_diff_eq(rhs, epsilon)
-            }
+
             (_, _) => false,
         }
     }
@@ -198,10 +199,10 @@ where
 impl<T> RelativeEq for Patterns<T>
 where
     T: Float + RelativeEq,
-    T::Epsilon: FromPrimitive + Copy,
+    T::Epsilon: Float,
 {
     fn default_max_relative() -> Self::Epsilon {
-        FromPrimitive::from_f64(FLOAT_EPSILON).unwrap()
+        T::Epsilon::convert(FLOAT_EPSILON)
     }
 
     fn relative_eq(
@@ -235,13 +236,15 @@ where
             (Patterns::Stripe(lhs), Patterns::Stripe(rhs)) => {
                 lhs.relative_eq(rhs, epsilon, max_relative)
             }
+            (Patterns::Uniform(lhs), Patterns::Uniform(rhs)) => {
+                lhs.relative_eq(rhs, epsilon, max_relative)
+            }
+
             #[cfg(test)]
             (Patterns::Test(lhs), Patterns::Test(rhs)) => {
                 lhs.relative_eq(rhs, epsilon, max_relative)
             }
-            (Patterns::Uniform(lhs), Patterns::Uniform(rhs)) => {
-                lhs.relative_eq(rhs, epsilon, max_relative)
-            }
+
             (_, _) => false,
         }
     }
@@ -250,7 +253,7 @@ where
 impl<T> UlpsEq for Patterns<T>
 where
     T: Float + UlpsEq,
-    T::Epsilon: FromPrimitive + Copy,
+    T::Epsilon: Float,
 {
     fn default_max_ulps() -> u32 {
         FLOAT_ULPS

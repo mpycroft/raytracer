@@ -3,6 +3,8 @@ use std::{
     ops::{AddAssign, DivAssign, MulAssign, SubAssign},
 };
 
+use num_traits::ToPrimitive;
+
 /// Extend the `num_traits` version of `Float` with the various Assign operators
 /// as they are not included by default. Also add Debug for convenience. While
 /// this makes our types more restrictive than needed it doesn't matter for our
@@ -21,7 +23,11 @@ pub trait Float:
     }
 
     fn half() -> Self {
-        Self::from(0.5f64).unwrap()
+        Self::convert(0.5f64)
+    }
+
+    fn convert<U: ToPrimitive>(val: U) -> Self {
+        Self::from(val).expect("Converting to Float failed")
     }
 }
 

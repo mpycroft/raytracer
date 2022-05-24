@@ -56,7 +56,7 @@ impl<'a, T: Float> Intersection<'a, T> {
             false
         };
 
-        let over_point = point + normal * T::from(FLOAT_EPSILON).unwrap();
+        let over_point = point + normal * T::convert(FLOAT_EPSILON);
 
         Computations::new(
             self.object,

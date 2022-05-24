@@ -45,9 +45,9 @@ impl<T: Float> Colour<T> {
     pub fn to_rgb(self) -> (u8, u8, u8) {
         let convert = |c: T| {
             ToPrimitive::to_u8(
-                &(clamp(c, T::zero(), T::one()) * T::from(255.0f64).unwrap()),
+                &(clamp(c, T::zero(), T::one()) * T::convert(255.0f64)),
             )
-            .unwrap()
+            .expect("Converting T to u8 failed")
         };
 
         (convert(self.r), convert(self.g), convert(self.b))

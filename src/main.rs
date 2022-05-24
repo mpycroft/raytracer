@@ -1,6 +1,7 @@
 use std::{
     f64::consts::{FRAC_PI_3, FRAC_PI_4},
     fs::write,
+    io,
 };
 
 use rand::SeedableRng;
@@ -10,7 +11,7 @@ use raytracer::{
     Camera, Colour, Material, Object, Pattern, PointLight, World,
 };
 
-fn main() {
+fn main() -> io::Result<()> {
     let mut world = World::new();
 
     let mut rng = Xoshiro256PlusPlus::seed_from_u64(1);
@@ -105,5 +106,7 @@ fn main() {
 
     let image = camera.render(&world);
 
-    write("image.ppm", image.to_ppm()).unwrap();
+    write("image.ppm", image.to_ppm())?;
+
+    Ok(())
 }

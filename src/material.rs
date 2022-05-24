@@ -66,10 +66,10 @@ impl<T: Float> Default for Material<T> {
     fn default() -> Self {
         Self::new(
             Pattern::default_uniform(Colour::white()),
-            T::from(0.1f64).unwrap(),
-            T::from(0.9f64).unwrap(),
-            T::from(0.9f64).unwrap(),
-            T::from(200.0f64).unwrap(),
+            T::convert(0.1f64),
+            T::convert(0.9f64),
+            T::convert(0.9f64),
+            T::convert(200.0f64),
         )
     }
 }

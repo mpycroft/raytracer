@@ -21,7 +21,7 @@ impl<T: Float> Plane<T> {
 
 impl<T: Float> Intersectable<T> for Plane<T> {
     fn intersect(&self, ray: &Ray<T>) -> Option<IntersectionPoints<T>> {
-        if ray.direction.y.abs() < T::from(FLOAT_EPSILON).unwrap() {
+        if ray.direction.y.abs() < T::convert(FLOAT_EPSILON) {
             return None;
         }
 

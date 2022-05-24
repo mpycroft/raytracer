@@ -1,9 +1,8 @@
 use std::ops::{Index, IndexMut, Mul, MulAssign};
 
-use anyhow::{bail, Result};
+use anyhow::bail;
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use derive_new::new;
-use num_traits::FromPrimitive;
 
 use super::{Angle, Point, Vector};
 use crate::util::{
@@ -142,13 +141,13 @@ impl<T: Float> Matrix<T, 4> {
         orientation * Self::translate(-from.x, -from.y, -from.z)
     }
 
-    pub fn invert(&self) -> Result<Self> {
+    pub fn invert(&self) -> anyhow::Result<Self> {
         let det = self.determinant();
 
         // Do a manual floating point comparison of det with zero in order to
         // avoid polluting the required traits when using invert with RelativeEq
         // and T:Epsilon that calling relative_eq() entails.
-        if det.abs() < T::from(crate::util::approx::FLOAT_EPSILON).unwrap() {
+        if det.abs() < T::convert(FLOAT_EPSILON) {
             bail!("Tried to invert a non invertible matrix - {:?}", self);
         }
 
@@ -348,12 +347,12 @@ impl<T: Float, const S: usize> MulAssign for Matrix<T, S> {
 impl<T, const S: usize> AbsDiffEq for Matrix<T, S>
 where
     T: Float + AbsDiffEq,
-    T::Epsilon: FromPrimitive + Copy,
+    T::Epsilon: Float,
 {
     type Epsilon = T::Epsilon;
 
     fn default_epsilon() -> Self::Epsilon {
-        FromPrimitive::from_f64(FLOAT_EPSILON).unwrap()
+        T::Epsilon::convert(FLOAT_EPSILON)
     }
 
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
@@ -372,10 +371,10 @@ where
 impl<T, const S: usize> RelativeEq for Matrix<T, S>
 where
     T: Float + RelativeEq,
-    T::Epsilon: FromPrimitive + Copy,
+    T::Epsilon: Float,
 {
     fn default_max_relative() -> Self::Epsilon {
-        FromPrimitive::from_f64(FLOAT_EPSILON).unwrap()
+        T::Epsilon::convert(FLOAT_EPSILON)
     }
 
     fn relative_eq(
@@ -403,7 +402,7 @@ where
 impl<T, const S: usize> UlpsEq for Matrix<T, S>
 where
     T: Float + UlpsEq,
-    T::Epsilon: FromPrimitive + Copy,
+    T::Epsilon: Float,
 {
     fn default_max_ulps() -> u32 {
         FLOAT_ULPS

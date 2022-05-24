@@ -1,8 +1,7 @@
 use derive_new::new;
 
-use crate::util::float::Float;
-
 use super::{Point, Transform, Transformable, Vector};
+use crate::util::float::Float;
 
 /// A `Ray` represents a geometric vector with a specific origin point and
 /// pointing in some direction.

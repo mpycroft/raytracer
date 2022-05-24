@@ -7,7 +7,7 @@ macro_rules! add_left_mul_scaler {
             type Output = $type;
 
             fn mul(self, rhs: $type) -> Self::Output {
-                rhs * T::from(self).unwrap()
+                rhs * T::convert(self)
             }
         }
     };
