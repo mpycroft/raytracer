@@ -73,6 +73,22 @@ impl<T: Float> World<T> {
         false
     }
 
+    pub fn reflected_colour(
+        &self,
+        computations: &Computations<T>,
+    ) -> Colour<T> {
+        if computations.object.material.reflective == T::zero() {
+            return Colour::black();
+        }
+
+        let reflect_ray =
+            Ray::new(computations.over_point, computations.reflect);
+
+        let colour = self.colour_at(&reflect_ray);
+
+        colour * computations.object.material.reflective
+    }
+
     fn intersect(&self, ray: &Ray<T>) -> Option<IntersectionList<T>> {
         let mut list = IntersectionList::new();
 
@@ -134,6 +150,8 @@ impl<T: Float> Default for World<T> {
 
 #[cfg(test)]
 mod tests {
+    use std::f64::consts::SQRT_2;
+
     use approx::*;
 
     use super::*;
@@ -308,6 +326,46 @@ mod tests {
         let w = World::default();
 
         assert!(!w.is_shadowed(&w.lights[0], &Point::new(-2.0, 2.0, -2.0)));
+    }
+
+    #[test]
+    fn the_reflected_colour_for_a_non_reflective_material() {
+        let mut w = World::default();
+
+        w.objects[1].material.ambient = 1.0;
+
+        assert_relative_eq!(
+            w.reflected_colour(
+                &Intersection::new(&w.objects[1], 1.0).prepare_computations(
+                    &Ray::new(Point::origin(), Vector::z_axis())
+                )
+            ),
+            Colour::black()
+        )
+    }
+
+    #[test]
+    fn the_reflected_colour_for_a_reflective_material() {
+        let mut w = World::default();
+
+        let mut o = Object::new_plane(
+            Transform::from_translate(0.0, -1.0, 0.0),
+            Material::default(),
+        );
+        o.material.reflective = 0.5;
+
+        w.push_object(o);
+
+        assert_relative_eq!(
+            w.reflected_colour(
+                &Intersection::new(w.objects.last().unwrap(), SQRT_2)
+                    .prepare_computations(&Ray::new(
+                        Point::new(0.0, 0.0, -3.0),
+                        Vector::new(0.0, -SQRT_2 / 2.0, SQRT_2 / 2.0)
+                    ))
+            ),
+            Colour::new(0.190_331, 0.237_913, 0.142_748)
+        )
     }
 
     #[test]
