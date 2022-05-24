@@ -16,17 +16,13 @@ fn main() -> io::Result<()> {
 
     let mut rng = Xoshiro256PlusPlus::seed_from_u64(1);
 
-    let floor_material = Material::new(
-        Pattern::default_perturbed(
-            PerlinNoise::new(&mut rng),
-            Pattern::default_stripe(Colour::white(), Colour::red()),
-            0.3,
-        ),
+    let mut floor_material = Material::new(
+        Pattern::default_uniform(Colour::new(0.4, 0.4, 0.4)),
         0.1,
         0.9,
         0.0,
         200.0,
-        0.0,
+        0.5,
     );
 
     world.push_object(Object::new_plane(
@@ -35,6 +31,7 @@ fn main() -> io::Result<()> {
     ));
 
     let wall_transform = Transform::from_rotate_x(Angle::from_degrees(90.0));
+    floor_material.reflective = 0.1;
     world.push_object(Object::new_plane(
         wall_transform
             .clone()
@@ -42,6 +39,7 @@ fn main() -> io::Result<()> {
             .translate(0.0, 0.0, 5.0),
         floor_material.clone(),
     ));
+    floor_material.reflective = 0.9;
     world.push_object(Object::new_plane(
         wall_transform
             .clone()
@@ -77,7 +75,7 @@ fn main() -> io::Result<()> {
             0.7,
             0.3,
             200.0,
-            0.0,
+            0.1,
         ),
     ));
     world.push_object(Object::new_sphere(
@@ -88,7 +86,7 @@ fn main() -> io::Result<()> {
             0.7,
             0.3,
             200.0,
-            0.0,
+            0.2,
         ),
     ));
 
@@ -108,7 +106,7 @@ fn main() -> io::Result<()> {
         ),
     );
 
-    let image = camera.render(&world);
+    let image = camera.render(&world, 10);
 
     write("image.ppm", image.to_ppm())?;
 

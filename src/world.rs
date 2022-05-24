@@ -26,7 +26,11 @@ impl<T: Float> World<T> {
         self.lights.push(light);
     }
 
-    pub fn shade_hit(&self, computations: &Computations<T>) -> Colour<T> {
+    pub fn shade_hit(
+        &self,
+        computations: &Computations<T>,
+        reflective_depth: u32,
+    ) -> Colour<T> {
         let mut colour = Colour::black();
 
         for light in &self.lights {
@@ -40,15 +44,17 @@ impl<T: Float> World<T> {
             );
         }
 
-        colour
+        let reflected = self.reflected_colour(computations, reflective_depth);
+
+        colour + reflected
     }
 
-    pub fn colour_at(&self, ray: &Ray<T>) -> Colour<T> {
+    pub fn colour_at(&self, ray: &Ray<T>, reflective_depth: u32) -> Colour<T> {
         if let Some(intersections) = self.intersect(ray) {
             if let Some(hit) = intersections.hit() {
                 let computations = hit.prepare_computations(ray);
 
-                return self.shade_hit(&computations);
+                return self.shade_hit(&computations, reflective_depth);
             }
         }
 
@@ -76,15 +82,18 @@ impl<T: Float> World<T> {
     pub fn reflected_colour(
         &self,
         computations: &Computations<T>,
+        reflective_depth: u32,
     ) -> Colour<T> {
-        if computations.object.material.reflective == T::zero() {
+        if computations.object.material.reflective == T::zero()
+            || reflective_depth == 0
+        {
             return Colour::black();
         }
 
         let reflect_ray =
             Ray::new(computations.over_point, computations.reflect);
 
-        let colour = self.colour_at(&reflect_ray);
+        let colour = self.colour_at(&reflect_ray, reflective_depth - 1);
 
         colour * computations.object.material.reflective
     }
@@ -210,7 +219,8 @@ mod tests {
             w.shade_hit(
                 &Intersection::new(&w.objects[0], 4.0).prepare_computations(
                     &Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()),
-                )
+                ),
+                5
             ),
             Colour::new(0.380_661, 0.475_826, 0.285_496)
         );
@@ -230,7 +240,8 @@ mod tests {
             w.shade_hit(
                 &Intersection::new(&w.objects[1], 0.5).prepare_computations(
                     &Ray::new(Point::origin(), Vector::z_axis())
-                )
+                ),
+                5
             ),
             Colour::new(0.904_984, 0.904_984, 0.904_984)
         );
@@ -256,7 +267,8 @@ mod tests {
             w.shade_hit(
                 &Intersection::new(&w.objects[1], 4.0).prepare_computations(
                     &Ray::new(Point::new(0.0, 0.0, 5.0), Vector::z_axis()),
-                )
+                ),
+                1
             ),
             Colour::new(0.1, 0.1, 0.1)
         );
@@ -265,10 +277,10 @@ mod tests {
     #[test]
     fn the_colour_when_a_ray_misses() {
         assert_relative_eq!(
-            World::default().colour_at(&Ray::new(
-                Point::new(0.0, 0.0, -5.0),
-                Vector::y_axis()
-            )),
+            World::default().colour_at(
+                &Ray::new(Point::new(0.0, 0.0, -5.0), Vector::y_axis()),
+                2
+            ),
             Colour::black()
         );
     }
@@ -276,10 +288,10 @@ mod tests {
     #[test]
     fn the_colour_when_a_ray_hits() {
         assert_relative_eq!(
-            World::default().colour_at(&Ray::new(
-                Point::new(0.0, 0.0, -5.0),
-                Vector::z_axis()
-            )),
+            World::default().colour_at(
+                &Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()),
+                5
+            ),
             Colour::new(0.380_661, 0.475_826, 0.285_496)
         );
     }
@@ -292,10 +304,10 @@ mod tests {
         w.objects[1].material.ambient = 1.0;
 
         assert_relative_eq!(
-            w.colour_at(&Ray::new(
-                Point::new(0.0, 0.0, 0.75),
-                -Vector::z_axis()
-            )),
+            w.colour_at(
+                &Ray::new(Point::new(0.0, 0.0, 0.75), -Vector::z_axis()),
+                1
+            ),
             Colour::white()
         );
     }
@@ -338,7 +350,8 @@ mod tests {
             w.reflected_colour(
                 &Intersection::new(&w.objects[1], 1.0).prepare_computations(
                     &Ray::new(Point::origin(), Vector::z_axis())
-                )
+                ),
+                1
             ),
             Colour::black()
         )
@@ -362,9 +375,83 @@ mod tests {
                     .prepare_computations(&Ray::new(
                         Point::new(0.0, 0.0, -3.0),
                         Vector::new(0.0, -SQRT_2 / 2.0, SQRT_2 / 2.0)
-                    ))
+                    )),
+                5
             ),
             Colour::new(0.190_331, 0.237_913, 0.142_748)
+        )
+    }
+
+    #[test]
+    fn shade_hit_with_a_reflective_material() {
+        let mut w = World::default();
+
+        let mut o = Object::new_plane(
+            Transform::from_translate(0.0, -1.0, 0.0),
+            Material::default(),
+        );
+        o.material.reflective = 0.5;
+
+        w.push_object(o);
+
+        assert_relative_eq!(
+            w.shade_hit(
+                &Intersection::new(w.objects.last().unwrap(), SQRT_2)
+                    .prepare_computations(&Ray::new(
+                        Point::new(0.0, 0.0, -3.0),
+                        Vector::new(0.0, -SQRT_2 / 2.0, SQRT_2 / 2.0)
+                    )),
+                2
+            ),
+            Colour::new(0.876_756, 0.924_339, 0.829_173)
+        )
+    }
+
+    #[test]
+    fn colour_at_with_mutually_reflective_surfaces() {
+        let mut w = World::new();
+
+        w.push_light(PointLight::new(Colour::white(), Point::origin()));
+
+        let mut p = Object::new_plane(
+            Transform::from_translate(0.0, -1.0, 0.0),
+            Material::default(),
+        );
+        p.material.reflective = 1.0;
+        w.push_object(p);
+
+        let mut p = Object::new_plane(
+            Transform::from_translate(0.0, 1.0, 0.0),
+            Material::default(),
+        );
+        p.material.reflective = 1.0;
+        w.push_object(p);
+
+        w.colour_at(&Ray::new(Point::origin(), Vector::y_axis()), 10);
+    }
+
+    #[test]
+    fn the_reflected_colour_at_the_maximum_recursion_depth() {
+        let mut w = World::default();
+
+        let mut o = Object::new_plane(
+            Transform::from_translate(0.0, -1.0, 0.0),
+            Material::default(),
+        );
+        o.material.reflective = 0.5;
+
+        w.push_object(o);
+
+        assert_relative_eq!(
+            w.reflected_colour(
+                &Intersection::new(w.objects.last().unwrap(), SQRT_2)
+                    .prepare_computations(&Ray::new(
+                        Point::new(0.0, 0.0, -3.0),
+                        Vector::new(0.0, -SQRT_2 / 2.0, SQRT_2 / 2.0)
+                    )),
+                0
+            ),
+            Colour::black()
         )
     }
 

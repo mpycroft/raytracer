@@ -62,13 +62,13 @@ impl<T: Float> Camera<T> {
         Ray::new(origin, direction)
     }
 
-    pub fn render(&self, world: &World<T>) -> Canvas<T> {
+    pub fn render(&self, world: &World<T>, reflective_depth: u32) -> Canvas<T> {
         let mut image = Canvas::new(self.horizontal, self.vertical);
 
         for y in 0..(self.vertical - 1) {
             for x in 0..(self.horizontal - 1) {
                 let ray = self.ray_for_pixel(x, y);
-                let colour = world.colour_at(&ray);
+                let colour = world.colour_at(&ray, reflective_depth);
 
                 image.write_pixel(x, y, colour);
             }
@@ -169,7 +169,7 @@ mod tests {
                     &Vector::y_axis(),
                 ),
             )
-            .render(&World::default())
+            .render(&World::default(), 10)
             .get_pixel(5, 5),
             Colour::new(0.380_661, 0.475_826, 0.285_496)
         );
