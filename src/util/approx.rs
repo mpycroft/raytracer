@@ -5,10 +5,10 @@ pub const FLOAT_EPSILON: f64 = 0.000_001;
 /// Arbitrary number of ulps to use when comparing floating point values.
 pub const FLOAT_ULPS: u32 = 6;
 
-/// Add the approx AbsDiffEq, RelativeEq and UlpsEq traits to a struct. This
-/// handles the very simple case of a series of struct members that are tested
-/// in order. It can also generate a test that always returns true - primarily
-/// for unit structs.
+/// Add the approx `AbsDiffEq`, `RelativeEq` and `UlpsEq` traits to a struct.
+/// This handles the very simple case of a series of struct members that are
+/// tested in order. It can also generate a test that always returns true -
+/// primarily for unit structs.
 macro_rules! add_approx_traits {
     (@add_cmp { true }, $fn:ident, $args:tt) => {
         true

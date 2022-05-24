@@ -8,7 +8,7 @@ use crate::{
     Object,
 };
 
-/// A trait that objects need to implement if they can be intersected in a
+/// A trait that `Object`s need to implement if they can be intersected in a
 /// scene, returns a list of the intersection points.
 pub trait Intersectable<T: Float> {
     fn intersect(&self, ray: &Ray<T>) -> Option<IntersectionPoints<T>>;
@@ -34,7 +34,7 @@ impl<T: Float> Deref for IntersectionPoints<T> {
     }
 }
 
-/// An Intersection stores both the t value of the intersection but also a
+/// An `Intersection` stores both the t value of the intersection but also a
 /// reference to the object that was intersected.
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, new)]
 pub struct Intersection<'a, T: Float> {
@@ -70,9 +70,9 @@ impl<'a, T: Float> Intersection<'a, T> {
     }
 }
 
-/// An IntersectionList is a simple wrapper around a vector of Intersections, it
-/// gives us type safety over using a plain Vec and makes it obvious what we are
-/// doing.
+/// An `IntersectionList` is a simple wrapper around a vector of
+/// `Intersection`s, it gives us type safety over using a plain Vec and makes it
+/// obvious what we are doing.
 #[derive(Clone, Debug, Default, PartialEq, PartialOrd)]
 pub struct IntersectionList<'a, T: Float>(Vec<Intersection<'a, T>>);
 
@@ -116,7 +116,7 @@ impl<'a, T: Float> DerefMut for IntersectionList<'a, T> {
     }
 }
 
-/// The Computations struct is a helper structure to store precomputed values
+/// The `Computations` struct is a helper structure to store precomputed values
 /// about an intersection.
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, new)]
 pub struct Computations<'a, T: Float> {

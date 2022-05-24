@@ -5,9 +5,9 @@ use paste::paste;
 
 use crate::util::float::Float;
 
-/// An Angle represents a geometric angle, it is simply a wrapper around a value
-/// in radians but by using it rather than raw f64's we get some safety between
-/// radians and degrees and usage become more explicit.
+/// An `Angle` represents a geometric angle, it is simply a wrapper around a
+/// value in radians but by using it rather than raw f64's we get some safety
+/// between radians and degrees and usage become more explicit.
 #[rustfmt::skip] // Don't merge these derives or we get a huge vertical list
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 #[derive(Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign)]
@@ -24,8 +24,8 @@ macro_rules! add_trigonometric_fns {
             self.radians.$func()
         }
 
-        pub fn $inv_func(ratio: T) -> Angle<T> {
-            Angle::from_radians(ratio.$inv_func())
+        pub fn $inv_func(ratio: T) -> Self {
+            Self::from_radians(ratio.$inv_func())
         }
     };
     ($($op:ident),+) => {
@@ -39,11 +39,11 @@ macro_rules! add_trigonometric_fns {
 
 impl<T: Float> Angle<T> {
     pub fn from_radians(radians: T) -> Self {
-        Angle { radians }
+        Self { radians }
     }
 
     pub fn from_degrees(degrees: T) -> Self {
-        Angle { radians: degrees.to_radians() }
+        Self { radians: degrees.to_radians() }
     }
 
     pub fn to_radians(self) -> T {
@@ -60,8 +60,8 @@ impl<T: Float> Angle<T> {
         self.radians.sin_cos()
     }
 
-    pub fn atan2(y: T, x: T) -> Angle<T> {
-        Angle::from_radians(y.atan2(x))
+    pub fn atan2(y: T, x: T) -> Self {
+        Self::from_radians(y.atan2(x))
     }
 }
 

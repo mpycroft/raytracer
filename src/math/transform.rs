@@ -5,9 +5,9 @@ use paste::paste;
 use super::{Angle, Matrix, Point, Vector};
 use crate::util::float::Float;
 
-/// The Transformable trait describes how to apply a Transform to any given
-/// object, implementing this allows us to .apply() a Transform to an object via
-/// this trait. This is really just some syntactic sugar so we always apply
+/// The `Transformable` trait describes how to apply a `Transform` to any given
+/// object, implementing this allows us to .apply() a `Transform` to an object
+/// via this trait. This is really just some syntactic sugar so we always apply
 /// Transform's to objects rather than transform objects with a given Transform.
 pub trait Transformable<'a, T: Float> {
     fn apply(&'a self, transform: &Transform<T>) -> Self;
@@ -25,11 +25,11 @@ where
     }
 }
 
-/// A Transform is a wrapper around a 4 dimensional matrix allowing a more
+/// A `Transform` is a wrapper around a 4 dimensional matrix allowing a more
 /// ergonomic use of transformations. Transformations can be chained in an
-/// obvious way e.g. Transform::new().rotate_x(2.3).scale(1.0, 0.5, 1.0) which
+/// obvious way e.g. `Transform::new().rotate_x(2.3).scale(1.0, 0.5, 1.0)` which
 /// will perform the multiplications in reverse order as expected e.g. scale *
-/// rotate_x.
+/// `rotate_x`.
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct Transform<T: Float> {
     data: Matrix<T, 4>,
@@ -74,7 +74,7 @@ impl<T: Float> Transform<T> {
         object.apply(self)
     }
 
-    /// The invert function returns a new transformation rather than changing
+    /// The `invert` function returns a new transformation rather than changing
     /// the internal data and allowing chaining as other functions do. Panics if
     /// the transformation cannot be inverted.
     pub fn invert(&self) -> Self {
@@ -85,9 +85,9 @@ impl<T: Float> Transform<T> {
         )
     }
 
-    /// The transpose function, much like invert, is not meant for chaining with
-    /// other transforms but to produce a new Transform object that contains a
-    /// transpose of the current object.
+    /// The `transpose` function, much like invert, is not meant for chaining
+    /// with other transforms but to produce a new Transform object that
+    /// contains a transpose of the current object.
     pub fn transpose(&self) -> Self {
         Self::from_matrix(self.data.transpose())
     }

@@ -5,8 +5,8 @@ use derive_new::new;
 use super::Vector;
 use crate::util::float::Float;
 
-/// A Point is a representation of a geometric position within the 3 dimensional
-/// scene we are working on.
+/// A `Point` is a representation of a geometric position within the 3
+/// dimensional scene we are working on.
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, new)]
 pub struct Point<T: Float> {
     pub x: T,
@@ -53,7 +53,7 @@ impl<T: Float> Sub for Point<T> {
 }
 
 impl<T: Float> Sub<Vector<T>> for Point<T> {
-    type Output = Point<T>;
+    type Output = Self;
 
     fn sub(self, rhs: Vector<T>) -> Self::Output {
         Self::Output::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)

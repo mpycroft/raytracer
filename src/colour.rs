@@ -8,8 +8,8 @@ use num_traits::{clamp, ToPrimitive};
 
 use crate::util::float::Float;
 
-/// A Colour represents an RGB colour in the image, values generally range from
-/// 0.0..1.0 but can go outside this range before final processing.
+/// A `Colour` represents an RGB colour in the image, values generally range
+/// from 0.0..1.0 but can go outside this range before final processing.
 #[rustfmt::skip] // Don't merge these derives or we get a huge vertical list
 #[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd, new)]
 #[derive(Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign)]

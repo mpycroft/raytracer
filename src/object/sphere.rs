@@ -6,7 +6,7 @@ use crate::{
     util::float::Float,
 };
 
-/// A Sphere is a unit sphere centred at the origin (0, 0, 0).
+/// A `Sphere` is a unit sphere centred at the origin (0, 0, 0).
 #[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
 pub struct Sphere<T: Float> {
     _phantom: PhantomData<T>,

@@ -11,11 +11,11 @@ use crate::util::{
     float::Float,
 };
 
-/// A Matrix is a square matrix of size T, stored in row major order. Due to the
-/// limitations on current const generics the implementation is a bit haphazard.
-/// The basics like creation, transpose and multiplication should work on
-/// arbitrary matrices but determinants, sub matrices, cofactors, etc. are only
-/// implemented enough for what we need to work.
+/// A `Matrix` is a square matrix of size T, stored in row major order. Due to
+/// the limitations on current const generics the implementation is a bit
+/// haphazard. The basics like creation, transpose and multiplication should
+/// work on arbitrary matrices but determinants, sub matrices, cofactors, etc.
+/// are only implemented enough for what we need to work.
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, new)]
 pub struct Matrix<T: Float, const S: usize> {
     data: [[T; S]; S],
@@ -132,14 +132,14 @@ impl<T: Float> Matrix<T, 4> {
         let left = forward.cross(&up);
         let true_up = left.cross(&forward);
 
-        let orientation = Matrix::new([
+        let orientation = Self::new([
             [left.x, left.y, left.z, T::zero()],
             [true_up.x, true_up.y, true_up.z, T::zero()],
             [-forward.x, -forward.y, -forward.z, T::zero()],
             [T::zero(), T::zero(), T::zero(), T::one()],
         ]);
 
-        orientation * Matrix::translate(-from.x, -from.y, -from.z)
+        orientation * Self::translate(-from.x, -from.y, -from.z)
     }
 
     pub fn invert(&self) -> Result<Self> {
@@ -152,7 +152,7 @@ impl<T: Float> Matrix<T, 4> {
             bail!("Tried to invert a non invertible matrix - {:?}", self);
         }
 
-        let mut matrix = Matrix::zero();
+        let mut matrix = Self::zero();
 
         for row in 0..4 {
             for col in 0..4 {

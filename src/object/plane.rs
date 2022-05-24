@@ -7,7 +7,7 @@ use crate::{
     Intersectable,
 };
 
-/// A Plane is an infinitely large plane situated along the x and z axes.
+/// A `Plane` is an infinitely large plane situated along the x and z axes.
 #[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
 pub struct Plane<T: Float> {
     _phantom: PhantomData<T>,

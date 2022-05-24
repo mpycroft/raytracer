@@ -3,6 +3,7 @@ use std::marker::PhantomData;
 use super::PatternAt;
 use crate::{math::Point, util::float::Float, Colour};
 
+/// A pattern for testing purposes.
 #[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
 pub struct Test<T: Float> {
     _phantom: PhantomData<T>,

@@ -6,16 +6,15 @@ mod perturbed;
 mod radial_gradient;
 mod ring;
 mod stripe;
+mod uniform;
+
 #[cfg(test)]
 mod test;
-mod uniform;
 
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use num_traits::FromPrimitive;
 use paste::paste;
 
-#[cfg(test)]
-use self::test::Test;
 use self::{
     blend::Blend, checker::Checker, gradient::Gradient,
     perlin_pattern::PerlinPattern, perturbed::Perturbed,
@@ -30,6 +29,9 @@ use crate::{
     },
     Colour, Object,
 };
+
+#[cfg(test)]
+use self::test::Test;
 
 /// A pattern that can be applied to a given object to change how it is rendered.
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
@@ -67,14 +69,10 @@ impl<T: Float> Pattern<T> {
         Self::new(Transform::default(), pattern)
     }
 
-    add_pattern_fns!(Blend(a: Pattern<T>, b: Pattern<T>));
+    add_pattern_fns!(Blend(a: Self, b: Self));
     add_pattern_fns!(Checker(a: Colour<T>, b: Colour<T>));
     add_pattern_fns!(Gradient(a: Colour<T>, b: Colour<T>));
-    add_pattern_fns!(Perturbed(
-        noise: PerlinNoise<T>,
-        pattern: Pattern<T>,
-        scale: T
-    ));
+    add_pattern_fns!(Perturbed(noise: PerlinNoise<T>, pattern: Self, scale: T));
     add_pattern_fns!(PerlinPattern(
         noise: PerlinNoise<T>,
         colour: Colour<T>,
@@ -83,9 +81,10 @@ impl<T: Float> Pattern<T> {
     add_pattern_fns!(RadialGradient(a: Colour<T>, b: Colour<T>));
     add_pattern_fns!(Ring(a: Colour<T>, b: Colour<T>));
     add_pattern_fns!(Stripe(a: Colour<T>, b: Colour<T>));
+    add_pattern_fns!(Uniform(colour: Colour<T>));
+
     #[cfg(test)]
     add_pattern_fns!(Test());
-    add_pattern_fns!(Uniform(colour: Colour<T>));
 
     pub fn pattern_at(
         &self,
@@ -122,9 +121,10 @@ pub enum Patterns<T: Float> {
     RadialGradient(RadialGradient<T>),
     Ring(Ring<T>),
     Stripe(Stripe<T>),
+    Uniform(Uniform<T>),
+
     #[cfg(test)]
     Test(Test<T>),
-    Uniform(Uniform<T>),
 }
 
 impl<T: Float> PatternAt<T> for Patterns<T> {
@@ -138,9 +138,10 @@ impl<T: Float> PatternAt<T> for Patterns<T> {
             Patterns::RadialGradient(data) => data.pattern_at(point),
             Patterns::Ring(data) => data.pattern_at(point),
             Patterns::Stripe(data) => data.pattern_at(point),
+            Patterns::Uniform(data) => data.pattern_at(point),
+
             #[cfg(test)]
             Patterns::Test(data) => data.pattern_at(point),
-            Patterns::Uniform(data) => data.pattern_at(point),
         }
     }
 }
@@ -494,7 +495,7 @@ mod tests {
         let p = Pattern::new_test(t);
 
         assert_relative_eq!(p.transform, t);
-        assert_relative_eq!(p.pattern, Patterns::Test(Test::new()))
+        assert_relative_eq!(p.pattern, Patterns::Test(Test::new()));
     }
 
     #[test]
@@ -502,7 +503,7 @@ mod tests {
         let p = Pattern::<f64>::default_test();
 
         assert_relative_eq!(p.transform, Transform::default());
-        assert_relative_eq!(p.pattern, Patterns::Test(Test::new()))
+        assert_relative_eq!(p.pattern, Patterns::Test(Test::new()));
     }
 
     #[test]

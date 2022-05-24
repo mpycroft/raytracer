@@ -5,8 +5,8 @@ use crate::{
     Colour, Material, Object, Pattern, PointLight,
 };
 
-/// World represents all the objects and light sources in a given scene that we
-/// are rendering.
+/// `World` represents all the objects and light sources in a given scene that
+/// we are rendering.
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub struct World<T: Float> {
     pub objects: Vec<Object<T>>,
@@ -15,7 +15,7 @@ pub struct World<T: Float> {
 
 impl<T: Float> World<T> {
     pub fn new() -> Self {
-        World { objects: Vec::new(), lights: Vec::new() }
+        Self { objects: Vec::new(), lights: Vec::new() }
     }
 
     pub fn push_object(&mut self, object: Object<T>) {
@@ -95,7 +95,7 @@ impl<T: Float> World<T> {
 
 impl<T: Float> Default for World<T> {
     fn default() -> Self {
-        let mut world = World::new();
+        let mut world = Self::new();
 
         world.push_object(Object::new_sphere(
             Transform::new(),

@@ -6,8 +6,8 @@ use crate::{
     Colour, Object, Pattern, PointLight,
 };
 
-/// Material represents what a given object is made up of including what colour
-/// it is and how it reacts to light.
+/// `Material` represents what a given object is made up of including what
+/// colour it is and how it reacts to light.
 #[derive(Clone, Debug, PartialEq, PartialOrd, new)]
 pub struct Material<T: Float> {
     pub pattern: Pattern<T>,

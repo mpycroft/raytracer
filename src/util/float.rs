@@ -3,10 +3,10 @@ use std::{
     ops::{AddAssign, DivAssign, MulAssign, SubAssign},
 };
 
-/// Extend the num_traits version of Float with the various Assign operators as
-/// they are not included by default. Also add Debug for convenience. While this
-/// makes our types more restrictive than needed it doesn't matter for our use
-/// case.
+/// Extend the `num_traits` version of `Float` with the various Assign operators
+/// as they are not included by default. Also add Debug for convenience. While
+/// this makes our types more restrictive than needed it doesn't matter for our
+/// use case.
 pub trait Float:
     num_traits::Float
     + AddAssign

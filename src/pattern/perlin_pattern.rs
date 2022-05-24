@@ -43,7 +43,7 @@ mod tests {
 
     #[test]
     fn creating_a_perlin_pattern() {
-        let mut rng = Xoshiro256PlusPlus::seed_from_u64(12661896);
+        let mut rng = Xoshiro256PlusPlus::seed_from_u64(12_661_896);
         let n = PerlinNoise::<f64>::new(&mut rng);
 
         let c = Colour::white();
@@ -58,7 +58,7 @@ mod tests {
 
     #[test]
     fn perlin_patterns_are_approximately_equal() {
-        let mut rng = Xoshiro256PlusPlus::seed_from_u64(12661896);
+        let mut rng = Xoshiro256PlusPlus::seed_from_u64(12_661_896);
         let n = PerlinNoise::<f64>::new(&mut rng);
         let p1 = PerlinPattern::new(n, Colour::white(), 1.6);
         let p2 = PerlinPattern::new(n, Colour::white(), 1.6);

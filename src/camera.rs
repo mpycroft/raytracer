@@ -5,7 +5,7 @@ use crate::{
     Canvas,
 };
 
-/// The Camera struct holds the data representing our camera view into the
+/// The `Camera` struct holds the data representing our camera view into the
 /// scene.
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub struct Camera<T: Float> {
@@ -34,7 +34,7 @@ impl<T: Float> Camera<T> {
             (half_view * aspect, half_view)
         };
 
-        Camera {
+        Self {
             horizontal,
             vertical,
             field_of_view,

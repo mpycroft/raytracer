@@ -5,7 +5,7 @@ use derive_new::new;
 
 use crate::util::float::Float;
 
-/// A Vector is a representation of a geometric vector, pointing in a given
+/// A `Vector` is a representation of a geometric vector, pointing in a given
 /// direction and with a magnitude.
 #[rustfmt::skip] // Don't merge these derives or we get a huge vertical list
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, new)]
@@ -49,7 +49,7 @@ impl<T: Float> Vector<T> {
         let magnitude = self.magnitude();
 
         if magnitude == T::zero() {
-            return Vector::new(T::zero(), T::zero(), T::zero());
+            return Self::new(T::zero(), T::zero(), T::zero());
         }
 
         Self::new(self.x / magnitude, self.y / magnitude, self.z / magnitude)

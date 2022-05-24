@@ -5,7 +5,7 @@ use crate::{
     Colour,
 };
 
-/// A marble like pattern using PerlinNoise.
+/// A marble like pattern using `PerlinNoise`.
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub struct Perturbed<T: Float> {
     noise: PerlinNoise<T>,

@@ -12,7 +12,7 @@ use crate::{
     },
 };
 
-/// Test is a shape intended purely for testing functions on Object.
+/// `Test` is a shape intended purely for testing functions on Object.
 #[derive(Clone, Debug, Default, PartialEq, PartialOrd)]
 pub struct Test<T: Float> {
     pub ray: Cell<Option<Ray<T>>>,
@@ -81,7 +81,7 @@ where
     }
 }
 
-impl<T: Float> UlpsEq for Test<T>
+impl<T> UlpsEq for Test<T>
 where
     T: Float + UlpsEq,
     T::Epsilon: FromPrimitive + Copy,

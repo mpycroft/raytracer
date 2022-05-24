@@ -20,7 +20,7 @@ use crate::{
     Material,
 };
 
-/// An Object represents some entity in the scene that can be rendered.
+/// An `Object` represents some entity in the scene that can be rendered.
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub struct Object<T: Float> {
     pub transform: Transform<T>,
