@@ -23,6 +23,8 @@ fn main() -> io::Result<()> {
         0.0,
         200.0,
         0.5,
+        0.0,
+        1.0,
     );
 
     world.push_object(Object::new_plane(
@@ -65,6 +67,8 @@ fn main() -> io::Result<()> {
             0.3,
             200.0,
             0.0,
+            0.0,
+            1.0,
         ),
     ));
     world.push_object(Object::new_sphere(
@@ -76,6 +80,8 @@ fn main() -> io::Result<()> {
             0.3,
             200.0,
             0.1,
+            0.0,
+            1.0,
         ),
     ));
     world.push_object(Object::new_sphere(
@@ -87,6 +93,8 @@ fn main() -> io::Result<()> {
             0.3,
             200.0,
             0.2,
+            0.0,
+            1.0,
         ),
     ));
 

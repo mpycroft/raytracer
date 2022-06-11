@@ -137,6 +137,8 @@ impl<T: Float> Default for World<T> {
                 T::convert(0.2f64),
                 T::convert(200.0f64),
                 T::zero(),
+                T::zero(),
+                T::one(),
             ),
         ));
         world.push_object(Object::new_sphere(
@@ -507,7 +509,9 @@ mod tests {
                     0.7,
                     0.2,
                     200.0,
-                    0.0
+                    0.0,
+                    0.0,
+                    1.0
                 )
             )
         );
