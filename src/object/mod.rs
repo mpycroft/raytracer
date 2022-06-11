@@ -63,6 +63,25 @@ impl<T: Float> Object<T> {
         Self::new(Transform::default(), Material::default(), shape)
     }
 
+    pub fn new_glass_sphere(
+        transform: Transform<T>,
+        refractive_index: T,
+    ) -> Self {
+        Self::new(
+            transform,
+            Material {
+                transparency: T::one(),
+                refractive_index,
+                ..Default::default()
+            },
+            Shape::Sphere(Sphere::new()),
+        )
+    }
+
+    pub fn default_glass_sphere() -> Self {
+        Self::new_glass_sphere(Transform::default(), T::convert(1.5))
+    }
+
     add_shape_fns!(Sphere, Plane);
 
     #[cfg(test)]
@@ -246,6 +265,37 @@ mod tests {
         assert_relative_eq!(o.transform, Transform::default());
         assert_relative_eq!(o.material, Material::default());
         assert_relative_eq!(o.shape, s);
+    }
+
+    #[test]
+    fn creating_a_new_glass_sphere() {
+        let t = Transform::from_translate(1.0, 1.0, 2.0);
+        let o = Object::new_glass_sphere(t, 1.2);
+
+        let m = Material {
+            transparency: 1.0,
+            refractive_index: 1.2,
+            ..Default::default()
+        };
+
+        assert_relative_eq!(o.transform, t);
+        assert_relative_eq!(o.material, m);
+        assert_relative_eq!(o.shape, Shape::Sphere(Sphere::new()));
+    }
+
+    #[test]
+    fn creating_a_default_glass_sphere() {
+        let o = Object::default_glass_sphere();
+
+        let m = Material {
+            transparency: 1.0,
+            refractive_index: 1.5,
+            ..Default::default()
+        };
+
+        assert_relative_eq!(o.transform, Transform::default());
+        assert_relative_eq!(o.material, m);
+        assert_relative_eq!(o.shape, Shape::Sphere(Sphere::default()));
     }
 
     #[test]
