@@ -46,7 +46,7 @@ impl<'a, T: Float> Intersection<'a, T> {
     pub fn prepare_computations(
         &self,
         ray: &Ray<T>,
-        _intersections: &IntersectionList<T>,
+        intersections: &IntersectionList<T>,
     ) -> Computations<'a, T> {
         let point = ray.position(self.t);
         let eye = -ray.direction;
@@ -64,6 +64,37 @@ impl<'a, T: Float> Intersection<'a, T> {
 
         let reflect = ray.direction.reflect(&normal);
 
+        let mut containers: Vec<&Object<T>> = Vec::new();
+
+        let mut n1 = T::infinity();
+        let mut n2 = T::infinity();
+
+        for intersection in intersections.iter() {
+            if intersection == self {
+                if containers.is_empty() {
+                    n1 = T::one();
+                } else {
+                    n1 = containers.last().unwrap().material.refractive_index;
+                };
+            }
+
+            if containers.contains(&intersection.object) {
+                containers.retain(|object| *object != intersection.object);
+            } else {
+                containers.push(intersection.object);
+            }
+
+            if intersection == self {
+                if containers.is_empty() {
+                    n2 = T::one();
+                } else {
+                    n2 = containers.last().unwrap().material.refractive_index;
+                }
+
+                break;
+            }
+        }
+
         Computations::new(
             self.object,
             self.t,
@@ -73,6 +104,8 @@ impl<'a, T: Float> Intersection<'a, T> {
             inside,
             over_point,
             reflect,
+            n1,
+            n2,
         )
     }
 }
@@ -142,6 +175,8 @@ pub struct Computations<'a, T: Float> {
     pub inside: bool,
     pub over_point: Point<T>,
     pub reflect: Vector<T>,
+    pub n1: T,
+    pub n2: T,
 }
 
 #[cfg(test)]
@@ -240,6 +275,45 @@ mod tests {
             c.reflect,
             Vector::new(0.0, SQRT_2 / 2.0, SQRT_2 / 2.0)
         )
+    }
+
+    #[test]
+    fn finding_n1_and_n2_at_various_intersections() {
+        let a =
+            Object::new_glass_sphere(Transform::from_scale(2.0, 2.0, 2.0), 1.5);
+        let b = Object::new_glass_sphere(
+            Transform::from_translate(0.0, 0.0, -0.25),
+            2.0,
+        );
+        let c = Object::new_glass_sphere(
+            Transform::from_translate(0.0, 0.0, 0.25),
+            2.5,
+        );
+
+        let r = Ray::new(Point::new(0.0, 0.0, -4.0), Vector::z_axis());
+
+        let i = IntersectionList::from(vec![
+            Intersection::new(&a, 2.0),
+            Intersection::new(&b, 2.75),
+            Intersection::new(&c, 3.25),
+            Intersection::new(&b, 4.75),
+            Intersection::new(&c, 5.25),
+            Intersection::new(&a, 6.0),
+        ]);
+
+        let test_values = |index: usize, n1: f64, n2: f64| {
+            let c = i[index].prepare_computations(&r, &i);
+
+            assert_relative_eq!(c.n1, n1);
+            assert_relative_eq!(c.n2, n2);
+        };
+
+        test_values(0, 1.0, 1.5);
+        test_values(1, 1.5, 2.0);
+        test_values(2, 2.0, 2.5);
+        test_values(3, 2.5, 2.5);
+        test_values(4, 2.5, 1.5);
+        test_values(5, 1.5, 1.0);
     }
 
     #[test]
