@@ -99,6 +99,20 @@ impl<T: Float> World<T> {
         colour * computations.object.material.reflective
     }
 
+    pub fn refracted_colour(
+        &self,
+        computations: &Computations<T>,
+        refracted_depth: u32,
+    ) -> Colour<T> {
+        if computations.object.material.transparency == T::zero()
+            || refracted_depth == 0
+        {
+            return Colour::black();
+        }
+
+        Colour::white()
+    }
+
     fn intersect(&self, ray: &Ray<T>) -> Option<IntersectionList<T>> {
         let mut list = IntersectionList::new();
 
@@ -480,6 +494,46 @@ mod tests {
             ),
             Colour::black()
         )
+    }
+
+    #[test]
+    fn the_refracted_colour_with_an_opaque_surface() {
+        let w = World::default();
+        let o = &w.objects[0];
+
+        let i = IntersectionList::from(vec![
+            Intersection::new(o, 4.0),
+            Intersection::new(o, 6.0),
+        ]);
+
+        let c = i[0].prepare_computations(
+            &Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()),
+            &i,
+        );
+
+        assert_relative_eq!(w.refracted_colour(&c, 5), Colour::black());
+    }
+
+    #[test]
+    fn the_refracted_colour_at_the_maximum_recursion_depth() {
+        let mut w = World::default();
+        let o = &mut w.objects[0];
+        o.material.transparency = 1.0;
+        o.material.refractive_index = 1.5;
+
+        let o = &w.objects[0];
+
+        let i = IntersectionList::from(vec![
+            Intersection::new(o, 4.0),
+            Intersection::new(o, 6.0),
+        ]);
+
+        let c = i[0].prepare_computations(
+            &Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()),
+            &i,
+        );
+
+        assert_relative_eq!(w.refracted_colour(&c, 0), Colour::black());
     }
 
     #[test]
