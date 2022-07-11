@@ -61,6 +61,7 @@ impl<'a, T: Float> Intersection<'a, T> {
         };
 
         let over_point = point + normal * T::convert(FLOAT_EPSILON);
+        let under_point = point - normal * T::convert(FLOAT_EPSILON);
 
         let reflect = ray.direction.reflect(&normal);
 
@@ -103,6 +104,7 @@ impl<'a, T: Float> Intersection<'a, T> {
             normal,
             inside,
             over_point,
+            under_point,
             reflect,
             n1,
             n2,
@@ -174,6 +176,7 @@ pub struct Computations<'a, T: Float> {
     pub normal: Vector<T>,
     pub inside: bool,
     pub over_point: Point<T>,
+    pub under_point: Point<T>,
     pub reflect: Vector<T>,
     pub n1: T,
     pub n2: T,
@@ -256,6 +259,24 @@ mod tests {
 
         assert!(c.over_point.z < -(FLOAT_EPSILON / 2.0));
         assert!(c.point.z > c.over_point.z);
+    }
+
+    #[test]
+    fn the_under_point_is_offset_below_the_surface() {
+        let o = Object::new_glass_sphere(
+            Transform::from_translate(0.0, 0.0, 1.0),
+            1.5,
+        );
+
+        let i = Intersection::new(&o, 5.0);
+
+        let c = i.prepare_computations(
+            &Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()),
+            &IntersectionList::from(i),
+        );
+
+        assert!(c.under_point.z > FLOAT_EPSILON / 2.0);
+        assert!(c.point.z < c.under_point.z);
     }
 
     #[test]
