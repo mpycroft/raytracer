@@ -52,7 +52,8 @@ impl<T: Float> World<T> {
     pub fn colour_at(&self, ray: &Ray<T>, reflective_depth: u32) -> Colour<T> {
         if let Some(intersections) = self.intersect(ray) {
             if let Some(hit) = intersections.hit() {
-                let computations = hit.prepare_computations(ray);
+                let computations =
+                    hit.prepare_computations(ray, &intersections);
 
                 return self.shade_hit(&computations, reflective_depth);
             }
@@ -217,10 +218,13 @@ mod tests {
     fn shading_an_intersection() {
         let w = World::default();
 
+        let i = Intersection::new(&w.objects[0], 4.0);
+
         assert_relative_eq!(
             w.shade_hit(
-                &Intersection::new(&w.objects[0], 4.0).prepare_computations(
+                &i.prepare_computations(
                     &Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()),
+                    &IntersectionList::from(i)
                 ),
                 5
             ),
@@ -238,10 +242,13 @@ mod tests {
             Point::new(0.0, 0.25, 0.0),
         ));
 
+        let i = Intersection::new(&w.objects[1], 0.5);
+
         assert_relative_eq!(
             w.shade_hit(
-                &Intersection::new(&w.objects[1], 0.5).prepare_computations(
-                    &Ray::new(Point::origin(), Vector::z_axis())
+                &i.prepare_computations(
+                    &Ray::new(Point::origin(), Vector::z_axis()),
+                    &IntersectionList::from(i)
                 ),
                 5
             ),
@@ -265,10 +272,13 @@ mod tests {
             Material::default(),
         ));
 
+        let i = Intersection::new(&w.objects[1], 4.0);
+
         assert_relative_eq!(
             w.shade_hit(
-                &Intersection::new(&w.objects[1], 4.0).prepare_computations(
+                &i.prepare_computations(
                     &Ray::new(Point::new(0.0, 0.0, 5.0), Vector::z_axis()),
+                    &IntersectionList::from(i)
                 ),
                 1
             ),
@@ -348,10 +358,13 @@ mod tests {
 
         w.objects[1].material.ambient = 1.0;
 
+        let i = Intersection::new(&w.objects[1], 1.0);
+
         assert_relative_eq!(
             w.reflected_colour(
-                &Intersection::new(&w.objects[1], 1.0).prepare_computations(
-                    &Ray::new(Point::origin(), Vector::z_axis())
+                &i.prepare_computations(
+                    &Ray::new(Point::origin(), Vector::z_axis()),
+                    &IntersectionList::from(i)
                 ),
                 1
             ),
@@ -371,13 +384,17 @@ mod tests {
 
         w.push_object(o);
 
+        let i = Intersection::new(w.objects.last().unwrap(), SQRT_2);
+
         assert_relative_eq!(
             w.reflected_colour(
-                &Intersection::new(w.objects.last().unwrap(), SQRT_2)
-                    .prepare_computations(&Ray::new(
+                &i.prepare_computations(
+                    &Ray::new(
                         Point::new(0.0, 0.0, -3.0),
                         Vector::new(0.0, -SQRT_2 / 2.0, SQRT_2 / 2.0)
-                    )),
+                    ),
+                    &IntersectionList::from(i)
+                ),
                 5
             ),
             Colour::new(0.190_331, 0.237_913, 0.142_748)
@@ -396,13 +413,17 @@ mod tests {
 
         w.push_object(o);
 
+        let i = Intersection::new(w.objects.last().unwrap(), SQRT_2);
+
         assert_relative_eq!(
             w.shade_hit(
-                &Intersection::new(w.objects.last().unwrap(), SQRT_2)
-                    .prepare_computations(&Ray::new(
+                &i.prepare_computations(
+                    &Ray::new(
                         Point::new(0.0, 0.0, -3.0),
                         Vector::new(0.0, -SQRT_2 / 2.0, SQRT_2 / 2.0)
-                    )),
+                    ),
+                    &IntersectionList::from(i)
+                ),
                 2
             ),
             Colour::new(0.876_756, 0.924_339, 0.829_173)
@@ -444,13 +465,17 @@ mod tests {
 
         w.push_object(o);
 
+        let i = Intersection::new(w.objects.last().unwrap(), SQRT_2);
+
         assert_relative_eq!(
             w.reflected_colour(
-                &Intersection::new(w.objects.last().unwrap(), SQRT_2)
-                    .prepare_computations(&Ray::new(
+                &i.prepare_computations(
+                    &Ray::new(
                         Point::new(0.0, 0.0, -3.0),
                         Vector::new(0.0, -SQRT_2 / 2.0, SQRT_2 / 2.0)
-                    )),
+                    ),
+                    &IntersectionList::from(i)
+                ),
                 0
             ),
             Colour::black()

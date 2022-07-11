@@ -43,7 +43,11 @@ pub struct Intersection<'a, T: Float> {
 }
 
 impl<'a, T: Float> Intersection<'a, T> {
-    pub fn prepare_computations(&self, ray: &Ray<T>) -> Computations<'a, T> {
+    pub fn prepare_computations(
+        &self,
+        ray: &Ray<T>,
+        _intersections: &IntersectionList<T>,
+    ) -> Computations<'a, T> {
         let point = ray.position(self.t);
         let eye = -ray.direction;
         let mut normal = self.object.normal_at(&point);
@@ -102,6 +106,12 @@ impl<'a, T: Float> IntersectionList<'a, T> {
 impl<'a, T: Float> From<Vec<Intersection<'a, T>>> for IntersectionList<'a, T> {
     fn from(vec: Vec<Intersection<'a, T>>) -> Self {
         Self(vec)
+    }
+}
+
+impl<'a, T: Float> From<Intersection<'a, T>> for IntersectionList<'a, T> {
+    fn from(intersection: Intersection<'a, T>) -> Self {
+        Self::from(vec![intersection])
     }
 }
 
@@ -167,10 +177,10 @@ mod tests {
         let o = Object::default_sphere();
         let i = Intersection::new(&o, 4.0);
 
-        let c = i.prepare_computations(&Ray::new(
-            Point::new(0.0, 0.0, -5.0),
-            Vector::z_axis(),
-        ));
+        let c = i.prepare_computations(
+            &Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()),
+            &IntersectionList::from(i),
+        );
 
         assert_float_relative_eq!(c.t, i.t);
         assert_relative_eq!(c.object, i.object);
@@ -185,8 +195,10 @@ mod tests {
         let o = Object::default_sphere();
         let i = Intersection::new(&o, 1.0);
 
-        let c = i
-            .prepare_computations(&Ray::new(Point::origin(), Vector::z_axis()));
+        let c = i.prepare_computations(
+            &Ray::new(Point::origin(), Vector::z_axis()),
+            &IntersectionList::from(i),
+        );
 
         assert_relative_eq!(c.point, Point::new(0.0, 0.0, 1.0));
         assert_relative_eq!(c.eye, -Vector::z_axis());
@@ -200,10 +212,12 @@ mod tests {
             Transform::from_translate(0.0, 0.0, 1.0),
             Material::default(),
         );
-        let c = Intersection::new(&o, 5.0).prepare_computations(&Ray::new(
-            Point::new(0.0, 0.0, -5.0),
-            Vector::z_axis(),
-        ));
+        let i = Intersection::new(&o, 5.0);
+
+        let c = i.prepare_computations(
+            &Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()),
+            &IntersectionList::from(i),
+        );
 
         assert!(c.over_point.z < -(FLOAT_EPSILON / 2.0));
         assert!(c.point.z > c.over_point.z);
@@ -214,10 +228,13 @@ mod tests {
         let o = Object::default_plane();
         let i = Intersection::new(&o, SQRT_2);
 
-        let c = i.prepare_computations(&Ray::new(
-            Point::new(0.0, 1.0, -1.0),
-            Vector::new(0.0, -SQRT_2 / 2.0, SQRT_2 / 2.0),
-        ));
+        let c = i.prepare_computations(
+            &Ray::new(
+                Point::new(0.0, 1.0, -1.0),
+                Vector::new(0.0, -SQRT_2 / 2.0, SQRT_2 / 2.0),
+            ),
+            &IntersectionList::from(i),
+        );
 
         assert_relative_eq!(
             c.reflect,
