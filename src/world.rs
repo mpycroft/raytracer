@@ -110,6 +110,15 @@ impl<T: Float> World<T> {
             return Colour::black();
         }
 
+        // Check for total internal reflection via Snell's Law
+        let n_ratio = computations.n1 / computations.n2;
+        let cos_i = computations.eye.dot(&computations.normal);
+        let sin2_t = n_ratio * n_ratio * (T::one() - cos_i * cos_i);
+
+        if sin2_t > T::one() {
+            return Colour::black();
+        }
+
         Colour::white()
     }
 
@@ -534,6 +543,28 @@ mod tests {
         );
 
         assert_relative_eq!(w.refracted_colour(&c, 0), Colour::black());
+    }
+
+    #[test]
+    fn the_refracted_colour_under_total_internal_reflection() {
+        let mut w = World::default();
+        let o = &mut w.objects[0];
+        o.material.transparency = 1.0;
+        o.material.refractive_index = 1.5;
+
+        let o = &w.objects[0];
+
+        let i = IntersectionList::from(vec![
+            Intersection::new(o, -SQRT_2 / 2.0),
+            Intersection::new(o, SQRT_2 / 2.0),
+        ]);
+
+        let c = i[1].prepare_computations(
+            &Ray::new(Point::new(0.0, 0.0, SQRT_2 / 2.0), Vector::y_axis()),
+            &i,
+        );
+
+        assert_relative_eq!(w.refracted_colour(&c, 5), Colour::black());
     }
 
     #[test]
