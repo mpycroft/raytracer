@@ -119,7 +119,14 @@ impl<T: Float> World<T> {
             return Colour::black();
         }
 
-        Colour::white()
+        // Handle the other cases
+        let cos_t = (T::one() - sin2_t).sqrt();
+        let direction = computations.normal * (n_ratio * cos_i - cos_t)
+            - computations.eye * n_ratio;
+
+        let refracted_ray = Ray::new(computations.under_point, direction);
+
+        self.colour_at(&refracted_ray, refracted_depth - 1)
     }
 
     fn intersect(&self, ray: &Ray<T>) -> Option<IntersectionList<T>> {
@@ -565,6 +572,43 @@ mod tests {
         );
 
         assert_relative_eq!(w.refracted_colour(&c, 5), Colour::black());
+    }
+
+    #[test]
+    fn the_refracted_colour_with_a_reflected_ray() {
+        let mut w = World::default();
+
+        {
+            let o1 = &mut w.objects[0];
+            o1.material.ambient = 1.0;
+            o1.material.pattern = Pattern::default_test();
+        }
+
+        {
+            let o2 = &mut w.objects[1];
+            o2.material.transparency = 1.0;
+            o2.material.refractive_index = 1.5;
+        }
+
+        let o1 = &w.objects[0];
+        let o2 = &w.objects[1];
+
+        let i = IntersectionList::from(vec![
+            Intersection::new(o1, -0.989_9),
+            Intersection::new(o2, -0.489_9),
+            Intersection::new(o2, 0.489_9),
+            Intersection::new(o1, 0.989_9),
+        ]);
+
+        let c = i[2].prepare_computations(
+            &Ray::new(Point::new(0.0, 0.0, 0.1), Vector::y_axis()),
+            &i,
+        );
+
+        assert_relative_eq!(
+            w.refracted_colour(&c, 5),
+            Colour::new(0.0, 0.998_884, 0.047_216)
+        );
     }
 
     #[test]
