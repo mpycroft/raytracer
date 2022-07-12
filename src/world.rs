@@ -29,7 +29,7 @@ impl<T: Float> World<T> {
     pub fn shade_hit(
         &self,
         computations: &Computations<T>,
-        reflective_depth: u32,
+        recursive_depth: u32,
     ) -> Colour<T> {
         let mut colour = Colour::black();
 
@@ -44,18 +44,19 @@ impl<T: Float> World<T> {
             );
         }
 
-        let reflected = self.reflected_colour(computations, reflective_depth);
+        let reflected = self.reflected_colour(computations, recursive_depth);
+        let refracted = self.refracted_colour(computations, recursive_depth);
 
-        colour + reflected
+        colour + reflected + refracted
     }
 
-    pub fn colour_at(&self, ray: &Ray<T>, reflective_depth: u32) -> Colour<T> {
+    pub fn colour_at(&self, ray: &Ray<T>, recursive_depth: u32) -> Colour<T> {
         if let Some(intersections) = self.intersect(ray) {
             if let Some(hit) = intersections.hit() {
                 let computations =
                     hit.prepare_computations(ray, &intersections);
 
-                return self.shade_hit(&computations, reflective_depth);
+                return self.shade_hit(&computations, recursive_depth);
             }
         }
 
@@ -83,10 +84,10 @@ impl<T: Float> World<T> {
     pub fn reflected_colour(
         &self,
         computations: &Computations<T>,
-        reflective_depth: u32,
+        recursive_depth: u32,
     ) -> Colour<T> {
         if computations.object.material.reflective == T::zero()
-            || reflective_depth == 0
+            || recursive_depth == 0
         {
             return Colour::black();
         }
@@ -94,18 +95,17 @@ impl<T: Float> World<T> {
         let reflect_ray =
             Ray::new(computations.over_point, computations.reflect);
 
-        let colour = self.colour_at(&reflect_ray, reflective_depth - 1);
-
-        colour * computations.object.material.reflective
+        self.colour_at(&reflect_ray, recursive_depth - 1)
+            * computations.object.material.reflective
     }
 
     pub fn refracted_colour(
         &self,
         computations: &Computations<T>,
-        refracted_depth: u32,
+        recursive_depth: u32,
     ) -> Colour<T> {
         if computations.object.material.transparency == T::zero()
-            || refracted_depth == 0
+            || recursive_depth == 0
         {
             return Colour::black();
         }
@@ -126,7 +126,8 @@ impl<T: Float> World<T> {
 
         let refracted_ray = Ray::new(computations.under_point, direction);
 
-        self.colour_at(&refracted_ray, refracted_depth - 1)
+        self.colour_at(&refracted_ray, recursive_depth - 1)
+            * computations.object.material.transparency
     }
 
     fn intersect(&self, ray: &Ray<T>) -> Option<IntersectionList<T>> {
@@ -608,6 +609,45 @@ mod tests {
         assert_relative_eq!(
             w.refracted_colour(&c, 5),
             Colour::new(0.0, 0.998_884, 0.047_216)
+        );
+    }
+
+    #[test]
+    fn shade_hit_with_a_transparent_material() {
+        let mut w = World::default();
+
+        w.push_object(Object::new_sphere(
+            Transform::from_translate(0.0, -3.5, -0.5),
+            Material {
+                pattern: Pattern::default_uniform(Colour::new(1.0, 0.0, 0.0)),
+                ambient: 0.5,
+                ..Default::default()
+            },
+        ));
+
+        w.push_object(Object::new_plane(
+            Transform::from_translate(0.0, -1.0, 0.0),
+            Material {
+                transparency: 0.5,
+                refractive_index: 1.5,
+                ..Default::default()
+            },
+        ));
+        let floor = w.objects.last().unwrap();
+
+        let i = IntersectionList::from(Intersection::new(floor, SQRT_2));
+
+        let c = i[0].prepare_computations(
+            &Ray::new(
+                Point::new(0.0, 0.0, -3.0),
+                Vector::new(0.0, -SQRT_2 / 2.0, SQRT_2 / 2.0),
+            ),
+            &i,
+        );
+
+        assert_relative_eq!(
+            w.shade_hit(&c, 5),
+            Colour::new(0.936_425, 0.686_425, 0.686_425)
         );
     }
 
