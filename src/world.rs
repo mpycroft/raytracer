@@ -31,10 +31,10 @@ impl<T: Float> World<T> {
         computations: &Computations<T>,
         recursive_depth: u32,
     ) -> Colour<T> {
-        let mut colour = Colour::black();
+        let mut surface = Colour::black();
 
         for light in &self.lights {
-            colour += computations.object.material.lighting(
+            surface += computations.object.material.lighting(
                 computations.object,
                 light,
                 &computations.over_point,
@@ -47,7 +47,17 @@ impl<T: Float> World<T> {
         let reflected = self.reflected_colour(computations, recursive_depth);
         let refracted = self.refracted_colour(computations, recursive_depth);
 
-        colour + reflected + refracted
+        if computations.object.material.reflective > T::zero()
+            && computations.object.material.transparency > T::zero()
+        {
+            let reflectance = computations.schlick();
+
+            return surface
+                + reflected * reflectance
+                + refracted * (T::one() - reflectance);
+        }
+
+        surface + reflected + refracted
     }
 
     pub fn colour_at(&self, ray: &Ray<T>, recursive_depth: u32) -> Colour<T> {
@@ -249,13 +259,13 @@ mod tests {
     fn shading_an_intersection() {
         let w = World::default();
 
-        let i = Intersection::new(&w.objects[0], 4.0);
+        let i = IntersectionList::from(Intersection::new(&w.objects[0], 4.0));
 
         assert_relative_eq!(
             w.shade_hit(
-                &i.prepare_computations(
+                &i[0].prepare_computations(
                     &Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()),
-                    &IntersectionList::from(i)
+                    &i
                 ),
                 5
             ),
@@ -273,13 +283,13 @@ mod tests {
             Point::new(0.0, 0.25, 0.0),
         ));
 
-        let i = Intersection::new(&w.objects[1], 0.5);
+        let i = IntersectionList::from(Intersection::new(&w.objects[1], 0.5));
 
         assert_relative_eq!(
             w.shade_hit(
-                &i.prepare_computations(
+                &i[0].prepare_computations(
                     &Ray::new(Point::origin(), Vector::z_axis()),
-                    &IntersectionList::from(i)
+                    &i
                 ),
                 5
             ),
@@ -303,13 +313,13 @@ mod tests {
             Material::default(),
         ));
 
-        let i = Intersection::new(&w.objects[1], 4.0);
+        let i = IntersectionList::from(Intersection::new(&w.objects[1], 4.0));
 
         assert_relative_eq!(
             w.shade_hit(
-                &i.prepare_computations(
+                &i[0].prepare_computations(
                     &Ray::new(Point::new(0.0, 0.0, 5.0), Vector::z_axis()),
-                    &IntersectionList::from(i)
+                    &i
                 ),
                 1
             ),
@@ -389,13 +399,13 @@ mod tests {
 
         w.objects[1].material.ambient = 1.0;
 
-        let i = Intersection::new(&w.objects[1], 1.0);
+        let i = IntersectionList::from(Intersection::new(&w.objects[1], 1.0));
 
         assert_relative_eq!(
             w.reflected_colour(
-                &i.prepare_computations(
+                &i[0].prepare_computations(
                     &Ray::new(Point::origin(), Vector::z_axis()),
-                    &IntersectionList::from(i)
+                    &i
                 ),
                 1
             ),
@@ -407,24 +417,24 @@ mod tests {
     fn the_reflected_colour_for_a_reflective_material() {
         let mut w = World::default();
 
-        let mut o = Object::new_plane(
+        w.push_object(Object::new_plane(
             Transform::from_translate(0.0, -1.0, 0.0),
-            Material::default(),
-        );
-        o.material.reflective = 0.5;
+            Material { reflective: 0.5, ..Default::default() },
+        ));
 
-        w.push_object(o);
-
-        let i = Intersection::new(w.objects.last().unwrap(), SQRT_2);
+        let i = IntersectionList::from(Intersection::new(
+            w.objects.last().unwrap(),
+            SQRT_2,
+        ));
 
         assert_relative_eq!(
             w.reflected_colour(
-                &i.prepare_computations(
+                &i[0].prepare_computations(
                     &Ray::new(
                         Point::new(0.0, 0.0, -3.0),
                         Vector::new(0.0, -SQRT_2 / 2.0, SQRT_2 / 2.0)
                     ),
-                    &IntersectionList::from(i)
+                    &i
                 ),
                 5
             ),
@@ -436,24 +446,24 @@ mod tests {
     fn shade_hit_with_a_reflective_material() {
         let mut w = World::default();
 
-        let mut o = Object::new_plane(
+        w.push_object(Object::new_plane(
             Transform::from_translate(0.0, -1.0, 0.0),
-            Material::default(),
-        );
-        o.material.reflective = 0.5;
+            Material { reflective: 0.5, ..Default::default() },
+        ));
 
-        w.push_object(o);
-
-        let i = Intersection::new(w.objects.last().unwrap(), SQRT_2);
+        let i = IntersectionList::from(Intersection::new(
+            w.objects.last().unwrap(),
+            SQRT_2,
+        ));
 
         assert_relative_eq!(
             w.shade_hit(
-                &i.prepare_computations(
+                &i[0].prepare_computations(
                     &Ray::new(
                         Point::new(0.0, 0.0, -3.0),
                         Vector::new(0.0, -SQRT_2 / 2.0, SQRT_2 / 2.0)
                     ),
-                    &IntersectionList::from(i)
+                    &i
                 ),
                 2
             ),
@@ -467,19 +477,15 @@ mod tests {
 
         w.push_light(PointLight::new(Colour::white(), Point::origin()));
 
-        let mut p = Object::new_plane(
+        w.push_object(Object::new_plane(
             Transform::from_translate(0.0, -1.0, 0.0),
-            Material::default(),
-        );
-        p.material.reflective = 1.0;
-        w.push_object(p);
+            Material { reflective: 1.0, ..Default::default() },
+        ));
 
-        let mut p = Object::new_plane(
+        w.push_object(Object::new_plane(
             Transform::from_translate(0.0, 1.0, 0.0),
-            Material::default(),
-        );
-        p.material.reflective = 1.0;
-        w.push_object(p);
+            Material { reflective: 1.0, ..Default::default() },
+        ));
 
         w.colour_at(&Ray::new(Point::origin(), Vector::y_axis()), 10);
     }
@@ -488,24 +494,24 @@ mod tests {
     fn the_reflected_colour_at_the_maximum_recursion_depth() {
         let mut w = World::default();
 
-        let mut o = Object::new_plane(
+        w.push_object(Object::new_plane(
             Transform::from_translate(0.0, -1.0, 0.0),
-            Material::default(),
-        );
-        o.material.reflective = 0.5;
+            Material { reflective: 0.5, ..Default::default() },
+        ));
 
-        w.push_object(o);
-
-        let i = Intersection::new(w.objects.last().unwrap(), SQRT_2);
+        let i = IntersectionList::from(Intersection::new(
+            w.objects.last().unwrap(),
+            SQRT_2,
+        ));
 
         assert_relative_eq!(
             w.reflected_colour(
-                &i.prepare_computations(
+                &i[0].prepare_computations(
                     &Ray::new(
                         Point::new(0.0, 0.0, -3.0),
                         Vector::new(0.0, -SQRT_2 / 2.0, SQRT_2 / 2.0)
                     ),
-                    &IntersectionList::from(i)
+                    &i
                 ),
                 0
             ),
@@ -649,6 +655,49 @@ mod tests {
             w.shade_hit(&c, 5),
             Colour::new(0.936_425, 0.686_425, 0.686_425)
         );
+    }
+
+    #[test]
+    fn shade_hit_with_a_reflective_transparent_material() {
+        let mut w = World::default();
+
+        w.push_object(Object::new_sphere(
+            Transform::from_translate(0.0, -3.5, -0.5),
+            Material {
+                pattern: Pattern::default_uniform(Colour::new(1.0, 0.0, 0.0)),
+                ambient: 0.5,
+                ..Default::default()
+            },
+        ));
+
+        w.push_object(Object::new_plane(
+            Transform::from_translate(0.0, -1.0, 0.0),
+            Material {
+                reflective: 0.5,
+                transparency: 0.5,
+                refractive_index: 1.5,
+                ..Default::default()
+            },
+        ));
+
+        let i = IntersectionList::from(Intersection::new(
+            w.objects.last().unwrap(),
+            SQRT_2,
+        ));
+
+        assert_relative_eq!(
+            w.shade_hit(
+                &i[0].prepare_computations(
+                    &Ray::new(
+                        Point::new(0.0, 0.0, -3.0),
+                        Vector::new(0.0, -SQRT_2 / 2.0, SQRT_2 / 2.0)
+                    ),
+                    &i
+                ),
+                2
+            ),
+            Colour::new(0.933_915, 0.696_434, 0.692_43)
+        )
     }
 
     #[test]
