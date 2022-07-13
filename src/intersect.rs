@@ -182,6 +182,28 @@ pub struct Computations<'a, T: Float> {
     pub n2: T,
 }
 
+impl<'a, T: Float> Computations<'a, T> {
+    pub fn schlick(&self) -> T {
+        let mut cos = self.eye.dot(&self.normal);
+
+        if self.n1 > self.n2 {
+            let n = self.n1 / self.n2;
+            let sin2_t = n * n * (T::one() - cos * cos);
+
+            if sin2_t > T::one() {
+                return T::one();
+            }
+
+            cos = (T::one() - sin2_t).sqrt();
+        }
+
+        let val = (self.n1 - self.n2) / (self.n1 + self.n2);
+        let r0 = val * val;
+
+        r0 + (T::one() - r0) * (T::one() - cos).powi(5)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::f64::consts::SQRT_2;
@@ -407,5 +429,53 @@ mod tests {
             IntersectionList::from(vec![i1, i2, i3, i4]).hit().unwrap(),
             &i4
         );
+    }
+
+    #[test]
+    fn the_schlick_approximation_under_total_internal_reflection() {
+        let o = Object::default_glass_sphere();
+
+        let i = IntersectionList::from(vec![
+            Intersection::new(&o, -SQRT_2 / 2.0),
+            Intersection::new(&o, SQRT_2 / 2.0),
+        ]);
+
+        let c = i[1].prepare_computations(
+            &Ray::new(Point::new(0.0, 0.0, SQRT_2 / 2.0), Vector::y_axis()),
+            &i,
+        );
+
+        assert_float_relative_eq!(c.schlick(), 1.0);
+    }
+
+    #[test]
+    fn the_schlick_approximation_with_a_perpendicular_viewing_angle() {
+        let o = Object::default_glass_sphere();
+
+        let i = IntersectionList::from(vec![
+            Intersection::new(&o, -1.0),
+            Intersection::new(&o, 1.0),
+        ]);
+
+        let c = i[1].prepare_computations(
+            &Ray::new(Point::origin(), Vector::y_axis()),
+            &i,
+        );
+
+        assert_float_relative_eq!(c.schlick(), 0.04);
+    }
+
+    #[test]
+    fn the_schlick_approximation_with_a_small_angle_and_n2_gt_n1() {
+        let o = Object::default_glass_sphere();
+
+        let i = IntersectionList::from(Intersection::new(&o, 1.858_9));
+
+        let c = i[0].prepare_computations(
+            &Ray::new(Point::new(0.0, 0.99, -2.0), Vector::z_axis()),
+            &i,
+        );
+
+        assert_float_relative_eq!(c.schlick(), 0.488_73);
     }
 }
