@@ -536,6 +536,7 @@ mod tests {
                 &Object::new_sphere(
                     Transform::from_scale(2.0, 2.0, 2.0),
                     Material::default(),
+                    true
                 ),
                 &Point::new(2.0, 3.0, 4.0)
             ),
@@ -562,6 +563,7 @@ mod tests {
                     &Object::new_sphere(
                         Transform::from_scale(2.0, 2.0, 2.0),
                         Material::default(),
+                        true
                     ),
                     &Point::new(2.5, 3.0, 3.5)
                 ),

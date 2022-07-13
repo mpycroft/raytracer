@@ -62,7 +62,7 @@ impl<T: Float> World<T> {
 
     pub fn colour_at(&self, ray: &Ray<T>, recursive_depth: u32) -> Colour<T> {
         if let Some(intersections) = self.intersect(ray) {
-            if let Some(hit) = intersections.hit() {
+            if let Some(hit) = intersections.hit(false) {
                 let computations =
                     hit.prepare_computations(ray, &intersections);
 
@@ -81,7 +81,7 @@ impl<T: Float> World<T> {
         let ray = Ray::new(*point, direction);
 
         if let Some(intersections) = self.intersect(&ray) {
-            if let Some(hit) = intersections.hit() {
+            if let Some(hit) = intersections.hit(true) {
                 if hit.t < distance {
                     return true;
                 }
@@ -182,10 +182,12 @@ impl<T: Float> Default for World<T> {
                 T::zero(),
                 T::one(),
             ),
+            true,
         ));
         world.push_object(Object::new_sphere(
             Transform::from_scale(T::half(), T::half(), T::half()),
             Material::default(),
+            true,
         ));
 
         world.push_light(PointLight::new(
@@ -231,6 +233,7 @@ mod tests {
         let o = Object::new_sphere(
             Transform::from_translate(-1.0, 2.3, 4.0),
             Material::default(),
+            true,
         );
         w.push_object(o.clone());
 
@@ -311,6 +314,7 @@ mod tests {
         w.push_object(Object::new_sphere(
             Transform::from_translate(0.0, 0.0, 10.0),
             Material::default(),
+            true,
         ));
 
         let i = IntersectionList::from(Intersection::new(&w.objects[1], 4.0));
@@ -394,6 +398,37 @@ mod tests {
     }
 
     #[test]
+    fn a_non_shadow_casting_object_does_not_shadow() {
+        let mut w = World::new();
+
+        w.push_light(PointLight::new(
+            Colour::white(),
+            Point::new(0.0, 0.0, -10.0),
+        ));
+
+        w.push_object(Object::new_sphere(
+            Transform::default(),
+            Material::default(),
+            false,
+        ));
+        w.push_object(Object::new_sphere(
+            Transform::from_translate(0.0, 0.0, 10.0),
+            Material::default(),
+            true,
+        ));
+
+        assert!(!w.is_shadowed(&w.lights[0], &Point::new(0.0, 0.0, 8.0)));
+
+        w.push_object(Object::new_sphere(
+            Transform::from_translate(0.0, 0.0, -2.0),
+            Material::default(),
+            true,
+        ));
+
+        assert!(w.is_shadowed(&w.lights[0], &Point::new(0.0, 0.0, 9.0)));
+    }
+
+    #[test]
     fn the_reflected_colour_for_a_non_reflective_material() {
         let mut w = World::default();
 
@@ -420,6 +455,7 @@ mod tests {
         w.push_object(Object::new_plane(
             Transform::from_translate(0.0, -1.0, 0.0),
             Material { reflective: 0.5, ..Default::default() },
+            true,
         ));
 
         let i = IntersectionList::from(Intersection::new(
@@ -449,6 +485,7 @@ mod tests {
         w.push_object(Object::new_plane(
             Transform::from_translate(0.0, -1.0, 0.0),
             Material { reflective: 0.5, ..Default::default() },
+            true,
         ));
 
         let i = IntersectionList::from(Intersection::new(
@@ -480,11 +517,13 @@ mod tests {
         w.push_object(Object::new_plane(
             Transform::from_translate(0.0, -1.0, 0.0),
             Material { reflective: 1.0, ..Default::default() },
+            true,
         ));
 
         w.push_object(Object::new_plane(
             Transform::from_translate(0.0, 1.0, 0.0),
             Material { reflective: 1.0, ..Default::default() },
+            true,
         ));
 
         w.colour_at(&Ray::new(Point::origin(), Vector::y_axis()), 10);
@@ -497,6 +536,7 @@ mod tests {
         w.push_object(Object::new_plane(
             Transform::from_translate(0.0, -1.0, 0.0),
             Material { reflective: 0.5, ..Default::default() },
+            true,
         ));
 
         let i = IntersectionList::from(Intersection::new(
@@ -629,6 +669,7 @@ mod tests {
                 ambient: 0.5,
                 ..Default::default()
             },
+            true,
         ));
 
         w.push_object(Object::new_plane(
@@ -638,6 +679,7 @@ mod tests {
                 refractive_index: 1.5,
                 ..Default::default()
             },
+            true,
         ));
         let floor = w.objects.last().unwrap();
 
@@ -668,6 +710,7 @@ mod tests {
                 ambient: 0.5,
                 ..Default::default()
             },
+            true,
         ));
 
         w.push_object(Object::new_plane(
@@ -678,6 +721,7 @@ mod tests {
                 refractive_index: 1.5,
                 ..Default::default()
             },
+            true,
         ));
 
         let i = IntersectionList::from(Intersection::new(
@@ -755,14 +799,16 @@ mod tests {
                     0.0,
                     0.0,
                     1.0
-                )
+                ),
+                true
             )
         );
         assert_relative_eq!(
             w.objects[1],
             Object::new_sphere(
                 Transform::from_scale(0.5, 0.5, 0.5),
-                Material::default()
+                Material::default(),
+                true
             )
         );
 

@@ -18,6 +18,7 @@ fn main() -> io::Result<()> {
             ),
             ..Default::default()
         },
+        true,
     ));
 
     world.push_object(Object::new_plane(
@@ -29,6 +30,7 @@ fn main() -> io::Result<()> {
             ),
             ..Default::default()
         },
+        true,
     ));
 
     world.push_object(Object::new_plane(
@@ -41,6 +43,34 @@ fn main() -> io::Result<()> {
             refractive_index: 1.5,
             ..Default::default()
         },
+        false,
+    ));
+
+    world.push_object(Object::new_sphere(
+        Transform::from_translate(2.0, -19.0, 30.0),
+        Material {
+            pattern: Pattern::default_uniform(Colour::new(0.6, 0.1, 0.1)),
+            ..Default::default()
+        },
+        true,
+    ));
+
+    world.push_object(Object::new_sphere(
+        Transform::from_translate(-3.0, -19.0, 35.0),
+        Material {
+            pattern: Pattern::default_uniform(Colour::new(0.1, 0.5, 0.2)),
+            ..Default::default()
+        },
+        true,
+    ));
+
+    world.push_object(Object::new_sphere(
+        Transform::from_translate(0.0, -15.0, 45.0),
+        Material {
+            pattern: Pattern::default_uniform(Colour::new(0.2, 0.2, 0.7)),
+            ..Default::default()
+        },
+        false,
     ));
 
     world.push_light(PointLight::new(

@@ -123,12 +123,16 @@ impl<'a, T: Float> IntersectionList<'a, T> {
         Self::default()
     }
 
-    pub fn hit(&self) -> Option<&Intersection<T>> {
+    pub fn hit(&self, check_shadowed: bool) -> Option<&Intersection<T>> {
         let mut intersection = None;
         let mut smallest = T::infinity();
 
         for i in &self.0 {
             if i.t < smallest && i.t >= T::zero() {
+                if check_shadowed && !i.object.cast_shadow {
+                    continue;
+                }
+
                 smallest = i.t;
                 intersection = Some(i);
             }
@@ -271,6 +275,7 @@ mod tests {
         let o = Object::new_sphere(
             Transform::from_translate(0.0, 0.0, 1.0),
             Material::default(),
+            true,
         );
         let i = Intersection::new(&o, 5.0);
 
@@ -393,7 +398,10 @@ mod tests {
         let i1 = Intersection::new(&o, 1.0);
         let i2 = Intersection::new(&o, 2.0);
 
-        assert_eq!(IntersectionList::from(vec![i1, i2]).hit().unwrap(), &i1);
+        assert_eq!(
+            IntersectionList::from(vec![i1, i2]).hit(false).unwrap(),
+            &i1
+        );
     }
 
     #[test]
@@ -403,7 +411,10 @@ mod tests {
         let i1 = Intersection::new(&o, -1.0);
         let i2 = Intersection::new(&o, 1.0);
 
-        assert_eq!(IntersectionList::from(vec![i1, i2]).hit().unwrap(), &i2);
+        assert_eq!(
+            IntersectionList::from(vec![i1, i2]).hit(false).unwrap(),
+            &i2
+        );
     }
 
     #[test]
@@ -413,7 +424,7 @@ mod tests {
         let i1 = Intersection::new(&o, -2.0);
         let i2 = Intersection::new(&o, -1.0);
 
-        assert!(IntersectionList::from(vec![i1, i2]).hit().is_none());
+        assert!(IntersectionList::from(vec![i1, i2]).hit(false).is_none());
     }
 
     #[test]
@@ -426,8 +437,31 @@ mod tests {
         let i4 = Intersection::new(&o, 2.0);
 
         assert_eq!(
-            IntersectionList::from(vec![i1, i2, i3, i4]).hit().unwrap(),
+            IntersectionList::from(vec![i1, i2, i3, i4]).hit(false).unwrap(),
             &i4
+        );
+    }
+
+    #[test]
+    fn the_hit_with_an_object_that_casts_no_shadow() {
+        let o1 = Object::new_sphere(
+            Transform::default(),
+            Material::default(),
+            false,
+        );
+        let o2 = Object::default_sphere();
+
+        let i1 = Intersection::new(&o1, 1.0);
+        let i2 = Intersection::new(&o2, 3.0);
+
+        assert_eq!(
+            IntersectionList::from(vec![i1, i2]).hit(true).unwrap(),
+            &i2
+        );
+
+        assert_eq!(
+            IntersectionList::from(vec![i1, i2]).hit(false).unwrap(),
+            &i1
         );
     }
 

@@ -4,6 +4,7 @@ mod sphere;
 mod test;
 
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
+use derive_new::new;
 use paste::paste;
 
 #[cfg(test)]
@@ -20,17 +21,22 @@ use crate::{
 };
 
 /// An `Object` represents some entity in the scene that can be rendered.
-#[derive(Clone, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, PartialEq, PartialOrd, new)]
 pub struct Object<T: Float> {
     pub transform: Transform<T>,
     pub material: Material<T>,
     pub shape: Shape<T>,
+    pub cast_shadow: bool,
 }
 
 macro_rules! add_shape_fns {
     (@add $fn_new:ident, $fn_default:ident, $shape:ident) => {
-        pub fn $fn_new(transform: Transform<T>, material: Material<T>) -> Self {
-            Self::new(transform, material, Shape::$shape($shape::new()))
+        pub fn $fn_new(
+            transform: Transform<T>, material: Material<T>, cast_shadow: bool
+        ) -> Self {
+            Self::new(
+                transform, material, Shape::$shape($shape::new()), cast_shadow
+            )
         }
 
         pub fn $fn_default() -> Self {
@@ -51,16 +57,8 @@ macro_rules! add_shape_fns {
 }
 
 impl<T: Float> Object<T> {
-    fn new(
-        transform: Transform<T>,
-        material: Material<T>,
-        shape: Shape<T>,
-    ) -> Self {
-        Self { transform, material, shape }
-    }
-
     fn default(shape: Shape<T>) -> Self {
-        Self::new(Transform::default(), Material::default(), shape)
+        Self::new(Transform::default(), Material::default(), shape, true)
     }
 
     pub fn new_glass_sphere(
@@ -75,6 +73,7 @@ impl<T: Float> Object<T> {
                 ..Default::default()
             },
             Shape::Sphere(Sphere::new()),
+            true,
         )
     }
 
@@ -249,11 +248,12 @@ mod tests {
         let m = Material::default();
         let s = Shape::Test(Test::default());
 
-        let o = Object::new(t, m.clone(), s.clone());
+        let o = Object::new(t, m.clone(), s.clone(), false);
 
         assert_relative_eq!(o.transform, t);
         assert_relative_eq!(o.material, m);
         assert_relative_eq!(o.shape, s);
+        assert!(!o.cast_shadow);
     }
 
     #[test]
@@ -265,6 +265,7 @@ mod tests {
         assert_relative_eq!(o.transform, Transform::default());
         assert_relative_eq!(o.material, Material::default());
         assert_relative_eq!(o.shape, s);
+        assert!(o.cast_shadow);
     }
 
     #[test]
@@ -303,11 +304,12 @@ mod tests {
         let t = Transform::<f64>::from_shear(0.0, 1.0, 1.0, 0.0, 0.0, 0.0);
         let m = Material::default();
 
-        let o = Object::new_sphere(t, m.clone());
+        let o = Object::new_sphere(t, m.clone(), false);
 
         assert_relative_eq!(o.transform, t);
         assert_relative_eq!(o.material, m);
         assert_relative_eq!(o.shape, Shape::Sphere(Sphere::new()));
+        assert!(!o.cast_shadow);
     }
 
     #[test]
@@ -317,6 +319,7 @@ mod tests {
         assert_relative_eq!(o.transform, Transform::default());
         assert_relative_eq!(o.material, Material::default());
         assert_relative_eq!(o.shape, Shape::Sphere(Sphere::default()));
+        assert!(o.cast_shadow);
     }
 
     #[test]
@@ -324,11 +327,12 @@ mod tests {
         let t = Transform::from_rotate_x(Angle::from_degrees(30.0f64));
         let m = Material::default();
 
-        let o = Object::new_plane(t, m.clone());
+        let o = Object::new_plane(t, m.clone(), true);
 
         assert_relative_eq!(o.transform, t);
         assert_relative_eq!(o.material, m);
         assert_relative_eq!(o.shape, Shape::Plane(Plane::new()));
+        assert!(o.cast_shadow);
     }
 
     #[test]
@@ -338,6 +342,7 @@ mod tests {
         assert_relative_eq!(o.transform, Transform::default());
         assert_relative_eq!(o.material, Material::default());
         assert_relative_eq!(o.shape, Shape::Plane(Plane::default()));
+        assert!(o.cast_shadow);
     }
 
     #[test]
@@ -345,11 +350,12 @@ mod tests {
         let t = Transform::from_scale(1.0, 0.5, 1.0);
         let m = Material::default();
 
-        let o = Object::new_test(t, m.clone());
+        let o = Object::new_test(t, m.clone(), true);
 
         assert_relative_eq!(o.transform, t);
         assert_relative_eq!(o.material, m);
         assert_relative_eq!(o.shape, Shape::Test(Test::new()));
+        assert!(o.cast_shadow);
     }
 
     #[test]
@@ -359,6 +365,7 @@ mod tests {
         assert_relative_eq!(o.transform, Transform::default());
         assert_relative_eq!(o.material, Material::default());
         assert_relative_eq!(o.shape, Shape::Test(Test::default()));
+        assert!(o.cast_shadow);
     }
 
     #[test]
@@ -366,6 +373,7 @@ mod tests {
         let o = Object::new_test(
             Transform::from_scale(2.0, 2.0, 2.0),
             Material::default(),
+            true,
         );
 
         o.intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()));
@@ -386,6 +394,7 @@ mod tests {
         let o = Object::new_test(
             Transform::from_translate(5.0, 0.0, 0.0),
             Material::default(),
+            true,
         );
 
         o.intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()));
@@ -407,6 +416,7 @@ mod tests {
             Object::new_test(
                 Transform::from_translate(0.0, 1.0, 0.0),
                 Material::default(),
+                true
             )
             .normal_at(&Point::new(
                 0.0,
@@ -423,7 +433,8 @@ mod tests {
             Object::new_test(
                 Transform::from_rotate_z(Angle::from_radians(PI / 5.0))
                     .scale(1.0, 0.5, 1.0),
-                Material::default()
+                Material::default(),
+                true
             )
             .normal_at(&Point::new(
                 0.0,
@@ -440,11 +451,13 @@ mod tests {
             Transform::from_translate(5.0, 4.0, 3.0),
             Material::default(),
             Shape::Test(Test::default()),
+            true,
         );
         let o2 = Object::new(
             Transform::from_translate(5.0, 4.0, 3.0),
             Material::default(),
             Shape::Test(Test::default()),
+            true,
         );
         let o3 = Object::default_sphere();
 
