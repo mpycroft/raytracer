@@ -62,13 +62,13 @@ impl<T: Float> Camera<T> {
         Ray::new(origin, direction)
     }
 
-    pub fn render(&self, world: &World<T>, reflective_depth: u32) -> Canvas<T> {
+    pub fn render(&self, world: &World<T>, recursive_depth: u32) -> Canvas<T> {
         let mut image = Canvas::new(self.horizontal, self.vertical);
 
         for y in 0..(self.vertical - 1) {
             for x in 0..(self.horizontal - 1) {
                 let ray = self.ray_for_pixel(x, y);
-                let colour = world.colour_at(&ray, reflective_depth);
+                let colour = world.colour_at(&ray, recursive_depth);
 
                 image.write_pixel(x, y, colour);
             }

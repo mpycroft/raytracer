@@ -1,101 +1,46 @@
-use std::{
-    f64::consts::{FRAC_PI_3, FRAC_PI_4},
-    fs::write,
-    io,
-};
+use std::{f64::consts::FRAC_PI_3, fs::write, io};
 
-use rand::SeedableRng;
-use rand_xoshiro::Xoshiro256PlusPlus;
 use raytracer::{
-    math::{Angle, PerlinNoise, Point, Transform, Vector},
+    math::{Angle, Point, Transform, Vector},
     Camera, Colour, Material, Object, Pattern, PointLight, World,
 };
 
 fn main() -> io::Result<()> {
     let mut world = World::new();
 
-    let mut rng = Xoshiro256PlusPlus::seed_from_u64(1);
-
-    let mut floor_material = Material::new(
-        Pattern::default_uniform(Colour::new(0.4, 0.4, 0.4)),
-        0.1,
-        0.9,
-        0.0,
-        200.0,
-        0.5,
-        0.0,
-        1.0,
-    );
-
     world.push_object(Object::new_plane(
-        Transform::default(),
-        floor_material.clone(),
-    ));
-
-    let wall_transform = Transform::from_rotate_x(Angle::from_degrees(90.0));
-    floor_material.reflective = 0.1;
-    world.push_object(Object::new_plane(
-        wall_transform
-            .clone()
-            .rotate_y(Angle::from_radians(-FRAC_PI_4))
-            .translate(0.0, 0.0, 5.0),
-        floor_material.clone(),
-    ));
-    floor_material.reflective = 0.9;
-    world.push_object(Object::new_plane(
-        wall_transform
-            .clone()
-            .rotate_y(Angle::from_radians(FRAC_PI_4))
-            .translate(0.0, 0.0, 5.0),
-        floor_material,
-    ));
-
-    world.push_object(Object::new_sphere(
-        Transform::from_translate(-0.5, 1.0, 0.5),
-        Material::new(
-            Pattern::default_perturbed(
-                PerlinNoise::new(&mut rng),
-                Pattern::new_ring(
-                    Transform::from_scale(0.3, 0.3, 0.3),
-                    Colour::new(0.1, 1.0, 0.5),
-                    Colour::white(),
-                ),
-                0.04,
+        Transform::from_rotate_x(Angle::from_degrees(90.0))
+            .translate(0.0, 0.0, 70.0),
+        Material {
+            pattern: Pattern::default_checker(
+                Colour::new(0.8, 0.8, 0.8),
+                Colour::new(0.3, 0.3, 0.3),
             ),
-            0.1,
-            0.7,
-            0.3,
-            200.0,
-            0.0,
-            0.0,
-            1.0,
-        ),
+            ..Default::default()
+        },
     ));
-    world.push_object(Object::new_sphere(
-        Transform::from_scale(0.5, 0.5, 0.5).translate(1.5, 0.5, -0.5),
-        Material::new(
-            Pattern::default_uniform(Colour::new(0.5, 1.0, 0.1)),
-            0.1,
-            0.7,
-            0.3,
-            200.0,
-            0.1,
-            0.0,
-            1.0,
-        ),
+
+    world.push_object(Object::new_plane(
+        Transform::from_translate(0.0, -20.0, 0.0),
+        Material {
+            pattern: Pattern::default_checker(
+                Colour::new(0.1, 0.7, 0.3),
+                Colour::new(0.5, 0.3, 0.0),
+            ),
+            ..Default::default()
+        },
     ));
-    world.push_object(Object::new_sphere(
-        Transform::from_scale(0.33, 0.33, 0.33).translate(-1.5, 0.33, -0.75),
-        Material::new(
-            Pattern::default_uniform(Colour::new(1.0, 0.8, 0.1)),
-            0.1,
-            0.7,
-            0.3,
-            200.0,
-            0.2,
-            0.0,
-            1.0,
-        ),
+
+    world.push_object(Object::new_plane(
+        Transform::from_translate(0.0, -10.0, 0.0),
+        Material {
+            pattern: Pattern::default_uniform(Colour::new(0.5, 0.5, 0.5)),
+            ambient: 0.5,
+            reflective: 0.4,
+            transparency: 1.0,
+            refractive_index: 1.5,
+            ..Default::default()
+        },
     ));
 
     world.push_light(PointLight::new(
@@ -108,8 +53,8 @@ fn main() -> io::Result<()> {
         500,
         FRAC_PI_3,
         Transform::view_transform(
-            &Point::new(0.0, 1.5, -5.0),
-            &Point::new(0.0, 1.0, 0.0),
+            &Point::new(0.0, 2.0, -5.0),
+            &Point::new(0.0, 0.0, 0.0),
             &Vector::y_axis(),
         ),
     );
