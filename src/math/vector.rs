@@ -16,6 +16,10 @@ impl Vector {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self { x, y, z }
     }
+
+    pub fn magnitude(&self) -> f64 {
+        (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
+    }
 }
 
 impl Add for Vector {
@@ -123,6 +127,22 @@ mod tests {
         assert_approx_eq!(p.x, 2.8);
         assert_approx_eq!(p.y, 4.0);
         assert_approx_eq!(p.z, -0.7);
+    }
+
+    #[test]
+    fn computing_the_magnitude_of_a_vector() {
+        assert_approx_eq!(Vector::new(1.0, 0.0, 0.0).magnitude(), 1.0);
+        assert_approx_eq!(Vector::new(0.0, 1.0, 0.0).magnitude(), 1.0);
+        assert_approx_eq!(Vector::new(0.0, 0.0, 1.0).magnitude(), 1.0);
+
+        assert_approx_eq!(
+            Vector::new(1.0, 2.0, 3.0).magnitude(),
+            f64::sqrt(14.0)
+        );
+        assert_approx_eq!(
+            Vector::new(-1.0, -2.0, -3.0).magnitude(),
+            f64::sqrt(14.0)
+        );
     }
 
     #[test]
