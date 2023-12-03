@@ -1,5 +1,5 @@
 use float_cmp::{ApproxEq, F64Margin};
-use std::ops::{Add, AddAssign, Neg, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 /// A Vector is a representation of a geometric vector, pointing in a given
 /// direction and with a magnitude.
@@ -45,6 +45,30 @@ impl SubAssign for Vector {
         self.x -= rhs.x;
         self.y -= rhs.y;
         self.z -= rhs.z;
+    }
+}
+
+impl Mul<f64> for Vector {
+    type Output = Self;
+
+    fn mul(self, rhs: f64) -> Self::Output {
+        Self::Output::new(self.x * rhs, self.y * rhs, self.z * rhs)
+    }
+}
+
+impl Mul<Vector> for f64 {
+    type Output = Vector;
+
+    fn mul(self, rhs: Vector) -> Self::Output {
+        rhs * self
+    }
+}
+
+impl MulAssign<f64> for Vector {
+    fn mul_assign(&mut self, rhs: f64) {
+        self.x *= rhs;
+        self.y *= rhs;
+        self.z *= rhs;
     }
 }
 
@@ -112,6 +136,29 @@ mod tests {
             Vector::new(0.0, 0.0, 0.0) - Vector::new(1.0, -2.0, 3.0),
             Vector::new(-1.0, 2.0, -3.0)
         );
+    }
+
+    #[test]
+    fn multiplying_a_vector_by_a_scaler() {
+        assert_approx_eq!(
+            Vector::new(1.0, -2.0, 3.0) * 3.5,
+            Vector::new(3.5, -7.0, 10.5)
+        );
+
+        assert_approx_eq!(
+            Vector::new(1.0, -2.0, 3.0) * 0.5,
+            Vector::new(0.5, -1.0, 1.5)
+        );
+
+        assert_approx_eq!(
+            -1.5 * Vector::new(-2.6, 0.0, 1.2),
+            Vector::new(3.9, 0.0, -1.8)
+        );
+
+        let mut v = Vector::new(1.0, 2.5, 3.1);
+        v *= 2.5;
+
+        assert_approx_eq!(v, Vector::new(2.5, 6.25, 7.75));
     }
 
     #[test]
