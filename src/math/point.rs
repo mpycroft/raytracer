@@ -1,4 +1,7 @@
 use float_cmp::{ApproxEq, F64Margin};
+use std::ops::{Add, AddAssign};
+
+use super::vector::Vector;
 
 /// A Point is a representation of a geometric position within the 3 dimensional
 /// scene we are working on
@@ -15,6 +18,30 @@ impl Point {
     }
 }
 
+impl Add<Vector> for Point {
+    type Output = Self;
+
+    fn add(self, rhs: Vector) -> Self::Output {
+        Self::Output::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
+    }
+}
+
+impl Add<Point> for Vector {
+    type Output = Point;
+
+    fn add(self, rhs: Point) -> Self::Output {
+        rhs + self
+    }
+}
+
+impl AddAssign<Vector> for Point {
+    fn add_assign(&mut self, rhs: Vector) {
+        self.x += rhs.x;
+        self.y += rhs.y;
+        self.z += rhs.z;
+    }
+}
+
 impl ApproxEq for Point {
     type Margin = F64Margin;
 
@@ -26,6 +53,7 @@ impl ApproxEq for Point {
             && self.z.approx_eq(other.z, margin)
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -38,6 +66,24 @@ mod tests {
         assert_approx_eq!(p.x, 4.3);
         assert_approx_eq!(p.y, -4.2);
         assert_approx_eq!(p.z, 3.1);
+    }
+
+    #[test]
+    fn adding_a_point_and_a_vector() {
+        assert_approx_eq!(
+            Point::new(3.0, -2.0, 5.0) + Vector::new(-2.0, 3.0, 1.0),
+            Point::new(1.0, 1.0, 6.0)
+        );
+
+        assert_approx_eq!(
+            Vector::new(5.25, 4.14, 4.0) + Point::new(0.1, 0.01, 1.0),
+            Point::new(5.35, 4.15, 5.0)
+        );
+
+        let mut p = Point::new(1.1, 2.2, 3.3);
+        p += Vector::new(-0.1, 0.1, 0.0);
+
+        assert_approx_eq!(p, Point::new(1.0, 2.3, 3.3));
     }
 
     #[test]
