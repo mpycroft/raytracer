@@ -3,3 +3,4 @@
 
 pub mod float;
 pub mod point;
+pub mod vector;
