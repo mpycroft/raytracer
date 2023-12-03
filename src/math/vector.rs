@@ -1,5 +1,7 @@
 use float_cmp::{ApproxEq, F64Margin};
-use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::ops::{
+    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign,
+};
 
 /// A Vector is a representation of a geometric vector, pointing in a given
 /// direction and with a magnitude.
@@ -69,6 +71,22 @@ impl MulAssign<f64> for Vector {
         self.x *= rhs;
         self.y *= rhs;
         self.z *= rhs;
+    }
+}
+
+impl Div<f64> for Vector {
+    type Output = Self;
+
+    fn div(self, rhs: f64) -> Self::Output {
+        Self::Output::new(self.x / rhs, self.y / rhs, self.z / rhs)
+    }
+}
+
+impl DivAssign<f64> for Vector {
+    fn div_assign(&mut self, rhs: f64) {
+        self.x /= rhs;
+        self.y /= rhs;
+        self.z /= rhs;
     }
 }
 
@@ -159,6 +177,19 @@ mod tests {
         v *= 2.5;
 
         assert_approx_eq!(v, Vector::new(2.5, 6.25, 7.75));
+    }
+
+    #[test]
+    fn dividing_a_vector_by_a_scaler() {
+        assert_approx_eq!(
+            Vector::new(1.0, -2.0, 3.0) / 2.0,
+            Vector::new(0.5, -1.0, 1.5)
+        );
+
+        let mut v = Vector::new(-0.0, 2.9, 0.6);
+        v /= 0.2;
+
+        assert_approx_eq!(v, Vector::new(0.0, 14.5, 3.0));
     }
 
     #[test]
