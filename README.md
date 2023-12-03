@@ -34,7 +34,20 @@ particularly care about that level of granularity or precision.
 Their macros have been reimplemented to avoid having to pass the type every time
 we do a comparison.
 
+### Tuples
+
+Rather than following the book's usage of tuples as an underlying data structure
+for both points and vectors we will implement them separately and use the type
+system in Rust to our advantage. This will allow us to not need to do some sorts
+of checks and we can enforce only valid operations on vectors and points. Since
+the only real usage of homogenous coordinates (w elements) on points and vectors
+is to make the matrix multiplication fall out and we already have that
+information in the type we shouldn't hit any fundamental issues.
+
 ## For the future
 
 * Consider making things generic over other float types (f32, arbitrary precision
   floats, fixed decimals, etc.) and examine performance.
+* We may need to revisit our use of 3 element points and vectors if we ever look
+  into SIMD style operations where we would actually want x, y, z, w elements
+  for speed.
