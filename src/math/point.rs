@@ -1,3 +1,5 @@
+use float_cmp::{ApproxEq, F64Margin};
+
 /// A Point is a representation of a geometric position within the 3 dimensional
 /// scene we are working on
 #[derive(Clone, Copy, Debug)]
@@ -13,10 +15,21 @@ impl Point {
     }
 }
 
+impl ApproxEq for Point {
+    type Margin = F64Margin;
+
+    fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
+        let margin = margin.into();
+
+        self.x.approx_eq(other.x, margin)
+            && self.y.approx_eq(other.y, margin)
+            && self.z.approx_eq(other.z, margin)
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::float::assert_approx_eq;
+    use crate::math::float::{assert_approx_eq, assert_approx_ne};
 
     #[test]
     fn creating_a_point() {
@@ -25,5 +38,16 @@ mod tests {
         assert_approx_eq!(p.x, 4.3);
         assert_approx_eq!(p.y, -4.2);
         assert_approx_eq!(p.z, 3.1);
+    }
+
+    #[test]
+    fn comparing_points() {
+        let p1 = Point::new(1.0, 2.0, 3.0);
+        let p2 = Point::new(1.0, 2.0, 3.0);
+        let p3 = Point::new(1.0, 2.006, 3.0);
+
+        assert_approx_eq!(p1, p2);
+
+        assert_approx_ne!(p1, p3);
     }
 }
