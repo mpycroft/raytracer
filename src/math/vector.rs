@@ -1,5 +1,5 @@
 use float_cmp::{ApproxEq, F64Margin};
-use std::ops::{Add, AddAssign, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Neg, Sub, SubAssign};
 
 /// A Vector is a representation of a geometric vector, pointing in a given
 /// direction and with a magnitude.
@@ -45,6 +45,14 @@ impl SubAssign for Vector {
         self.x -= rhs.x;
         self.y -= rhs.y;
         self.z -= rhs.z;
+    }
+}
+
+impl Neg for Vector {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        Self::Output::new(-self.x, -self.y, -self.z)
     }
 }
 
@@ -99,6 +107,19 @@ mod tests {
         v -= Vector::new(-2.0, 2.5, -0.1);
 
         assert_approx_eq!(v, Vector::new(1.0, -4.5, -2.9));
+
+        assert_approx_eq!(
+            Vector::new(0.0, 0.0, 0.0) - Vector::new(1.0, -2.0, 3.0),
+            Vector::new(-1.0, 2.0, -3.0)
+        );
+    }
+
+    #[test]
+    fn negating_a_vector() {
+        assert_approx_eq!(
+            -Vector::new(1.0, -2.0, 3.0),
+            Vector::new(-1.0, 2.0, -3.0)
+        );
     }
 
     #[test]
