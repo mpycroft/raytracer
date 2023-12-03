@@ -7,3 +7,4 @@ description = "A ray tracer written in Rust"
 license = "MIT"
 
 [dependencies]
+float-cmp = "0.9.0"
