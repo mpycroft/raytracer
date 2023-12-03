@@ -1,4 +1,5 @@
 use float_cmp::{ApproxEq, F64Margin};
+use std::ops::{Add, AddAssign};
 
 /// A Vector is a representation of a geometric vector, pointing in a given
 /// direction and with a magnitude.
@@ -12,6 +13,22 @@ pub struct Vector {
 impl Vector {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self { x, y, z }
+    }
+}
+
+impl Add for Vector {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self::Output::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
+    }
+}
+
+impl AddAssign for Vector {
+    fn add_assign(&mut self, rhs: Self) {
+        self.x += rhs.x;
+        self.y += rhs.y;
+        self.z += rhs.z;
     }
 }
 
@@ -40,6 +57,19 @@ mod tests {
         assert_approx_eq!(p.x, 2.8);
         assert_approx_eq!(p.y, 4.0);
         assert_approx_eq!(p.z, -0.7);
+    }
+
+    #[test]
+    fn adding_two_vectors() {
+        assert_approx_eq!(
+            Vector::new(2.3, 5.1, -3.0) + Vector::new(1.0, 1.0, 1.0),
+            Vector::new(3.3, 6.1, -2.0)
+        );
+
+        let mut v = Vector::new(-0.6, 0.5, 1.2);
+        v += Vector::new(-0.0, 0.5, -0.2);
+
+        assert_approx_eq!(v, Vector::new(-0.6, 1.0, 1.0));
     }
 
     #[test]
