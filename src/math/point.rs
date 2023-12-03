@@ -1,5 +1,5 @@
 use float_cmp::{ApproxEq, F64Margin};
-use std::ops::{Add, AddAssign};
+use std::ops::{Add, AddAssign, Sub, SubAssign};
 
 use super::vector::Vector;
 
@@ -42,6 +42,30 @@ impl AddAssign<Vector> for Point {
     }
 }
 
+impl Sub for Point {
+    type Output = Vector;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self::Output::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
+    }
+}
+
+impl Sub<Vector> for Point {
+    type Output = Point;
+
+    fn sub(self, rhs: Vector) -> Self::Output {
+        Self::Output::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
+    }
+}
+
+impl SubAssign<Vector> for Point {
+    fn sub_assign(&mut self, rhs: Vector) {
+        self.x -= rhs.x;
+        self.y -= rhs.y;
+        self.z -= rhs.z;
+    }
+}
+
 impl ApproxEq for Point {
     type Margin = F64Margin;
 
@@ -53,7 +77,6 @@ impl ApproxEq for Point {
             && self.z.approx_eq(other.z, margin)
     }
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -84,6 +107,27 @@ mod tests {
         p += Vector::new(-0.1, 0.1, 0.0);
 
         assert_approx_eq!(p, Point::new(1.0, 2.3, 3.3));
+    }
+
+    #[test]
+    fn subtracting_two_points() {
+        assert_approx_eq!(
+            Point::new(3.0, 2.0, 1.0) - Point::new(5.0, 6.0, 7.0),
+            Vector::new(-2.0, -4.0, -6.0)
+        );
+    }
+
+    #[test]
+    fn subtracting_a_vector_from_a_point() {
+        assert_approx_eq!(
+            Point::new(3.7, 7.1, 2.001) - Vector::new(1.0, 1.8, 0.0),
+            Point::new(2.7, 5.3, 2.001)
+        );
+
+        let mut p = Point::new(1.5, 0.3, -0.5);
+        p -= Vector::new(0.3, 0.4, 0.5);
+
+        assert_approx_eq!(p, Point::new(1.2, -0.1, -1.0));
     }
 
     #[test]
