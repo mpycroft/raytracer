@@ -18,6 +18,18 @@ impl Canvas {
     pub fn write_pixel(&mut self, x: usize, y: usize, colour: Colour) {
         self.pixels[y * self.width + x] = colour;
     }
+
+    pub fn to_ppm(&self) -> String {
+        let mut data = format!("P3\n{} {}\n255\n", self.width, self.height);
+
+        for pixel in &self.pixels {
+            let (red, green, blue) = pixel.to_u8();
+
+            data.push_str(&format!("{red} {green} {blue}\n"));
+        }
+
+        data
+    }
 }
 
 #[cfg(test)]
@@ -43,5 +55,75 @@ mod tests {
         c.write_pixel(2, 3, Colour::red());
 
         assert_approx_eq!(c.pixels[32], Colour::red());
+    }
+
+    #[test]
+    fn generating_ppm_data_from_a_canvas() {
+        let mut c = Canvas::new(5, 3);
+
+        c.write_pixel(0, 0, Colour::new(1.5, 0.0, 0.0));
+        c.write_pixel(2, 1, Colour::new(0.0, 0.5, 0.0));
+        c.write_pixel(4, 2, Colour::new(-0.5, 0.0, 1.0));
+
+        assert_eq!(
+            c.to_ppm(),
+            "\
+P3
+5 3
+255
+255 0 0
+0 0 0
+0 0 0
+0 0 0
+0 0 0
+0 0 0
+0 0 0
+0 128 0
+0 0 0
+0 0 0
+0 0 0
+0 0 0
+0 0 0
+0 0 0
+0 0 255\n"
+        );
+
+        let w = 10;
+        let h = 2;
+        let mut c = Canvas::new(w, h);
+
+        for x in 0..w {
+            for y in 0..h {
+                c.write_pixel(x, y, Colour::new(1.0, 0.8, 0.6));
+            }
+        }
+
+        assert_eq!(
+            c.to_ppm(),
+            "\
+P3
+10 2
+255
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153
+255 204 153\n"
+        );
     }
 }
