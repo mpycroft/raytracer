@@ -3,6 +3,8 @@ use std::ops::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign,
 };
 
+use super::float::approx_eq;
+
 /// A Vector is a representation of a geometric vector, pointing in a given
 /// direction and with a magnitude.
 #[derive(Clone, Copy, Debug)]
@@ -19,6 +21,16 @@ impl Vector {
 
     pub fn magnitude(&self) -> f64 {
         (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
+    }
+
+    pub fn normalise(&self) -> Self {
+        let magnitude = self.magnitude();
+
+        if approx_eq!(magnitude, 0.0) {
+            return Self::new(0.0, 0.0, 0.0);
+        }
+
+        *self / magnitude
     }
 }
 
@@ -143,6 +155,26 @@ mod tests {
             Vector::new(-1.0, -2.0, -3.0).magnitude(),
             f64::sqrt(14.0)
         );
+    }
+
+    #[test]
+    fn normalising_a_vector() {
+        assert_approx_eq!(
+            Vector::new(4.0, 0.0, 0.0).normalise(),
+            Vector::new(1.0, 0.0, 0.0)
+        );
+
+        let v = Vector::new(1.0, 2.0, 3.0).normalise();
+        let sqrt_14 = f64::sqrt(14.0);
+        assert_approx_eq!(
+            v,
+            Vector::new(1.0 / sqrt_14, 2.0 / sqrt_14, 3.0 / sqrt_14)
+        );
+        assert_approx_eq!(v.magnitude(), 1.0);
+
+        let v = Vector::new(0.0, 0.0, 0.0).normalise();
+        assert_approx_eq!(v, Vector::new(0.0, 0.0, 0.0));
+        assert_approx_eq!(v.magnitude(), 0.0);
     }
 
     #[test]

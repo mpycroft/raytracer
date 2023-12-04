@@ -7,7 +7,6 @@
 //! overwritten if needed in certain places.
 
 /// Compare if two values are almost equal. See float-cmp documentation.
-#[cfg(test)]
 macro_rules! approx_eq {
     ($lhs:expr, $rhs:expr) => {
         crate::math::float::approx_eq!(
@@ -23,7 +22,6 @@ macro_rules! approx_eq {
         $lhs.approx_eq($rhs, $margin)
     }};
 }
-#[cfg(test)]
 pub(crate) use approx_eq;
 
 /// Compare if two values are not almost equal. See float-cmp documentation.
