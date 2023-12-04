@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign};
+use std::ops::{Add, AddAssign, Sub, SubAssign};
 
 use float_cmp::{ApproxEq, F64Margin};
 
@@ -34,6 +34,26 @@ impl AddAssign for Colour {
         self.red += rhs.red;
         self.green += rhs.green;
         self.blue += rhs.blue;
+    }
+}
+
+impl Sub for Colour {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self::Output::new(
+            self.red - rhs.red,
+            self.green - rhs.green,
+            self.blue - rhs.blue,
+        )
+    }
+}
+
+impl SubAssign for Colour {
+    fn sub_assign(&mut self, rhs: Self) {
+        self.red -= rhs.red;
+        self.green -= rhs.green;
+        self.blue -= rhs.blue;
     }
 }
 
@@ -74,6 +94,19 @@ mod tests {
         c += Colour::new(0.5, 0.01, -0.3);
 
         assert_approx_eq!(c, Colour::new(0.0, 0.91, 0.9));
+    }
+
+    #[test]
+    fn subtracting_two_colours() {
+        assert_approx_eq!(
+            Colour::new(0.9, 0.6, 0.75) - Colour::new(0.7, 0.1, 0.25),
+            Colour::new(0.2, 0.5, 0.5)
+        );
+
+        let mut c = Colour::new(1.0, 1.0, 1.0);
+        c -= Colour::new(1.0, 0.0, 0.5);
+
+        assert_approx_eq!(c, Colour::new(0.0, 1.0, 0.5));
     }
 
     #[test]
