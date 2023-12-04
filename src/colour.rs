@@ -47,6 +47,12 @@ impl Colour {
     pub fn cyan() -> Self {
         Self::new(0.0, 1.0, 1.0)
     }
+
+    pub fn to_u8(&self) -> (u8, u8, u8) {
+        let convert = |c: f64| (c.clamp(0.0, 1.0) * 255.0).round() as u8;
+
+        (convert(self.red), convert(self.green), convert(self.blue))
+    }
 }
 
 impl Add for Colour {
@@ -166,6 +172,15 @@ mod tests {
         assert_approx_eq!(Colour::yellow(), Colour::new(1.0, 1.0, 0.0));
         assert_approx_eq!(Colour::purple(), Colour::new(1.0, 0.0, 1.0));
         assert_approx_eq!(Colour::cyan(), Colour::new(0.0, 1.0, 1.0));
+    }
+
+    #[test]
+    fn generating_u8_values_from_a_colour() {
+        assert_eq!(Colour::black().to_u8(), (0, 0, 0));
+        assert_eq!(Colour::white().to_u8(), (255, 255, 255));
+
+        assert_eq!(Colour::new(-0.3, 0.5, 1.0).to_u8(), (0, 128, 255));
+        assert_eq!(Colour::new(0.2, 0.51, 0.9).to_u8(), (51, 130, 230));
     }
 
     #[test]
