@@ -1,3 +1,5 @@
+use std::ops::{Add, AddAssign};
+
 use float_cmp::{ApproxEq, F64Margin};
 
 /// A Colour represents an RGB colour in the image, values generally range from
@@ -12,6 +14,26 @@ pub struct Colour {
 impl Colour {
     pub fn new(red: f64, green: f64, blue: f64) -> Self {
         Self { red, green, blue }
+    }
+}
+
+impl Add for Colour {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self::Output::new(
+            self.red + rhs.red,
+            self.green + rhs.green,
+            self.blue + rhs.blue,
+        )
+    }
+}
+
+impl AddAssign for Colour {
+    fn add_assign(&mut self, rhs: Self) {
+        self.red += rhs.red;
+        self.green += rhs.green;
+        self.blue += rhs.blue;
     }
 }
 
@@ -39,6 +61,19 @@ mod tests {
         assert_approx_eq!(c.red, -0.5);
         assert_approx_eq!(c.green, 0.4);
         assert_approx_eq!(c.blue, 1.7);
+    }
+
+    #[test]
+    fn adding_two_colours() {
+        assert_approx_eq!(
+            Colour::new(0.9, 0.6, 0.75) + Colour::new(0.7, 0.1, 0.25),
+            Colour::new(1.6, 0.7, 1.0)
+        );
+
+        let mut c = Colour::new(-0.5, 0.9, 1.2);
+        c += Colour::new(0.5, 0.01, -0.3);
+
+        assert_approx_eq!(c, Colour::new(0.0, 0.91, 0.9));
     }
 
     #[test]
