@@ -1,7 +1,8 @@
-use float_cmp::{ApproxEq, F64Margin};
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
-use super::vector::Vector;
+use float_cmp::{ApproxEq, F64Margin};
+
+use super::Vector;
 
 /// A Point is a representation of a geometric position within the 3 dimensional
 /// scene we are working on

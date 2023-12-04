@@ -1,7 +1,8 @@
-use float_cmp::{ApproxEq, F64Margin};
 use std::ops::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign,
 };
+
+use float_cmp::{ApproxEq, F64Margin};
 
 use super::float::approx_eq;
 
@@ -140,9 +141,8 @@ impl ApproxEq for Vector {
 
 #[cfg(test)]
 mod tests {
-    use crate::math::float::{assert_approx_eq, assert_approx_ne};
-
     use super::*;
+    use crate::math::float::{assert_approx_eq, assert_approx_ne};
 
     #[test]
     fn creating_a_vector() {
