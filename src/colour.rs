@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 
 use float_cmp::{ApproxEq, F64Margin};
 
@@ -57,6 +57,50 @@ impl SubAssign for Colour {
     }
 }
 
+impl Mul<f64> for Colour {
+    type Output = Self;
+
+    fn mul(self, rhs: f64) -> Self::Output {
+        Self::Output::new(self.red * rhs, self.green * rhs, self.blue * rhs)
+    }
+}
+
+impl Mul<Colour> for f64 {
+    type Output = Colour;
+
+    fn mul(self, rhs: Colour) -> Self::Output {
+        rhs * self
+    }
+}
+
+impl Mul for Colour {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        Self::Output::new(
+            self.red * rhs.red,
+            self.green * rhs.green,
+            self.blue * rhs.blue,
+        )
+    }
+}
+
+impl MulAssign<f64> for Colour {
+    fn mul_assign(&mut self, rhs: f64) {
+        self.red *= rhs;
+        self.green *= rhs;
+        self.blue *= rhs;
+    }
+}
+
+impl MulAssign for Colour {
+    fn mul_assign(&mut self, rhs: Self) {
+        self.red *= rhs.red;
+        self.green *= rhs.green;
+        self.blue *= rhs.blue;
+    }
+}
+
 impl ApproxEq for Colour {
     type Margin = F64Margin;
 
@@ -107,6 +151,37 @@ mod tests {
         c -= Colour::new(1.0, 0.0, 0.5);
 
         assert_approx_eq!(c, Colour::new(0.0, 1.0, 0.5));
+    }
+
+    #[test]
+    fn multiplying_a_colour_by_a_scaler() {
+        assert_approx_eq!(
+            Colour::new(0.2, 0.3, 0.4) * 2.0,
+            Colour::new(0.4, 0.6, 0.8)
+        );
+
+        assert_approx_eq!(
+            0.9 * Colour::new(1.0, 0.2, 1.4),
+            Colour::new(0.90, 0.18, 1.26)
+        );
+
+        let mut c = Colour::new(0.5, -1.2, 2.44);
+        c *= -0.3;
+
+        assert_approx_eq!(c, Colour::new(-0.15, 0.36, -0.732));
+    }
+
+    #[test]
+    fn multiplying_two_colours() {
+        assert_approx_eq!(
+            Colour::new(1.0, 0.2, 0.4) * Colour::new(0.9, 1.0, 0.1),
+            Colour::new(0.9, 0.2, 0.04)
+        );
+
+        let mut c = Colour::new(-1.0, 0.7, 1.2);
+        c *= Colour::new(0.5, 1.0, -0.6);
+
+        assert_approx_eq!(c, Colour::new(-0.5, 0.7, -0.72));
     }
 
     #[test]
