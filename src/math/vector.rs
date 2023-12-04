@@ -20,7 +20,7 @@ impl Vector {
     }
 
     pub fn magnitude(&self) -> f64 {
-        (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
+        (self.dot(*self)).sqrt()
     }
 
     pub fn normalise(&self) -> Self {
@@ -31,6 +31,10 @@ impl Vector {
         }
 
         *self / magnitude
+    }
+
+    pub fn dot(&self, rhs: Self) -> f64 {
+        self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
 }
 
@@ -175,6 +179,16 @@ mod tests {
         let v = Vector::new(0.0, 0.0, 0.0).normalise();
         assert_approx_eq!(v, Vector::new(0.0, 0.0, 0.0));
         assert_approx_eq!(v.magnitude(), 0.0);
+    }
+
+    #[test]
+    fn computing_the_dot_product_of_two_vectors() {
+        let v1 = Vector::new(1.0, 2.0, 3.0);
+        let v2 = Vector::new(2.0, 3.0, 4.0);
+        let d = 20.0;
+
+        assert_approx_eq!(v1.dot(v2), d);
+        assert_approx_eq!(v2.dot(v1), d);
     }
 
     #[test]
