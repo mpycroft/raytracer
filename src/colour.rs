@@ -1,10 +1,16 @@
-use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
+use std::ops::{Mul, MulAssign};
+
+use derive_more::{
+    Add, AddAssign, Constructor, Mul, MulAssign, Sub, SubAssign,
+};
 
 use crate::math::float::impl_approx_eq;
 
 /// A Colour represents an RGB colour in the image, values generally range from
 /// 0.0..1.0 but can go outside this range before final processing.
-#[derive(Clone, Copy, Debug)]
+#[rustfmt::skip]
+#[derive(Clone, Copy, Debug, Constructor)]
+#[derive(Add, AddAssign, Sub, SubAssign, Mul, MulAssign)]
 pub struct Colour {
     pub red: f64,
     pub green: f64,
@@ -12,10 +18,6 @@ pub struct Colour {
 }
 
 impl Colour {
-    pub fn new(red: f64, green: f64, blue: f64) -> Self {
-        Self { red, green, blue }
-    }
-
     pub fn black() -> Self {
         Self::new(0.0, 0.0, 0.0)
     }
@@ -55,54 +57,6 @@ impl Colour {
     }
 }
 
-impl Add for Colour {
-    type Output = Self;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        Self::Output::new(
-            self.red + rhs.red,
-            self.green + rhs.green,
-            self.blue + rhs.blue,
-        )
-    }
-}
-
-impl AddAssign for Colour {
-    fn add_assign(&mut self, rhs: Self) {
-        self.red += rhs.red;
-        self.green += rhs.green;
-        self.blue += rhs.blue;
-    }
-}
-
-impl Sub for Colour {
-    type Output = Self;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        Self::Output::new(
-            self.red - rhs.red,
-            self.green - rhs.green,
-            self.blue - rhs.blue,
-        )
-    }
-}
-
-impl SubAssign for Colour {
-    fn sub_assign(&mut self, rhs: Self) {
-        self.red -= rhs.red;
-        self.green -= rhs.green;
-        self.blue -= rhs.blue;
-    }
-}
-
-impl Mul<f64> for Colour {
-    type Output = Self;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Self::Output::new(self.red * rhs, self.green * rhs, self.blue * rhs)
-    }
-}
-
 impl Mul<Colour> for f64 {
     type Output = Colour;
 
@@ -120,14 +74,6 @@ impl Mul for Colour {
             self.green * rhs.green,
             self.blue * rhs.blue,
         )
-    }
-}
-
-impl MulAssign<f64> for Colour {
-    fn mul_assign(&mut self, rhs: f64) {
-        self.red *= rhs;
-        self.green *= rhs;
-        self.blue *= rhs;
     }
 }
 
