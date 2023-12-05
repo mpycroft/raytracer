@@ -2,9 +2,8 @@ use std::ops::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign,
 };
 
-use float_cmp::{ApproxEq, F64Margin};
-
 use super::float::approx_eq;
+use super::float::impl_approx_eq;
 
 /// A Vector is a representation of a geometric vector, pointing in a given
 /// direction and with a magnitude.
@@ -127,22 +126,12 @@ impl Neg for Vector {
     }
 }
 
-impl ApproxEq for Vector {
-    type Margin = F64Margin;
-
-    fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
-        let margin = margin.into();
-
-        self.x.approx_eq(other.x, margin)
-            && self.y.approx_eq(other.y, margin)
-            && self.z.approx_eq(other.z, margin)
-    }
-}
+impl_approx_eq!(Vector { x, y, z });
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::float::{assert_approx_eq, assert_approx_ne};
+    use crate::math::float::*;
 
     #[test]
     fn creating_a_vector() {

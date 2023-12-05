@@ -35,7 +35,7 @@ impl Canvas {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::float::assert_approx_eq;
+    use crate::math::float::*;
 
     #[test]
     fn creating_a_canvas() {

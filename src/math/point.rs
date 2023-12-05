@@ -1,8 +1,6 @@
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
-use float_cmp::{ApproxEq, F64Margin};
-
-use super::Vector;
+use super::{float::impl_approx_eq, Vector};
 
 /// A Point is a representation of a geometric position within the 3 dimensional
 /// scene we are working on
@@ -67,21 +65,12 @@ impl SubAssign<Vector> for Point {
     }
 }
 
-impl ApproxEq for Point {
-    type Margin = F64Margin;
+impl_approx_eq!(Point { x, y, z });
 
-    fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
-        let margin = margin.into();
-
-        self.x.approx_eq(other.x, margin)
-            && self.y.approx_eq(other.y, margin)
-            && self.z.approx_eq(other.z, margin)
-    }
-}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::float::{assert_approx_eq, assert_approx_ne};
+    use crate::math::float::*;
 
     #[test]
     fn creating_a_point() {

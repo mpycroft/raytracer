@@ -1,6 +1,6 @@
 use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 
-use float_cmp::{ApproxEq, F64Margin};
+use crate::math::float::impl_approx_eq;
 
 /// A Colour represents an RGB colour in the image, values generally range from
 /// 0.0..1.0 but can go outside this range before final processing.
@@ -139,22 +139,12 @@ impl MulAssign for Colour {
     }
 }
 
-impl ApproxEq for Colour {
-    type Margin = F64Margin;
-
-    fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
-        let margin = margin.into();
-
-        self.red.approx_eq(other.red, margin)
-            && self.green.approx_eq(other.green, margin)
-            && self.blue.approx_eq(other.blue, margin)
-    }
-}
+impl_approx_eq!(Colour { red, green, blue });
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::float::{assert_approx_eq, assert_approx_ne};
+    use crate::math::float::*;
 
     #[test]
     fn creating_a_colour() {
