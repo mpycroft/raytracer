@@ -9,6 +9,18 @@ use super::{Point, Vector};
 #[derive(Clone, Copy, Debug, Index, IndexMut)]
 pub struct Matrix<const N: usize>([[f64; N]; N]);
 
+impl<const N: usize> Matrix<N> {
+    pub fn identity() -> Self {
+        let mut data = [[0.0; N]; N];
+
+        for (index, row_data) in data.iter_mut().enumerate() {
+            row_data[index] = 1.0;
+        }
+
+        Self(data)
+    }
+}
+
 impl<const N: usize> Mul for Matrix<N> {
     type Output = Self;
 
@@ -154,6 +166,39 @@ mod tests {
         assert_approx_eq!(m[2][0], 0.0);
         assert_approx_eq!(m[2][1], 1.0);
         assert_approx_eq!(m[2][2], 1.0);
+
+        assert_approx_eq!(
+            Matrix::<4>::identity(),
+            Matrix([
+                [1.0, 0.0, 0.0, 0.0],
+                [0.0, 1.0, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 0.0],
+                [0.0, 0.0, 0.0, 1.0]
+            ])
+        );
+    }
+
+    #[test]
+    fn multiplying_by_the_identity_matrix() {
+        let id = Matrix::identity();
+
+        let m = Matrix([
+            [0.0, 1.0, 2.0, 4.0],
+            [1.0, 2.0, 4.0, 8.0],
+            [2.0, 4.0, 8.0, 16.0],
+            [4.0, 8.0, 16.0, 32.0],
+        ]);
+
+        assert_approx_eq!(m * id, m);
+        assert_approx_eq!(id * m, m);
+
+        let p = Point::new(1.0, 2.0, 3.0);
+        assert_approx_eq!(id * p, p);
+        assert_approx_eq!(p * id, p);
+
+        let v = Vector::new(2.0, 3.5, 4.2);
+        assert_approx_eq!(id * v, v);
+        assert_approx_eq!(v * id, v);
     }
 
     #[test]
