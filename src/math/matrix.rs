@@ -3,6 +3,8 @@ use std::ops::{Mul, MulAssign};
 use derive_more::{Index, IndexMut};
 use float_cmp::{ApproxEq, F64Margin};
 
+use super::Point;
+
 /// A Matrix is a square matrix of size N, stored in row major order.
 #[derive(Clone, Copy, Debug, Index, IndexMut)]
 pub struct Matrix<const N: usize>([[f64; N]; N]);
@@ -28,6 +30,35 @@ impl<const N: usize> Mul for Matrix<N> {
 impl<const N: usize> MulAssign for Matrix<N> {
     fn mul_assign(&mut self, rhs: Self) {
         self.0 = (*self * rhs).0;
+    }
+}
+
+impl Mul<Point> for Matrix<4> {
+    type Output = Point;
+
+    fn mul(self, rhs: Point) -> Self::Output {
+        Self::Output::new(
+            self[0][0] * rhs.x
+                + self[0][1] * rhs.y
+                + self[0][2] * rhs.z
+                + self[0][3],
+            self[1][0] * rhs.x
+                + self[1][1] * rhs.y
+                + self[1][2] * rhs.z
+                + self[1][3],
+            self[2][0] * rhs.x
+                + self[2][1] * rhs.y
+                + self[2][2] * rhs.z
+                + self[2][3],
+        )
+    }
+}
+
+impl Mul<Matrix<4>> for Point {
+    type Output = Self;
+
+    fn mul(self, rhs: Matrix<4>) -> Self::Output {
+        rhs * self
     }
 }
 
@@ -217,6 +248,21 @@ mod tests {
                 [1.8, 3.5, 4.6, 6.9]
             ])
         );
+    }
+
+    #[test]
+    fn multiplying_a_matrix_by_a_point() {
+        let m = Matrix([
+            [1.0, 2.0, 3.0, 4.0],
+            [2.0, 4.0, 4.0, 2.0],
+            [8.0, 6.0, 4.0, 1.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ]);
+        let p = Point::new(1.0, 2.0, 3.0);
+        let r = Point::new(18.0, 24.0, 33.0);
+
+        assert_approx_eq!(m * p, r);
+        assert_approx_eq!(p * m, r);
     }
 
     #[test]
