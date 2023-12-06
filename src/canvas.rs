@@ -58,6 +58,13 @@ mod tests {
     }
 
     #[test]
+    #[should_panic]
+    fn writing_pixels_with_invalid_values() {
+        let mut c = Canvas::new(5, 5);
+        c.write_pixel(3, 10, Colour::green());
+    }
+
+    #[test]
     fn generating_ppm_data_from_a_canvas() {
         let mut c = Canvas::new(5, 3);
 
