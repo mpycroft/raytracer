@@ -1,9 +1,35 @@
-use derive_more::Index;
+use std::ops::{Mul, MulAssign};
+
+use derive_more::{Index, IndexMut};
 use float_cmp::{ApproxEq, F64Margin};
 
 /// A Matrix is a square matrix of size N, stored in row major order.
-#[derive(Clone, Copy, Debug, Index)]
-pub struct Matrix<const N: usize>(pub [[f64; N]; N]);
+#[derive(Clone, Copy, Debug, Index, IndexMut)]
+pub struct Matrix<const N: usize>([[f64; N]; N]);
+
+impl<const N: usize> Mul for Matrix<N> {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        let mut data = [[0.0; N]; N];
+
+        for (row, row_data) in data.iter_mut().enumerate() {
+            for (col, value) in row_data.iter_mut().enumerate() {
+                for index in 0..N {
+                    *value += self[row][index] * rhs[index][col];
+                }
+            }
+        }
+
+        Self(data)
+    }
+}
+
+impl<const N: usize> MulAssign for Matrix<N> {
+    fn mul_assign(&mut self, rhs: Self) {
+        self.0 = (*self * rhs).0;
+    }
+}
 
 impl<const N: usize> ApproxEq for Matrix<N> {
     type Margin = F64Margin;
@@ -111,6 +137,86 @@ mod tests {
         ]);
 
         let _ = m[4][2];
+    }
+
+    #[test]
+    fn mutable_indexing_into_a_matrix() {
+        let mut m = Matrix([
+            [1.0, 2.0, 3.0, 4.0],
+            [5.0, 6.0, 7.0, 8.0],
+            [9.0, 10.0, 11.0, 12.0],
+            [13.0, 14.0, 15.0, 16.0],
+        ]);
+
+        m[0][1] = 7.8;
+        m[2][0] = 0.7;
+        m[3][3] = 12.7;
+
+        assert_approx_eq!(m[0][0], 1.0);
+        assert_approx_eq!(m[0][1], 7.8);
+        assert_approx_eq!(m[1][2], 7.0);
+        assert_approx_eq!(m[2][0], 0.7);
+        assert_approx_eq!(m[3][1], 14.0);
+        assert_approx_eq!(m[3][3], 12.7);
+    }
+
+    #[test]
+    #[should_panic]
+    fn mutable_indexing_with_invalid_values() {
+        let mut m = Matrix([
+            [1.0, 2.0, 3.0, 4.0],
+            [4.0, 3.0, 2.0, 1.0],
+            [0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 1.0],
+        ]);
+
+        m[5][10] = 0.5;
+    }
+
+    #[test]
+    fn multiplying_two_matrices() {
+        assert_approx_eq!(
+            Matrix([
+                [1.0, 2.0, 3.0, 4.0],
+                [5.0, 6.0, 7.0, 8.0],
+                [9.0, 8.0, 7.0, 6.0],
+                [5.0, 4.0, 3.0, 2.0]
+            ]) * Matrix([
+                [-2.0, 1.0, 2.0, 3.0],
+                [3.0, 2.0, 1.0, -1.0],
+                [4.0, 3.0, 6.0, 5.0],
+                [1.0, 2.0, 7.0, 8.0]
+            ]),
+            Matrix([
+                [20.0, 22.0, 50.0, 48.0],
+                [44.0, 54.0, 114.0, 108.0],
+                [40.0, 58.0, 110.0, 102.0],
+                [16.0, 26.0, 46.0, 42.0]
+            ])
+        );
+
+        let mut m = Matrix([
+            [0.2, 0.3, 1.6, -9.2],
+            [0.0, 1.0, 1.0, 2.0],
+            [5.3, 2.16, -2.5, 6.6],
+            [1.0, 1.0, 1.5, 1.5],
+        ]);
+        m *= Matrix([
+            [2.3, 4.5, 6.1, 8.9],
+            [1.0, 2.0, 3.0, 4.0],
+            [-1.0, -2.0, -3.0, -4.0],
+            [-0.0, 0.0, 0.0, 0.0],
+        ]);
+
+        assert_approx_eq!(
+            m,
+            Matrix([
+                [-0.84, -1.7, -2.68, -3.42],
+                [0.0, 0.0, 0.0, 0.0],
+                [16.85, 33.17, 46.31, 65.81],
+                [1.8, 3.5, 4.6, 6.9]
+            ])
+        );
     }
 
     #[test]
