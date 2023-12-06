@@ -3,7 +3,7 @@ use std::ops::{Mul, MulAssign};
 use derive_more::{Index, IndexMut};
 use float_cmp::{ApproxEq, F64Margin};
 
-use super::Point;
+use super::{Point, Vector};
 
 /// A Matrix is a square matrix of size N, stored in row major order.
 #[derive(Clone, Copy, Debug, Index, IndexMut)]
@@ -55,6 +55,26 @@ impl Mul<Point> for Matrix<4> {
 }
 
 impl Mul<Matrix<4>> for Point {
+    type Output = Self;
+
+    fn mul(self, rhs: Matrix<4>) -> Self::Output {
+        rhs * self
+    }
+}
+
+impl Mul<Vector> for Matrix<4> {
+    type Output = Vector;
+
+    fn mul(self, rhs: Vector) -> Self::Output {
+        Self::Output::new(
+            self[0][0] * rhs.x + self[0][1] * rhs.y + self[0][2] * rhs.z,
+            self[1][0] * rhs.x + self[1][1] * rhs.y + self[1][2] * rhs.z,
+            self[2][0] * rhs.x + self[2][1] * rhs.y + self[2][2] * rhs.z,
+        )
+    }
+}
+
+impl Mul<Matrix<4>> for Vector {
     type Output = Self;
 
     fn mul(self, rhs: Matrix<4>) -> Self::Output {
@@ -263,6 +283,21 @@ mod tests {
 
         assert_approx_eq!(m * p, r);
         assert_approx_eq!(p * m, r);
+    }
+
+    #[test]
+    fn multiplying_a_matrix_by_a_vector() {
+        let m = Matrix([
+            [1.0, 2.0, -2.0, 3.0],
+            [0.0, 2.5, 0.1, 0.8],
+            [2.4, 4.8, 0.112, -2.5],
+            [1.7, 0.6, 2.3, 1.5],
+        ]);
+        let v = Vector::new(1.5, 2.5, 4.0);
+        let r = Vector::new(-1.5, 6.65, 16.048);
+
+        assert_approx_eq!(m * v, r);
+        assert_approx_eq!(v * m, r);
     }
 
     #[test]
