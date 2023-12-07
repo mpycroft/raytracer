@@ -223,7 +223,9 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(
+        expected = "index out of bounds: the len is 4 but the index is 4"
+    )]
     fn indexing_with_invalid_values() {
         let m = Matrix([
             [0.0, 0.0, 1.0, 0.0],
@@ -257,7 +259,9 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(
+        expected = "index out of bounds: the len is 4 but the index is 5"
+    )]
     fn mutable_indexing_with_invalid_values() {
         let mut m = Matrix([
             [1.0, 2.0, 3.0, 4.0],

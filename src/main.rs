@@ -1,3 +1,7 @@
+// Ignore pedantic lints in our temp binary code until we actually start writing
+// real raytracer code here.
+#![allow(clippy::pedantic)]
+
 use std::{fs::write, io::Error};
 
 use raytracer::{

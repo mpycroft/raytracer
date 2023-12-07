@@ -1,10 +1,10 @@
 //! The float module provides macros for using floating point numbers based on
-//! the float_cmp crate. These macros reimplement the macros in float_cmp but do
-//! not require the type to be specified (we call $lhs.approx_eq($rhs) rather
-//! than the fully qualified type as ApproxEq). This works for all values except
-//! implicit conversion of a margin from a tuple. We are assuming the defaults
-//! for epsilon and ulps are "good enough" for our usage but they can be
-//! overwritten if needed in certain places.
+//! the `float_cmp` crate. These macros reimplement the macros in `float_cmp`
+//! but do not require the type to be specified (we call `$lhs.approx_eq($rhs)`
+//! rather than the fully qualified type as `ApproxEq`). This works for all
+//! values except implicit conversion of a margin from a tuple. We are assuming
+//! the defaults for epsilon and ulps are "good enough" for our usage but they
+//! can be overwritten if needed in certain places.
 
 /// Compare if two values are almost equal. See float-cmp documentation.
 macro_rules! approx_eq {
@@ -78,7 +78,7 @@ macro_rules! assert_approx_ne {
 #[cfg(test)]
 pub(crate) use assert_approx_ne;
 
-/// Implement the ApproxEq trait for a struct.
+/// Implement the `ApproxEq` trait for a struct.
 macro_rules! impl_approx_eq {
     ($ty:ty { $id:ident $(, $ids:ident)* }) => {
         impl float_cmp::ApproxEq for $ty {
@@ -106,6 +106,10 @@ mod tests {
     use super::*;
 
     #[test]
+    // This is here because rust_analyser (though not clippy itself) complains
+    // about the assert_ne! on raw floats and putting the #[allow] on the
+    // statement itself does not seem to work.
+    #[allow(clippy::float_cmp)]
     fn comparing_floats() {
         let a = 100.15 + 0.15 + 0.15;
         let b = 100.1 + 0.1 + 0.25;
@@ -138,6 +142,10 @@ mod tests {
     }
 
     #[test]
+    // This is here because rust_analyser (though not clippy itself) complains
+    // about the assert_ne! on raw floats and putting the #[allow] on the
+    // statement itself does not seem to work.
+    #[allow(clippy::float_cmp)]
     fn asserting_floats() {
         let a = 168_512.002_519_000_6;
         let b = 168_512.002_519_000_7;

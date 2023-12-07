@@ -19,10 +19,12 @@ pub struct Vector {
 }
 
 impl Vector {
+    #[must_use]
     pub fn magnitude(&self) -> f64 {
         (self.dot(*self)).sqrt()
     }
 
+    #[must_use]
     pub fn normalise(&self) -> Self {
         let magnitude = self.magnitude();
 
@@ -33,10 +35,12 @@ impl Vector {
         *self / magnitude
     }
 
+    #[must_use]
     pub fn dot(&self, rhs: Self) -> f64 {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
 
+    #[must_use]
     pub fn cross(&self, rhs: Self) -> Self {
         Self::new(
             self.y * rhs.z - self.z * rhs.y,

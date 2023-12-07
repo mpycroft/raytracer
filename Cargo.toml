@@ -9,3 +9,6 @@ license = "MIT"
 [dependencies]
 derive_more = "0.99.17"
 float-cmp = "0.9.0"
+
+[lints.clippy]
+pedantic = "warn"
