@@ -35,6 +35,13 @@ impl<const N: usize> Matrix<N> {
     }
 }
 
+impl Matrix<2> {
+    #[must_use]
+    pub fn determinant(&self) -> f64 {
+        self[0][0] * self[1][1] - self[0][1] * self[1][0]
+    }
+}
+
 impl<const N: usize> Mul for Matrix<N> {
     type Output = Self;
 
@@ -235,6 +242,14 @@ mod tests {
 
         let id = Matrix::<3>::identity();
         assert_approx_eq!(id.transpose(), id);
+    }
+
+    #[test]
+    fn calculating_the_determinant_of_a_2x2_matrix() {
+        assert_approx_eq!(
+            Matrix([[1.0, 5.0], [-3.0, 2.0]]).determinant(),
+            17.0
+        );
     }
 
     #[test]
