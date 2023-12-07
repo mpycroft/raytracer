@@ -10,11 +10,25 @@ use super::{Point, Vector};
 pub struct Matrix<const N: usize>([[f64; N]; N]);
 
 impl<const N: usize> Matrix<N> {
+    #[must_use]
     pub fn identity() -> Self {
         let mut data = [[0.0; N]; N];
 
         for (index, row_data) in data.iter_mut().enumerate() {
             row_data[index] = 1.0;
+        }
+
+        Self(data)
+    }
+
+    #[must_use]
+    pub fn transpose(&self) -> Self {
+        let mut data = [[0.0; N]; N];
+
+        for (row, row_data) in self.0.iter().enumerate() {
+            for (col, col_data) in row_data.iter().enumerate() {
+                data[col][row] = *col_data;
+            }
         }
 
         Self(data)
@@ -199,6 +213,28 @@ mod tests {
         let v = Vector::new(2.0, 3.5, 4.2);
         assert_approx_eq!(id * v, v);
         assert_approx_eq!(v * id, v);
+    }
+
+    #[test]
+    fn transposing_a_matrix() {
+        assert_approx_eq!(
+            Matrix([
+                [0.0, 9.0, 3.0, 0.0],
+                [9.0, 8.0, 0.0, 8.0],
+                [1.0, 8.0, 5.0, 3.0],
+                [0.0, 0.0, 5.0, 8.0]
+            ])
+            .transpose(),
+            Matrix([
+                [0.0, 9.0, 1.0, 0.0],
+                [9.0, 8.0, 8.0, 0.0],
+                [3.0, 0.0, 5.0, 5.0],
+                [0.0, 8.0, 3.0, 8.0]
+            ])
+        );
+
+        let id = Matrix::<3>::identity();
+        assert_approx_eq!(id.transpose(), id);
     }
 
     #[test]
