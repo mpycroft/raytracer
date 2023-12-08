@@ -102,6 +102,17 @@ impl Matrix<3> {
     pub fn minor(&self, row: usize, col: usize) -> f64 {
         self.submatrix(row, col).determinant()
     }
+
+    #[must_use]
+    pub fn cofactor(&self, row: usize, col: usize) -> f64 {
+        let minor = self.minor(row, col);
+
+        if (row + col) % 2 != 0 {
+            return minor * -1.0;
+        }
+
+        minor
+    }
 }
 
 impl Matrix<2> {
@@ -366,6 +377,16 @@ mod tests {
         assert_approx_eq!(s.determinant(), 25.0);
 
         assert_approx_eq!(m.minor(1, 0), 25.0);
+    }
+
+    #[test]
+    fn calculating_the_cofactor_of_a_matrix() {
+        let m = Matrix([[3.0, 5.0, 0.0], [2.0, -1.0, -7.0], [6.0, -1.0, 5.0]]);
+
+        assert_approx_eq!(m.minor(0, 0), -12.0);
+        assert_approx_eq!(m.cofactor(0, 0), -12.0);
+        assert_approx_eq!(m.minor(1, 0), 25.0);
+        assert_approx_eq!(m.cofactor(1, 0), -25.0);
     }
 
     #[test]
