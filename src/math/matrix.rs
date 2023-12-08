@@ -1,37 +1,53 @@
-use std::ops::{Mul, MulAssign};
+use std::{
+    ops::{Mul, MulAssign},
+    slice::{Iter, IterMut},
+};
 
-use derive_more::{Index, IndexMut};
+use derive_more::{Index, IndexMut, IntoIterator};
 use float_cmp::{ApproxEq, F64Margin};
 
 use super::{Point, Vector};
 
 /// A Matrix is a square matrix of size N, stored in row major order.
-#[derive(Clone, Copy, Debug, Index, IndexMut)]
+#[derive(Clone, Copy, Debug, Index, IndexMut, IntoIterator)]
 pub struct Matrix<const N: usize>([[f64; N]; N]);
 
 impl<const N: usize> Matrix<N> {
     #[must_use]
-    pub fn identity() -> Self {
-        let mut data = [[0.0; N]; N];
+    fn zero() -> Self {
+        Self([[0.0; N]; N])
+    }
 
-        for (index, row_data) in data.iter_mut().enumerate() {
+    #[must_use]
+    pub fn identity() -> Self {
+        let mut matrix = Self::zero();
+
+        for (index, row_data) in matrix.iter_mut().enumerate() {
             row_data[index] = 1.0;
         }
 
-        Self(data)
+        matrix
     }
 
     #[must_use]
     pub fn transpose(&self) -> Self {
-        let mut data = [[0.0; N]; N];
+        let mut matrix = Self::zero();
 
-        for (row, row_data) in self.0.iter().enumerate() {
+        for (row, row_data) in self.iter().enumerate() {
             for (col, col_data) in row_data.iter().enumerate() {
-                data[col][row] = *col_data;
+                matrix[col][row] = *col_data;
             }
         }
 
-        Self(data)
+        matrix
+    }
+
+    pub fn iter(&self) -> Iter<'_, [f64; N]> {
+        self.0.iter()
+    }
+
+    pub fn iter_mut(&mut self) -> IterMut<'_, [f64; N]> {
+        self.0.iter_mut()
     }
 }
 
@@ -44,10 +60,10 @@ fn submatrix<const N: usize, const M: usize>(
     row: usize,
     col: usize,
 ) -> Matrix<M> {
-    let mut data = [[0.0; M]; M];
+    let mut out_matrix = Matrix::zero();
 
     let mut new_row = 0;
-    for (cur_row, row_data) in matrix.0.iter().enumerate() {
+    for (cur_row, row_data) in matrix.iter().enumerate() {
         if row == cur_row {
             continue;
         }
@@ -58,7 +74,7 @@ fn submatrix<const N: usize, const M: usize>(
                 continue;
             }
 
-            data[new_row][new_col] = *value;
+            out_matrix[new_row][new_col] = *value;
 
             new_col += 1;
         }
@@ -66,7 +82,7 @@ fn submatrix<const N: usize, const M: usize>(
         new_row += 1;
     }
 
-    Matrix(data)
+    out_matrix
 }
 
 impl Matrix<4> {
@@ -94,9 +110,9 @@ impl<const N: usize> Mul for Matrix<N> {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        let mut data = [[0.0; N]; N];
+        let mut matrix = Self::Output::zero();
 
-        for (row, row_data) in data.iter_mut().enumerate() {
+        for (row, row_data) in matrix.iter_mut().enumerate() {
             for (col, value) in row_data.iter_mut().enumerate() {
                 for index in 0..N {
                     *value += self[row][index] * rhs[index][col];
@@ -104,7 +120,7 @@ impl<const N: usize> Mul for Matrix<N> {
             }
         }
 
-        Self(data)
+        matrix
     }
 }
 
@@ -163,13 +179,33 @@ impl Mul<Matrix<4>> for Vector {
     }
 }
 
+impl<'a, const N: usize> IntoIterator for &'a Matrix<N> {
+    type Item = &'a [f64; N];
+
+    type IntoIter = Iter<'a, [f64; N]>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+impl<'a, const N: usize> IntoIterator for &'a mut Matrix<N> {
+    type Item = &'a mut [f64; N];
+
+    type IntoIter = IterMut<'a, [f64; N]>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter_mut()
+    }
+}
+
 impl<const N: usize> ApproxEq for Matrix<N> {
     type Margin = F64Margin;
 
     fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
         let margin = margin.into();
 
-        for (lhs_row, rhs_row) in self.0.iter().zip(other.0.iter()) {
+        for (lhs_row, rhs_row) in self.iter().zip(other.iter()) {
             for (lhs, rhs) in lhs_row.iter().zip(rhs_row.iter()) {
                 if !lhs.approx_eq(*rhs, margin) {
                     return false;
@@ -244,6 +280,11 @@ mod tests {
                 [0.0, 0.0, 1.0, 0.0],
                 [0.0, 0.0, 0.0, 1.0]
             ])
+        );
+
+        assert_approx_eq!(
+            Matrix::<3>::zero(),
+            Matrix([[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]])
         );
     }
 
@@ -466,6 +507,41 @@ mod tests {
 
         assert_approx_eq!(m * v, r);
         assert_approx_eq!(v * m, r);
+    }
+
+    #[test]
+    fn iterating_over_a_matrix() {
+        let m = Matrix([
+            [1.0, 2.0, 3.0, 4.0],
+            [5.0, 6.0, 7.0, 8.0],
+            [9.0, 10.0, 11.0, 12.0],
+            [13.0, 14.0, 15.0, 16.0],
+        ]);
+
+        let mut c = 1.0;
+        for r in m {
+            for v in r {
+                assert_approx_eq!(v, c);
+                c += 1.0;
+            }
+        }
+
+        let mut c = 1.0;
+        for r in &m {
+            for v in r {
+                assert_approx_eq!(*v, c);
+                c += 1.0;
+            }
+        }
+
+        let mut c = 1.0;
+        let mut m = m;
+        for r in &mut m {
+            for v in r {
+                assert_approx_eq!(*v, c);
+                c += 1.0;
+            }
+        }
     }
 
     #[test]
