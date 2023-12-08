@@ -97,6 +97,11 @@ impl Matrix<3> {
     pub fn submatrix(&self, row: usize, col: usize) -> Matrix<2> {
         submatrix(self, row, col)
     }
+
+    #[must_use]
+    pub fn minor(&self, row: usize, col: usize) -> f64 {
+        self.submatrix(row, col).determinant()
+    }
 }
 
 impl Matrix<2> {
@@ -351,6 +356,16 @@ mod tests {
             .submatrix(2, 1),
             Matrix([[-6.0, 1.0, 6.0], [-8.0, 8.0, 6.0], [-7.0, -1.0, 1.0]])
         );
+    }
+
+    #[test]
+    fn calculating_the_minor_of_a_matrix() {
+        let m = Matrix([[3.0, 5.0, 0.0], [2.0, -1.0, -7.0], [6.0, -1.0, 5.0]]);
+
+        let s = m.submatrix(1, 0);
+        assert_approx_eq!(s.determinant(), 25.0);
+
+        assert_approx_eq!(m.minor(1, 0), 25.0);
     }
 
     #[test]
