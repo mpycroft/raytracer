@@ -35,6 +35,54 @@ impl<const N: usize> Matrix<N> {
     }
 }
 
+/// We would really like to be able to define the output of this function as
+/// Matrix<N -1> but until const generic exprs are stabilised in Rust we can't do
+/// that. Easiest solution is to use a helper function like this and then pass
+/// the correct N and M for specific sizes in the appropriate impl Matrix blocks.
+fn submatrix<const N: usize, const M: usize>(
+    matrix: &Matrix<N>,
+    row: usize,
+    col: usize,
+) -> Matrix<M> {
+    let mut data = [[0.0; M]; M];
+
+    let mut new_row = 0;
+    for (cur_row, row_data) in matrix.0.iter().enumerate() {
+        if row == cur_row {
+            continue;
+        }
+
+        let mut new_col = 0;
+        for (cur_col, value) in row_data.iter().enumerate() {
+            if col == cur_col {
+                continue;
+            }
+
+            data[new_row][new_col] = *value;
+
+            new_col += 1;
+        }
+
+        new_row += 1;
+    }
+
+    Matrix(data)
+}
+
+impl Matrix<4> {
+    #[must_use]
+    pub fn submatrix(&self, row: usize, col: usize) -> Matrix<3> {
+        submatrix(self, row, col)
+    }
+}
+
+impl Matrix<3> {
+    #[must_use]
+    pub fn submatrix(&self, row: usize, col: usize) -> Matrix<2> {
+        submatrix(self, row, col)
+    }
+}
+
 impl Matrix<2> {
     #[must_use]
     pub fn determinant(&self) -> f64 {
@@ -242,6 +290,26 @@ mod tests {
 
         let id = Matrix::<3>::identity();
         assert_approx_eq!(id.transpose(), id);
+    }
+
+    #[test]
+    fn calculating_the_submatrix_of_a_matrix() {
+        assert_approx_eq!(
+            Matrix([[1.0, 5.0, 0.0], [-3.0, 2.0, 7.0], [0.0, 6.0, -3.0]])
+                .submatrix(0, 2),
+            Matrix([[-3.0, 2.0], [0.0, 6.0]])
+        );
+
+        assert_approx_eq!(
+            Matrix([
+                [-6.0, 1.0, 1.0, 6.0],
+                [-8.0, 5.0, 8.0, 6.0],
+                [-1.0, 0.0, 8.0, 2.0],
+                [-7.0, 1.0, -1.0, 1.0]
+            ])
+            .submatrix(2, 1),
+            Matrix([[-6.0, 1.0, 6.0], [-8.0, 8.0, 6.0], [-7.0, -1.0, 1.0]])
+        );
     }
 
     #[test]
