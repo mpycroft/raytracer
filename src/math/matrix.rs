@@ -3,10 +3,11 @@ use std::{
     slice::{Iter, IterMut},
 };
 
+use anyhow::{bail, Result};
 use derive_more::{Index, IndexMut, IntoIterator};
 use float_cmp::{ApproxEq, F64Margin};
 
-use super::{Point, Vector};
+use super::{float::approx_eq, Point, Vector};
 
 /// A Matrix is a square matrix of size N, stored in row major order.
 #[derive(Clone, Copy, Debug, Index, IndexMut, IntoIterator)]
@@ -125,6 +126,33 @@ macro_rules! impl_matrix {
 
 impl_matrix!(4);
 impl_matrix!(3);
+
+impl Matrix<4> {
+    /// Attempt to invert the matrix.
+    ///
+    /// # Errors
+    ///
+    /// Will return an error if the matrix cannot be inverted.
+    pub fn invert(&self) -> Result<Self> {
+        let det = self.determinant();
+
+        if approx_eq!(det, 0.0) {
+            bail!(
+                "Tried to invert a Matrix that cannot be inverted - {self:?}"
+            );
+        }
+
+        let mut matrix = Matrix::zero();
+
+        for row in 0..4 {
+            for col in 0..4 {
+                matrix[col][row] = self.cofactor(row, col) / det;
+            }
+        }
+
+        Ok(matrix)
+    }
+}
 
 impl Matrix<2> {
     #[must_use]
@@ -358,6 +386,121 @@ mod tests {
 
         let id = Matrix::<3>::identity();
         assert_approx_eq!(id.transpose(), id);
+    }
+
+    #[test]
+    fn calculating_the_inverse_of_a_matrix() {
+        let m = Matrix([
+            [6.0, 4.0, 4.0, 4.0],
+            [5.0, 5.0, 7.0, 6.0],
+            [4.0, -9.0, 3.0, -7.0],
+            [9.0, 1.0, 7.0, -6.0],
+        ]);
+
+        assert_approx_eq!(m.determinant(), -2120.0);
+        assert!(m.invert().is_ok());
+
+        let m = Matrix([
+            [-5.0, 2.0, 6.0, -8.0],
+            [1.0, -5.0, 1.0, 8.0],
+            [7.0, 7.0, -6.0, -7.0],
+            [1.0, -3.0, 7.0, 4.0],
+        ]);
+
+        let i = m.invert().unwrap();
+
+        assert_approx_eq!(m.determinant(), 532.0);
+        assert_approx_eq!(m.cofactor(2, 3), -160.0);
+        assert_approx_eq!(i[3][2], -160.0 / 532.0);
+        assert_approx_eq!(m.cofactor(3, 2), 105.0);
+        assert_approx_eq!(i[2][3], 105.0 / 532.0);
+
+        assert_approx_eq!(
+            i,
+            Matrix([
+                [0.218_05, 0.451_13, 0.240_6, -0.045_11],
+                [-0.808_27, -1.456_77, -0.443_61, 0.520_68],
+                [-0.078_95, -0.223_68, -0.052_63, 0.197_37],
+                [-0.522_56, -0.813_91, -0.300_75, 0.306_39],
+            ]),
+            epsilon = 0.000_01
+        );
+
+        assert_approx_eq!(
+            Matrix([
+                [8.0, -5.0, 9.0, 2.0],
+                [7.0, 5.0, 6.0, 1.0],
+                [-6.0, 0.0, 9.0, 6.0],
+                [-3.0, 0.0, -9.0, -4.0],
+            ])
+            .invert()
+            .unwrap(),
+            Matrix([
+                [-0.153_85, -0.153_85, -0.282_05, -0.538_46],
+                [-0.076_92, 0.123_08, 0.025_64, 0.030_77],
+                [0.358_97, 0.358_97, 0.435_9, 0.923_08],
+                [-0.692_31, -0.692_31, -0.769_23, -1.92308],
+            ]),
+            epsilon = 0.000_01
+        );
+
+        assert_approx_eq!(
+            Matrix([
+                [9.0, 3.0, 0.0, 9.0],
+                [-5.0, -2.0, -6.0, -3.0],
+                [-4.0, 9.0, 6.0, 4.0],
+                [-7.0, 6.0, 6.0, 2.0],
+            ])
+            .invert()
+            .unwrap(),
+            Matrix([
+                [-0.040_74, -0.077_78, 0.144_44, -0.222_22],
+                [-0.077_78, 0.033_33, 0.366_67, -0.333_33],
+                [-0.029_01, -0.146_3, -0.109_26, 0.129_63],
+                [0.177_78, 0.066_67, -0.266_67, 0.333_33],
+            ]),
+            epsilon = 0.000_01
+        );
+
+        let m1 = Matrix([
+            [3.0, -9.0, 7.0, 3.0],
+            [3.0, -8.0, 2.0, -9.0],
+            [-4.0, 4.0, 4.0, 1.0],
+            [-6.0, 5.0, -1.0, 1.0],
+        ]);
+        let m2 = Matrix([
+            [8.0, 2.0, 2.0, 2.0],
+            [3.0, -1.0, 7.0, 0.0],
+            [7.0, 0.0, 5.0, 4.0],
+            [6.0, -2.0, 0.0, 5.0],
+        ]);
+
+        let r = m1 * m2;
+
+        assert_approx_eq!(r * m2.invert().unwrap(), m1, epsilon = 0.000_01);
+    }
+
+    #[test]
+    fn attempt_to_invert_a_matrix_that_cannot_be_inverted() {
+        let m = Matrix([
+            [-4.0, 2.0, -2.0, -3.0],
+            [9.0, 6.0, 2.0, 6.0],
+            [0.0, -5.0, 1.0, -5.0],
+            [0.0, 0.0, 0.0, 0.0],
+        ]);
+
+        assert_approx_eq!(m.determinant(), 0.0);
+
+        let m = m.invert();
+
+        assert!(m.is_err());
+
+        assert_eq!(
+            m.err().unwrap().to_string(),
+            "Tried to invert a Matrix that cannot be inverted - \
+    Matrix([[-4.0, 2.0, -2.0, -3.0], [9.0, 6.0, 2.0, 6.0], \
+    [0.0, -5.0, 1.0, -5.0], [0.0, 0.0, 0.0, 0.0]])"
+        );
     }
 
     #[test]
