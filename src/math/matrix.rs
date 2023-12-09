@@ -51,69 +51,80 @@ impl<const N: usize> Matrix<N> {
     }
 }
 
-/// We would really like to be able to define the output of this function as
-/// Matrix<N -1> but until const generic exprs are stabilised in Rust we can't do
-/// that. Easiest solution is to use a helper function like this and then pass
-/// the correct N and M for specific sizes in the appropriate impl Matrix blocks.
-fn submatrix<const N: usize, const M: usize>(
-    matrix: &Matrix<N>,
-    row: usize,
-    col: usize,
-) -> Matrix<M> {
-    let mut out_matrix = Matrix::zero();
+/// Implement submatrix, cofactor, minor and determinant functions for a given
+/// matrix size. We would really like to be able to implement these for a given
+/// const N size but unfortunately we can't do so for submatrix until const
+/// generic exprs is stable (output needs to be Matrix<N - 1>). Since we can't
+/// implement submatrix we can't implement minor or cofactor for generic N and
+/// we would also need specialisation in stable so we could have determinant for
+/// N as well as determinant for Matrix<2>. To avoid lots of code duplication
+/// wrap everything in a macro and just implement for Matrix<4> and <3>.
+macro_rules! impl_matrix {
+    ($size:expr) => {
+        impl Matrix<$size> {
+            #[must_use]
+            pub fn submatrix(
+                &self,
+                row: usize,
+                col: usize,
+            ) -> Matrix<{ $size - 1 }> {
+                let mut out_matrix = Matrix::zero();
 
-    let mut new_row = 0;
-    for (cur_row, row_data) in matrix.iter().enumerate() {
-        if row == cur_row {
-            continue;
-        }
+                let mut new_row = 0;
+                for (cur_row, row_data) in self.iter().enumerate() {
+                    if row == cur_row {
+                        continue;
+                    }
 
-        let mut new_col = 0;
-        for (cur_col, value) in row_data.iter().enumerate() {
-            if col == cur_col {
-                continue;
+                    let mut new_col = 0;
+                    for (cur_col, value) in row_data.iter().enumerate() {
+                        if col == cur_col {
+                            continue;
+                        }
+
+                        out_matrix[new_row][new_col] = *value;
+
+                        new_col += 1;
+                    }
+
+                    new_row += 1;
+                }
+
+                out_matrix
             }
 
-            out_matrix[new_row][new_col] = *value;
+            #[must_use]
+            pub fn minor(&self, row: usize, col: usize) -> f64 {
+                self.submatrix(row, col).determinant()
+            }
 
-            new_col += 1;
+            #[must_use]
+            pub fn cofactor(&self, row: usize, col: usize) -> f64 {
+                let minor = self.minor(row, col);
+
+                if (row + col) % 2 != 0 {
+                    return minor * -1.0;
+                }
+
+                minor
+            }
+
+            #[must_use]
+            pub fn determinant(&self) -> f64 {
+                let mut det = 0.0;
+
+                for col in 0..$size {
+                    det += self[0][col] * self.cofactor(0, col);
+                }
+
+                det
+            }
         }
-
-        new_row += 1;
-    }
-
-    out_matrix
+    };
 }
 
-impl Matrix<4> {
-    #[must_use]
-    pub fn submatrix(&self, row: usize, col: usize) -> Matrix<3> {
-        submatrix(self, row, col)
-    }
-}
-
-impl Matrix<3> {
-    #[must_use]
-    pub fn submatrix(&self, row: usize, col: usize) -> Matrix<2> {
-        submatrix(self, row, col)
-    }
-
-    #[must_use]
-    pub fn minor(&self, row: usize, col: usize) -> f64 {
-        self.submatrix(row, col).determinant()
-    }
-
-    #[must_use]
-    pub fn cofactor(&self, row: usize, col: usize) -> f64 {
-        let minor = self.minor(row, col);
-
-        if (row + col) % 2 != 0 {
-            return minor * -1.0;
-        }
-
-        minor
-    }
-}
+impl_matrix!(4);
+impl_matrix!(3);
 
 impl Matrix<2> {
     #[must_use]
@@ -390,11 +401,31 @@ mod tests {
     }
 
     #[test]
-    fn calculating_the_determinant_of_a_2x2_matrix() {
+    fn calculating_the_determinant_of_a_matrix() {
         assert_approx_eq!(
             Matrix([[1.0, 5.0], [-3.0, 2.0]]).determinant(),
             17.0
         );
+
+        let m = Matrix([[1.0, 2.0, 6.0], [-5.0, 8.0, -4.0], [2.0, 6.0, 4.0]]);
+
+        assert_approx_eq!(m.cofactor(0, 0), 56.0);
+        assert_approx_eq!(m.cofactor(0, 1), 12.0);
+        assert_approx_eq!(m.cofactor(0, 2), -46.0);
+        assert_approx_eq!(m.determinant(), -196.0);
+
+        let m = Matrix([
+            [-2.0, -8.0, 3.0, 5.0],
+            [-3.0, 1.0, 7.0, 3.0],
+            [1.0, 2.0, -9.0, 6.0],
+            [-6.0, 7.0, 7.0, -9.0],
+        ]);
+
+        assert_approx_eq!(m.cofactor(0, 0), 690.0);
+        assert_approx_eq!(m.cofactor(0, 1), 447.0);
+        assert_approx_eq!(m.cofactor(0, 2), 210.0);
+        assert_approx_eq!(m.cofactor(0, 3), 51.0);
+        assert_approx_eq!(m.determinant(), -4071.0);
     }
 
     #[test]
