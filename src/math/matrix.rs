@@ -151,8 +151,7 @@ impl Matrix<4> {
 
     #[must_use]
     pub fn rotate_x(radians: f64) -> Self {
-        let cos = radians.cos();
-        let sin = radians.sin();
+        let (sin, cos) = radians.sin_cos();
 
         Self([
             [1.0, 0.0, 0.0, 0.0],
@@ -164,8 +163,7 @@ impl Matrix<4> {
 
     #[must_use]
     pub fn rotate_y(radians: f64) -> Self {
-        let cos = radians.cos();
-        let sin = radians.sin();
+        let (sin, cos) = radians.sin_cos();
 
         Self([
             [cos, 0.0, sin, 0.0],
@@ -177,8 +175,7 @@ impl Matrix<4> {
 
     #[must_use]
     pub fn rotate_z(radians: f64) -> Self {
-        let cos = radians.cos();
-        let sin = radians.sin();
+        let (sin, cos) = radians.sin_cos();
 
         Self([
             [cos, -sin, 0.0, 0.0],

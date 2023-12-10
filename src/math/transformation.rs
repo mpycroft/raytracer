@@ -19,11 +19,11 @@ impl Transformation {
     }
 
     #[must_use]
-    pub fn apply<T>(&self, object: T) -> <Matrix<4> as Mul<T>>::Output
+    pub fn apply<T: Copy>(&self, object: &T) -> <Matrix<4> as Mul<T>>::Output
     where
         Matrix<4>: Mul<T>,
     {
-        self.0 * object
+        self.0 * *object
     }
 
     #[must_use]
@@ -117,26 +117,26 @@ mod tests {
         let t =
             Transformation::new().translate(1.0, 2.0, 3.0).scale(2.0, 2.0, 2.0);
 
-        assert_approx_eq!(t.apply(p), o);
+        assert_approx_eq!(t.apply(&p), o);
 
         assert_approx_eq!(
             Transformation::new()
                 .translate(1.0, 2.0, 3.0)
                 .scale(2.0, 2.0, 2.0)
-                .apply(p),
+                .apply(&p),
             o
         );
 
         let mut t = Transformation::new();
         t = t.translate(1.0, 2.0, 3.0).scale(2.0, 2.0, 2.0);
 
-        assert_approx_eq!(t.apply(p), o);
+        assert_approx_eq!(t.apply(&p), o);
 
         let mut t = Transformation::new();
         t = t.translate(1.0, 2.0, 3.0);
         t = t.scale(2.0, 2.0, 2.0);
 
-        assert_approx_eq!(t.apply(p), o);
+        assert_approx_eq!(t.apply(&p), o);
     }
 
     #[test]
@@ -144,10 +144,10 @@ mod tests {
         let p = Point::new(1.5, 2.5, 3.5);
 
         let t = Transformation::new();
-        assert_approx_eq!(t.apply(p), p);
+        assert_approx_eq!(t.apply(&p), p);
 
         assert_approx_eq!(
-            t.scale(2.0, 2.0, 2.0).apply(p),
+            t.scale(2.0, 2.0, 2.0).apply(&p),
             Point::new(3.0, 5.0, 7.0)
         );
     }
@@ -160,7 +160,7 @@ mod tests {
                 .translate(1.0, 1.0, 1.0)
                 .scale(2.5, 2.5, 2.5)
                 .translate(-2.0, 3.0, 9.5)
-                .apply(Point::new(0.0, 0.0, 1.0)),
+                .apply(&Point::new(0.0, 0.0, 1.0)),
             Point::new(3.0, 5.5, 12.0)
         );
     }
