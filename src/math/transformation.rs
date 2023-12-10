@@ -26,6 +26,26 @@ impl Transformation {
         self.0 * *object
     }
 
+    /// Unlike the other function on `Transform`, `invert` is not intended for
+    /// chaining, instead it returns a new `Transform` with the inverted matrix.
+    ///
+    /// # Panics
+    ///
+    /// In general the simple transformation matrices we use should always be
+    /// invertible, therefore we just panic if we are unable to invert.
+    #[must_use]
+    pub fn invert(&self) -> Self {
+        Self(self.0.invert().unwrap_or_else(|err| panic!("{err}")))
+    }
+
+    /// Like the `invert` function `transpose` does not chain like other
+    /// functions, instead it returns a new `Transform` with the transposed
+    /// matrix.
+    #[must_use]
+    pub fn transpose(&self) -> Self {
+        Self(self.0.transpose())
+    }
+
     #[must_use]
     pub fn translate(mut self, x: f64, y: f64, z: f64) -> Self {
         self.0 = Matrix::translate(x, y, z) * self.0;
@@ -98,7 +118,7 @@ mod tests {
     use std::f64::consts::{FRAC_PI_2, FRAC_PI_6, PI};
 
     use super::*;
-    use crate::math::{float::*, Point};
+    use crate::math::{float::*, Point, Vector};
 
     #[test]
     fn creating_a_transformation() {
@@ -162,6 +182,45 @@ mod tests {
                 .translate(-2.0, 3.0, 9.5)
                 .apply(&Point::new(0.0, 0.0, 1.0)),
             Point::new(3.0, 5.5, 12.0)
+        );
+    }
+
+    #[test]
+    fn inverting_a_transform() {
+        let v = Vector::new(5.1, -2.3, 9.52);
+
+        let t = Transformation::new()
+            .rotate_x(1.5)
+            .scale(1.0, 2.0, 4.3)
+            .translate(0.0, 1.0, 2.3)
+            .rotate_y(1.0);
+
+        assert_approx_eq!(t.invert().apply(&t.apply(&v)), v);
+    }
+
+    #[test]
+    #[should_panic(expected = "\
+Tried to invert a Matrix that cannot be inverted - Matrix<4>([
+    [12.0, 1.0, 2.0, 0.0],
+    [0.0, 0.0, 0.0, 0.0],
+    [-2.0, 0.0, 1.0, 0.0],
+    [-1.5, 9.3, 0.0, 2.0],
+])")]
+    fn inverting_a_non_invertible_transform() {
+        let _ = Transformation(Matrix([
+            [12.0, 1.0, 2.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0],
+            [-2.0, 0.0, 1.0, 0.0],
+            [-1.5, 9.3, 0.0, 2.0],
+        ]))
+        .invert();
+    }
+
+    #[test]
+    fn transposing_a_transform() {
+        assert_approx_eq!(
+            Transformation::new().translate(2.5, 3.1, -1.0).transpose().0,
+            Matrix::translate(2.5, 3.1, -1.0).transpose()
         );
     }
 
