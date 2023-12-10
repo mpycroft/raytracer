@@ -611,6 +611,34 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::many_single_char_names)]
+    fn chaining_multiple_transformations() {
+        let o = Point::new(1.0, 0.0, 1.0);
+
+        let r = Matrix::rotate_x(FRAC_PI_2);
+        let s = Matrix::scale(5.0, 5.0, 5.0);
+        let t = Matrix::translate(10.0, 5.0, 7.0);
+
+        let p = r * o;
+        assert_approx_eq!(p, Point::new(1.0, -1.0, 0.0));
+
+        let p = s * p;
+        assert_approx_eq!(
+            p,
+            Point::new(5.0, -5.0, 0.0),
+            epsilon = 0.000_000_001
+        );
+
+        let p = t * p;
+        assert_approx_eq!(p, Point::new(15.0, 0.0, 7.0));
+
+        let m = t * s * r;
+        assert_approx_eq!(m * o, p);
+
+        assert_approx_eq!(m.invert().unwrap() * p, o);
+    }
+
+    #[test]
     fn calculating_the_inverse_of_a_matrix() {
         let m = Matrix([
             [6.0, 4.0, 4.0, 4.0],
