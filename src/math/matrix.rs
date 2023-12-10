@@ -11,7 +11,7 @@ use super::{float::approx_eq, Point, Vector};
 
 /// A Matrix is a square matrix of size N, stored in row major order.
 #[derive(Clone, Copy, Debug, Index, IndexMut, IntoIterator)]
-pub struct Matrix<const N: usize>([[f64; N]; N]);
+pub struct Matrix<const N: usize>(pub [[f64; N]; N]);
 
 impl<const N: usize> Matrix<N> {
     #[must_use]
