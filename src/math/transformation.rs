@@ -4,6 +4,26 @@ use float_cmp::{ApproxEq, F64Margin};
 
 use super::matrix::Matrix;
 
+/// The `Transformable` trait describes how to apply a `Transformation` to any given
+/// object, implementing this allows us to .apply() a `Transformation` to an object
+/// via this trait. This is really just some syntactic sugar so we always apply
+/// Transform's to objects rather than transform objects with a given Transform.
+pub trait Transformable<'a> {
+    fn apply(&'a self, transformation: &Transformation) -> Self;
+}
+
+/// Blanket implementation of Transformable for objects that can be multiplied
+/// by a matrix e.g. Points and Vectors.
+impl<'a, T> Transformable<'a> for T
+where
+    Matrix<4>: Mul<T, Output = T>,
+    T: 'a + Copy,
+{
+    fn apply(&'a self, transformation: &Transformation) -> Self {
+        transformation.0 * *self
+    }
+}
+
 /// A `Transformation` is a wrapper around a 4 dimensional matrix allowing a
 /// more ergonomic use of transformations. Transformations can be chained in an
 /// obvious way e.g. `Transformation::new().rotate_x(2.3).scale(1.0, 0.5, 1.0)`
@@ -35,11 +55,8 @@ impl Transformation {
     }
 
     #[must_use]
-    pub fn apply<T: Copy>(&self, object: &T) -> <Matrix<4> as Mul<T>>::Output
-    where
-        Matrix<4>: Mul<T>,
-    {
-        self.0 * *object
+    pub fn apply<'a, T: Transformable<'a>>(&self, object: &'a T) -> T {
+        object.apply(self)
     }
 
     /// Unlike the other function on `Transform`, `invert` is not intended for
@@ -140,11 +157,16 @@ mod tests {
 
         let t = Transformation::new();
         assert_approx_eq!(t.apply(&p), p);
+        assert_approx_eq!(p.apply(&t), p);
 
-        assert_approx_eq!(
-            t.scale(2.0, 2.0, 2.0).apply(&p),
-            Point::new(3.0, 5.0, 7.0)
-        );
+        let t = t.scale(2.0, 2.0, 2.0);
+
+        assert_approx_eq!(t.apply(&p), Point::new(3.0, 5.0, 7.0));
+
+        let v1 = Vector::new(1.5, 2.5, 3.5);
+        let v2 = Vector::new(3.0, 5.0, 7.0);
+        assert_approx_eq!(t.apply(&v1), v2);
+        assert_approx_eq!(v1.apply(&t), v2);
     }
 
     #[test]
