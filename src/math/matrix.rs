@@ -162,6 +162,19 @@ impl Matrix<4> {
         ])
     }
 
+    #[must_use]
+    pub fn rotate_y(radians: f64) -> Self {
+        let cos = radians.cos();
+        let sin = radians.sin();
+
+        Self([
+            [cos, 0.0, sin, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+            [-sin, 0.0, cos, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ])
+    }
+
     /// Attempt to invert the matrix.
     ///
     /// # Errors
@@ -489,6 +502,29 @@ mod tests {
         assert_approx_eq!(
             half.invert().unwrap() * p,
             Point::new(0.0, sqrt_2_div_2, -sqrt_2_div_2)
+        );
+    }
+
+    #[test]
+    fn multiplying_by_a_rotate_y_matrix() {
+        let p = Point::new(0.0, 0.0, 1.0);
+
+        let half = Matrix::rotate_y(FRAC_PI_4);
+
+        let sqrt_2_div_2 = SQRT_2 / 2.0;
+        assert_approx_eq!(
+            half * p,
+            Point::new(sqrt_2_div_2, 0.0, sqrt_2_div_2)
+        );
+
+        assert_approx_eq!(
+            Matrix::rotate_y(FRAC_PI_2) * Vector::new(0.0, 0.0, 1.0),
+            Vector::new(1.0, 0.0, 0.0)
+        );
+
+        assert_approx_eq!(
+            half.invert().unwrap() * p,
+            Point::new(-sqrt_2_div_2, 0.0, sqrt_2_div_2)
         );
     }
 
