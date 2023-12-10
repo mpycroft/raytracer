@@ -129,6 +129,16 @@ impl_matrix!(4);
 impl_matrix!(3);
 
 impl Matrix<4> {
+    #[must_use]
+    pub fn translate(x: f64, y: f64, z: f64) -> Self {
+        Self([
+            [1.0, 0.0, 0.0, x],
+            [0.0, 1.0, 0.0, y],
+            [0.0, 0.0, 1.0, z],
+            [0.0, 0.0, 0.0, 1.0],
+        ])
+    }
+
     /// Attempt to invert the matrix.
     ///
     /// # Errors
@@ -399,6 +409,19 @@ mod tests {
 
         let id = Matrix::<3>::identity();
         assert_approx_eq!(id.transpose(), id);
+    }
+
+    #[test]
+    fn multiplying_by_a_translation_matrix() {
+        let m = Matrix::translate(5.0, -3.0, 2.0);
+
+        let p = Point::new(-3.0, 4.0, 5.0);
+        assert_approx_eq!(m * p, Point::new(2.0, 1.0, 7.0));
+
+        assert_approx_eq!(m.invert().unwrap() * p, Point::new(-8.0, 7.0, 3.0));
+
+        let v = Vector::new(-3.0, 4.0, 5.0);
+        assert_approx_eq!(m * v, v);
     }
 
     #[test]
