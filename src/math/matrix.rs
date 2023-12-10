@@ -188,6 +188,16 @@ impl Matrix<4> {
         ])
     }
 
+    #[must_use]
+    pub fn shear(xy: f64, xz: f64, yx: f64, yz: f64, zx: f64, zy: f64) -> Self {
+        Self([
+            [1.0, xy, xz, 0.0],
+            [yx, 1.0, yz, 0.0],
+            [zx, zy, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ])
+    }
+
     /// Attempt to invert the matrix.
     ///
     /// # Errors
@@ -561,6 +571,42 @@ mod tests {
         assert_approx_eq!(
             half.invert().unwrap() * p,
             Point::new(sqrt_2_div_2, sqrt_2_div_2, 0.0)
+        );
+    }
+
+    #[test]
+    fn multiplying_by_a_shearing_matrix() {
+        let p = Point::new(2.0, 3.0, 4.0);
+
+        assert_approx_eq!(
+            Matrix::shear(1.0, 0.0, 0.0, 0.0, 0.0, 0.0) * p,
+            Point::new(5.0, 3.0, 4.0)
+        );
+
+        assert_approx_eq!(
+            Matrix::shear(0.0, 1.0, 0.0, 0.0, 0.0, 0.0) * p,
+            Point::new(6.0, 3.0, 4.0)
+        );
+
+        assert_approx_eq!(
+            Matrix::shear(0.0, 0.0, 1.0, 0.0, 0.0, 0.0) * p,
+            Point::new(2.0, 5.0, 4.0)
+        );
+
+        assert_approx_eq!(
+            Matrix::shear(0.0, 0.0, 0.0, 1.0, 0.0, 0.0) * p,
+            Point::new(2.0, 7.0, 4.0)
+        );
+
+        assert_approx_eq!(
+            Matrix::shear(0.0, 0.0, 0.0, 0.0, 1.0, 0.0) * p,
+            Point::new(2.0, 3.0, 6.0)
+        );
+
+        assert_approx_eq!(
+            Matrix::shear(0.0, 0.0, 0.0, 0.0, 0.0, 1.0)
+                * Vector::new(2.0, 3.0, 4.0),
+            Vector::new(2.0, 3.0, 7.0)
         );
     }
 
