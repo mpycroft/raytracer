@@ -8,4 +8,5 @@ mod transformation;
 mod vector;
 
 pub use point::Point;
+pub use transformation::Transformation;
 pub use vector::Vector;
