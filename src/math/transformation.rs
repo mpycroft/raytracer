@@ -12,6 +12,22 @@ use super::matrix::Matrix;
 #[derive(Clone, Copy, Debug)]
 pub struct Transformation(pub Matrix<4>);
 
+/// Generate `Transformation` chain functions and avoid duplicating trivial
+/// code.
+macro_rules! add_transformation_fn {
+    ($name:ident($($arg:ident: $type:ty),+)) => {
+        // We don't need to actually use the return value all the time for these
+        // functions as they mutate as well.
+        #[must_use]
+        pub fn $name(mut self, $($arg: $type),+) -> Self {
+            self.0 = Matrix::$name($($arg),+) * self.0;
+
+            self
+        }
+
+    };
+}
+
 impl Transformation {
     #[must_use]
     pub fn new() -> Self {
@@ -46,55 +62,14 @@ impl Transformation {
         Self(self.0.transpose())
     }
 
-    #[must_use]
-    pub fn translate(mut self, x: f64, y: f64, z: f64) -> Self {
-        self.0 = Matrix::translate(x, y, z) * self.0;
-
-        self
-    }
-
-    #[must_use]
-    pub fn scale(mut self, x: f64, y: f64, z: f64) -> Self {
-        self.0 = Matrix::scale(x, y, z) * self.0;
-
-        self
-    }
-
-    #[must_use]
-    pub fn rotate_x(mut self, radians: f64) -> Self {
-        self.0 = Matrix::rotate_x(radians) * self.0;
-
-        self
-    }
-
-    #[must_use]
-    pub fn rotate_y(mut self, radians: f64) -> Self {
-        self.0 = Matrix::rotate_y(radians) * self.0;
-
-        self
-    }
-
-    #[must_use]
-    pub fn rotate_z(mut self, radians: f64) -> Self {
-        self.0 = Matrix::rotate_z(radians) * self.0;
-
-        self
-    }
-
-    #[must_use]
-    pub fn shear(
-        mut self,
-        xy: f64,
-        xz: f64,
-        yx: f64,
-        yz: f64,
-        zx: f64,
-        zy: f64,
-    ) -> Self {
-        self.0 = Matrix::shear(xy, xz, yx, yz, zx, zy) * self.0;
-
-        self
-    }
+    add_transformation_fn!(translate(x: f64, y: f64, z:f64));
+    add_transformation_fn!(scale(x: f64, y: f64, z: f64));
+    add_transformation_fn!(rotate_x(radians: f64));
+    add_transformation_fn!(rotate_y(radians: f64));
+    add_transformation_fn!(rotate_z(radians: f64));
+    add_transformation_fn!(shear(
+        xy: f64, xz: f64, yx: f64, yz: f64, zx: f64, zy: f64
+    ));
 }
 
 impl Default for Transformation {
