@@ -139,6 +139,16 @@ impl Matrix<4> {
         ])
     }
 
+    #[must_use]
+    pub fn scale(x: f64, y: f64, z: f64) -> Self {
+        Self([
+            [x, 0.0, 0.0, 0.0],
+            [0.0, y, 0.0, 0.0],
+            [0.0, 0.0, z, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ])
+    }
+
     /// Attempt to invert the matrix.
     ///
     /// # Errors
@@ -422,6 +432,26 @@ mod tests {
 
         let v = Vector::new(-3.0, 4.0, 5.0);
         assert_approx_eq!(m * v, v);
+    }
+
+    #[test]
+    fn multiplying_by_a_scaling_matrix() {
+        let m = Matrix::scale(2.0, 3.0, 4.0);
+
+        assert_approx_eq!(
+            m * Point::new(-4.0, 6.0, 8.0),
+            Point::new(-8.0, 18.0, 32.0)
+        );
+
+        let v = Vector::new(-4.0, 6.0, 8.0);
+        assert_approx_eq!(m * v, Vector::new(-8.0, 18.0, 32.0));
+
+        assert_approx_eq!(m.invert().unwrap() * v, Vector::new(-2.0, 2.0, 2.0));
+
+        assert_approx_eq!(
+            Matrix::scale(-1.0, 1.0, 1.0) * Point::new(2.0, 3.0, 4.0),
+            Point::new(-2.0, 3.0, 4.0)
+        );
     }
 
     #[test]
