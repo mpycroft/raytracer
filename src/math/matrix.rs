@@ -149,6 +149,19 @@ impl Matrix<4> {
         ])
     }
 
+    #[must_use]
+    pub fn rotate_x(radians: f64) -> Self {
+        let cos = radians.cos();
+        let sin = radians.sin();
+
+        Self([
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, cos, -sin, 0.0],
+            [0.0, sin, cos, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ])
+    }
+
     /// Attempt to invert the matrix.
     ///
     /// # Errors
@@ -307,6 +320,8 @@ impl<const N: usize> ApproxEq for Matrix<N> {
 
 #[cfg(test)]
 mod tests {
+    use std::f64::consts::{FRAC_PI_2, FRAC_PI_4, SQRT_2};
+
     use super::*;
     use crate::math::float::*;
 
@@ -451,6 +466,29 @@ mod tests {
         assert_approx_eq!(
             Matrix::scale(-1.0, 1.0, 1.0) * Point::new(2.0, 3.0, 4.0),
             Point::new(-2.0, 3.0, 4.0)
+        );
+    }
+
+    #[test]
+    fn multiplying_by_a_rotate_x_matrix() {
+        let p = Point::new(0.0, 1.0, 0.0);
+
+        let half = Matrix::rotate_x(FRAC_PI_4);
+
+        let sqrt_2_div_2 = SQRT_2 / 2.0;
+        assert_approx_eq!(
+            half * p,
+            Point::new(0.0, sqrt_2_div_2, sqrt_2_div_2)
+        );
+
+        assert_approx_eq!(
+            Matrix::rotate_x(FRAC_PI_2) * Vector::new(0.0, 1.0, 0.0),
+            Vector::new(0.0, 0.0, 1.0)
+        );
+
+        assert_approx_eq!(
+            half.invert().unwrap() * p,
+            Point::new(0.0, sqrt_2_div_2, -sqrt_2_div_2)
         );
     }
 
