@@ -4,6 +4,7 @@
 pub mod float;
 pub mod matrix;
 mod point;
+mod transformation;
 mod vector;
 
 pub use point::Point;
