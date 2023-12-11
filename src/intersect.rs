@@ -37,6 +37,26 @@ impl<'a> IntersectionList<'a> {
     pub fn new() -> Self {
         Self(Vec::new())
     }
+
+    /// Find the intersection with the smallest positive t value.
+    ///
+    /// # Panics
+    ///
+    /// Will panic if any t values are NaN
+    #[must_use]
+    pub fn hit(&self) -> Option<Intersection<'a>> {
+        self.0
+            .iter()
+            .filter(|val| val.t > 0.0)
+            .min_by(|a, b| a.t.partial_cmp(&b.t).unwrap())
+            .copied()
+    }
+}
+
+impl<'a> Default for IntersectionList<'a> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[cfg(test)]
@@ -86,6 +106,51 @@ mod tests {
         l[0].t = 0.0;
 
         assert_approx_eq!(l[0].t, 0.0);
+    }
+
+    #[test]
+    fn the_hit_when_all_intersections_are_positive() {
+        let i1 = Intersection::new(&Sphere, 1.0);
+        let i2 = Intersection::new(&Sphere, 2.0);
+
+        let h = IntersectionList::from(vec![i1, i2]).hit();
+
+        assert!(h.is_some());
+        assert_approx_eq!(h.unwrap(), i1);
+    }
+
+    #[test]
+    fn the_hit_when_some_intersections_are_negative() {
+        let i1 = Intersection::new(&Sphere, 1.0);
+        let i2 = Intersection::new(&Sphere, 1.0);
+
+        let h = IntersectionList::from(vec![i1, i2]).hit();
+
+        assert!(h.is_some());
+        assert_approx_eq!(h.unwrap(), i1);
+    }
+
+    #[test]
+    fn the_hit_when_all_intersections_are_negative() {
+        let i1 = Intersection::new(&Sphere, -2.0);
+        let i2 = Intersection::new(&Sphere, -1.0);
+
+        let h = IntersectionList::from(vec![i1, i2]).hit();
+
+        assert!(h.is_none());
+    }
+
+    #[test]
+    fn the_hit_is_always_the_lowest_nonnegative_intersection() {
+        let i1 = Intersection::new(&Sphere, 5.0);
+        let i2 = Intersection::new(&Sphere, 7.0);
+        let i3 = Intersection::new(&Sphere, -3.0);
+        let i4 = Intersection::new(&Sphere, 2.0);
+
+        let h = IntersectionList::from(vec![i1, i2, i3, i4]).hit();
+
+        assert!(h.is_some());
+        assert_approx_eq!(h.unwrap(), i4);
     }
 
     #[test]
