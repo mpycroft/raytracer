@@ -51,3 +51,8 @@ information in the type we shouldn't hit any fundamental issues.
 * We may need to revisit our use of 3 element points and vectors if we ever look
   into SIMD style operations where we would actually want x, y, z, w elements
   for speed.
+* Matrices are currently Copy for convenience but probably shouldn't be since
+  they are generally 16 f64, however removing copy makes them a bit more
+  annoying to use (e.g. implementing MulAssign, checks have to be a references,
+  etc.). If we find that we spend a lot of time copying we may want to revisit
+  this later.
