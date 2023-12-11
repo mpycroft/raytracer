@@ -4,7 +4,7 @@
 pub mod float;
 mod matrix;
 mod point;
-mod ray;
+pub mod ray;
 mod transformation;
 mod vector;
 

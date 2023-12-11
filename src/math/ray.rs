@@ -6,8 +6,15 @@ use super::{float::impl_approx_eq, point::Point, vector::Vector};
 /// pointing in some direction.
 #[derive(Clone, Copy, Debug, Constructor)]
 pub struct Ray {
-    origin: Point,
-    direction: Vector,
+    pub origin: Point,
+    pub direction: Vector,
+}
+
+impl Ray {
+    #[must_use]
+    pub fn position(&self, t: f64) -> Point {
+        self.origin + self.direction * t
+    }
 }
 
 impl_approx_eq!(Ray { origin, direction });
@@ -26,6 +33,16 @@ mod tests {
 
         assert_approx_eq!(r.origin, p);
         assert_approx_eq!(r.direction, v);
+    }
+
+    #[test]
+    fn computing_a_point_from_a_distance() {
+        let r = Ray::new(Point::new(2.0, 3.0, 4.0), Vector::new(1.0, 0.0, 0.0));
+
+        assert_approx_eq!(r.position(0.0), Point::new(2.0, 3.0, 4.0));
+        assert_approx_eq!(r.position(1.0), Point::new(3.0, 3.0, 4.0));
+        assert_approx_eq!(r.position(-1.0), Point::new(1.0, 3.0, 4.0));
+        assert_approx_eq!(r.position(2.5), Point::new(4.5, 3.0, 4.0));
     }
 
     #[test]
