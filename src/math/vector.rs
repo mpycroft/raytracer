@@ -20,6 +20,21 @@ pub struct Vector {
 
 impl Vector {
     #[must_use]
+    pub fn x_axis() -> Self {
+        Self::new(1.0, 0.0, 0.0)
+    }
+
+    #[must_use]
+    pub fn y_axis() -> Self {
+        Self::new(0.0, 1.0, 0.0)
+    }
+
+    #[must_use]
+    pub fn z_axis() -> Self {
+        Self::new(0.0, 0.0, 1.0)
+    }
+
+    #[must_use]
     pub fn magnitude(&self) -> f64 {
         (self.dot(self)).sqrt()
     }
@@ -72,13 +87,17 @@ mod tests {
         assert_approx_eq!(p.x, 2.8);
         assert_approx_eq!(p.y, 4.0);
         assert_approx_eq!(p.z, -0.7);
+
+        assert_approx_eq!(Vector::x_axis(), Vector::new(1.0, 0.0, 0.0));
+        assert_approx_eq!(Vector::y_axis(), Vector::new(0.0, 1.0, 0.0));
+        assert_approx_eq!(Vector::z_axis(), Vector::new(0.0, 0.0, 1.0));
     }
 
     #[test]
     fn computing_the_magnitude_of_a_vector() {
-        assert_approx_eq!(Vector::new(1.0, 0.0, 0.0).magnitude(), 1.0);
-        assert_approx_eq!(Vector::new(0.0, 1.0, 0.0).magnitude(), 1.0);
-        assert_approx_eq!(Vector::new(0.0, 0.0, 1.0).magnitude(), 1.0);
+        assert_approx_eq!(Vector::x_axis().magnitude(), 1.0);
+        assert_approx_eq!(Vector::y_axis().magnitude(), 1.0);
+        assert_approx_eq!(Vector::z_axis().magnitude(), 1.0);
 
         assert_approx_eq!(
             Vector::new(1.0, 2.0, 3.0).magnitude(),
@@ -94,7 +113,7 @@ mod tests {
     fn normalising_a_vector() {
         assert_approx_eq!(
             Vector::new(4.0, 0.0, 0.0).normalise(),
-            Vector::new(1.0, 0.0, 0.0)
+            Vector::x_axis()
         );
 
         let v = Vector::new(1.0, 2.0, 3.0).normalise();

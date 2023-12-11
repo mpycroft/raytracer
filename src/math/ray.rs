@@ -37,7 +37,7 @@ mod tests {
 
     #[test]
     fn computing_a_point_from_a_distance() {
-        let r = Ray::new(Point::new(2.0, 3.0, 4.0), Vector::new(1.0, 0.0, 0.0));
+        let r = Ray::new(Point::new(2.0, 3.0, 4.0), Vector::x_axis());
 
         assert_approx_eq!(r.position(0.0), Point::new(2.0, 3.0, 4.0));
         assert_approx_eq!(r.position(1.0), Point::new(3.0, 3.0, 4.0));

@@ -9,7 +9,7 @@ pub struct Sphere;
 
 impl Intersectable for Sphere {
     fn intersect(&self, ray: &Ray) -> Option<Vec<f64>> {
-        let sphere_to_ray = ray.origin - Point::new(0.0, 0.0, 0.0);
+        let sphere_to_ray = ray.origin - Point::origin();
 
         let a = ray.direction.dot(&ray.direction);
         let b = 2.0 * ray.direction.dot(&sphere_to_ray);
@@ -38,8 +38,7 @@ mod tests {
 
     #[test]
     fn a_ray_intersects_a_sphere_at_two_points() {
-        let r =
-            Ray::new(Point::new(0.0, 0.0, -5.0), Vector::new(0.0, 0.0, 1.0));
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
 
         let s = Sphere;
 
@@ -55,8 +54,7 @@ mod tests {
 
     #[test]
     fn a_ray_intersects_a_sphere_at_a_tangent() {
-        let r =
-            Ray::new(Point::new(0.0, 1.0, -5.0), Vector::new(0.0, 0.0, 1.0));
+        let r = Ray::new(Point::new(0.0, 1.0, -5.0), Vector::z_axis());
 
         let s = Sphere;
 
@@ -72,8 +70,7 @@ mod tests {
 
     #[test]
     fn a_ray_misses_a_sphere() {
-        let r =
-            Ray::new(Point::new(0.0, 2.0, -5.0), Vector::new(0.0, 0.0, 1.0));
+        let r = Ray::new(Point::new(0.0, 2.0, -5.0), Vector::z_axis());
 
         let s = Sphere;
 
@@ -83,7 +80,7 @@ mod tests {
 
     #[test]
     fn a_ray_originates_inside_a_sphere() {
-        let r = Ray::new(Point::new(0.0, 0.0, 0.0), Vector::new(0.0, 0.0, 1.0));
+        let r = Ray::new(Point::origin(), Vector::z_axis());
 
         let s = Sphere;
 
@@ -99,7 +96,7 @@ mod tests {
 
     #[test]
     fn a_sphere_is_behind_a_ray() {
-        let r = Ray::new(Point::new(0.0, 0.0, 5.0), Vector::new(0.0, 0.0, 1.0));
+        let r = Ray::new(Point::new(0.0, 0.0, 5.0), Vector::z_axis());
 
         let s = Sphere;
 

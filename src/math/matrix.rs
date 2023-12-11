@@ -515,7 +515,7 @@ mod tests {
         );
 
         assert_approx_eq!(
-            Matrix::rotate_x(FRAC_PI_2) * Vector::new(0.0, 1.0, 0.0),
+            Matrix::rotate_x(FRAC_PI_2) * Vector::y_axis(),
             Vector::new(0.0, 0.0, 1.0)
         );
 
@@ -538,7 +538,7 @@ mod tests {
         );
 
         assert_approx_eq!(
-            Matrix::rotate_y(FRAC_PI_2) * Vector::new(0.0, 0.0, 1.0),
+            Matrix::rotate_y(FRAC_PI_2) * Vector::z_axis(),
             Vector::new(1.0, 0.0, 0.0)
         );
 
@@ -561,7 +561,7 @@ mod tests {
         );
 
         assert_approx_eq!(
-            Matrix::rotate_z(FRAC_PI_2) * Vector::new(0.0, 1.0, 0.0),
+            Matrix::rotate_z(FRAC_PI_2) * Vector::y_axis(),
             Vector::new(-1.0, 0.0, 0.0)
         );
 

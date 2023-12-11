@@ -13,6 +13,13 @@ pub struct Point {
     pub z: f64,
 }
 
+impl Point {
+    #[must_use]
+    pub fn origin() -> Self {
+        Self::new(0.0, 0.0, 0.0)
+    }
+}
+
 impl Add<Vector> for Point {
     type Output = Self;
 
@@ -75,6 +82,8 @@ mod tests {
         assert_approx_eq!(p.x, 4.3);
         assert_approx_eq!(p.y, -4.2);
         assert_approx_eq!(p.z, 3.1);
+
+        assert_approx_eq!(Point::origin(), Point::new(0.0, 0.0, 0.0));
     }
 
     #[test]
