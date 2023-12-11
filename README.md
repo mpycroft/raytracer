@@ -60,3 +60,5 @@ information in the type we shouldn't hit any fundamental issues.
   vector of values for a minimum using iterators. May need to check later on if
   its more efficient to use a different data structure or store elements sorted,
   etc. when we have lots of hits.
+* We only store the transformation matrix with each object, we may consider
+  precomputing the inverted matrix as well.

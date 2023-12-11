@@ -2,7 +2,7 @@ use derive_more::Constructor;
 
 use crate::{
     intersect::{Intersectable, Intersection, IntersectionList},
-    math::{float::impl_approx_eq, Point, Ray, Transformation},
+    math::{float::impl_approx_eq, Point, Ray, Transformable, Transformation},
 };
 
 /// A Sphere is a unit sphere centred at the origin (0, 0, 0).
@@ -13,6 +13,8 @@ pub struct Sphere {
 
 impl Intersectable for Sphere {
     fn intersect(&self, ray: &Ray) -> Option<IntersectionList> {
+        let ray = ray.apply(&self.transformation.invert());
+
         let sphere_to_ray = ray.origin - Point::origin();
 
         let a = ray.direction.dot(&ray.direction);
@@ -138,6 +140,32 @@ mod tests {
 
         assert_approx_eq!(i[0].t, -6.0);
         assert_approx_eq!(i[1].t, -4.0);
+    }
+
+    #[test]
+    fn intersecting_a_scaled_sphere_with_a_ray() {
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
+
+        let s = Sphere::new(Transformation::new().scale(2.0, 2.0, 2.0));
+
+        let i = s.intersect(&r);
+        assert!(i.is_some());
+
+        let i = i.unwrap();
+        assert_eq!(i.len(), 2);
+
+        assert_approx_eq!(i[0].t, 3.0);
+        assert_approx_eq!(i[1].t, 7.0);
+    }
+
+    #[test]
+    fn intersecting_a_translated_sphere_with_a_ray() {
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
+
+        let s = Sphere::new(Transformation::new().translate(5.0, 0.0, 0.0));
+
+        let i = s.intersect(&r);
+        assert!(i.is_none());
     }
 
     #[test]
