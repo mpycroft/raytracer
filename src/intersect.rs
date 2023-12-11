@@ -8,7 +8,7 @@ use crate::math::Ray;
 /// scene, returns a vector of intersection t values.
 pub trait Intersectable {
     #[must_use]
-    fn intersect(&self, ray: &Ray) -> Option<Vec<f64>>;
+    fn intersect(&self, ray: &Ray) -> Option<IntersectionList>;
 }
 
 /// An Intersection stores both the t value of the intersection in addition to a
