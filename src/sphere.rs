@@ -1,11 +1,15 @@
+use derive_more::Constructor;
+
 use crate::{
     intersect::{Intersectable, Intersection, IntersectionList},
-    math::{Point, Ray},
+    math::{float::impl_approx_eq, Point, Ray, Transformation},
 };
 
 /// A Sphere is a unit sphere centred at the origin (0, 0, 0).
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Sphere;
+#[derive(Clone, Copy, Debug, Constructor)]
+pub struct Sphere {
+    pub transformation: Transformation,
+}
 
 impl Intersectable for Sphere {
     fn intersect(&self, ray: &Ray) -> Option<IntersectionList> {
@@ -34,16 +38,37 @@ impl Intersectable for Sphere {
     }
 }
 
+impl Default for Sphere {
+    fn default() -> Self {
+        Self::new(Transformation::new())
+    }
+}
+
+impl_approx_eq!(Sphere { transformation });
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::math::{float::*, Vector};
 
     #[test]
+    fn creating_a_sphere() {
+        let t = Transformation::new().translate(2.0, 3.0, 0.0);
+        let s = Sphere::new(t);
+
+        assert_approx_eq!(s.transformation, t);
+
+        assert_approx_eq!(
+            Sphere::default().transformation,
+            Transformation::new()
+        );
+    }
+
+    #[test]
     fn a_ray_intersects_a_sphere_at_two_points() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
 
-        let s = Sphere;
+        let s = Sphere::default();
 
         let i = s.intersect(&r);
         assert!(i.is_some());
@@ -51,9 +76,9 @@ mod tests {
         let i = i.unwrap();
         assert_eq!(i.len(), 2);
 
-        assert_eq!(i[0].object, &s);
+        assert_approx_eq!(i[0].object, s);
         assert_approx_eq!(i[0].t, 4.0);
-        assert_eq!(i[1].object, &s);
+        assert_approx_eq!(i[1].object, s);
         assert_approx_eq!(i[1].t, 6.0);
     }
 
@@ -61,7 +86,7 @@ mod tests {
     fn a_ray_intersects_a_sphere_at_a_tangent() {
         let r = Ray::new(Point::new(0.0, 1.0, -5.0), Vector::z_axis());
 
-        let s = Sphere;
+        let s = Sphere::default();
 
         let i = s.intersect(&r);
         assert!(i.is_some());
@@ -77,7 +102,7 @@ mod tests {
     fn a_ray_misses_a_sphere() {
         let r = Ray::new(Point::new(0.0, 2.0, -5.0), Vector::z_axis());
 
-        let s = Sphere;
+        let s = Sphere::default();
 
         let i = s.intersect(&r);
         assert!(i.is_none());
@@ -87,7 +112,7 @@ mod tests {
     fn a_ray_originates_inside_a_sphere() {
         let r = Ray::new(Point::origin(), Vector::z_axis());
 
-        let s = Sphere;
+        let s = Sphere::default();
 
         let i = s.intersect(&r);
         assert!(i.is_some());
@@ -103,7 +128,7 @@ mod tests {
     fn a_sphere_is_behind_a_ray() {
         let r = Ray::new(Point::new(0.0, 0.0, 5.0), Vector::z_axis());
 
-        let s = Sphere;
+        let s = Sphere::default();
 
         let i = s.intersect(&r);
         assert!(i.is_some());
@@ -113,5 +138,24 @@ mod tests {
 
         assert_approx_eq!(i[0].t, -6.0);
         assert_approx_eq!(i[1].t, -4.0);
+    }
+
+    #[test]
+    fn comparing_spheres() {
+        let s1 = Sphere::new(
+            Transformation::new().translate(0.5, 1.0, 0.0).scale(1.0, 2.0, 2.0),
+        );
+        let s2 = Sphere::new(
+            Transformation::new().translate(0.5, 1.0, 0.0).scale(1.0, 2.0, 2.0),
+        );
+        let s3 = Sphere::new(
+            Transformation::new()
+                .translate(0.500_1, 1.0, 0.0)
+                .scale(1.0, 2.0, 2.0),
+        );
+
+        assert_approx_eq!(s1, s2);
+
+        assert_approx_ne!(s1, s3);
     }
 }

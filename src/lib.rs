@@ -8,3 +8,4 @@ mod sphere;
 
 pub use canvas::Canvas;
 pub use colour::Colour;
+pub use sphere::Sphere;
