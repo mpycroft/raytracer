@@ -1,6 +1,11 @@
 use derive_more::Constructor;
 
-use super::{float::impl_approx_eq, point::Point, vector::Vector};
+use super::{
+    float::impl_approx_eq,
+    point::Point,
+    transformation::{Transformable, Transformation},
+    vector::Vector,
+};
 
 /// A Ray represents a geometric vector with a specific origin point and
 /// pointing in some direction.
@@ -14,6 +19,15 @@ impl Ray {
     #[must_use]
     pub fn position(&self, t: f64) -> Point {
         self.origin + self.direction * t
+    }
+}
+
+impl<'a> Transformable<'a> for Ray {
+    fn apply(&'a self, transformation: &Transformation) -> Self {
+        Ray::new(
+            self.origin.apply(transformation),
+            self.direction.apply(transformation),
+        )
     }
 }
 
@@ -43,6 +57,24 @@ mod tests {
         assert_approx_eq!(r.position(1.0), Point::new(3.0, 3.0, 4.0));
         assert_approx_eq!(r.position(-1.0), Point::new(1.0, 3.0, 4.0));
         assert_approx_eq!(r.position(2.5), Point::new(4.5, 3.0, 4.0));
+    }
+
+    #[test]
+    fn translating_a_ray() {
+        assert_approx_eq!(
+            Ray::new(Point::new(1.0, 2.0, 3.0), Vector::y_axis())
+                .apply(&Transformation::new().translate(3.0, 4.0, 5.0)),
+            Ray::new(Point::new(4.0, 6.0, 8.0), Vector::y_axis())
+        );
+    }
+
+    #[test]
+    fn scaling_a_ray() {
+        assert_approx_eq!(
+            Ray::new(Point::new(1.0, 2.0, 3.0), Vector::y_axis())
+                .apply(&Transformation::new().scale(2.0, 3.0, 4.0)),
+            Ray::new(Point::new(2.0, 6.0, 12.0), Vector::new(0.0, 3.0, 0.0))
+        );
     }
 
     #[test]
