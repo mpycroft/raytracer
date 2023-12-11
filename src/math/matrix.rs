@@ -8,7 +8,7 @@ use anyhow::{bail, Result};
 use derive_more::{Index, IndexMut, IntoIterator};
 use float_cmp::{ApproxEq, F64Margin};
 
-use super::{float::approx_eq, Point, Vector};
+use super::{float::approx_eq, point::Point, vector::Vector};
 
 /// A Matrix is a square matrix of size N, stored in row major order.
 #[derive(Clone, Copy, Index, IndexMut, IntoIterator)]

@@ -2,7 +2,7 @@ use std::ops::{Add, AddAssign, Sub, SubAssign};
 
 use derive_more::Constructor;
 
-use super::{float::impl_approx_eq, Vector};
+use super::{float::impl_approx_eq, vector::Vector};
 
 /// A Point is a representation of a geometric position within the 3 dimensional
 /// scene we are working on.

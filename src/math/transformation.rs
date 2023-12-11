@@ -118,7 +118,7 @@ mod tests {
     use std::f64::consts::{FRAC_PI_2, FRAC_PI_6, PI};
 
     use super::*;
-    use crate::math::{float::*, Point, Vector};
+    use crate::math::{float::*, point::Point, vector::Vector};
 
     #[test]
     fn creating_a_transformation() {
