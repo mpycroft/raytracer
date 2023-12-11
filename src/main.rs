@@ -2,25 +2,34 @@
 // real raytracer code here.
 #![allow(clippy::pedantic)]
 
-use raytracer::math::{matrix::Matrix, Vector};
+use std::{f64::consts::FRAC_PI_6, fs::write, io::Error};
 
-fn main() {
-    println!("{:?}", Matrix::<4>::identity().invert().unwrap());
+use raytracer::{
+    math::{Point, Transformable, Transformation},
+    Canvas, Colour,
+};
 
-    let m = Matrix([
-        [1.0, 2.0, 3.0, 4.0],
-        [0.0, -2.0, -3.0, 0.0],
-        [-2.0, 1.0, 0.0, 1.0],
-        [-1.0, 2.0, 0.0, 1.0],
-    ]);
+fn main() -> Result<(), Error> {
+    let mut canvas = Canvas::new(500, 500);
 
-    println!("{:?}", m * m.invert().unwrap());
+    let transform = Transformation::new()
+        .scale(200.0, 200.0, 0.0)
+        .translate(250.0, 250.0, 0.0);
 
-    println!("{:?}", m.transpose().invert().unwrap());
-    println!("{:?}", m.invert().unwrap().transpose());
+    let point = Point::new(0.0, 1.0, 0.0);
 
-    let mut id = Matrix::identity();
-    id[0][1] = 2.0;
+    for count in 0..12 {
+        let radians = count as f64 * FRAC_PI_6;
 
-    println!("{:?}", id * Vector::new(1.0, 2.0, 3.0));
+        let pixel = point
+            .apply(&Transformation::new().rotate_z(radians).extend(&transform));
+
+        canvas.write_pixel(
+            pixel.x as usize,
+            pixel.y as usize,
+            &Colour::white(),
+        );
+    }
+
+    write("image.ppm", canvas.to_ppm())
 }

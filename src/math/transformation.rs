@@ -9,6 +9,7 @@ use super::matrix::Matrix;
 /// via this trait. This is really just some syntactic sugar so we always apply
 /// Transform's to objects rather than transform objects with a given Transform.
 pub trait Transformable<'a> {
+    #[must_use]
     fn apply(&'a self, transformation: &Transformation) -> Self;
 }
 
@@ -30,7 +31,7 @@ where
 /// which will perform the multiplications in reverse order as expected e.g.
 /// `scale` * `rotate_x`.
 #[derive(Clone, Copy, Debug)]
-pub struct Transformation(pub Matrix<4>);
+pub struct Transformation(Matrix<4>);
 
 /// Generate `Transformation` chain functions and avoid duplicating trivial
 /// code.
@@ -77,6 +78,13 @@ impl Transformation {
     #[must_use]
     pub fn transpose(&self) -> Self {
         Self(self.0.transpose())
+    }
+
+    #[must_use]
+    pub fn extend(mut self, transformation: &Self) -> Self {
+        self.0 = transformation.0 * self.0;
+
+        self
     }
 
     add_transformation_fn!(translate(x: f64, y: f64, z:f64));
@@ -218,6 +226,16 @@ Tried to invert a Matrix that cannot be inverted - Matrix<4>([
         assert_approx_eq!(
             Transformation::new().translate(2.5, 3.1, -1.0).transpose().0,
             Matrix::translate(2.5, 3.1, -1.0).transpose()
+        );
+    }
+
+    #[test]
+    fn extending_a_transformation() {
+        let t = Transformation::new().translate(1.0, 2.0, 3.0);
+
+        assert_approx_eq!(
+            Transformation::new().scale(2.0, 2.0, 2.0).extend(&t),
+            Transformation::new().scale(2.0, 2.0, 2.0).translate(1.0, 2.0, 3.0)
         );
     }
 
