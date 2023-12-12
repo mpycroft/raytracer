@@ -43,7 +43,15 @@ impl Intersectable for Sphere {
     }
 
     fn normal_at(&self, point: &Point) -> Vector {
-        *point - Point::origin()
+        let inverse_transform = self.transformation.invert();
+
+        let object_point = point.apply(&inverse_transform);
+
+        let object_normal = object_point - Point::origin();
+
+        let world_normal = object_normal.apply(&inverse_transform.transpose());
+
+        world_normal.normalise()
     }
 }
 
@@ -57,6 +65,8 @@ impl_approx_eq!(Sphere { transformation });
 
 #[cfg(test)]
 mod tests {
+    use std::f64::consts::{FRAC_1_SQRT_2, PI, SQRT_2};
+
     use super::*;
     use crate::math::{float::*, Vector};
 
@@ -209,6 +219,30 @@ mod tests {
         );
 
         assert_approx_eq!(n, n.normalise());
+    }
+
+    #[test]
+    fn computing_the_normal_on_a_translated_sphere() {
+        let s = Sphere::new(Transformation::new().translate(0.0, 1.0, 0.0));
+
+        assert_approx_eq!(
+            s.normal_at(&Point::new(0.0, 1.0 + FRAC_1_SQRT_2, -FRAC_1_SQRT_2)),
+            Vector::new(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2)
+        );
+    }
+
+    #[test]
+    fn computing_the_normal_on_a_transformed_sphere() {
+        let s = Sphere::new(
+            Transformation::new().rotate_z(PI / 5.0).scale(1.0, 0.5, 1.0),
+        );
+
+        let sqrt_2_div_2 = SQRT_2 / 2.0;
+        assert_approx_eq!(
+            s.normal_at(&Point::new(0.0, sqrt_2_div_2, -sqrt_2_div_2)),
+            Vector::new(0.0, 0.970_14, -0.242_54),
+            epsilon = 0.000_01
+        );
     }
 
     #[test]
