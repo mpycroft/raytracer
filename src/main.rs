@@ -2,33 +2,50 @@
 // real raytracer code here.
 #![allow(clippy::pedantic)]
 
-use std::{f64::consts::FRAC_PI_6, fs::write, io::Error};
+use std::{fs::write, io::Error};
 
 use raytracer::{
-    math::{Point, Transformable, Transformation},
-    Canvas, Colour,
+    intersect::Intersectable,
+    math::{Point, Ray, Transformation},
+    Canvas, Colour, Sphere,
 };
 
 fn main() -> Result<(), Error> {
-    let mut canvas = Canvas::new(500, 500);
+    let canvas_pixels = 500;
+    let mut canvas = Canvas::new(canvas_pixels, canvas_pixels);
 
-    let transform = Transformation::new()
-        .scale(200.0, 200.0, 0.0)
-        .translate(250.0, 250.0, 0.0);
+    let origin = Point::new(0.0, 0.0, -5.0);
 
-    let point = Point::new(0.0, 1.0, 0.0);
+    let wall_size = 7.0;
+    let wall_z = 10.0;
 
-    for count in 0..12 {
-        let radians = count as f64 * FRAC_PI_6;
+    let pixel_size = wall_size / canvas_pixels as f64;
+    let half = wall_size / 2.0;
 
-        let pixel = point
-            .apply(&Transformation::new().rotate_z(radians).extend(&transform));
+    let colour = Colour::red();
 
-        canvas.write_pixel(
-            pixel.x as usize,
-            pixel.y as usize,
-            &Colour::white(),
-        );
+    let sphere = Sphere::new(
+        Transformation::new()
+            .scale(0.5, 1.0, 1.0)
+            .shear(1.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+    );
+
+    for y in 0..canvas_pixels {
+        let world_y = half - pixel_size * y as f64;
+
+        for x in 0..canvas_pixels {
+            let world_x = -half + pixel_size * x as f64;
+
+            let position = Point::new(world_x, world_y, wall_z);
+
+            let ray = Ray::new(origin, (position - origin).normalise());
+
+            if let Some(list) = sphere.intersect(&ray) {
+                if list.hit().is_some() {
+                    canvas.write_pixel(x, y, &colour);
+                }
+            }
+        }
     }
 
     write("image.ppm", canvas.to_ppm())
