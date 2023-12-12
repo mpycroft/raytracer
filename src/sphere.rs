@@ -2,7 +2,10 @@ use derive_more::Constructor;
 
 use crate::{
     intersect::{Intersectable, Intersection, IntersectionList},
-    math::{float::impl_approx_eq, Point, Ray, Transformable, Transformation},
+    math::{
+        float::impl_approx_eq, Point, Ray, Transformable, Transformation,
+        Vector,
+    },
 };
 
 /// A Sphere is a unit sphere centred at the origin (0, 0, 0).
@@ -37,6 +40,10 @@ impl Intersectable for Sphere {
             vec![Intersection::new(self, t1), Intersection::new(self, t2)]
                 .into(),
         )
+    }
+
+    fn normal_at(&self, point: &Point) -> Vector {
+        *point - Point::origin()
     }
 }
 
@@ -166,6 +173,42 @@ mod tests {
 
         let i = s.intersect(&r);
         assert!(i.is_none());
+    }
+
+    #[test]
+    fn the_normal_on_a_sphere_at_a_point_on_an_axis() {
+        let s = Sphere::default();
+
+        assert_approx_eq!(
+            s.normal_at(&Point::new(1.0, 0.0, 0.0)),
+            Vector::x_axis()
+        );
+
+        assert_approx_eq!(
+            s.normal_at(&Point::new(0.0, 1.0, 0.0)),
+            Vector::y_axis()
+        );
+
+        assert_approx_eq!(
+            s.normal_at(&Point::new(0.0, 0.0, 1.0)),
+            Vector::z_axis()
+        );
+    }
+
+    #[test]
+    fn the_normal_on_a_sphere_at_a_non_axial_point() {
+        let s = Sphere::default();
+
+        let sqrt_3_div_3 = f64::sqrt(3.0) / 3.0;
+        let n =
+            s.normal_at(&Point::new(sqrt_3_div_3, sqrt_3_div_3, sqrt_3_div_3));
+
+        assert_approx_eq!(
+            n,
+            Vector::new(sqrt_3_div_3, sqrt_3_div_3, sqrt_3_div_3)
+        );
+
+        assert_approx_eq!(n, n.normalise());
     }
 
     #[test]

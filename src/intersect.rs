@@ -2,13 +2,16 @@ use derive_more::{Constructor, Deref, DerefMut, From};
 use float_cmp::{ApproxEq, F64Margin};
 
 use super::Sphere;
-use crate::math::Ray;
+use crate::math::{Point, Ray, Vector};
 
 /// A trait that objects need to implement if they can be intersected in a
 /// scene, returns a vector of intersection t values.
 pub trait Intersectable {
     #[must_use]
     fn intersect(&self, ray: &Ray) -> Option<IntersectionList>;
+
+    #[must_use]
+    fn normal_at(&self, point: &Point) -> Vector;
 }
 
 /// An Intersection stores both the t value of the intersection in addition to a
