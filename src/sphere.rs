@@ -6,12 +6,14 @@ use crate::{
         float::impl_approx_eq, Point, Ray, Transformable, Transformation,
         Vector,
     },
+    Material,
 };
 
-/// A Sphere is a unit sphere centred at the origin (0, 0, 0).
+/// A `Sphere` is a unit sphere centred at the origin (0, 0, 0).
 #[derive(Clone, Copy, Debug, Constructor)]
 pub struct Sphere {
     pub transformation: Transformation,
+    pub material: Material,
 }
 
 impl Intersectable for Sphere {
@@ -57,30 +59,34 @@ impl Intersectable for Sphere {
 
 impl Default for Sphere {
     fn default() -> Self {
-        Self::new(Transformation::new())
+        Self::new(Transformation::new(), Material::default())
     }
 }
 
-impl_approx_eq!(Sphere { transformation });
+impl_approx_eq!(Sphere { transformation, material });
 
 #[cfg(test)]
 mod tests {
     use std::f64::consts::{FRAC_1_SQRT_2, PI, SQRT_2};
 
     use super::*;
-    use crate::math::{float::*, Vector};
+    use crate::{
+        math::{float::*, Vector},
+        Colour,
+    };
 
     #[test]
     fn creating_a_sphere() {
         let t = Transformation::new().translate(2.0, 3.0, 0.0);
-        let s = Sphere::new(t);
+        let m = Material { colour: Colour::red(), ..Default::default() };
+        let s = Sphere::new(t, m);
 
         assert_approx_eq!(s.transformation, t);
+        assert_approx_eq!(s.material, m);
 
-        assert_approx_eq!(
-            Sphere::default().transformation,
-            Transformation::new()
-        );
+        let s = Sphere::default();
+        assert_approx_eq!(s.transformation, Transformation::new());
+        assert_approx_eq!(s.material, Material::default());
     }
 
     #[test]
@@ -163,7 +169,10 @@ mod tests {
     fn intersecting_a_scaled_sphere_with_a_ray() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
 
-        let s = Sphere::new(Transformation::new().scale(2.0, 2.0, 2.0));
+        let s = Sphere::new(
+            Transformation::new().scale(2.0, 2.0, 2.0),
+            Material::default(),
+        );
 
         let i = s.intersect(&r);
         assert!(i.is_some());
@@ -179,7 +188,10 @@ mod tests {
     fn intersecting_a_translated_sphere_with_a_ray() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
 
-        let s = Sphere::new(Transformation::new().translate(5.0, 0.0, 0.0));
+        let s = Sphere::new(
+            Transformation::new().translate(5.0, 0.0, 0.0),
+            Material::default(),
+        );
 
         let i = s.intersect(&r);
         assert!(i.is_none());
@@ -223,7 +235,10 @@ mod tests {
 
     #[test]
     fn computing_the_normal_on_a_translated_sphere() {
-        let s = Sphere::new(Transformation::new().translate(0.0, 1.0, 0.0));
+        let s = Sphere::new(
+            Transformation::new().translate(0.0, 1.0, 0.0),
+            Material::default(),
+        );
 
         assert_approx_eq!(
             s.normal_at(&Point::new(0.0, 1.0 + FRAC_1_SQRT_2, -FRAC_1_SQRT_2)),
@@ -235,6 +250,7 @@ mod tests {
     fn computing_the_normal_on_a_transformed_sphere() {
         let s = Sphere::new(
             Transformation::new().rotate_z(PI / 5.0).scale(1.0, 0.5, 1.0),
+            Material::default(),
         );
 
         let sqrt_2_div_2 = SQRT_2 / 2.0;
@@ -249,14 +265,17 @@ mod tests {
     fn comparing_spheres() {
         let s1 = Sphere::new(
             Transformation::new().translate(0.5, 1.0, 0.0).scale(1.0, 2.0, 2.0),
+            Material::default(),
         );
         let s2 = Sphere::new(
             Transformation::new().translate(0.5, 1.0, 0.0).scale(1.0, 2.0, 2.0),
+            Material::default(),
         );
         let s3 = Sphere::new(
             Transformation::new()
                 .translate(0.500_1, 1.0, 0.0)
                 .scale(1.0, 2.0, 2.0),
+            Material::default(),
         );
 
         assert_approx_eq!(s1, s2);

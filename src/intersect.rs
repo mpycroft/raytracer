@@ -68,7 +68,10 @@ impl<'a> Default for IntersectionList<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::{float::*, Transformation};
+    use crate::{
+        math::{float::*, Transformation},
+        Material,
+    };
 
     #[test]
     fn creating_an_intersection() {
@@ -174,7 +177,10 @@ mod tests {
         let s1 = Sphere::default();
         let i1 = Intersection::new(&s1, 3.2);
         let i2 = Intersection::new(&s1, 3.2);
-        let s2 = Sphere::new(Transformation::new().translate(1.0, 0.0, 0.0));
+        let s2 = Sphere::new(
+            Transformation::new().translate(1.0, 0.0, 0.0),
+            Material::default(),
+        );
         let i3 = Intersection::new(&s2, 3.2);
 
         assert_approx_eq!(i1, i2);

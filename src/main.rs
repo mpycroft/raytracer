@@ -7,7 +7,7 @@ use std::{fs::write, io::Error};
 use raytracer::{
     intersect::Intersectable,
     math::{Point, Ray, Transformation},
-    Canvas, Colour, Sphere,
+    Canvas, Colour, Material, Sphere,
 };
 
 fn main() -> Result<(), Error> {
@@ -28,6 +28,7 @@ fn main() -> Result<(), Error> {
         Transformation::new()
             .scale(0.5, 1.0, 1.0)
             .shear(1.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        Material::default(),
     );
 
     for y in 0..canvas_pixels {
