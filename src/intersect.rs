@@ -31,6 +31,7 @@ pub struct Computations<'a> {
     pub point: Point,
     pub eye: Vector,
     pub normal: Vector,
+    pub inside: bool,
 }
 
 impl<'a> Intersection<'a> {
@@ -38,13 +39,17 @@ impl<'a> Intersection<'a> {
     pub fn prepare_computations(&self, ray: &Ray) -> Computations {
         let point = ray.position(self.t);
 
-        Computations::new(
-            self.object,
-            self.t,
-            point,
-            -ray.direction,
-            self.object.normal_at(&point),
-        )
+        let eye = -ray.direction;
+        let mut normal = self.object.normal_at(&point);
+
+        let inside = if normal.dot(&eye) < 0.0 {
+            normal *= -1.0;
+            true
+        } else {
+            false
+        };
+
+        Computations::new(self.object, self.t, point, eye, normal, inside)
     }
 }
 
@@ -123,6 +128,26 @@ mod tests {
         assert_approx_eq!(c.point, Point::new(0.0, 0.0, -1.0));
         assert_approx_eq!(c.eye, -Vector::z_axis());
         assert_approx_eq!(c.normal, -Vector::z_axis());
+        assert!(!c.inside);
+    }
+
+    #[test]
+    #[allow(clippy::many_single_char_names)]
+    fn the_hit_when_an_intersection_occurs_on_the_inside() {
+        let r = Ray::new(Point::origin(), Vector::z_axis());
+        let s = Sphere::default();
+        let t = 1.0;
+
+        let i = Intersection::new(&s, t);
+
+        let c = i.prepare_computations(&r);
+
+        assert_approx_eq!(c.object, s);
+        assert_approx_eq!(c.t, t);
+        assert_approx_eq!(c.point, Point::new(0.0, 0.0, 1.0));
+        assert_approx_eq!(c.eye, -Vector::z_axis());
+        assert_approx_eq!(c.normal, -Vector::z_axis());
+        assert!(c.inside);
     }
 
     #[test]
