@@ -1,4 +1,8 @@
-use crate::{PointLight, Sphere};
+use crate::{
+    intersect::{Intersectable, IntersectionList},
+    math::Ray,
+    PointLight, Sphere,
+};
 
 /// A `World` represents all the objects and light sources in a given scene that
 /// we are rendering.
@@ -21,6 +25,25 @@ impl World {
     pub fn add_light(&mut self, light: PointLight) {
         self.lights.push(light);
     }
+
+    #[must_use]
+    fn intersect(&self, ray: &Ray) -> Option<IntersectionList> {
+        let mut list = IntersectionList::new();
+
+        for obj in &self.objects {
+            if let Some(mut intersects) = obj.intersect(ray) {
+                list.append(&mut *intersects);
+            }
+        }
+
+        if list.is_empty() {
+            return None;
+        }
+
+        list.sort_by(|a, b| a.t.partial_cmp(&b.t).unwrap());
+
+        Some(list)
+    }
 }
 
 impl Default for World {
@@ -33,9 +56,34 @@ impl Default for World {
 mod tests {
     use super::*;
     use crate::{
-        math::{float::assert_approx_eq, Point, Transformation},
+        math::{float::assert_approx_eq, Point, Transformation, Vector},
         Colour, Material,
     };
+
+    fn test_world() -> World {
+        let mut w = World::new();
+
+        w.add_object(Sphere::new(
+            Transformation::new(),
+            Material {
+                colour: Colour::new(0.8, 1.0, 0.6),
+                diffuse: 0.7,
+                specular: 0.2,
+                ..Default::default()
+            },
+        ));
+        w.add_object(Sphere::new(
+            Transformation::new().scale(0.5, 0.5, 0.5),
+            Material::default(),
+        ));
+
+        w.add_light(PointLight::new(
+            Point::new(-10.0, 10.0, -10.0),
+            Colour::white(),
+        ));
+
+        w
+    }
 
     #[test]
     fn creating_a_world() {
@@ -74,5 +122,23 @@ mod tests {
         assert_eq!(w.lights.len(), 2);
         assert_approx_eq!(w.lights[0], l1);
         assert_approx_eq!(w.lights[1], l2);
+    }
+
+    #[test]
+    fn intersect_a_world_with_a_ray() {
+        let w = test_world();
+
+        let i = w
+            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()));
+
+        assert!(i.is_some());
+
+        let i = i.unwrap();
+
+        assert_eq!(i.len(), 4);
+        assert_approx_eq!(i[0].t, 4.0);
+        assert_approx_eq!(i[1].t, 4.5);
+        assert_approx_eq!(i[2].t, 5.5);
+        assert_approx_eq!(i[3].t, 6.0);
     }
 }
