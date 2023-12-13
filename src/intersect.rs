@@ -22,6 +22,32 @@ pub struct Intersection<'a> {
     pub t: f64,
 }
 
+/// The `Computations` struct is a helper structure to store precomputed values
+/// about an intersection.
+#[derive(Clone, Copy, Debug, Constructor)]
+pub struct Computations<'a> {
+    pub object: &'a Sphere,
+    pub t: f64,
+    pub point: Point,
+    pub eye: Vector,
+    pub normal: Vector,
+}
+
+impl<'a> Intersection<'a> {
+    #[must_use]
+    pub fn prepare_computations(&self, ray: &Ray) -> Computations {
+        let point = ray.position(self.t);
+
+        Computations::new(
+            self.object,
+            self.t,
+            point,
+            -ray.direction,
+            self.object.normal_at(&point),
+        )
+    }
+}
+
 impl<'a> ApproxEq for Intersection<'a> {
     type Margin = F64Margin;
 
@@ -80,6 +106,23 @@ mod tests {
 
         assert_approx_eq!(i.object, s);
         assert_approx_eq!(i.t, 1.5);
+    }
+
+    #[test]
+    #[allow(clippy::many_single_char_names)]
+    fn precomputing_the_state_of_an_intersection() {
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
+        let s = Sphere::default();
+        let t = 4.0;
+        let i = Intersection::new(&s, t);
+
+        let c = i.prepare_computations(&r);
+
+        assert_approx_eq!(c.object, s);
+        assert_approx_eq!(c.t, t);
+        assert_approx_eq!(c.point, Point::new(0.0, 0.0, -1.0));
+        assert_approx_eq!(c.eye, -Vector::z_axis());
+        assert_approx_eq!(c.normal, -Vector::z_axis());
     }
 
     #[test]
