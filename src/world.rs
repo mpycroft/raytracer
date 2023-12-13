@@ -1,7 +1,7 @@
 use crate::{
-    intersect::{Intersectable, IntersectionList},
+    intersect::{Computations, Intersectable, IntersectionList},
     math::Ray,
-    PointLight, Sphere,
+    Colour, PointLight, Sphere,
 };
 
 /// A `World` represents all the objects and light sources in a given scene that
@@ -27,6 +27,21 @@ impl World {
     }
 
     #[must_use]
+    pub fn shade_hit(&self, computations: &Computations) -> Colour {
+        let mut colour = Colour::black();
+
+        for light in &self.lights {
+            colour += computations.object.material.lighting(
+                light,
+                &computations.point,
+                &computations.eye,
+                &computations.normal,
+            );
+        }
+
+        colour
+    }
+
     fn intersect(&self, ray: &Ray) -> Option<IntersectionList> {
         let mut list = IntersectionList::new();
 
@@ -56,6 +71,7 @@ impl Default for World {
 mod tests {
     use super::*;
     use crate::{
+        intersect::Intersection,
         math::{float::assert_approx_eq, Point, Transformation, Vector},
         Colour, Material,
     };
@@ -140,5 +156,45 @@ mod tests {
         assert_approx_eq!(i[1].t, 4.5);
         assert_approx_eq!(i[2].t, 5.5);
         assert_approx_eq!(i[3].t, 6.0);
+    }
+
+    #[test]
+    fn shading_an_intersection() {
+        let w = test_world();
+
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
+
+        let i = Intersection::new(&w.objects[0], 4.0);
+
+        let c = i.prepare_computations(&r);
+
+        assert_approx_eq!(
+            w.shade_hit(&c),
+            Colour::new(0.380_66, 0.475_83, 0.285_5),
+            epsilon = 0.000_01
+        );
+    }
+
+    #[test]
+    fn shading_an_intersection_from_the_inside() {
+        let mut w = test_world();
+
+        w.lights.clear();
+        w.add_light(PointLight::new(
+            Point::new(0.0, 0.25, 0.0),
+            Colour::white(),
+        ));
+
+        let r = Ray::new(Point::origin(), Vector::z_axis());
+
+        let i = Intersection::new(&w.objects[1], 0.5);
+
+        let c = i.prepare_computations(&r);
+
+        assert_approx_eq!(
+            w.shade_hit(&c),
+            Colour::new(0.904_98, 0.904_98, 0.904_98),
+            epsilon = 0.000_01
+        );
     }
 }
