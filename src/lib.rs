@@ -7,6 +7,7 @@ mod material;
 pub mod math;
 mod point_light;
 mod sphere;
+pub mod world;
 
 pub use canvas::Canvas;
 pub use colour::Colour;
