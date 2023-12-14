@@ -1,5 +1,6 @@
 //! Split code into a library and binary for organisational purposes.
 
+pub mod camera;
 mod canvas;
 mod colour;
 pub mod intersect;
