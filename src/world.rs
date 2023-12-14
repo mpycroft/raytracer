@@ -27,6 +27,19 @@ impl World {
     }
 
     #[must_use]
+    pub fn colour_at(&self, ray: &Ray) -> Colour {
+        if let Some(intersections) = self.intersect(ray) {
+            if let Some(hit) = intersections.hit() {
+                let computations = hit.prepare_computations(ray);
+
+                return self.shade_hit(&computations);
+            }
+        }
+
+        Colour::black()
+    }
+
+    #[must_use]
     pub fn shade_hit(&self, computations: &Computations) -> Colour {
         let mut colour = Colour::black();
 
@@ -141,21 +154,37 @@ mod tests {
     }
 
     #[test]
-    fn intersect_a_world_with_a_ray() {
+    fn the_colour_when_a_ray_misses() {
         let w = test_world();
 
-        let i = w
-            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()));
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::y_axis());
 
-        assert!(i.is_some());
+        assert_approx_eq!(w.colour_at(&r), Colour::black());
+    }
 
-        let i = i.unwrap();
+    #[test]
+    fn the_colour_when_a_ray_hits() {
+        let w = test_world();
 
-        assert_eq!(i.len(), 4);
-        assert_approx_eq!(i[0].t, 4.0);
-        assert_approx_eq!(i[1].t, 4.5);
-        assert_approx_eq!(i[2].t, 5.5);
-        assert_approx_eq!(i[3].t, 6.0);
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
+
+        assert_approx_eq!(
+            w.colour_at(&r),
+            Colour::new(0.380_66, 0.475_83, 0.285_5),
+            epsilon = 0.000_01
+        );
+    }
+
+    #[test]
+    fn the_colour_with_an_intersection_behind_the_ray() {
+        let mut w = test_world();
+
+        w.objects[0].material.ambient = 1.0;
+        w.objects[1].material.ambient = 1.0;
+
+        let r = Ray::new(Point::new(0.0, 0.0, 0.75), -Vector::z_axis());
+
+        assert_approx_eq!(w.colour_at(&r), w.objects[1].material.colour);
     }
 
     #[test]
@@ -196,5 +225,23 @@ mod tests {
             Colour::new(0.904_98, 0.904_98, 0.904_98),
             epsilon = 0.000_01
         );
+    }
+
+    #[test]
+    fn intersect_a_world_with_a_ray() {
+        let w = test_world();
+
+        let i = w
+            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()));
+
+        assert!(i.is_some());
+
+        let i = i.unwrap();
+
+        assert_eq!(i.len(), 4);
+        assert_approx_eq!(i[0].t, 4.0);
+        assert_approx_eq!(i[1].t, 4.5);
+        assert_approx_eq!(i[2].t, 5.5);
+        assert_approx_eq!(i[3].t, 6.0);
     }
 }
