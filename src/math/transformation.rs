@@ -2,7 +2,7 @@ use std::ops::Mul;
 
 use float_cmp::{ApproxEq, F64Margin};
 
-use super::Matrix;
+use super::{Matrix, Point, Vector};
 
 /// The `Transformable` trait describes how to apply a `Transformation` to any given
 /// object, implementing this allows us to .apply() a `Transformation` to an object
@@ -53,6 +53,11 @@ impl Transformation {
     #[must_use]
     pub fn new() -> Self {
         Self(Matrix::identity())
+    }
+
+    #[must_use]
+    pub fn view_transformation(from: &Point, to: &Point, up: &Vector) -> Self {
+        Self(Matrix::view_transformation(from, to, up))
     }
 
     #[must_use]
@@ -118,7 +123,7 @@ mod tests {
     use std::f64::consts::{FRAC_PI_2, FRAC_PI_6, PI};
 
     use super::*;
-    use crate::math::{float::*, Point, Vector};
+    use crate::math::float::*;
 
     #[test]
     fn creating_a_transformation() {
@@ -157,6 +162,18 @@ mod tests {
         t = t.scale(2.0, 2.0, 2.0);
 
         assert_approx_eq!(t.apply(&p), o);
+    }
+
+    #[test]
+    fn creating_a_view_transformation() {
+        let from = Point::new(1.0, 2.0, 3.0);
+        let to = Point::new(-2.0, 12.0, 0.5);
+        let up = Vector::new(1.5, 0.0, 0.8);
+
+        assert_approx_eq!(
+            Transformation::view_transformation(&from, &to, &up).0,
+            Matrix::view_transformation(&from, &to, &up)
+        );
     }
 
     #[test]
