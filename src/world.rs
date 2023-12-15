@@ -1,6 +1,6 @@
 use crate::{
     intersect::{Computations, Intersectable, IntersectionList},
-    math::Ray,
+    math::{Point, Ray},
     Colour, PointLight, Sphere,
 };
 
@@ -56,6 +56,7 @@ impl World {
         colour
     }
 
+    #[must_use]
     fn intersect(&self, ray: &Ray) -> Option<IntersectionList> {
         let mut list = IntersectionList::new();
 
@@ -73,6 +74,26 @@ impl World {
 
         Some(list)
     }
+
+    #[must_use]
+    pub fn is_shadowed(&self, light: &PointLight, point: &Point) -> bool {
+        let vector = light.position - *point;
+
+        let distance = vector.magnitude();
+        let direction = vector.normalise();
+
+        let ray = Ray::new(*point, direction);
+
+        if let Some(intersections) = self.intersect(&ray) {
+            if let Some(hit) = intersections.hit() {
+                if hit.t < distance {
+                    return true;
+                }
+            }
+        }
+
+        false
+    }
 }
 
 impl Default for World {
@@ -88,8 +109,8 @@ mod tests {
     use super::*;
     use crate::{
         intersect::Intersection,
-        math::{float::assert_approx_eq, Point, Transformation, Vector},
-        Camera, Colour, Material,
+        math::{float::assert_approx_eq, Transformation, Vector},
+        Camera, Material,
     };
 
     fn test_world() -> World {
@@ -269,5 +290,33 @@ mod tests {
             Colour::new(0.380_66, 0.475_83, 0.285_5),
             epsilon = 0.000_01
         );
+    }
+
+    #[test]
+    fn no_shadow_when_nothing_is_collinear_with_point_and_light() {
+        let w = test_world();
+
+        assert!(!w.is_shadowed(&w.lights[0], &Point::new(0.0, 10.0, 0.0)));
+    }
+
+    #[test]
+    fn shadow_when_an_object_is_between_point_and_light() {
+        let w = test_world();
+
+        assert!(w.is_shadowed(&w.lights[0], &Point::new(10.0, -10.0, 10.0)));
+    }
+
+    #[test]
+    fn no_shadow_when_an_object_is_behind_the_light() {
+        let w = test_world();
+
+        assert!(!w.is_shadowed(&w.lights[0], &Point::new(-20.0, 20.0, -20.0)));
+    }
+
+    #[test]
+    fn no_shadow_when_an_object_is_behind_the_point() {
+        let w = test_world();
+
+        assert!(!w.is_shadowed(&w.lights[0], &Point::new(-2.0, 2.0, -2.0)));
     }
 }
