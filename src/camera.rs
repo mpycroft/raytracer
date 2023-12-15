@@ -35,7 +35,7 @@ impl Camera {
             (half_view * aspect, half_view)
         };
 
-        Camera {
+        Self {
             horizontal_size,
             vertical_size,
             transformation,
