@@ -1,11 +1,13 @@
-use crate::math::{Point, Ray, Transformable, Transformation};
+use crate::{
+    math::{Point, Ray, Transformable, Transformation},
+    Canvas, World,
+};
 
 /// `Camera` holds all the data representing our view into the scene.
 #[derive(Clone, Copy, Debug)]
 pub struct Camera {
     horizontal_size: usize,
     vertical_size: usize,
-    field_of_view: f64,
     transformation: Transformation,
     half_width: f64,
     half_height: f64,
@@ -36,12 +38,28 @@ impl Camera {
         Camera {
             horizontal_size,
             vertical_size,
-            field_of_view,
             transformation,
             half_width,
             half_height,
             pixel_size: half_width * 2.0 / horizontal_float,
         }
+    }
+
+    #[must_use]
+    pub fn render(&self, world: &World) -> Canvas {
+        let mut canvas = Canvas::new(self.horizontal_size, self.vertical_size);
+
+        for x in 0..self.horizontal_size {
+            for y in 0..self.vertical_size {
+                let ray = self.ray_for_pixel(x, y);
+
+                let colour = world.colour_at(&ray);
+
+                canvas.write_pixel(x, y, &colour);
+            }
+        }
+
+        canvas
     }
 
     #[must_use]
@@ -83,7 +101,6 @@ mod tests {
 
         assert_eq!(c.horizontal_size, h);
         assert_eq!(c.vertical_size, v);
-        assert_approx_eq!(c.field_of_view, f);
         assert_approx_eq!(c.transformation, t);
         assert_approx_eq!(c.half_width, 1.0);
         assert_approx_eq!(c.half_height, 0.75);

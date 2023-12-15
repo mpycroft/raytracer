@@ -82,11 +82,13 @@ impl Default for World {
 
 #[cfg(test)]
 mod tests {
+    use std::f64::consts::FRAC_PI_2;
+
     use super::*;
     use crate::{
         intersect::Intersection,
         math::{float::assert_approx_eq, Point, Transformation, Vector},
-        Colour, Material,
+        Camera, Colour, Material,
     };
 
     fn test_world() -> World {
@@ -243,5 +245,28 @@ mod tests {
         assert_approx_eq!(i[1].t, 4.5);
         assert_approx_eq!(i[2].t, 5.5);
         assert_approx_eq!(i[3].t, 6.0);
+    }
+
+    #[test]
+    fn rendering_a_world_with_a_camera() {
+        let w = test_world();
+        let c = Camera::new(
+            11,
+            11,
+            FRAC_PI_2,
+            Transformation::view_transformation(
+                &Point::new(0.0, 0.0, -5.0),
+                &Point::origin(),
+                &Vector::y_axis(),
+            ),
+        );
+
+        let i = c.render(&w);
+
+        assert_approx_eq!(
+            i.get_pixel(5, 5),
+            Colour::new(0.380_66, 0.475_83, 0.285_5),
+            epsilon = 0.000_01
+        );
     }
 }
