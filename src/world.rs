@@ -46,10 +46,10 @@ impl World {
         for light in &self.lights {
             colour += computations.object.material.lighting(
                 light,
-                &computations.point,
+                &computations.over_point,
                 &computations.eye,
                 &computations.normal,
-                self.is_shadowed(light, &computations.point),
+                self.is_shadowed(light, &computations.over_point),
             );
         }
 
