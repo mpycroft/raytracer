@@ -24,10 +24,15 @@ impl Material {
         point: &Point,
         eye: &Vector,
         normal: &Vector,
+        in_shadow: bool,
     ) -> Colour {
         let colour = self.colour * light.intensity;
 
         let ambient = colour * self.ambient;
+
+        if in_shadow {
+            return ambient;
+        }
 
         let light_vector = (light.position - *point).normalise();
         let light_dot_normal = light_vector.dot(normal);
@@ -88,6 +93,23 @@ mod tests {
 
     #[test]
     #[allow(clippy::many_single_char_names)]
+    fn lighting_with_the_surface_in_shadow() {
+        let m = Material::default();
+        let p = Point::origin();
+
+        let e = -Vector::z_axis();
+        let n = -Vector::z_axis();
+
+        let l = PointLight::new(Point::new(0.0, 0.0, -10.0), Colour::white());
+
+        assert_approx_eq!(
+            m.lighting(&l, &p, &e, &n, true),
+            Colour::new(0.1, 0.1, 0.1)
+        );
+    }
+
+    #[test]
+    #[allow(clippy::many_single_char_names)]
     fn lighting_with_the_eye_between_the_light_and_the_surface() {
         let m = Material::default();
         let p = Point::origin();
@@ -98,7 +120,7 @@ mod tests {
         let l = PointLight::new(Point::new(0.0, 0.0, -10.0), Colour::white());
 
         assert_approx_eq!(
-            m.lighting(&l, &p, &e, &n),
+            m.lighting(&l, &p, &e, &n, false),
             Colour::new(1.9, 1.9, 1.9)
         );
     }
@@ -115,7 +137,7 @@ mod tests {
 
         let l = PointLight::new(Point::new(0.0, 0.0, -10.0), Colour::white());
 
-        assert_approx_eq!(m.lighting(&l, &p, &e, &n), Colour::white());
+        assert_approx_eq!(m.lighting(&l, &p, &e, &n, false), Colour::white());
     }
 
     #[test]
@@ -130,7 +152,7 @@ mod tests {
         let l = PointLight::new(Point::new(0.0, 10.0, -10.0), Colour::white());
 
         assert_approx_eq!(
-            m.lighting(&l, &p, &e, &n),
+            m.lighting(&l, &p, &e, &n, false),
             Colour::new(0.736_4, 0.736_4, 0.736_4),
             epsilon = 0.000_1
         );
@@ -149,7 +171,7 @@ mod tests {
         let l = PointLight::new(Point::new(0.0, 10.0, -10.0), Colour::white());
 
         assert_approx_eq!(
-            m.lighting(&l, &p, &e, &n),
+            m.lighting(&l, &p, &e, &n, false),
             Colour::new(1.636_4, 1.636_4, 1.636_4),
             epsilon = 0.000_1
         );
@@ -167,7 +189,7 @@ mod tests {
         let l = PointLight::new(Point::new(0.0, 0.0, 10.0), Colour::white());
 
         assert_approx_eq!(
-            m.lighting(&l, &p, &e, &n),
+            m.lighting(&l, &p, &e, &n, false),
             Colour::new(0.1, 0.1, 0.1)
         );
     }
