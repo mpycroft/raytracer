@@ -1,4 +1,4 @@
-use crate::math::Transformation;
+use crate::math::{Point, Ray, Transformable, Transformation};
 
 /// `Camera` holds all the data representing our view into the scene.
 #[derive(Clone, Copy, Debug)]
@@ -43,21 +43,40 @@ impl Camera {
             pixel_size: half_width * 2.0 / horizontal_float,
         }
     }
+
+    #[must_use]
+    pub fn ray_for_pixel(&self, x: usize, y: usize) -> Ray {
+        #[allow(clippy::cast_precision_loss)]
+        let x_offset = (x as f64 + 0.5) * self.pixel_size;
+        #[allow(clippy::cast_precision_loss)]
+        let y_offset = (y as f64 + 0.5) * self.pixel_size;
+
+        let world_x = self.half_width - x_offset;
+        let world_y = self.half_height - y_offset;
+
+        let transformation = self.transformation.invert();
+
+        let pixel = Point::new(world_x, world_y, -1.0).apply(&transformation);
+
+        let origin = Point::origin().apply(&transformation);
+
+        Ray::new(origin, (pixel - origin).normalise())
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::PI;
+    use std::f64::consts::{FRAC_PI_2, FRAC_PI_4, SQRT_2};
 
     use super::*;
-    use crate::math::float::assert_approx_eq;
+    use crate::math::{float::assert_approx_eq, Vector};
 
     #[test]
     #[allow(clippy::many_single_char_names)]
     fn creating_a_camera() {
         let h = 160;
         let v = 120;
-        let f = PI / 2.0;
+        let f = FRAC_PI_2;
         let t = Transformation::new();
 
         let c = Camera::new(h, v, f, t);
@@ -79,5 +98,37 @@ mod tests {
         assert_approx_eq!(c.half_width, 0.625);
         assert_approx_eq!(c.half_height, 1.0);
         assert_approx_eq!(c.pixel_size, 0.01);
+    }
+
+    #[test]
+    fn constructing_a_ray_through_the_canvas() {
+        let c = Camera::new(201, 101, FRAC_PI_2, Transformation::new());
+
+        assert_approx_eq!(
+            c.ray_for_pixel(100, 50),
+            Ray::new(Point::origin(), -Vector::z_axis())
+        );
+
+        assert_approx_eq!(
+            c.ray_for_pixel(0, 0),
+            Ray::new(
+                Point::origin(),
+                Vector::new(0.665_19, 0.332_59, -0.668_51)
+            ),
+            epsilon = 0.000_01
+        );
+
+        let mut c = c;
+        c.transformation =
+            c.transformation.translate(0.0, -2.0, 5.0).rotate_y(FRAC_PI_4);
+
+        let sqrt_2_div_2 = SQRT_2 / 2.0;
+        assert_approx_eq!(
+            c.ray_for_pixel(100, 50),
+            Ray::new(
+                Point::new(0.0, 2.0, -5.0),
+                Vector::new(sqrt_2_div_2, 0.0, -sqrt_2_div_2)
+            )
+        );
     }
 }
