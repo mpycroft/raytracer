@@ -49,7 +49,7 @@ impl World {
                 &computations.point,
                 &computations.eye,
                 &computations.normal,
-                false,
+                self.is_shadowed(light, &computations.point),
             );
         }
 
@@ -249,6 +249,33 @@ mod tests {
             Colour::new(0.904_98, 0.904_98, 0.904_98),
             epsilon = 0.000_01
         );
+    }
+
+    #[test]
+    #[allow(clippy::many_single_char_names)]
+    fn colour_when_intersection_is_in_shadow() {
+        let mut w = World::new();
+
+        w.add_light(PointLight::new(
+            Point::new(0.0, 0.0, -10.0),
+            Colour::white(),
+        ));
+
+        w.add_object(Sphere::default());
+
+        let s = Sphere::new(
+            Transformation::new().translate(0.0, 0.0, 10.0),
+            Material::default(),
+        );
+        w.add_object(s);
+
+        let r = Ray::new(Point::new(0.0, 0.0, 5.0), Vector::z_axis());
+
+        let i = Intersection::new(&s, 4.0);
+
+        let c = i.prepare_computations(&r);
+
+        assert_approx_eq!(w.shade_hit(&c), Colour::new(0.1, 0.1, 0.1));
     }
 
     #[test]
