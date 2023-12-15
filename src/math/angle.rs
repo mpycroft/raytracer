@@ -13,6 +13,20 @@ use float_cmp::{ApproxEq, F64Margin};
 #[derive(Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div, DivAssign, Neg)]
 pub struct Angle(pub f64);
 
+macro_rules! add_trigonometric_fns {
+    ($fn:ident, $inv_fn:ident) => {
+        #[must_use]
+        pub fn $fn(&self) -> f64 {
+            self.0.$fn()
+        }
+
+        #[must_use]
+        pub fn $inv_fn(ratio: f64) -> Self {
+            Self(ratio.$inv_fn())
+        }
+    };
+}
+
 impl Angle {
     #[must_use]
     pub fn from_degrees(degrees: f64) -> Self {
@@ -22,6 +36,20 @@ impl Angle {
     #[must_use]
     pub fn to_degrees(&self) -> f64 {
         self.0.to_degrees()
+    }
+
+    add_trigonometric_fns!(sin, asin);
+    add_trigonometric_fns!(cos, acos);
+    add_trigonometric_fns!(tan, atan);
+
+    #[must_use]
+    pub fn sin_cos(&self) -> (f64, f64) {
+        self.0.sin_cos()
+    }
+
+    #[must_use]
+    pub fn atan2(y: f64, x: f64) -> Self {
+        Self(y.atan2(x))
     }
 }
 
@@ -117,6 +145,23 @@ mod tests {
     #[test]
     fn negating_an_angle() {
         assert_approx_eq!(-Angle(PI), Angle::from_degrees(-180.0));
+    }
+
+    #[test]
+    fn trigonometric_functions_pass_through() {
+        assert_approx_eq!(Angle(PI).cos(), PI.cos());
+        assert_approx_eq!(Angle(FRAC_PI_2).sin(), FRAC_PI_2.sin());
+        assert_approx_eq!(Angle(FRAC_PI_3).tan(), FRAC_PI_3.tan());
+
+        let (s1, c1) = Angle::from_degrees(163.5).sin_cos();
+        let (s2, c2) = 163.5f64.to_radians().sin_cos();
+        assert_approx_eq!(s1, s2);
+        assert_approx_eq!(c1, c2);
+
+        assert_approx_eq!(
+            Angle::atan2(FRAC_PI_4, FRAC_PI_6).0,
+            FRAC_PI_4.atan2(FRAC_PI_6)
+        );
     }
 
     #[test]
