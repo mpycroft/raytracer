@@ -9,7 +9,7 @@ use std::{
 };
 
 use raytracer::{
-    math::{Point, Transformation, Vector},
+    math::{Angle, Point, Transformation, Vector},
     Camera, Colour, Material, PointLight, Sphere, World,
 };
 
@@ -30,8 +30,8 @@ fn main() -> Result<(), Error> {
     world.add_object(Sphere::new(
         Transformation::new()
             .scale(10.0, 0.01, 10.0)
-            .rotate_x(FRAC_PI_2)
-            .rotate_y(-FRAC_PI_4)
+            .rotate_x(Angle(FRAC_PI_2))
+            .rotate_y(Angle(-FRAC_PI_4))
             .translate(0.0, 0.0, 5.0),
         material,
     ));
@@ -39,8 +39,8 @@ fn main() -> Result<(), Error> {
     world.add_object(Sphere::new(
         Transformation::new()
             .scale(10.0, 0.01, 10.0)
-            .rotate_x(FRAC_PI_2)
-            .rotate_y(FRAC_PI_4)
+            .rotate_x(Angle(FRAC_PI_2))
+            .rotate_y(Angle(FRAC_PI_4))
             .translate(0.0, 0.0, 5.0),
         material,
     ));
@@ -91,7 +91,7 @@ fn main() -> Result<(), Error> {
     let camera = Camera::new(
         1000,
         500,
-        FRAC_PI_3,
+        Angle(FRAC_PI_3),
         Transformation::view_transformation(
             &Point::new(0.0, 1.5, -5.0),
             &Point::new(0.0, 1.0, 0.0),

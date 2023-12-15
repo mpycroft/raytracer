@@ -1,5 +1,5 @@
 use crate::{
-    math::{Point, Ray, Transformable, Transformation},
+    math::{Angle, Point, Ray, Transformable, Transformation},
     Canvas, World,
 };
 
@@ -19,11 +19,10 @@ impl Camera {
     pub fn new(
         horizontal_size: usize,
         vertical_size: usize,
-        field_of_view: f64,
+        field_of_view: Angle,
         transformation: Transformation,
     ) -> Self {
-        let half_view = (field_of_view / 2.0).tan();
-
+        let half_view = (field_of_view.0 / 2.0).tan();
         #[allow(clippy::cast_precision_loss)]
         let horizontal_float = horizontal_size as f64;
         #[allow(clippy::cast_precision_loss)]
@@ -94,7 +93,7 @@ mod tests {
     fn creating_a_camera() {
         let h = 160;
         let v = 120;
-        let f = FRAC_PI_2;
+        let f = Angle(FRAC_PI_2);
         let t = Transformation::new();
 
         let c = Camera::new(h, v, f, t);
@@ -119,7 +118,12 @@ mod tests {
 
     #[test]
     fn constructing_a_ray_through_the_canvas() {
-        let c = Camera::new(201, 101, FRAC_PI_2, Transformation::new());
+        let c = Camera::new(
+            201,
+            101,
+            Angle::from_degrees(90.0),
+            Transformation::new(),
+        );
 
         assert_approx_eq!(
             c.ray_for_pixel(100, 50),
@@ -136,8 +140,10 @@ mod tests {
         );
 
         let mut c = c;
-        c.transformation =
-            c.transformation.translate(0.0, -2.0, 5.0).rotate_y(FRAC_PI_4);
+        c.transformation = c
+            .transformation
+            .translate(0.0, -2.0, 5.0)
+            .rotate_y(Angle(FRAC_PI_4));
 
         let sqrt_2_div_2 = SQRT_2 / 2.0;
         assert_approx_eq!(

@@ -2,7 +2,7 @@ use std::ops::Mul;
 
 use float_cmp::{ApproxEq, F64Margin};
 
-use super::{Matrix, Point, Vector};
+use super::{Angle, Matrix, Point, Vector};
 
 /// The `Transformable` trait describes how to apply a `Transformation` to any given
 /// object, implementing this allows us to .apply() a `Transformation` to an object
@@ -94,9 +94,9 @@ impl Transformation {
 
     add_transformation_fn!(translate(x: f64, y: f64, z:f64));
     add_transformation_fn!(scale(x: f64, y: f64, z: f64));
-    add_transformation_fn!(rotate_x(radians: f64));
-    add_transformation_fn!(rotate_y(radians: f64));
-    add_transformation_fn!(rotate_z(radians: f64));
+    add_transformation_fn!(rotate_x(angle: Angle));
+    add_transformation_fn!(rotate_y(angle: Angle));
+    add_transformation_fn!(rotate_z(angle: Angle));
     add_transformation_fn!(shear(
         xy: f64, xz: f64, yx: f64, yz: f64, zx: f64, zy: f64
     ));
@@ -120,7 +120,7 @@ impl ApproxEq for Transformation {
 
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::{FRAC_PI_2, FRAC_PI_6, PI};
+    use std::f64::consts::{FRAC_PI_2, FRAC_PI_6};
 
     use super::*;
     use crate::math::float::*;
@@ -198,7 +198,7 @@ mod tests {
     fn chaining_multiple_transformations() {
         assert_approx_eq!(
             Transformation::new()
-                .rotate_y(FRAC_PI_2)
+                .rotate_y(Angle(FRAC_PI_2))
                 .translate(1.0, 1.0, 1.0)
                 .scale(2.5, 2.5, 2.5)
                 .translate(-2.0, 3.0, 9.5)
@@ -212,10 +212,10 @@ mod tests {
         let v = Vector::new(5.1, -2.3, 9.52);
 
         let t = Transformation::new()
-            .rotate_x(1.5)
+            .rotate_x(Angle(1.5))
             .scale(1.0, 2.0, 4.3)
             .translate(0.0, 1.0, 2.3)
-            .rotate_y(1.0);
+            .rotate_y(Angle::from_degrees(261.9));
 
         assert_approx_eq!(t.invert().apply(&t.apply(&v)), v);
     }
@@ -275,18 +275,18 @@ Tried to invert a Matrix that cannot be inverted - Matrix<4>([
     #[test]
     fn rotating_a_transformation() {
         assert_approx_eq!(
-            Transformation::new().rotate_x(FRAC_PI_2).0,
-            Matrix::rotate_x(FRAC_PI_2)
+            Transformation::new().rotate_x(Angle(FRAC_PI_2)).0,
+            Matrix::rotate_x(Angle(FRAC_PI_2))
         );
 
         assert_approx_eq!(
-            Transformation::new().rotate_y(FRAC_PI_6).0,
-            Matrix::rotate_y(FRAC_PI_6)
+            Transformation::new().rotate_y(Angle(FRAC_PI_6)).0,
+            Matrix::rotate_y(Angle(FRAC_PI_6))
         );
 
         assert_approx_eq!(
-            Transformation::new().rotate_z(PI).0,
-            Matrix::rotate_z(PI)
+            Transformation::new().rotate_z(Angle::from_degrees(180.0)).0,
+            Matrix::rotate_z(Angle::from_degrees(180.0))
         );
     }
 

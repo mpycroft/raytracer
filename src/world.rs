@@ -109,7 +109,7 @@ mod tests {
     use super::*;
     use crate::{
         intersect::Intersection,
-        math::{float::assert_approx_eq, Transformation, Vector},
+        math::{float::assert_approx_eq, Angle, Transformation, Vector},
         Camera, Material,
     };
 
@@ -302,7 +302,7 @@ mod tests {
         let c = Camera::new(
             11,
             11,
-            FRAC_PI_2,
+            Angle(FRAC_PI_2),
             Transformation::view_transformation(
                 &Point::new(0.0, 0.0, -5.0),
                 &Point::origin(),
