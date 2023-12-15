@@ -79,7 +79,7 @@ impl<'a> ApproxEq for Intersection<'a> {
 
 /// A List is a simple wrapper around a vector of Intersections, it gives us
 /// type safety over using a plain Vec and makes it obvious what we are doing.
-#[derive(Clone, Debug, Deref, DerefMut, From)]
+#[derive(Clone, Debug, From, Deref, DerefMut)]
 pub struct IntersectionList<'a>(Vec<Intersection<'a>>);
 
 impl<'a> IntersectionList<'a> {
