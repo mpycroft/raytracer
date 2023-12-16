@@ -60,8 +60,8 @@ impl Camera {
     /// valid but will if there is an error in the formatting for progress
     /// somewhere.
     #[must_use]
-    pub fn render(&self, world: &World, progress: bool) -> Canvas {
-        if progress {
+    pub fn render(&self, world: &World, quiet: bool) -> Canvas {
+        if !quiet {
             println!(
                 "Size {} by {}",
                 HumanCount(self.horizontal_size.try_into().unwrap()),
@@ -71,7 +71,9 @@ impl Camera {
             println!("Rendering scene...");
         }
 
-        let bar = if progress {
+        let bar = if quiet {
+            ProgressBar::hidden()
+        } else {
             ProgressBar::new(self.horizontal_size.try_into().unwrap())
                 .with_style(
                     ProgressStyle::with_template(
@@ -84,8 +86,6 @@ Elapsed: {elapsed}, estimated: {eta}, rows/sec: {per_sec}",
                 )
                 .with_prefix("Rows")
                 .with_finish(ProgressFinish::AndClear)
-        } else {
-            ProgressBar::hidden()
         };
 
         let started = Instant::now();
@@ -102,7 +102,7 @@ Elapsed: {elapsed}, estimated: {eta}, rows/sec: {per_sec}",
             }
         }
 
-        if progress {
+        if !quiet {
             Term::stdout().clear_last_lines(1).unwrap();
 
             println!(

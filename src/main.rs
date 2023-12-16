@@ -2,19 +2,28 @@
 // real raytracer code here.
 #![allow(clippy::pedantic)]
 
+mod arguments;
+
 use std::{
     f64::consts::{FRAC_PI_2, FRAC_PI_3, FRAC_PI_4},
     fs::write,
     io::Error,
 };
 
+use clap::Parser;
 use raytracer::{
     math::{Angle, Point, Transformation, Vector},
     Camera, Colour, Material, PointLight, Sphere, World,
 };
 
+use crate::arguments::Arguments;
+
 fn main() -> Result<(), Error> {
-    print!("Generating scene...");
+    let arguments = Arguments::parse();
+
+    if !arguments.quiet {
+        print!("Generating scene...");
+    }
 
     let mut world = World::new();
 
@@ -101,13 +110,15 @@ fn main() -> Result<(), Error> {
         ),
     );
 
-    println!("done");
+    if !arguments.quiet {
+        println!("done");
+    }
 
-    let canvas = camera.render(&world, true);
+    let canvas = camera.render(&world, arguments.quiet);
 
-    let file = "image.ppm";
+    if !arguments.quiet {
+        println!("Writing to file {}", arguments.out);
+    }
 
-    println!("Writing to file {file}");
-
-    write(file, canvas.to_ppm())
+    write(arguments.out, canvas.to_ppm())
 }
