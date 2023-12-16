@@ -14,6 +14,8 @@ use raytracer::{
 };
 
 fn main() -> Result<(), Error> {
+    print!("Generating scene...");
+
     let mut world = World::new();
 
     let material = Material {
@@ -99,7 +101,13 @@ fn main() -> Result<(), Error> {
         ),
     );
 
-    let canvas = camera.render(&world);
+    println!("done");
 
-    write("image.ppm", canvas.to_ppm())
+    let canvas = camera.render(&world, true);
+
+    let file = "image.ppm";
+
+    println!("Writing to file {file}");
+
+    write(file, canvas.to_ppm())
 }

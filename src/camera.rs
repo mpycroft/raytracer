@@ -1,3 +1,11 @@
+use std::time::Instant;
+
+use console::Term;
+use indicatif::{
+    HumanCount, HumanDuration, ProgressBar, ProgressFinish, ProgressIterator,
+    ProgressStyle,
+};
+
 use crate::{
     math::{Angle, Point, Ray, Transformable, Transformation},
     Canvas, World,
@@ -44,11 +52,47 @@ impl Camera {
         }
     }
 
+    /// Renders the given `World` using the given camera.
+    ///
+    /// # Panics
+    ///
+    /// This function should not panic as all the values unwrapped should be
+    /// valid but will if there is an error in the formatting for progress
+    /// somewhere.
     #[must_use]
-    pub fn render(&self, world: &World) -> Canvas {
+    pub fn render(&self, world: &World, progress: bool) -> Canvas {
+        if progress {
+            println!(
+                "Size {} by {}",
+                HumanCount(self.horizontal_size.try_into().unwrap()),
+                HumanCount(self.vertical_size.try_into().unwrap())
+            );
+
+            println!("Rendering scene...");
+        }
+
+        let bar = if progress {
+            ProgressBar::new(self.horizontal_size.try_into().unwrap())
+                .with_style(
+                    ProgressStyle::with_template(
+                        "\
+{prefix} {bar:40.cyan/blue} {human_pos:>7}/{human_len:7} ({percent}%)
+Elapsed: {elapsed}, estimated: {eta}, rows/sec: {per_sec}",
+                    )
+                    .unwrap()
+                    .progress_chars("#>-"),
+                )
+                .with_prefix("Rows")
+                .with_finish(ProgressFinish::AndClear)
+        } else {
+            ProgressBar::hidden()
+        };
+
+        let started = Instant::now();
+
         let mut canvas = Canvas::new(self.horizontal_size, self.vertical_size);
 
-        for x in 0..self.horizontal_size {
+        for x in (0..self.horizontal_size).progress_with(bar) {
             for y in 0..self.vertical_size {
                 let ray = self.ray_for_pixel(x, y);
 
@@ -56,6 +100,16 @@ impl Camera {
 
                 canvas.write_pixel(x, y, &colour);
             }
+        }
+
+        if progress {
+            Term::stdout().clear_last_lines(1).unwrap();
+
+            println!(
+                "Rendering scene...done\nRendered {} rows in {}",
+                HumanCount(self.horizontal_size.try_into().unwrap()),
+                HumanDuration(started.elapsed())
+            );
         }
 
         canvas

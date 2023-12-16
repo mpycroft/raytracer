@@ -310,7 +310,7 @@ mod tests {
             ),
         );
 
-        let i = c.render(&w);
+        let i = c.render(&w, false);
 
         assert_approx_eq!(
             i.get_pixel(5, 5),
