@@ -1,4 +1,5 @@
 use std::{
+    fmt::{self, Debug, Formatter},
     ops::{Mul, MulAssign},
     slice::{Iter, IterMut},
 };
@@ -10,7 +11,7 @@ use float_cmp::{ApproxEq, F64Margin};
 use super::{float::approx_eq, Point, Vector};
 
 /// A Matrix is a square matrix of size N, stored in row major order.
-#[derive(Clone, Copy, Debug, Index, IndexMut, IntoIterator)]
+#[derive(Clone, Copy, Index, IndexMut, IntoIterator)]
 pub struct Matrix<const N: usize>(pub [[f64; N]; N]);
 
 impl<const N: usize> Matrix<N> {
@@ -142,7 +143,7 @@ impl Matrix<4> {
             );
         }
 
-        let mut matrix = Matrix::zero();
+        let mut matrix = Self::zero();
 
         for row in 0..4 {
             for col in 0..4 {
@@ -251,6 +252,18 @@ impl<'a, const N: usize> IntoIterator for &'a mut Matrix<N> {
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter_mut()
+    }
+}
+
+impl<const N: usize> Debug for Matrix<N> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        writeln!(f, "Matrix<{N}>([")?;
+
+        for row_data in self {
+            writeln!(f, "    {row_data:?},")?;
+        }
+
+        write!(f, "])")
     }
 }
 
@@ -497,9 +510,13 @@ mod tests {
 
         assert_eq!(
             m.err().unwrap().to_string(),
-            "Tried to invert a Matrix that cannot be inverted - \
-    Matrix([[-4.0, 2.0, -2.0, -3.0], [9.0, 6.0, 2.0, 6.0], \
-    [0.0, -5.0, 1.0, -5.0], [0.0, 0.0, 0.0, 0.0]])"
+            "\
+Tried to invert a Matrix that cannot be inverted - Matrix<4>([
+    [-4.0, 2.0, -2.0, -3.0],
+    [9.0, 6.0, 2.0, 6.0],
+    [0.0, -5.0, 1.0, -5.0],
+    [0.0, 0.0, 0.0, 0.0],
+])"
         );
     }
 
