@@ -237,7 +237,7 @@ mod tests {
     fn the_hit_when_some_intersections_are_negative() {
         let s = Sphere::default();
         let i1 = Intersection::new(&s, 1.0);
-        let i2 = Intersection::new(&s, 1.0);
+        let i2 = Intersection::new(&s, -1.0);
 
         let h = IntersectionList::from(vec![i1, i2]).hit();
 
