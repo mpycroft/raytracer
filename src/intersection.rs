@@ -181,7 +181,7 @@ mod tests {
     use super::*;
     use crate::{
         math::{float::*, Transformation},
-        Material, Shape,
+        Material,
     };
 
     #[test]
@@ -234,13 +234,12 @@ mod tests {
     fn the_hit_should_offset_the_point() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
 
-        let s = Object::new(
+        let o = Object::new_test(
             Transformation::new().translate(0.0, 0.0, 1.0),
             Material::default(),
-            Shape::new_test(),
         );
 
-        let i = Intersection::new(&s, 5.0);
+        let i = Intersection::new(&o, 5.0);
 
         let c = i.prepare_computations(&r);
 
@@ -399,10 +398,9 @@ mod tests {
         let o1 = Object::default_test();
         let i1 = Intersection::new(&o1, 3.2);
         let i2 = Intersection::new(&o1, 3.2);
-        let o2 = Object::new(
+        let o2 = Object::new_test(
             Transformation::new().translate(1.0, 0.0, 0.0),
             Material::default(),
-            Shape::new_test(),
         );
         let i3 = Intersection::new(&o2, 3.2);
 

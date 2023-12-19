@@ -109,13 +109,13 @@ mod tests {
     use super::*;
     use crate::{
         math::{float::*, Angle, Transformation, Vector},
-        Camera, Intersection, Material, Shape,
+        Camera, Intersection, Material,
     };
 
     fn test_world() -> World {
         let mut w = World::new();
 
-        w.add_object(Object::new(
+        w.add_object(Object::new_sphere(
             Transformation::new(),
             Material {
                 colour: Colour::new(0.8, 1.0, 0.6),
@@ -123,12 +123,10 @@ mod tests {
                 specular: 0.2,
                 ..Default::default()
             },
-            Shape::new_sphere(),
         ));
-        w.add_object(Object::new(
+        w.add_object(Object::new_sphere(
             Transformation::new().scale(0.5, 0.5, 0.5),
             Material::default(),
-            Shape::new_sphere(),
         ));
 
         w.add_light(PointLight::new(
@@ -155,10 +153,9 @@ mod tests {
         let mut w = World::new();
 
         let o1 = Object::default_test();
-        let o2 = Object::new(
+        let o2 = Object::new_sphere(
             Transformation::new().translate(1.0, 2.0, 3.0),
             Material::default(),
-            Shape::new_sphere(),
         );
 
         w.add_object(o1);
@@ -265,10 +262,9 @@ mod tests {
 
         w.add_object(Object::default_sphere());
 
-        let o = Object::new(
+        let o = Object::new_sphere(
             Transformation::new().translate(0.0, 0.0, 10.0),
             Material::default(),
-            Shape::new_sphere(),
         );
         w.add_object(o);
 

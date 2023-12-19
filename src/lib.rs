@@ -6,7 +6,7 @@ mod colour;
 pub mod intersection;
 mod material;
 pub mod math;
-pub mod object;
+mod object;
 mod point_light;
 mod shape;
 mod world;

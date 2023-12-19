@@ -19,12 +19,29 @@ pub struct Object {
 
 impl Object {
     #[must_use]
+    pub fn new_sphere(
+        transformation: Transformation,
+        material: Material,
+    ) -> Self {
+        Self::new(transformation, material, Shape::new_sphere())
+    }
+
+    #[must_use]
     pub fn default_sphere() -> Self {
         Self::new(
             Transformation::new(),
             Material::default(),
             Shape::new_sphere(),
         )
+    }
+
+    #[cfg(test)]
+    #[must_use]
+    pub fn new_test(
+        transformation: Transformation,
+        material: Material,
+    ) -> Self {
+        Self::new(transformation, material, Shape::new_test())
     }
 
     #[cfg(test)]
@@ -75,14 +92,30 @@ mod tests {
     fn creating_an_object() {
         let t = Transformation::new().translate(2.0, 3.0, 0.0);
         let m = Material { colour: Colour::red(), ..Default::default() };
+        let s = Shape::new_sphere();
+
+        let o = Object::new_sphere(t, m);
+
+        assert_approx_eq!(o.transformation, t);
+        assert_approx_eq!(o.material, m);
+        assert_approx_eq!(o.shape, s);
+
+        let o = Object::default_sphere();
+
+        assert_approx_eq!(o.transformation, Transformation::new());
+        assert_approx_eq!(o.material, Material::default());
+        assert_approx_eq!(o.shape, s);
+
         let s = Shape::new_test();
-        let o = Object::new(t, m, s);
+
+        let o = Object::new_test(t, m);
 
         assert_approx_eq!(o.transformation, t);
         assert_approx_eq!(o.material, m);
         assert_approx_eq!(o.shape, s);
 
         let o = Object::default_test();
+
         assert_approx_eq!(o.transformation, Transformation::new());
         assert_approx_eq!(o.material, Material::default());
         assert_approx_eq!(o.shape, s);
@@ -92,10 +125,9 @@ mod tests {
     fn intersecting_a_transformed_object_with_a_ray() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
 
-        let mut o = Object::new(
+        let mut o = Object::new_test(
             Transformation::new().scale(2.0, 2.0, 2.0),
             Material::default(),
-            Shape::new_test(),
         );
 
         let i = o.intersect(&r);
@@ -119,11 +151,11 @@ mod tests {
 
     #[test]
     fn computing_the_normal_on_a_transformed_shape() {
-        let mut o = Object::new(
+        let mut o = Object::new_test(
             Transformation::new().translate(0.0, 1.0, 0.0),
             Material::default(),
-            Shape::new_test(),
         );
+
         assert_approx_eq!(
             o.normal_at(&Point::new(0.0, 1.0 + FRAC_1_SQRT_2, -FRAC_1_SQRT_2)),
             Vector::new(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2)
@@ -145,10 +177,9 @@ mod tests {
     fn intersecting_a_scaled_sphere_with_a_ray() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
 
-        let o = Object::new(
+        let o = Object::new_sphere(
             Transformation::new().scale(2.0, 2.0, 2.0),
             Material::default(),
-            Shape::new_sphere(),
         );
 
         let i = o.intersect(&r);
@@ -168,10 +199,9 @@ mod tests {
     fn intersecting_a_translated_sphere_with_a_ray() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
 
-        let o = Object::new(
+        let o = Object::new_sphere(
             Transformation::new().translate(5.0, 0.0, 0.0),
             Material::default(),
-            Shape::new_sphere(),
         );
 
         let i = o.intersect(&r);
@@ -180,10 +210,9 @@ mod tests {
 
     #[test]
     fn computing_the_normal_on_a_translated_sphere() {
-        let o = Object::new(
+        let o = Object::new_sphere(
             Transformation::new().translate(0.0, 1.0, 0.0),
             Material::default(),
-            Shape::new_sphere(),
         );
 
         assert_approx_eq!(
@@ -194,12 +223,11 @@ mod tests {
 
     #[test]
     fn computing_the_normal_on_a_transformed_sphere() {
-        let o = Object::new(
+        let o = Object::new_sphere(
             Transformation::new()
                 .rotate_z(Angle::from_degrees(36.0))
                 .scale(1.0, 0.5, 1.0),
             Material::default(),
-            Shape::new_sphere(),
         );
 
         let sqrt_2_div_2 = SQRT_2 / 2.0;
@@ -214,10 +242,9 @@ mod tests {
     fn comparing_objects() {
         let o1 = Object::default_test();
         let o2 = Object::default_test();
-        let o3 = Object::new(
+        let o3 = Object::new_test(
             Transformation::new().scale(1.0, 2.0, 1.0),
             Material::default(),
-            Shape::new_test(),
         );
 
         assert_approx_eq!(o1, o2);

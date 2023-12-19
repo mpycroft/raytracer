@@ -13,7 +13,7 @@ use std::{
 use clap::Parser;
 use raytracer::{
     math::{Angle, Point, Transformation, Vector},
-    Camera, Colour, Material, Object, PointLight, Shape, World,
+    Camera, Colour, Material, Object, PointLight, World,
 };
 
 use crate::arguments::Arguments;
@@ -33,33 +33,30 @@ fn main() -> Result<(), Error> {
         ..Default::default()
     };
 
-    world.add_object(Object::new(
+    world.add_object(Object::new_sphere(
         Transformation::new().scale(10.0, 0.01, 10.0),
         material,
-        Shape::new_sphere(),
     ));
 
-    world.add_object(Object::new(
+    world.add_object(Object::new_sphere(
         Transformation::new()
             .scale(10.0, 0.01, 10.0)
             .rotate_x(Angle(FRAC_PI_2))
             .rotate_y(Angle(-FRAC_PI_4))
             .translate(0.0, 0.0, 5.0),
         material,
-        Shape::new_sphere(),
     ));
 
-    world.add_object(Object::new(
+    world.add_object(Object::new_sphere(
         Transformation::new()
             .scale(10.0, 0.01, 10.0)
             .rotate_x(Angle(FRAC_PI_2))
             .rotate_y(Angle(FRAC_PI_4))
             .translate(0.0, 0.0, 5.0),
         material,
-        Shape::new_sphere(),
     ));
 
-    world.add_object(Object::new(
+    world.add_object(Object::new_sphere(
         Transformation::new()
             .translate(-0.5, 1.0, 0.5)
             .shear(0.0, 0.9, 0.0, 0.0, 0.0, 0.0),
@@ -69,10 +66,9 @@ fn main() -> Result<(), Error> {
             specular: 0.9,
             ..Default::default()
         },
-        Shape::new_sphere(),
     ));
 
-    world.add_object(Object::new(
+    world.add_object(Object::new_sphere(
         Transformation::new().scale(0.5, 0.5, 0.5).translate(1.5, 0.5, -0.5),
         Material {
             colour: Colour::new(0.1, 1.0, 0.1),
@@ -80,10 +76,9 @@ fn main() -> Result<(), Error> {
             specular: 0.3,
             ..Default::default()
         },
-        Shape::new_sphere(),
     ));
 
-    world.add_object(Object::new(
+    world.add_object(Object::new_sphere(
         Transformation::new()
             .scale(0.33, 0.33, 0.33)
             .translate(-1.5, 0.33, -0.75),
@@ -93,7 +88,6 @@ fn main() -> Result<(), Error> {
             specular: 0.3,
             ..Default::default()
         },
-        Shape::new_sphere(),
     ));
 
     world.add_light(PointLight::new(
