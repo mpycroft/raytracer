@@ -2,7 +2,7 @@ use derive_more::Constructor;
 use float_cmp::{ApproxEq, F64Margin};
 
 use crate::{
-    intersect::{Intersectable, IntersectionList},
+    intersect::{Intersectable, Intersection, IntersectionList},
     math::{Point, Ray, Transformable, Transformation, Vector},
     Material, Shape,
 };
@@ -17,7 +17,16 @@ pub struct Object {
 
 impl Object {
     #[must_use]
-    pub fn new_test() -> Self {
+    pub fn default_sphere() -> Self {
+        Self::new(
+            Transformation::new(),
+            Material::default(),
+            Shape::new_sphere(),
+        )
+    }
+
+    #[must_use]
+    pub fn default_test() -> Self {
         Self::new(Transformation::new(), Material::default(), Shape::new_test())
     }
 }
@@ -26,7 +35,17 @@ impl Intersectable for Object {
     fn intersect(&self, ray: &Ray) -> Option<IntersectionList> {
         let ray = ray.apply(&self.transformation.invert());
 
-        self.shape.intersect(&ray)
+        let Some(t_values) = self.shape.intersect(&ray) else {
+            return None;
+        };
+
+        Some(
+            t_values
+                .iter()
+                .map(|t| Intersection::new(self, *t))
+                .collect::<Vec<Intersection>>()
+                .into(),
+        )
     }
 
     fn normal_at(&self, point: &Point) -> Vector {
@@ -75,7 +94,7 @@ mod tests {
         assert_approx_eq!(o.material, m);
         assert_approx_eq!(o.shape, &s);
 
-        let o = Object::new_test();
+        let o = Object::default_test();
         assert_approx_eq!(o.transformation, Transformation::new());
         assert_approx_eq!(o.material, Material::default());
         assert_approx_eq!(o.shape, &s);
@@ -93,7 +112,8 @@ mod tests {
 
         let _ = o.intersect(&r);
 
-        let Shape::Test(test) = o.shape.clone();
+        let Shape::Test(test) = o.shape.clone() else { unreachable!() };
+
         assert_approx_eq!(
             test.ray.get().unwrap(),
             Ray::new(Point::new(0.0, 0.0, -2.5), Vector::new(0.0, 0.0, 0.5))
@@ -103,7 +123,8 @@ mod tests {
 
         let _ = o.intersect(&r);
 
-        let Shape::Test(test) = o.shape;
+        let Shape::Test(test) = o.shape else { unreachable!() };
+
         assert_approx_eq!(
             test.ray.get().unwrap(),
             Ray::new(Point::new(-5.0, 0.0, -5.0), Vector::z_axis())
@@ -135,9 +156,78 @@ mod tests {
     }
 
     #[test]
+    fn intersecting_a_scaled_sphere_with_a_ray() {
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
+
+        let o = Object::new(
+            Transformation::new().scale(2.0, 2.0, 2.0),
+            Material::default(),
+            Shape::new_sphere(),
+        );
+
+        let i = o.intersect(&r);
+        assert!(i.is_some());
+
+        let i = i.unwrap();
+        assert_eq!(i.len(), 2);
+
+        assert_approx_eq!(i[0].object, &o);
+        assert_approx_eq!(i[1].object, &o);
+
+        assert_approx_eq!(i[0].t, 3.0);
+        assert_approx_eq!(i[1].t, 7.0);
+    }
+
+    #[test]
+    fn intersecting_a_translated_sphere_with_a_ray() {
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
+
+        let o = Object::new(
+            Transformation::new().translate(5.0, 0.0, 0.0),
+            Material::default(),
+            Shape::new_sphere(),
+        );
+
+        let i = o.intersect(&r);
+        assert!(i.is_none());
+    }
+
+    #[test]
+    fn computing_the_normal_on_a_translated_sphere() {
+        let o = Object::new(
+            Transformation::new().translate(0.0, 1.0, 0.0),
+            Material::default(),
+            Shape::new_sphere(),
+        );
+
+        assert_approx_eq!(
+            o.normal_at(&Point::new(0.0, 1.0 + FRAC_1_SQRT_2, -FRAC_1_SQRT_2)),
+            Vector::new(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2)
+        );
+    }
+
+    #[test]
+    fn computing_the_normal_on_a_transformed_sphere() {
+        let o = Object::new(
+            Transformation::new()
+                .rotate_z(Angle::from_degrees(36.0))
+                .scale(1.0, 0.5, 1.0),
+            Material::default(),
+            Shape::new_sphere(),
+        );
+
+        let sqrt_2_div_2 = SQRT_2 / 2.0;
+        assert_approx_eq!(
+            o.normal_at(&Point::new(0.0, sqrt_2_div_2, -sqrt_2_div_2)),
+            Vector::new(0.0, 0.970_14, -0.242_54),
+            epsilon = 0.000_01
+        );
+    }
+
+    #[test]
     fn comparing_objects() {
-        let o1 = Object::new_test();
-        let o2 = Object::new_test();
+        let o1 = Object::default_test();
+        let o2 = Object::default_test();
         let o3 = Object::new(
             Transformation::new().scale(1.0, 2.0, 1.0),
             Material::default(),

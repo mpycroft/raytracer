@@ -1,14 +1,14 @@
 use crate::{
     intersect::{Computations, Intersectable, IntersectionList},
     math::{Point, Ray},
-    Colour, PointLight, Sphere,
+    Colour, Object, PointLight,
 };
 
 /// A `World` represents all the objects and light sources in a given scene that
 /// we are rendering.
 #[derive(Clone, Debug)]
 pub struct World {
-    objects: Vec<Sphere>,
+    objects: Vec<Object>,
     lights: Vec<PointLight>,
 }
 
@@ -18,7 +18,7 @@ impl World {
         Self { objects: Vec::new(), lights: Vec::new() }
     }
 
-    pub fn add_object(&mut self, object: Sphere) {
+    pub fn add_object(&mut self, object: Object) {
         self.objects.push(object);
     }
 
@@ -109,14 +109,14 @@ mod tests {
     use super::*;
     use crate::{
         intersect::Intersection,
-        math::{float::assert_approx_eq, Angle, Transformation, Vector},
-        Camera, Material,
+        math::{float::*, Angle, Transformation, Vector},
+        Camera, Material, Shape,
     };
 
     fn test_world() -> World {
         let mut w = World::new();
 
-        w.add_object(Sphere::new(
+        w.add_object(Object::new(
             Transformation::new(),
             Material {
                 colour: Colour::new(0.8, 1.0, 0.6),
@@ -124,10 +124,12 @@ mod tests {
                 specular: 0.2,
                 ..Default::default()
             },
+            Shape::new_sphere(),
         ));
-        w.add_object(Sphere::new(
+        w.add_object(Object::new(
             Transformation::new().scale(0.5, 0.5, 0.5),
             Material::default(),
+            Shape::new_sphere(),
         ));
 
         w.add_light(PointLight::new(
@@ -153,18 +155,19 @@ mod tests {
     fn adding_elements_to_a_world() {
         let mut w = World::new();
 
-        let s1 = Sphere::default();
-        let s2 = Sphere::new(
+        let o1 = Object::default_test();
+        let o2 = Object::new(
             Transformation::new().translate(1.0, 2.0, 3.0),
             Material::default(),
+            Shape::new_sphere(),
         );
 
-        w.add_object(s1);
-        w.add_object(s2);
+        w.add_object(o1.clone());
+        w.add_object(o2.clone());
 
         assert_eq!(w.objects.len(), 2);
-        assert_approx_eq!(w.objects[0], s1);
-        assert_approx_eq!(w.objects[1], s2);
+        assert_approx_eq!(w.objects[0], &o1);
+        assert_approx_eq!(w.objects[1], &o2);
 
         let l1 = PointLight::new(Point::origin(), Colour::blue());
         let l2 = PointLight::new(Point::new(1.0, 2.0, 3.0), Colour::green());
@@ -261,17 +264,18 @@ mod tests {
             Colour::white(),
         ));
 
-        w.add_object(Sphere::default());
+        w.add_object(Object::default_sphere());
 
-        let s = Sphere::new(
+        let o = Object::new(
             Transformation::new().translate(0.0, 0.0, 10.0),
             Material::default(),
+            Shape::new_sphere(),
         );
-        w.add_object(s);
+        w.add_object(o.clone());
 
         let r = Ray::new(Point::new(0.0, 0.0, 5.0), Vector::z_axis());
 
-        let i = Intersection::new(&s, 4.0);
+        let i = Intersection::new(&o, 4.0);
 
         let c = i.prepare_computations(&r);
 

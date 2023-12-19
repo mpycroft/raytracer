@@ -1,35 +1,40 @@
+mod sphere;
 mod test;
 
 use float_cmp::{ApproxEq, F64Margin};
-pub use test::Test;
 
-use crate::{
-    intersect::{Intersectable, IntersectionList},
-    math::{Point, Ray, Vector},
-};
+use self::sphere::Sphere;
+use self::test::Test;
+use crate::math::{Point, Ray, Vector};
 
 /// `Shape` is the list of the various geometries that can be rendered.
 #[derive(Clone, Debug)]
 pub enum Shape {
+    Sphere(Sphere),
     Test(Test),
 }
 
 impl Shape {
     #[must_use]
+    pub fn new_sphere() -> Self {
+        Self::Sphere(Sphere)
+    }
+
+    #[must_use]
     pub fn new_test() -> Self {
         Self::Test(Test::new())
     }
-}
 
-impl Intersectable for Shape {
-    fn intersect(&self, ray: &Ray) -> Option<IntersectionList> {
+    pub fn intersect(&self, ray: &Ray) -> Option<Vec<f64>> {
         match self {
+            Shape::Sphere(sphere) => sphere.intersect(ray),
             Shape::Test(test) => test.intersect(ray),
         }
     }
 
-    fn normal_at(&self, point: &Point) -> Vector {
+    pub fn normal_at(&self, point: &Point) -> Vector {
         match self {
+            Shape::Sphere(sphere) => sphere.normal_at(point),
             Shape::Test(test) => test.normal_at(point),
         }
     }
@@ -42,7 +47,9 @@ impl ApproxEq for &Shape {
         let margin = margin.into();
 
         match (self, other) {
+            (Shape::Sphere(_), Shape::Sphere(_)) => true,
             (Shape::Test(lhs), Shape::Test(rhs)) => lhs.approx_eq(rhs, margin),
+            (_, _) => false,
         }
     }
 }
@@ -56,9 +63,7 @@ mod tests {
     fn comparing_shapes() {
         let s1 = Shape::new_test();
         let s2 = Shape::new_test();
-        let s3 = Shape::new_test();
-        let Shape::Test(t) = &s3;
-        t.ray.set(Some(Ray::new(Point::origin(), Vector::x_axis())));
+        let s3 = Shape::new_sphere();
 
         assert_approx_eq!(s1, &s2);
 
