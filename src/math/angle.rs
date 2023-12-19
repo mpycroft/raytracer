@@ -76,7 +76,7 @@ mod tests {
     use std::f64::consts::{FRAC_PI_2, FRAC_PI_3, FRAC_PI_4, FRAC_PI_6, PI};
 
     use super::*;
-    use crate::math::float::{assert_approx_eq, assert_approx_ne};
+    use crate::math::float::*;
 
     #[test]
     fn creating_angles() {
