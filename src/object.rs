@@ -27,6 +27,7 @@ impl Object {
         )
     }
 
+    #[cfg(test)]
     #[must_use]
     pub fn default_test() -> Self {
         Self::new(Transformation::new(), Material::default(), Shape::new_test())

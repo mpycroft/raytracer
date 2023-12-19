@@ -22,7 +22,7 @@ impl Ray {
 
 impl<'a> Transformable<'a> for Ray {
     fn apply(&'a self, transformation: &Transformation) -> Self {
-        Ray::new(
+        Self::new(
             self.origin.apply(transformation),
             self.direction.apply(transformation),
         )
