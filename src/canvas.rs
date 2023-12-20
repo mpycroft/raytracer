@@ -11,6 +11,7 @@ pub struct Canvas {
 }
 
 impl Canvas {
+    #[must_use]
     pub fn new(width: usize, height: usize) -> Self {
         Self { width, height, pixels: vec![Colour::black(); width * height] }
     }
@@ -19,6 +20,7 @@ impl Canvas {
         self.pixels[y * self.width + x] = colour;
     }
 
+    #[must_use]
     pub fn to_ppm(&self) -> String {
         let mut data = format!("P3\n{} {}\n255\n", self.width, self.height);
 
@@ -55,6 +57,15 @@ mod tests {
         c.write_pixel(2, 3, Colour::red());
 
         assert_approx_eq!(c.pixels[32], Colour::red());
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "index out of bounds: the len is 25 but the index is 53"
+    )]
+    fn writing_pixels_with_invalid_values() {
+        let mut c = Canvas::new(5, 5);
+        c.write_pixel(3, 10, Colour::green());
     }
 
     #[test]

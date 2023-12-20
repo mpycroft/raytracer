@@ -18,39 +18,53 @@ pub struct Colour {
 }
 
 impl Colour {
+    #[must_use]
     pub fn black() -> Self {
         Self::new(0.0, 0.0, 0.0)
     }
 
+    #[must_use]
     pub fn white() -> Self {
         Self::new(1.0, 1.0, 1.0)
     }
 
+    #[must_use]
     pub fn red() -> Self {
         Self::new(1.0, 0.0, 0.0)
     }
 
+    #[must_use]
     pub fn green() -> Self {
         Self::new(0.0, 1.0, 0.0)
     }
 
+    #[must_use]
     pub fn blue() -> Self {
         Self::new(0.0, 0.0, 1.0)
     }
 
+    #[must_use]
     pub fn yellow() -> Self {
         Self::new(1.0, 1.0, 0.0)
     }
 
+    #[must_use]
     pub fn purple() -> Self {
         Self::new(1.0, 0.0, 1.0)
     }
 
+    #[must_use]
     pub fn cyan() -> Self {
         Self::new(0.0, 1.0, 1.0)
     }
 
+    #[must_use]
     pub fn to_u8(&self) -> (u8, u8, u8) {
+        // There is no nice way to do a conversion from f64 to a u8 so we are
+        // forced to use `as` and the clamp and multiplication guarantee that we
+        // are within the value of a u8.
+        #[allow(clippy::cast_possible_truncation)]
+        #[allow(clippy::cast_sign_loss)]
         let convert = |c: f64| (c.clamp(0.0, 1.0) * 255.0).round() as u8;
 
         (convert(self.red), convert(self.green), convert(self.blue))

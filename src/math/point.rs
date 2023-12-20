@@ -5,7 +5,7 @@ use derive_more::Constructor;
 use super::{float::impl_approx_eq, Vector};
 
 /// A Point is a representation of a geometric position within the 3 dimensional
-/// scene we are working on
+/// scene we are working on.
 #[derive(Clone, Copy, Debug, Constructor)]
 pub struct Point {
     pub x: f64,
@@ -46,7 +46,7 @@ impl Sub for Point {
 }
 
 impl Sub<Vector> for Point {
-    type Output = Point;
+    type Output = Self;
 
     fn sub(self, rhs: Vector) -> Self::Output {
         Self::Output::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)

@@ -2,6 +2,7 @@
 //! needed throughout the ray tracer.
 
 pub mod float;
+pub mod matrix;
 mod point;
 mod vector;
 
