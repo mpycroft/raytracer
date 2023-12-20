@@ -1,4 +1,9 @@
-use raytracer::math::{Point, Vector};
+use std::{fs::write, io::Error};
+
+use raytracer::{
+    math::{Point, Vector},
+    Canvas, Colour,
+};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Projectile {
@@ -31,25 +36,30 @@ impl Environment {
     }
 }
 
-fn main() {
-    let mut projectile =
-        Projectile::new(Point::new(0.0, 1.0, 0.0), Vector::new(1.0, 1.0, 0.0));
+fn main() -> Result<(), Error> {
+    let width = 900;
+    let height = 550;
+    let mut canvas = Canvas::new(width, height);
 
+    let mut projectile = Projectile::new(
+        Point::new(0.0, 1.0, 0.0),
+        Vector::new(1.0, 1.8, 0.0).normalise() * 11.25,
+    );
     let environment = Environment::new(
         Vector::new(0.0, -0.1, 0.0),
         Vector::new(-0.01, 0.0, 0.0),
     );
 
-    let mut tick = 0;
-
-    println!("Initial projectile {projectile:?}");
-
     while projectile.position.y >= 0.0 {
-        projectile = environment.update(projectile);
-        tick += 1;
+        let x = projectile.position.x as i32;
+        let y = height as i32 - projectile.position.y as i32;
 
-        println!("Projectile at tick {tick:?} is {projectile:?}");
+        if (0..width as i32).contains(&x) && (0..height as i32).contains(&y) {
+            canvas.write_pixel(x as usize, y as usize, Colour::white());
+        }
+
+        projectile = environment.update(projectile);
     }
 
-    println!("Projectile landed in {tick:?} ticks")
+    write("image.ppm", canvas.to_ppm())
 }

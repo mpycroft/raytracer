@@ -78,6 +78,27 @@ macro_rules! assert_approx_ne {
 #[cfg(test)]
 pub(crate) use assert_approx_ne;
 
+/// Implement the ApproxEq trait for a struct.
+macro_rules! impl_approx_eq {
+    ($ty:ty { $id:ident $(, $ids:ident)* }) => {
+        impl float_cmp::ApproxEq for $ty {
+            type Margin = float_cmp::F64Margin;
+
+            fn approx_eq<M: Into<Self::Margin>>(
+                self, other: Self, margin: M
+            ) -> bool {
+                let margin = margin.into();
+
+                self.$id.approx_eq(other.$id, margin)
+                $(
+                    && self.$ids.approx_eq(other.$ids, margin)
+                )*
+            }
+        }
+    };
+}
+pub(crate) use impl_approx_eq;
+
 #[cfg(test)]
 mod tests {
     use std::f64::EPSILON;

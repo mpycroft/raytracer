@@ -1,14 +1,17 @@
-use std::ops::{
-    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign,
+use std::ops::Mul;
+
+use derive_more::{
+    Add, AddAssign, Constructor, Div, DivAssign, Mul, MulAssign, Neg, Sub,
+    SubAssign,
 };
 
-use float_cmp::{ApproxEq, F64Margin};
-
-use super::float::approx_eq;
+use super::float::{approx_eq, impl_approx_eq};
 
 /// A Vector is a representation of a geometric vector, pointing in a given
 /// direction and with a magnitude.
-#[derive(Clone, Copy, Debug)]
+#[rustfmt::skip]
+#[derive(Clone, Copy, Debug, Constructor, Neg)]
+#[derive(Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div, DivAssign)]
 pub struct Vector {
     pub x: f64,
     pub y: f64,
@@ -16,10 +19,6 @@ pub struct Vector {
 }
 
 impl Vector {
-    pub fn new(x: f64, y: f64, z: f64) -> Self {
-        Self { x, y, z }
-    }
-
     pub fn magnitude(&self) -> f64 {
         (self.dot(*self)).sqrt()
     }
@@ -47,46 +46,6 @@ impl Vector {
     }
 }
 
-impl Add for Vector {
-    type Output = Self;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        Self::Output::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
-    }
-}
-
-impl AddAssign for Vector {
-    fn add_assign(&mut self, rhs: Self) {
-        self.x += rhs.x;
-        self.y += rhs.y;
-        self.z += rhs.z;
-    }
-}
-
-impl Sub for Vector {
-    type Output = Self;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        Self::Output::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
-    }
-}
-
-impl SubAssign for Vector {
-    fn sub_assign(&mut self, rhs: Self) {
-        self.x -= rhs.x;
-        self.y -= rhs.y;
-        self.z -= rhs.z;
-    }
-}
-
-impl Mul<f64> for Vector {
-    type Output = Self;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Self::Output::new(self.x * rhs, self.y * rhs, self.z * rhs)
-    }
-}
-
 impl Mul<Vector> for f64 {
     type Output = Vector;
 
@@ -95,54 +54,12 @@ impl Mul<Vector> for f64 {
     }
 }
 
-impl MulAssign<f64> for Vector {
-    fn mul_assign(&mut self, rhs: f64) {
-        self.x *= rhs;
-        self.y *= rhs;
-        self.z *= rhs;
-    }
-}
-
-impl Div<f64> for Vector {
-    type Output = Self;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Self::Output::new(self.x / rhs, self.y / rhs, self.z / rhs)
-    }
-}
-
-impl DivAssign<f64> for Vector {
-    fn div_assign(&mut self, rhs: f64) {
-        self.x /= rhs;
-        self.y /= rhs;
-        self.z /= rhs;
-    }
-}
-
-impl Neg for Vector {
-    type Output = Self;
-
-    fn neg(self) -> Self::Output {
-        Self::Output::new(-self.x, -self.y, -self.z)
-    }
-}
-
-impl ApproxEq for Vector {
-    type Margin = F64Margin;
-
-    fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
-        let margin = margin.into();
-
-        self.x.approx_eq(other.x, margin)
-            && self.y.approx_eq(other.y, margin)
-            && self.z.approx_eq(other.z, margin)
-    }
-}
+impl_approx_eq!(Vector { x, y, z });
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::float::{assert_approx_eq, assert_approx_ne};
+    use crate::math::float::*;
 
     #[test]
     fn creating_a_vector() {
