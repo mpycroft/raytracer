@@ -16,8 +16,8 @@ impl Canvas {
         Self { width, height, pixels: vec![Colour::black(); width * height] }
     }
 
-    pub fn write_pixel(&mut self, x: usize, y: usize, colour: Colour) {
-        self.pixels[y * self.width + x] = colour;
+    pub fn write_pixel(&mut self, x: usize, y: usize, colour: &Colour) {
+        self.pixels[y * self.width + x] = *colour;
     }
 
     #[must_use]
@@ -54,7 +54,7 @@ mod tests {
     #[test]
     fn writing_pixels_to_a_canvas() {
         let mut c = Canvas::new(10, 20);
-        c.write_pixel(2, 3, Colour::red());
+        c.write_pixel(2, 3, &Colour::red());
 
         assert_approx_eq!(c.pixels[32], Colour::red());
     }
@@ -65,16 +65,16 @@ mod tests {
     )]
     fn writing_pixels_with_invalid_values() {
         let mut c = Canvas::new(5, 5);
-        c.write_pixel(3, 10, Colour::green());
+        c.write_pixel(3, 10, &Colour::green());
     }
 
     #[test]
     fn generating_ppm_data_from_a_canvas() {
         let mut c = Canvas::new(5, 3);
 
-        c.write_pixel(0, 0, Colour::new(1.5, 0.0, 0.0));
-        c.write_pixel(2, 1, Colour::new(0.0, 0.5, 0.0));
-        c.write_pixel(4, 2, Colour::new(-0.5, 0.0, 1.0));
+        c.write_pixel(0, 0, &Colour::new(1.5, 0.0, 0.0));
+        c.write_pixel(2, 1, &Colour::new(0.0, 0.5, 0.0));
+        c.write_pixel(4, 2, &Colour::new(-0.5, 0.0, 1.0));
 
         assert_eq!(
             c.to_ppm(),
@@ -105,7 +105,7 @@ P3
 
         for x in 0..w {
             for y in 0..h {
-                c.write_pixel(x, y, Colour::new(1.0, 0.8, 0.6));
+                c.write_pixel(x, y, &Colour::new(1.0, 0.8, 0.6));
             }
         }
 

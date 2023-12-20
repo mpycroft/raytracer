@@ -12,7 +12,7 @@ use super::{float::approx_eq, Point, Vector};
 
 /// A Matrix is a square matrix of size N, stored in row major order.
 #[derive(Clone, Copy, Index, IndexMut, IntoIterator)]
-pub struct Matrix<const N: usize>(pub [[f64; N]; N]);
+pub struct Matrix<const N: usize>(pub(super) [[f64; N]; N]);
 
 impl<const N: usize> Matrix<N> {
     #[must_use]
@@ -129,6 +129,72 @@ impl_matrix!(4);
 impl_matrix!(3);
 
 impl Matrix<4> {
+    #[must_use]
+    pub fn translate(x: f64, y: f64, z: f64) -> Self {
+        Self([
+            [1.0, 0.0, 0.0, x],
+            [0.0, 1.0, 0.0, y],
+            [0.0, 0.0, 1.0, z],
+            [0.0, 0.0, 0.0, 1.0],
+        ])
+    }
+
+    #[must_use]
+    pub fn scale(x: f64, y: f64, z: f64) -> Self {
+        Self([
+            [x, 0.0, 0.0, 0.0],
+            [0.0, y, 0.0, 0.0],
+            [0.0, 0.0, z, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ])
+    }
+
+    #[must_use]
+    pub fn rotate_x(radians: f64) -> Self {
+        let (sin, cos) = radians.sin_cos();
+
+        Self([
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, cos, -sin, 0.0],
+            [0.0, sin, cos, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ])
+    }
+
+    #[must_use]
+    pub fn rotate_y(radians: f64) -> Self {
+        let (sin, cos) = radians.sin_cos();
+
+        Self([
+            [cos, 0.0, sin, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+            [-sin, 0.0, cos, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ])
+    }
+
+    #[must_use]
+    pub fn rotate_z(radians: f64) -> Self {
+        let (sin, cos) = radians.sin_cos();
+
+        Self([
+            [cos, -sin, 0.0, 0.0],
+            [sin, cos, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ])
+    }
+
+    #[must_use]
+    pub fn shear(xy: f64, xz: f64, yx: f64, yz: f64, zx: f64, zy: f64) -> Self {
+        Self([
+            [1.0, xy, xz, 0.0],
+            [yx, 1.0, yz, 0.0],
+            [zx, zy, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ])
+    }
+
     /// Attempt to invert the matrix.
     ///
     /// # Errors
@@ -287,6 +353,8 @@ impl<const N: usize> ApproxEq for Matrix<N> {
 
 #[cfg(test)]
 mod tests {
+    use std::f64::consts::{FRAC_PI_2, FRAC_PI_4, SQRT_2};
+
     use super::*;
     use crate::math::float::*;
 
@@ -399,6 +467,172 @@ mod tests {
 
         let id = Matrix::<3>::identity();
         assert_approx_eq!(id.transpose(), id);
+    }
+
+    #[test]
+    fn multiplying_by_a_translation_matrix() {
+        let m = Matrix::translate(5.0, -3.0, 2.0);
+
+        let p = Point::new(-3.0, 4.0, 5.0);
+        assert_approx_eq!(m * p, Point::new(2.0, 1.0, 7.0));
+
+        assert_approx_eq!(m.invert().unwrap() * p, Point::new(-8.0, 7.0, 3.0));
+
+        let v = Vector::new(-3.0, 4.0, 5.0);
+        assert_approx_eq!(m * v, v);
+    }
+
+    #[test]
+    fn multiplying_by_a_scaling_matrix() {
+        let m = Matrix::scale(2.0, 3.0, 4.0);
+
+        assert_approx_eq!(
+            m * Point::new(-4.0, 6.0, 8.0),
+            Point::new(-8.0, 18.0, 32.0)
+        );
+
+        let v = Vector::new(-4.0, 6.0, 8.0);
+        assert_approx_eq!(m * v, Vector::new(-8.0, 18.0, 32.0));
+
+        assert_approx_eq!(m.invert().unwrap() * v, Vector::new(-2.0, 2.0, 2.0));
+
+        assert_approx_eq!(
+            Matrix::scale(-1.0, 1.0, 1.0) * Point::new(2.0, 3.0, 4.0),
+            Point::new(-2.0, 3.0, 4.0)
+        );
+    }
+
+    #[test]
+    fn multiplying_by_a_rotate_x_matrix() {
+        let p = Point::new(0.0, 1.0, 0.0);
+
+        let half = Matrix::rotate_x(FRAC_PI_4);
+
+        let sqrt_2_div_2 = SQRT_2 / 2.0;
+        assert_approx_eq!(
+            half * p,
+            Point::new(0.0, sqrt_2_div_2, sqrt_2_div_2)
+        );
+
+        assert_approx_eq!(
+            Matrix::rotate_x(FRAC_PI_2) * Vector::new(0.0, 1.0, 0.0),
+            Vector::new(0.0, 0.0, 1.0)
+        );
+
+        assert_approx_eq!(
+            half.invert().unwrap() * p,
+            Point::new(0.0, sqrt_2_div_2, -sqrt_2_div_2)
+        );
+    }
+
+    #[test]
+    fn multiplying_by_a_rotate_y_matrix() {
+        let p = Point::new(0.0, 0.0, 1.0);
+
+        let half = Matrix::rotate_y(FRAC_PI_4);
+
+        let sqrt_2_div_2 = SQRT_2 / 2.0;
+        assert_approx_eq!(
+            half * p,
+            Point::new(sqrt_2_div_2, 0.0, sqrt_2_div_2)
+        );
+
+        assert_approx_eq!(
+            Matrix::rotate_y(FRAC_PI_2) * Vector::new(0.0, 0.0, 1.0),
+            Vector::new(1.0, 0.0, 0.0)
+        );
+
+        assert_approx_eq!(
+            half.invert().unwrap() * p,
+            Point::new(-sqrt_2_div_2, 0.0, sqrt_2_div_2)
+        );
+    }
+
+    #[test]
+    fn multiplying_by_a_rotate_z_matrix() {
+        let p = Point::new(0.0, 1.0, 0.0);
+
+        let half = Matrix::rotate_z(FRAC_PI_4);
+
+        let sqrt_2_div_2 = SQRT_2 / 2.0;
+        assert_approx_eq!(
+            half * p,
+            Point::new(-sqrt_2_div_2, sqrt_2_div_2, 0.0)
+        );
+
+        assert_approx_eq!(
+            Matrix::rotate_z(FRAC_PI_2) * Vector::new(0.0, 1.0, 0.0),
+            Vector::new(-1.0, 0.0, 0.0)
+        );
+
+        assert_approx_eq!(
+            half.invert().unwrap() * p,
+            Point::new(sqrt_2_div_2, sqrt_2_div_2, 0.0)
+        );
+    }
+
+    #[test]
+    fn multiplying_by_a_shearing_matrix() {
+        let p = Point::new(2.0, 3.0, 4.0);
+
+        assert_approx_eq!(
+            Matrix::shear(1.0, 0.0, 0.0, 0.0, 0.0, 0.0) * p,
+            Point::new(5.0, 3.0, 4.0)
+        );
+
+        assert_approx_eq!(
+            Matrix::shear(0.0, 1.0, 0.0, 0.0, 0.0, 0.0) * p,
+            Point::new(6.0, 3.0, 4.0)
+        );
+
+        assert_approx_eq!(
+            Matrix::shear(0.0, 0.0, 1.0, 0.0, 0.0, 0.0) * p,
+            Point::new(2.0, 5.0, 4.0)
+        );
+
+        assert_approx_eq!(
+            Matrix::shear(0.0, 0.0, 0.0, 1.0, 0.0, 0.0) * p,
+            Point::new(2.0, 7.0, 4.0)
+        );
+
+        assert_approx_eq!(
+            Matrix::shear(0.0, 0.0, 0.0, 0.0, 1.0, 0.0) * p,
+            Point::new(2.0, 3.0, 6.0)
+        );
+
+        assert_approx_eq!(
+            Matrix::shear(0.0, 0.0, 0.0, 0.0, 0.0, 1.0)
+                * Vector::new(2.0, 3.0, 4.0),
+            Vector::new(2.0, 3.0, 7.0)
+        );
+    }
+
+    #[test]
+    #[allow(clippy::many_single_char_names)]
+    fn chaining_multiple_transformations() {
+        let o = Point::new(1.0, 0.0, 1.0);
+
+        let r = Matrix::rotate_x(FRAC_PI_2);
+        let s = Matrix::scale(5.0, 5.0, 5.0);
+        let t = Matrix::translate(10.0, 5.0, 7.0);
+
+        let p = r * o;
+        assert_approx_eq!(p, Point::new(1.0, -1.0, 0.0));
+
+        let p = s * p;
+        assert_approx_eq!(
+            p,
+            Point::new(5.0, -5.0, 0.0),
+            epsilon = 0.000_000_001
+        );
+
+        let p = t * p;
+        assert_approx_eq!(p, Point::new(15.0, 0.0, 7.0));
+
+        let m = t * s * r;
+        assert_approx_eq!(m * o, p);
+
+        assert_approx_eq!(m.invert().unwrap() * p, o);
     }
 
     #[test]
