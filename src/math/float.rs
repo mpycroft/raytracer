@@ -7,7 +7,6 @@
 //! overwritten if needed in certain places.
 
 /// Compare if two values are almost equal. See float-cmp documentation.
-#[cfg(test)]
 macro_rules! approx_eq {
     ($lhs:expr, $rhs:expr) => {
         crate::math::float::approx_eq!(
@@ -23,14 +22,13 @@ macro_rules! approx_eq {
         $lhs.approx_eq($rhs, $margin)
     }};
 }
-#[cfg(test)]
 pub(crate) use approx_eq;
 
 /// Compare if two values are not almost equal. See float-cmp documentation.
 #[cfg(test)]
 macro_rules! approx_ne {
     ($($tt:tt)+) => {
-        !approx_eq!($($tt)+)
+        !crate::math::float::approx_eq!($($tt)+)
     };
 }
 #[cfg(test)]
@@ -40,16 +38,16 @@ pub(crate) use approx_ne;
 #[cfg(test)]
 macro_rules! _assert_approx_helper {
     ($approx:ident, $lhs:expr, $rhs:expr) => {
-        _assert_approx_helper!(
+        crate::math::float::_assert_approx_helper!(
             $approx, $lhs, $rhs, float_cmp::F64Margin::default()
         )
     };
     ($approx:ident, $lhs:expr, $rhs:expr $(, $set:ident = $val:expr)*) => {{
         let margin = float_cmp::F64Margin::zero()$(.$set($val))*;
-        _assert_approx_helper!($approx, $lhs, $rhs, margin)
+        crate::math::float::_assert_approx_helper!($approx, $lhs, $rhs, margin)
     }};
     ($approx:ident, $lhs:expr, $rhs:expr, $margin:expr) => {{
-        if !$approx!($lhs, $rhs, $margin) {
+        if !crate::math::float::$approx!($lhs, $rhs, $margin) {
             panic!("\
 assertion failed: (left {} right)
   left: {:?},
@@ -64,7 +62,7 @@ pub(crate) use _assert_approx_helper;
 #[cfg(test)]
 macro_rules! assert_approx_eq {
     ($($tt:tt)+) => {
-        _assert_approx_helper!(approx_eq, $($tt)+);
+        crate::math::float::_assert_approx_helper!(approx_eq, $($tt)+);
     };
 }
 #[cfg(test)]
@@ -74,7 +72,7 @@ pub(crate) use assert_approx_eq;
 #[cfg(test)]
 macro_rules! assert_approx_ne {
     ($($tt:tt)+) => {
-        _assert_approx_helper!(approx_ne, $($tt)+);
+        crate::math::float::_assert_approx_helper!(approx_ne, $($tt)+);
     };
 }
 #[cfg(test)]
