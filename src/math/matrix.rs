@@ -195,6 +195,23 @@ impl Matrix<4> {
         ])
     }
 
+    #[must_use]
+    pub fn view_transformation(from: &Point, to: &Point, up: &Vector) -> Self {
+        let forward = (*to - *from).normalise();
+        let up = up.normalise();
+        let left = forward.cross(&up);
+        let true_up = left.cross(&forward);
+
+        let matrix = Self([
+            [left.x, left.y, left.z, 0.0],
+            [true_up.x, true_up.y, true_up.z, 0.0],
+            [-forward.x, -forward.y, -forward.z, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ]);
+
+        matrix * Self::translate(-from.x, -from.y, -from.z)
+    }
+
     /// Attempt to invert the matrix.
     ///
     /// # Errors
@@ -633,6 +650,60 @@ mod tests {
         assert_approx_eq!(m * o, p);
 
         assert_approx_eq!(m.invert().unwrap() * p, o);
+    }
+
+    #[test]
+    fn the_transformation_matrix_for_the_default_orientation() {
+        assert_approx_eq!(
+            Matrix::view_transformation(
+                &Point::origin(),
+                &Point::new(0.0, 0.0, -1.0),
+                &Vector::y_axis()
+            ),
+            Matrix::<4>::identity()
+        );
+    }
+
+    #[test]
+    fn a_view_transformation_matrix_looking_in_positive_z() {
+        assert_approx_eq!(
+            Matrix::view_transformation(
+                &Point::origin(),
+                &Point::new(0.0, 0.0, 1.0),
+                &Vector::y_axis()
+            ),
+            Matrix::scale(-1.0, 1.0, -1.0)
+        );
+    }
+
+    #[test]
+    fn the_view_transformation_moves_the_world() {
+        assert_approx_eq!(
+            Matrix::view_transformation(
+                &Point::new(0.0, 0.0, 8.0),
+                &Point::origin(),
+                &Vector::y_axis()
+            ),
+            Matrix::translate(0.0, 0.0, -8.0)
+        );
+    }
+
+    #[test]
+    fn an_arbitrary_view_transformation() {
+        assert_approx_eq!(
+            Matrix::view_transformation(
+                &Point::new(1.0, 3.0, 2.0),
+                &Point::new(4.0, -2.0, 8.0),
+                &Vector::new(1.0, 1.0, 0.0)
+            ),
+            Matrix([
+                [-0.507_09, 0.507_09, 0.676_12, -2.366_43],
+                [0.767_72, 0.606_09, 0.121_22, -2.828_43],
+                [-0.358_57, 0.597_61, -0.717_14, 0.0],
+                [0.0, 0.0, 0.0, 1.0]
+            ]),
+            epsilon = 0.000_01
+        );
     }
 
     #[test]

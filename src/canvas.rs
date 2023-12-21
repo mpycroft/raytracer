@@ -21,6 +21,11 @@ impl Canvas {
     }
 
     #[must_use]
+    pub fn get_pixel(&self, x: usize, y: usize) -> Colour {
+        self.pixels[y * self.width + x]
+    }
+
+    #[must_use]
     pub fn to_ppm(&self) -> String {
         let mut data = format!("P3\n{} {}\n255\n", self.width, self.height);
 
@@ -66,6 +71,25 @@ mod tests {
     fn writing_pixels_with_invalid_values() {
         let mut c = Canvas::new(5, 5);
         c.write_pixel(3, 10, &Colour::green());
+    }
+
+    #[test]
+    fn getting_pixels_from_a_canvas() {
+        let mut c = Canvas::new(10, 20);
+        c.write_pixel(4, 4, &Colour::red());
+
+        assert_approx_eq!(c.get_pixel(4, 4), Colour::red());
+        assert_approx_eq!(c.get_pixel(3, 4), Colour::black());
+        assert_approx_eq!(c.get_pixel(4, 3), Colour::black());
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "index out of bounds: the len is 25 but the index is 35"
+    )]
+    fn getting_pixels_with_an_invalid_value() {
+        let c = Canvas::new(5, 5);
+        let _ = c.get_pixel(20, 3);
     }
 
     #[test]
