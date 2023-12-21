@@ -56,3 +56,9 @@ information in the type we shouldn't hit any fundamental issues.
   annoying to use (e.g. implementing MulAssign, checks have to be a references,
   etc.). If we find that we spend a lot of time copying we may want to revisit
   this later.
+* Intersections are not sorted when added to the List and we just search the
+  vector of values for a minimum using iterators. May need to check later on if
+  its more efficient to use a different data structure or store elements sorted,
+  etc. when we have lots of hits.
+* We only store the transformation matrix with each object, we may consider
+  precomputing the inverted matrix as well.

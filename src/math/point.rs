@@ -2,7 +2,7 @@ use std::ops::{Add, AddAssign, Sub, SubAssign};
 
 use derive_more::Constructor;
 
-use super::{float::impl_approx_eq, Vector};
+use super::{float::impl_approx_eq, vector::Vector};
 
 /// A Point is a representation of a geometric position within the 3 dimensional
 /// scene we are working on.
@@ -11,6 +11,13 @@ pub struct Point {
     pub x: f64,
     pub y: f64,
     pub z: f64,
+}
+
+impl Point {
+    #[must_use]
+    pub fn origin() -> Self {
+        Self::new(0.0, 0.0, 0.0)
+    }
 }
 
 impl Add<Vector> for Point {
@@ -75,6 +82,8 @@ mod tests {
         assert_approx_eq!(p.x, 4.3);
         assert_approx_eq!(p.y, -4.2);
         assert_approx_eq!(p.z, 3.1);
+
+        assert_approx_eq!(Point::origin(), Point::new(0.0, 0.0, 0.0));
     }
 
     #[test]

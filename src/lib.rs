@@ -2,7 +2,10 @@
 
 mod canvas;
 mod colour;
+pub mod intersect;
 pub mod math;
+mod sphere;
 
 pub use canvas::Canvas;
 pub use colour::Colour;
+pub use sphere::Sphere;
