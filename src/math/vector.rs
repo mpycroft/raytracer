@@ -63,6 +63,11 @@ impl Vector {
             self.x * rhs.y - self.y * rhs.x,
         )
     }
+
+    #[must_use]
+    pub fn reflect(&self, normal: &Self) -> Self {
+        *self - *normal * 2.0 * self.dot(normal)
+    }
 }
 
 impl Mul<Vector> for f64 {
@@ -77,6 +82,8 @@ impl_approx_eq!(Vector { x, y, z });
 
 #[cfg(test)]
 mod tests {
+    use std::f64::consts::SQRT_2;
+
     use super::*;
     use crate::math::float::*;
 
@@ -146,6 +153,24 @@ mod tests {
 
         assert_approx_eq!(v1.cross(&v2), Vector::new(-1.0, 2.0, -1.0));
         assert_approx_eq!(v2.cross(&v1), Vector::new(1.0, -2.0, 1.0));
+    }
+
+    #[test]
+    fn reflecting_a_vector() {
+        assert_approx_eq!(
+            Vector::new(1.0, -1.0, 0.0).reflect(&Vector::y_axis()),
+            Vector::new(1.0, 1.0, 0.0)
+        );
+
+        let sqrt_2_div_2 = SQRT_2 / 2.0;
+        assert_approx_eq!(
+            -Vector::y_axis().reflect(&Vector::new(
+                sqrt_2_div_2,
+                sqrt_2_div_2,
+                0.0
+            )),
+            Vector::x_axis()
+        );
     }
 
     #[test]

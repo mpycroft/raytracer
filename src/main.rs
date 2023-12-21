@@ -7,7 +7,7 @@ use std::{fs::write, io::Error};
 use raytracer::{
     intersect::Intersectable,
     math::{Point, Ray, Transformation},
-    Canvas, Colour, Sphere,
+    Canvas, Colour, Material, PointLight, Sphere,
 };
 
 fn main() -> Result<(), Error> {
@@ -22,12 +22,19 @@ fn main() -> Result<(), Error> {
     let pixel_size = wall_size / canvas_pixels as f64;
     let half = wall_size / 2.0;
 
-    let colour = Colour::red();
-
     let sphere = Sphere::new(
-        Transformation::new()
-            .scale(0.5, 1.0, 1.0)
-            .shear(1.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        Transformation::new().scale(0.8, 1.2, 1.0).rotate_z(0.7),
+        Material {
+            colour: Colour::new(0.5, 0.2, 0.6),
+            ambient: 0.4,
+            diffuse: 0.4,
+            ..Default::default()
+        },
+    );
+
+    let light = PointLight::new(
+        Point::new(10.0, 10.0, -10.0),
+        Colour::new(0.1, 0.9, 0.2),
     );
 
     for y in 0..canvas_pixels {
@@ -41,7 +48,15 @@ fn main() -> Result<(), Error> {
             let ray = Ray::new(origin, (position - origin).normalise());
 
             if let Some(list) = sphere.intersect(&ray) {
-                if list.hit().is_some() {
+                if let Some(hit) = list.hit() {
+                    let point = ray.position(hit.t);
+                    let normal = hit.object.normal_at(&point);
+                    let eye = -ray.direction;
+
+                    let colour = hit
+                        .object
+                        .material
+                        .lighting(&light, &point, &eye, &normal);
                     canvas.write_pixel(x, y, &colour);
                 }
             }

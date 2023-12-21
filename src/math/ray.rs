@@ -2,9 +2,7 @@ use derive_more::Constructor;
 
 use super::{
     float::impl_approx_eq,
-    point::Point,
-    transformation::{Transformable, Transformation},
-    vector::Vector,
+    Point, Vector, {Transformable, Transformation},
 };
 
 /// A Ray represents a geometric vector with a specific origin point and

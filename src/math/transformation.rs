@@ -2,7 +2,7 @@ use std::ops::Mul;
 
 use float_cmp::{ApproxEq, F64Margin};
 
-use super::matrix::Matrix;
+use super::Matrix;
 
 /// The `Transformable` trait describes how to apply a `Transformation` to any given
 /// object, implementing this allows us to .apply() a `Transformation` to an object
@@ -118,7 +118,7 @@ mod tests {
     use std::f64::consts::{FRAC_PI_2, FRAC_PI_6, PI};
 
     use super::*;
-    use crate::math::{float::*, point::Point, vector::Vector};
+    use crate::math::{float::*, Point, Vector};
 
     #[test]
     fn creating_a_transformation() {

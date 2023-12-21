@@ -2,13 +2,16 @@ use derive_more::{Constructor, Deref, DerefMut, From};
 use float_cmp::{ApproxEq, F64Margin};
 
 use super::Sphere;
-use crate::math::Ray;
+use crate::math::{Point, Ray, Vector};
 
 /// A trait that objects need to implement if they can be intersected in a
 /// scene, returns a vector of intersection t values.
 pub trait Intersectable {
     #[must_use]
     fn intersect(&self, ray: &Ray) -> Option<IntersectionList>;
+
+    #[must_use]
+    fn normal_at(&self, point: &Point) -> Vector;
 }
 
 /// An Intersection stores both the t value of the intersection in addition to a
@@ -65,7 +68,10 @@ impl<'a> Default for IntersectionList<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::{float::*, Transformation};
+    use crate::{
+        math::{float::*, Transformation},
+        Material,
+    };
 
     #[test]
     fn creating_an_intersection() {
@@ -171,7 +177,10 @@ mod tests {
         let s1 = Sphere::default();
         let i1 = Intersection::new(&s1, 3.2);
         let i2 = Intersection::new(&s1, 3.2);
-        let s2 = Sphere::new(Transformation::new().translate(1.0, 0.0, 0.0));
+        let s2 = Sphere::new(
+            Transformation::new().translate(1.0, 0.0, 0.0),
+            Material::default(),
+        );
         let i3 = Intersection::new(&s2, 3.2);
 
         assert_approx_eq!(i1, i2);
