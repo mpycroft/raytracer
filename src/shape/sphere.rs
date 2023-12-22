@@ -44,13 +44,10 @@ mod tests {
     };
 
     #[test]
-    #[allow(clippy::many_single_char_names)]
     fn a_ray_intersects_a_sphere_at_two_points() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
 
-        let s = Sphere;
-
-        let b = s.intersect(&r);
+        let b = Sphere.intersect(&r);
 
         assert!(b.is_some());
 
@@ -64,13 +61,10 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::many_single_char_names)]
     fn a_ray_intersects_a_sphere_at_a_tangent() {
         let r = Ray::new(Point::new(0.0, 1.0, -5.0), Vector::z_axis());
 
-        let s = Sphere;
-
-        let b = s.intersect(&r);
+        let b = Sphere.intersect(&r);
 
         assert!(b.is_some());
 
@@ -87,20 +81,15 @@ mod tests {
     fn a_ray_misses_a_sphere() {
         let r = Ray::new(Point::new(0.0, 2.0, -5.0), Vector::z_axis());
 
-        let s = Sphere;
-
-        let i = s.intersect(&r);
+        let i = Sphere.intersect(&r);
         assert!(i.is_none());
     }
 
     #[test]
-    #[allow(clippy::many_single_char_names)]
     fn a_ray_originates_inside_a_sphere() {
         let r = Ray::new(Point::origin(), Vector::z_axis());
 
-        let s = Sphere;
-
-        let b = s.intersect(&r);
+        let b = Sphere.intersect(&r);
 
         assert!(b.is_some());
 
@@ -114,13 +103,10 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::many_single_char_names)]
     fn a_sphere_is_behind_a_ray() {
         let r = Ray::new(Point::new(0.0, 0.0, 5.0), Vector::z_axis());
 
-        let s = Sphere;
-
-        let b = s.intersect(&r);
+        let b = Sphere.intersect(&r);
 
         assert!(b.is_some());
 
@@ -155,10 +141,12 @@ mod tests {
 
     #[test]
     fn the_normal_on_a_sphere_at_a_non_axial_point() {
-        let s = Sphere;
         let sqrt_3_div_3 = f64::sqrt(3.0) / 3.0;
-        let n =
-            s.normal_at(&Point::new(sqrt_3_div_3, sqrt_3_div_3, sqrt_3_div_3));
+        let n = Sphere.normal_at(&Point::new(
+            sqrt_3_div_3,
+            sqrt_3_div_3,
+            sqrt_3_div_3,
+        ));
 
         assert_approx_eq!(
             n,
