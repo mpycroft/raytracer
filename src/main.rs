@@ -5,7 +5,7 @@
 mod arguments;
 
 use std::{
-    f64::consts::{FRAC_PI_2, FRAC_PI_3, FRAC_PI_4},
+    f64::consts::{FRAC_PI_2, FRAC_PI_3},
     fs::write,
     io::Error,
 };
@@ -33,37 +33,20 @@ fn main() -> Result<(), Error> {
         ..Default::default()
     };
 
-    world.add_object(Object::new_sphere(
-        Transformation::new().scale(10.0, 0.01, 10.0),
-        material,
-    ));
-
-    world.add_object(Object::new_sphere(
+    world.add_object(Object::new_plane(Transformation::new(), material));
+    world.add_object(Object::new_plane(
         Transformation::new()
-            .scale(10.0, 0.01, 10.0)
             .rotate_x(Angle(FRAC_PI_2))
-            .rotate_y(Angle(-FRAC_PI_4))
-            .translate(0.0, 0.0, 5.0),
+            .translate(0.0, 0.0, 10.0),
         material,
     ));
 
     world.add_object(Object::new_sphere(
-        Transformation::new()
-            .scale(10.0, 0.01, 10.0)
-            .rotate_x(Angle(FRAC_PI_2))
-            .rotate_y(Angle(FRAC_PI_4))
-            .translate(0.0, 0.0, 5.0),
-        material,
-    ));
-
-    world.add_object(Object::new_sphere(
-        Transformation::new()
-            .translate(-0.5, 1.0, 0.5)
-            .shear(0.0, 0.9, 0.0, 0.0, 0.0, 0.0),
+        Transformation::new().translate(-0.5, 1.0, 0.5),
         Material {
-            colour: Colour::new(0.1, 0.1, 1.0),
+            colour: Colour::new(0.1, 1.0, 0.5),
             diffuse: 0.7,
-            specular: 0.9,
+            specular: 0.3,
             ..Default::default()
         },
     ));
@@ -71,7 +54,7 @@ fn main() -> Result<(), Error> {
     world.add_object(Object::new_sphere(
         Transformation::new().scale(0.5, 0.5, 0.5).translate(1.5, 0.5, -0.5),
         Material {
-            colour: Colour::new(0.1, 1.0, 0.1),
+            colour: Colour::new(0.5, 1.0, 0.1),
             diffuse: 0.7,
             specular: 0.3,
             ..Default::default()
@@ -83,7 +66,7 @@ fn main() -> Result<(), Error> {
             .scale(0.33, 0.33, 0.33)
             .translate(-1.5, 0.33, -0.75),
         Material {
-            colour: Colour::new(1.0, 0.1, 0.1),
+            colour: Colour::new(1.0, 0.8, 0.1),
             diffuse: 0.7,
             specular: 0.3,
             ..Default::default()
@@ -92,11 +75,11 @@ fn main() -> Result<(), Error> {
 
     world.add_light(PointLight::new(
         Point::new(-10.0, 10.0, -10.0),
-        Colour::white(),
+        Colour::new(0.8, 0.8, 0.8),
     ));
     world.add_light(PointLight::new(
         Point::new(10.0, 10.0, -10.0),
-        Colour::new(0.5, 0.3, 0.3),
+        Colour::new(0.3, 0.3, 0.3),
     ));
 
     let camera = Camera::new(
