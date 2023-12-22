@@ -19,6 +19,19 @@ pub struct Object {
 
 impl Object {
     #[must_use]
+    pub fn new_plane(
+        transformation: Transformation,
+        material: Material,
+    ) -> Self {
+        Self::new(transformation, material, Shape::new_plane())
+    }
+
+    #[must_use]
+    pub fn default_plane() -> Self {
+        Self::new_plane(Transformation::new(), Material::default())
+    }
+
+    #[must_use]
     pub fn new_sphere(
         transformation: Transformation,
         material: Material,
@@ -28,11 +41,7 @@ impl Object {
 
     #[must_use]
     pub fn default_sphere() -> Self {
-        Self::new(
-            Transformation::new(),
-            Material::default(),
-            Shape::new_sphere(),
-        )
+        Self::new_sphere(Transformation::new(), Material::default())
     }
 
     #[cfg(test)]
@@ -47,7 +56,7 @@ impl Object {
     #[cfg(test)]
     #[must_use]
     pub fn default_test() -> Self {
-        Self::new(Transformation::new(), Material::default(), Shape::new_test())
+        Self::new_test(Transformation::new(), Material::default())
     }
 }
 
@@ -92,6 +101,21 @@ mod tests {
     fn creating_an_object() {
         let t = Transformation::new().translate(2.0, 3.0, 0.0);
         let m = Material { colour: Colour::red(), ..Default::default() };
+
+        let s = Shape::new_plane();
+
+        let o = Object::new_plane(t, m);
+
+        assert_approx_eq!(o.transformation, t);
+        assert_approx_eq!(o.material, m);
+        assert_approx_eq!(o.shape, s);
+
+        let o = Object::default_plane();
+
+        assert_approx_eq!(o.transformation, Transformation::new());
+        assert_approx_eq!(o.material, Material::default());
+        assert_approx_eq!(o.shape, s);
+
         let s = Shape::new_sphere();
 
         let o = Object::new_sphere(t, m);

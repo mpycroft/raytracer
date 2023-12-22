@@ -1,9 +1,11 @@
+mod plane;
 mod sphere;
 #[cfg(test)]
 mod test;
 
 use float_cmp::{ApproxEq, F64Margin};
 
+use self::plane::Plane;
 use self::sphere::Sphere;
 #[cfg(test)]
 pub(super) use self::test::Test;
@@ -15,12 +17,18 @@ use crate::{
 /// `Shape` is the list of the various geometries that can be rendered.
 #[derive(Clone, Copy, Debug)]
 pub enum Shape {
+    Plane(Plane),
     Sphere(Sphere),
     #[cfg(test)]
     Test(Test),
 }
 
 impl Shape {
+    #[must_use]
+    pub fn new_plane() -> Self {
+        Self::Plane(Plane)
+    }
+
     #[must_use]
     pub fn new_sphere() -> Self {
         Self::Sphere(Sphere)
@@ -36,6 +44,7 @@ impl Shape {
 impl Intersectable for Shape {
     fn intersect<'a>(&'a self, ray: &Ray) -> Option<ListBuilder<'a>> {
         match self {
+            Self::Plane(plane) => plane.intersect(ray),
             Self::Sphere(sphere) => sphere.intersect(ray),
             #[cfg(test)]
             Self::Test(test) => test.intersect(ray),
@@ -44,6 +53,7 @@ impl Intersectable for Shape {
 
     fn normal_at(&self, point: &Point) -> Vector {
         match self {
+            Self::Plane(plane) => plane.normal_at(point),
             Self::Sphere(sphere) => sphere.normal_at(point),
             #[cfg(test)]
             Self::Test(test) => test.normal_at(point),
@@ -56,10 +66,10 @@ impl ApproxEq for Shape {
 
     fn approx_eq<M: Into<Self::Margin>>(self, other: Self, _margin: M) -> bool {
         match (self, other) {
-            (Self::Sphere(_), Self::Sphere(_)) => true,
+            (Self::Sphere(_), Self::Sphere(_))
+            | (Self::Plane(_), Self::Plane(_)) => true,
             #[cfg(test)]
             (Self::Test(_), Self::Test(_)) => true,
-            #[cfg(test)]
             (_, _) => false,
         }
     }
