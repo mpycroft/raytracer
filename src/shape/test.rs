@@ -27,7 +27,7 @@ impl Intersectable for Test {
     }
 
     fn normal_at(&self, point: &Point) -> Vector {
-        todo!()
+        *point - Point::origin()
     }
 }
 
@@ -76,6 +76,14 @@ mod tests {
         assert!(i.is_none());
 
         assert_approx_eq!(t.ray.get().unwrap(), r);
+    }
+
+    #[test]
+    fn normal_at_on_a_test_shape() {
+        assert_approx_eq!(
+            Test::new().normal_at(&Point::new(1.0, 2.0, 3.0)),
+            Vector::new(1.0, 2.0, 3.0)
+        );
     }
 
     #[test]

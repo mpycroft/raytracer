@@ -30,7 +30,15 @@ impl Intersectable for Object {
     }
 
     fn normal_at(&self, point: &Point) -> Vector {
-        todo!()
+        let inverse_transform = self.transformation.invert();
+
+        let object_point = point.apply(&inverse_transform);
+
+        let object_normal = self.shape.normal_at(&object_point);
+
+        let world_normal = object_normal.apply(&inverse_transform.transpose());
+
+        world_normal.normalise()
     }
 }
 
@@ -48,8 +56,13 @@ impl ApproxEq for &Object {
 
 #[cfg(test)]
 mod tests {
+    use std::f64::consts::{FRAC_1_SQRT_2, PI, SQRT_2};
+
     use super::*;
-    use crate::{math::float::*, Colour};
+    use crate::{
+        math::{float::*, Angle},
+        Colour,
+    };
 
     #[test]
     fn creating_an_object() {
@@ -94,6 +107,30 @@ mod tests {
         assert_approx_eq!(
             test.ray.get().unwrap(),
             Ray::new(Point::new(-5.0, 0.0, -5.0), Vector::z_axis())
+        );
+    }
+
+    #[test]
+    fn computing_the_normal_on_a_transformed_shape() {
+        let mut o = Object::new(
+            Transformation::new().translate(0.0, 1.0, 0.0),
+            Material::default(),
+            Shape::new_test(),
+        );
+        assert_approx_eq!(
+            o.normal_at(&Point::new(0.0, 1.0 + FRAC_1_SQRT_2, -FRAC_1_SQRT_2)),
+            Vector::new(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2)
+        );
+
+        o.transformation = Transformation::new()
+            .rotate_z(Angle(PI / 5.0))
+            .scale(1.0, 0.5, 1.0);
+
+        let sqrt_2_div_d = SQRT_2 / 2.0;
+        assert_approx_eq!(
+            o.normal_at(&Point::new(0.0, sqrt_2_div_d, -sqrt_2_div_d)),
+            Vector::new(0.0, 0.970_14, -0.242_54),
+            epsilon = 0.000_01
         );
     }
 

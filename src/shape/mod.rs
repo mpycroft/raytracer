@@ -29,7 +29,9 @@ impl Intersectable for Shape {
     }
 
     fn normal_at(&self, point: &Point) -> Vector {
-        todo!()
+        match self {
+            Shape::Test(test) => test.normal_at(point),
+        }
     }
 }
 
