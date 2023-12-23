@@ -8,7 +8,7 @@ repository = "https://github.com/mpycroft/raytracer"
 license = "MIT"
 
 [dependencies]
-anyhow = "1.0.75"
+anyhow = "1.0.76"
 clap = { version = "4.4.11", features = ["derive"] }
 console = "0.15.7"
 derive_more = "0.99.17"

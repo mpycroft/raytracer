@@ -150,7 +150,7 @@ impl<'a> ListBuilder<'a> {
     ///
     /// # Panics
     ///
-    /// Will panic if no object was set or no t values were set.
+    /// Will panic if no object was set or no t values were added.
     #[must_use]
     pub fn build(self) -> List<'a> {
         let object = self.object.expect(

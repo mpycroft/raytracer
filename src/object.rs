@@ -1,5 +1,3 @@
-use derive_more::Constructor;
-
 use crate::{
     intersection::{Intersectable, ListBuilder},
     math::{
@@ -10,14 +8,28 @@ use crate::{
 };
 
 /// An 'Object' represents some entity in the scene that can be rendered.
-#[derive(Clone, Copy, Debug, Constructor)]
+#[derive(Clone, Copy, Debug)]
 pub struct Object {
-    pub transformation: Transformation,
+    transformation: Transformation,
+    inverse_transformation: Transformation,
     pub material: Material,
-    pub shape: Shape,
+    shape: Shape,
 }
 
 impl Object {
+    #[must_use]
+    fn new(
+        transformation: Transformation,
+        material: Material,
+        shape: Shape,
+    ) -> Self {
+        Self {
+            transformation,
+            inverse_transformation: transformation.invert(),
+            material,
+            shape,
+        }
+    }
     #[must_use]
     pub fn new_plane(
         transformation: Transformation,
@@ -62,7 +74,7 @@ impl Object {
 
 impl Intersectable for Object {
     fn intersect<'a>(&'a self, ray: &Ray) -> Option<ListBuilder<'a>> {
-        let ray = ray.apply(&self.transformation.invert());
+        let ray = ray.apply(&self.inverse_transformation);
 
         let Some(builder) = self.shape.intersect(&ray) else {
             return None;
@@ -72,15 +84,13 @@ impl Intersectable for Object {
     }
 
     fn normal_at(&self, point: &Point) -> Vector {
-        let inverse_transform = self.transformation.invert();
-
-        let object_point = point.apply(&inverse_transform);
+        let object_point = point.apply(&self.inverse_transformation);
 
         let object_normal = self.shape.normal_at(&object_point);
 
-        let world_normal = object_normal.apply(&inverse_transform.transpose());
-
-        world_normal.normalise()
+        object_normal
+            .apply(&self.inverse_transformation.transpose())
+            .normalise()
     }
 }
 
@@ -149,7 +159,7 @@ mod tests {
     fn intersecting_a_transformed_object_with_a_ray() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
 
-        let mut o = Object::new_test(
+        let o = Object::new_test(
             Transformation::new().scale(2.0, 2.0, 2.0),
             Material::default(),
         );
@@ -162,7 +172,10 @@ mod tests {
             Ray::new(Point::new(0.0, 0.0, -2.5), Vector::new(0.0, 0.0, 0.5))
         );
 
-        o.transformation = Transformation::new().translate(5.0, 0.0, 0.0);
+        let o = Object::new_test(
+            Transformation::new().translate(5.0, 0.0, 0.0),
+            Material::default(),
+        );
 
         let i = o.intersect(&r);
         let l = i.unwrap().object(&o).build();
@@ -175,7 +188,7 @@ mod tests {
 
     #[test]
     fn computing_the_normal_on_a_transformed_shape() {
-        let mut o = Object::new_test(
+        let o = Object::new_test(
             Transformation::new().translate(0.0, 1.0, 0.0),
             Material::default(),
         );
@@ -185,9 +198,12 @@ mod tests {
             Vector::new(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2)
         );
 
-        o.transformation = Transformation::new()
-            .rotate_z(Angle(PI / 5.0))
-            .scale(1.0, 0.5, 1.0);
+        let o = Object::new_test(
+            Transformation::new()
+                .rotate_z(Angle(PI / 5.0))
+                .scale(1.0, 0.5, 1.0),
+            Material::default(),
+        );
 
         let sqrt_2_div_d = SQRT_2 / 2.0;
         assert_approx_eq!(
