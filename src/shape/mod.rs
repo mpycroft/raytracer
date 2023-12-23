@@ -5,7 +5,10 @@ use float_cmp::{ApproxEq, F64Margin};
 
 use self::sphere::Sphere;
 use self::test::Test;
-use crate::math::{Point, Ray, Vector};
+use crate::{
+    intersection::{Intersectable, ListBuilder},
+    math::{Point, Ray, Vector},
+};
 
 /// `Shape` is the list of the various geometries that can be rendered.
 #[derive(Clone, Debug)]
@@ -24,15 +27,17 @@ impl Shape {
     pub fn new_test() -> Self {
         Self::Test(Test::new())
     }
+}
 
-    pub fn intersect(&self, ray: &Ray) -> Option<Vec<f64>> {
+impl Intersectable for Shape {
+    fn intersect<'a>(&'a self, ray: &Ray) -> Option<ListBuilder<'a>> {
         match self {
             Shape::Sphere(sphere) => sphere.intersect(ray),
             Shape::Test(test) => test.intersect(ray),
         }
     }
 
-    pub fn normal_at(&self, point: &Point) -> Vector {
+    fn normal_at(&self, point: &Point) -> Vector {
         match self {
             Shape::Sphere(sphere) => sphere.normal_at(point),
             Shape::Test(test) => test.normal_at(point),

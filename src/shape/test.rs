@@ -2,7 +2,10 @@ use std::cell::Cell;
 
 use float_cmp::{ApproxEq, F64Margin};
 
-use crate::math::{Point, Ray, Vector};
+use crate::{
+    intersection::{Intersectable, ListBuilder},
+    math::{Point, Ray, Vector},
+};
 
 /// A `Test` is a shape intended purely for testing functions on `Object`.
 #[derive(Clone, Debug)]
@@ -15,14 +18,16 @@ impl Test {
     pub fn new() -> Self {
         Self { ray: Cell::new(None) }
     }
+}
 
-    pub fn intersect(&self, ray: &Ray) -> Option<Vec<f64>> {
+impl Intersectable for Test {
+    fn intersect<'a>(&'a self, ray: &Ray) -> Option<ListBuilder<'a>> {
         self.ray.replace(Some(*ray));
 
         None
     }
 
-    pub fn normal_at(&self, point: &Point) -> Vector {
+    fn normal_at(&self, point: &Point) -> Vector {
         *point - Point::origin()
     }
 }

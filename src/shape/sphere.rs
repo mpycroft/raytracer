@@ -1,11 +1,14 @@
-use crate::math::{Point, Ray, Vector};
+use crate::{
+    intersection::{Intersectable, ListBuilder},
+    math::{Point, Ray, Vector},
+};
 
 /// A `Sphere` is a unit sphere centred at the origin (0, 0, 0).
 #[derive(Clone, Copy, Debug)]
 pub struct Sphere;
 
-impl Sphere {
-    pub fn intersect(&self, ray: &Ray) -> Option<Vec<f64>> {
+impl Intersectable for Sphere {
+    fn intersect<'a>(&'a self, ray: &Ray) -> Option<ListBuilder<'a>> {
         let sphere_to_ray = ray.origin - Point::origin();
 
         let a = ray.direction.dot(&ray.direction);
@@ -24,10 +27,10 @@ impl Sphere {
         let t1 = (-b - discriminant) / a;
         let t2 = (-b + discriminant) / a;
 
-        Some(vec![t1, t2])
+        Some(ListBuilder::new().add_t(t1).add_t(t2))
     }
 
-    pub fn normal_at(&self, point: &Point) -> Vector {
+    fn normal_at(&self, point: &Point) -> Vector {
         *point - Point::origin()
     }
 }
@@ -35,38 +38,49 @@ impl Sphere {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::{float::*, Vector};
+    use crate::{
+        math::{float::*, Vector},
+        Object,
+    };
 
     #[test]
+    #[allow(clippy::many_single_char_names)]
     fn a_ray_intersects_a_sphere_at_two_points() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
 
         let s = Sphere;
 
-        let i = s.intersect(&r);
-        assert!(i.is_some());
+        let b = s.intersect(&r);
 
-        let i = i.unwrap();
+        assert!(b.is_some());
+
+        let o = Object::default_sphere();
+        let i = b.unwrap().object(&o).build();
+
         assert_eq!(i.len(), 2);
 
-        assert_approx_eq!(i[0], 4.0);
-        assert_approx_eq!(i[1], 6.0);
+        assert_approx_eq!(i[0].t, 4.0);
+        assert_approx_eq!(i[1].t, 6.0);
     }
 
     #[test]
+    #[allow(clippy::many_single_char_names)]
     fn a_ray_intersects_a_sphere_at_a_tangent() {
         let r = Ray::new(Point::new(0.0, 1.0, -5.0), Vector::z_axis());
 
         let s = Sphere;
 
-        let i = s.intersect(&r);
-        assert!(i.is_some());
+        let b = s.intersect(&r);
 
-        let i = i.unwrap();
+        assert!(b.is_some());
+
+        let o = Object::default_sphere();
+        let i = b.unwrap().object(&o).build();
+
         assert_eq!(i.len(), 2);
 
-        assert_approx_eq!(i[0], 5.0);
-        assert_approx_eq!(i[1], 5.0);
+        assert_approx_eq!(i[0].t, 5.0);
+        assert_approx_eq!(i[1].t, 5.0);
     }
 
     #[test]
@@ -80,35 +94,43 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::many_single_char_names)]
     fn a_ray_originates_inside_a_sphere() {
         let r = Ray::new(Point::origin(), Vector::z_axis());
 
         let s = Sphere;
 
-        let i = s.intersect(&r);
-        assert!(i.is_some());
+        let b = s.intersect(&r);
 
-        let i = i.unwrap();
+        assert!(b.is_some());
+
+        let o = Object::default_sphere();
+        let i = b.unwrap().object(&o).build();
+
         assert_eq!(i.len(), 2);
 
-        assert_approx_eq!(i[0], -1.0);
-        assert_approx_eq!(i[1], 1.0);
+        assert_approx_eq!(i[0].t, -1.0);
+        assert_approx_eq!(i[1].t, 1.0);
     }
 
     #[test]
+    #[allow(clippy::many_single_char_names)]
     fn a_sphere_is_behind_a_ray() {
         let r = Ray::new(Point::new(0.0, 0.0, 5.0), Vector::z_axis());
 
         let s = Sphere;
 
-        let i = s.intersect(&r);
-        assert!(i.is_some());
+        let b = s.intersect(&r);
 
-        let i = i.unwrap();
+        assert!(b.is_some());
+
+        let o = Object::default_sphere();
+        let i = b.unwrap().object(&o).build();
+
         assert_eq!(i.len(), 2);
 
-        assert_approx_eq!(i[0], -6.0);
-        assert_approx_eq!(i[1], -4.0);
+        assert_approx_eq!(i[0].t, -6.0);
+        assert_approx_eq!(i[1].t, -4.0);
     }
 
     #[test]

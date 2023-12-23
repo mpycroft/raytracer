@@ -8,11 +8,11 @@ use crate::{
     Object,
 };
 
-/// A trait that objects need to implement if they can be intersected in a
-/// scene, returns a vector of intersection t values.
+/// A trait that `Object`s need to implement if they can be intersected in a
+/// scene, returns an optional `ListBuilder` for constructing a `List`.
 pub trait Intersectable {
     #[must_use]
-    fn intersect(&self, ray: &Ray) -> Option<IntersectionList>;
+    fn intersect<'a>(&'a self, ray: &Ray) -> Option<ListBuilder<'a>>;
 
     #[must_use]
     fn normal_at(&self, point: &Point) -> Vector;
@@ -85,10 +85,9 @@ impl<'a> ApproxEq for Intersection<'a> {
 /// it gives us type safety over using a plain Vec and makes it obvious what we
 /// are doing.
 #[derive(Clone, Debug, From, Deref, DerefMut)]
-#[allow(clippy::module_name_repetitions)]
-pub struct IntersectionList<'a>(Vec<Intersection<'a>>);
+pub struct List<'a>(Vec<Intersection<'a>>);
 
-impl<'a> IntersectionList<'a> {
+impl<'a> List<'a> {
     #[must_use]
     pub fn new() -> Self {
         Self(Vec::new())
@@ -110,7 +109,68 @@ impl<'a> IntersectionList<'a> {
     }
 }
 
-impl<'a> Default for IntersectionList<'a> {
+impl<'a> Default for List<'a> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// `ListBuilder` provides a way to generate an intersection `List` when the
+/// calculation of the t values is further down the call chain than when we know
+/// what object is being intersected. We can append multiple t values then set
+/// the `Object` later on and get a `List` containing an `Intersection` for each
+/// t value with the appropriate object set.
+pub struct ListBuilder<'a> {
+    object: Option<&'a Object>,
+    t: Vec<f64>,
+}
+
+impl<'a> ListBuilder<'a> {
+    #[must_use]
+    pub fn new() -> Self {
+        Self { object: None, t: Vec::new() }
+    }
+
+    #[must_use]
+    pub fn object(mut self, object: &'a Object) -> Self {
+        self.object = Some(object);
+
+        self
+    }
+
+    #[must_use]
+    pub fn add_t(mut self, t: f64) -> Self {
+        self.t.push(t);
+
+        self
+    }
+
+    /// Builds an intersection 'List' from a set of t values and a given object.
+    /// There must be at least one t value.
+    ///
+    /// # Panics
+    ///
+    /// Will panic if no object was set or no t values were set.
+    #[must_use]
+    pub fn build(self) -> List<'a> {
+        let object = self.object.expect(
+            "Object reference not set when creating intersection List.",
+        );
+
+        assert!(
+            !self.t.is_empty(),
+            "No t values were added when creating intersection List."
+        );
+
+        self.t
+            .iter()
+            .map(|t| Intersection::new(object, *t))
+            .collect::<Vec<Intersection<'a>>>()
+            .into()
+    }
+}
+
+impl<'a> Default for ListBuilder<'a> {
     fn default() -> Self {
         Self::new()
     }
@@ -190,7 +250,7 @@ mod tests {
 
     #[test]
     fn creating_an_intersection_list() {
-        let mut l = IntersectionList::new();
+        let mut l = List::new();
         assert_eq!(l.len(), 0);
 
         let o = Object::default_test();
@@ -200,10 +260,10 @@ mod tests {
         assert_approx_eq!(l[0].object, &o);
         assert_approx_eq!(l[0].t, 1.2);
 
-        let l = IntersectionList::default();
+        let l = List::default();
         assert_eq!(l.len(), 0);
 
-        let l = IntersectionList::from(vec![
+        let l = List::from(vec![
             Intersection::new(&o, 1.0),
             Intersection::new(&o, 2.0),
         ]);
@@ -214,12 +274,61 @@ mod tests {
     }
 
     #[test]
+    fn creating_an_intersection_list_with_builder() {
+        let o = Object::default_test();
+
+        let b = ListBuilder::new().object(&o).add_t(1.0);
+
+        let l = b.build();
+
+        assert_eq!(l.len(), 1);
+        assert_approx_eq!(l[0].object, &o);
+        assert_approx_eq!(l[0].t, 1.0);
+
+        let l = ListBuilder::new()
+            .object(&o)
+            .add_t(1.0)
+            .add_t(2.0)
+            .add_t(-2.0)
+            .build();
+
+        assert_eq!(l.len(), 3);
+
+        assert_approx_eq!(l[0].object, &o);
+        assert_approx_eq!(l[0].t, 1.0);
+
+        assert_approx_eq!(l[1].object, &o);
+        assert_approx_eq!(l[1].t, 2.0);
+
+        assert_approx_eq!(l[2].object, &o);
+        assert_approx_eq!(l[2].t, -2.0);
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "Object reference not set when creating intersection List."
+    )]
+    fn intersection_list_builder_without_setting_object() {
+        let _ = ListBuilder::new().add_t(1.0).build();
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "No t values were added when creating intersection List."
+    )]
+    fn intersection_list_builder_without_adding_t_values() {
+        let o = Object::default_test();
+
+        let _ = ListBuilder::new().object(&o).build();
+    }
+
+    #[test]
     fn dereferencing_an_intersection_list() {
         let o = Object::default_test();
         let i1 = Intersection::new(&o, 1.5);
         let i2 = Intersection::new(&o, 2.5);
 
-        let mut l = IntersectionList::from(vec![i1, i2]);
+        let mut l = List::from(vec![i1, i2]);
 
         assert_approx_eq!(l[0], i1);
         assert_approx_eq!(l[1], i2);
@@ -235,7 +344,7 @@ mod tests {
         let i1 = Intersection::new(&o, 1.0);
         let i2 = Intersection::new(&o, 2.0);
 
-        let h = IntersectionList::from(vec![i1, i2]).hit();
+        let h = List::from(vec![i1, i2]).hit();
 
         assert!(h.is_some());
         assert_approx_eq!(h.unwrap(), i1);
@@ -247,7 +356,7 @@ mod tests {
         let i1 = Intersection::new(&o, 1.0);
         let i2 = Intersection::new(&o, -1.0);
 
-        let h = IntersectionList::from(vec![i1, i2]).hit();
+        let h = List::from(vec![i1, i2]).hit();
 
         assert!(h.is_some());
         assert_approx_eq!(h.unwrap(), i1);
@@ -259,7 +368,7 @@ mod tests {
         let i1 = Intersection::new(&o, -2.0);
         let i2 = Intersection::new(&o, -1.0);
 
-        let h = IntersectionList::from(vec![i1, i2]).hit();
+        let h = List::from(vec![i1, i2]).hit();
 
         assert!(h.is_none());
     }
@@ -267,15 +376,22 @@ mod tests {
     #[test]
     fn the_hit_is_always_the_lowest_nonnegative_intersection() {
         let o = Object::default_test();
-        let i1 = Intersection::new(&o, 5.0);
-        let i2 = Intersection::new(&o, 7.0);
-        let i3 = Intersection::new(&o, -3.0);
-        let i4 = Intersection::new(&o, 2.0);
 
-        let h = IntersectionList::from(vec![i1, i2, i3, i4]).hit();
+        let h = ListBuilder::new()
+            .object(&o)
+            .add_t(5.0)
+            .add_t(7.0)
+            .add_t(-3.0)
+            .add_t(2.0)
+            .build()
+            .hit();
 
         assert!(h.is_some());
-        assert_approx_eq!(h.unwrap(), i4);
+
+        let h = h.unwrap();
+
+        assert_approx_eq!(h.object, &o);
+        assert_approx_eq!(h.t, 2.0);
     }
 
     #[test]

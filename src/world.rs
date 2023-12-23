@@ -1,5 +1,5 @@
 use crate::{
-    intersection::{Computations, Intersectable, IntersectionList},
+    intersection::{Computations, Intersectable, List},
     math::{Point, Ray},
     Colour, Object, PointLight,
 };
@@ -57,12 +57,12 @@ impl World {
     }
 
     #[must_use]
-    fn intersect(&self, ray: &Ray) -> Option<IntersectionList> {
-        let mut list = IntersectionList::new();
+    fn intersect(&self, ray: &Ray) -> Option<List> {
+        let mut list = List::new();
 
         for obj in &self.objects {
-            if let Some(mut intersects) = obj.intersect(ray) {
-                list.append(&mut *intersects);
+            if let Some(intersects) = obj.intersect(ray) {
+                list.append(&mut *intersects.build());
             }
         }
 

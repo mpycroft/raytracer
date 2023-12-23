@@ -2,9 +2,9 @@ use derive_more::Constructor;
 use float_cmp::{ApproxEq, F64Margin};
 
 use crate::{
-    intersection::{Intersectable, IntersectionList},
+    intersection::{Intersectable, ListBuilder},
     math::{Point, Ray, Transformable, Transformation, Vector},
-    Intersection, Material, Shape,
+    Material, Shape,
 };
 
 /// An 'Object' represents some entity in the scene that can be rendered.
@@ -32,20 +32,14 @@ impl Object {
 }
 
 impl Intersectable for Object {
-    fn intersect(&self, ray: &Ray) -> Option<IntersectionList> {
+    fn intersect<'a>(&'a self, ray: &Ray) -> Option<ListBuilder<'a>> {
         let ray = ray.apply(&self.transformation.invert());
 
-        let Some(t_values) = self.shape.intersect(&ray) else {
+        let Some(builder) = self.shape.intersect(&ray) else {
             return None;
         };
 
-        Some(
-            t_values
-                .iter()
-                .map(|t| Intersection::new(self, *t))
-                .collect::<Vec<Intersection>>()
-                .into(),
-        )
+        Some(builder.object(self))
     }
 
     fn normal_at(&self, point: &Point) -> Vector {
@@ -168,7 +162,7 @@ mod tests {
         let i = o.intersect(&r);
         assert!(i.is_some());
 
-        let i = i.unwrap();
+        let i = i.unwrap().build();
         assert_eq!(i.len(), 2);
 
         assert_approx_eq!(i[0].object, &o);
