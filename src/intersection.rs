@@ -85,6 +85,7 @@ impl<'a> ApproxEq for Intersection<'a> {
 /// it gives us type safety over using a plain Vec and makes it obvious what we
 /// are doing.
 #[derive(Clone, Debug, From, Deref, DerefMut)]
+#[allow(clippy::module_name_repetitions)]
 pub struct IntersectionList<'a>(Vec<Intersection<'a>>);
 
 impl<'a> IntersectionList<'a> {
@@ -93,11 +94,12 @@ impl<'a> IntersectionList<'a> {
         Self(Vec::new())
     }
 
-    /// Find the intersection with the smallest positive t value.
+    /// Find the intersection with the smallest positive t value. Assumes the
+    /// list of intersections is not sorted.
     ///
     /// # Panics
     ///
-    /// Will panic if any t values are NaN
+    /// Will panic if any t values are NaN.
     #[must_use]
     pub fn hit(&self) -> Option<Intersection<'a>> {
         self.0

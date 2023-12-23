@@ -2,9 +2,9 @@ use derive_more::Constructor;
 use float_cmp::{ApproxEq, F64Margin};
 
 use crate::{
-    intersect::{Intersectable, Intersection, IntersectionList},
+    intersection::{Intersectable, IntersectionList},
     math::{Point, Ray, Transformable, Transformation, Vector},
-    Material, Shape,
+    Intersection, Material, Shape,
 };
 
 /// An 'Object' represents some entity in the scene that can be rendered.

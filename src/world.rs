@@ -1,5 +1,5 @@
 use crate::{
-    intersect::{Computations, Intersectable, IntersectionList},
+    intersection::{Computations, Intersectable, IntersectionList},
     math::{Point, Ray},
     Colour, Object, PointLight,
 };
@@ -108,9 +108,8 @@ mod tests {
 
     use super::*;
     use crate::{
-        intersect::Intersection,
         math::{float::*, Angle, Transformation, Vector},
-        Camera, Material, Shape,
+        Camera, Intersection, Material, Shape,
     };
 
     fn test_world() -> World {

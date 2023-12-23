@@ -3,7 +3,7 @@
 mod camera;
 mod canvas;
 mod colour;
-pub mod intersect;
+pub mod intersection;
 mod material;
 pub mod math;
 pub mod object;
@@ -14,6 +14,7 @@ mod world;
 pub use camera::Camera;
 pub use canvas::Canvas;
 pub use colour::Colour;
+pub use intersection::Intersection;
 pub use material::Material;
 pub use object::Object;
 pub use point_light::PointLight;
