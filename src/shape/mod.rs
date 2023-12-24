@@ -3,6 +3,7 @@ mod sphere;
 #[cfg(test)]
 mod test;
 
+use enum_dispatch::enum_dispatch;
 use float_cmp::{ApproxEq, F64Margin};
 
 use self::plane::Plane;
@@ -16,6 +17,7 @@ use crate::{
 
 /// `Shape` is the list of the various geometries that can be rendered.
 #[derive(Clone, Copy, Debug)]
+#[enum_dispatch]
 pub enum Shape {
     Plane(Plane),
     Sphere(Sphere),
@@ -38,26 +40,6 @@ impl Shape {
     #[must_use]
     pub fn new_test() -> Self {
         Self::Test(Test)
-    }
-}
-
-impl Intersectable for Shape {
-    fn intersect<'a>(&'a self, ray: &Ray) -> Option<ListBuilder<'a>> {
-        match self {
-            Self::Plane(plane) => plane.intersect(ray),
-            Self::Sphere(sphere) => sphere.intersect(ray),
-            #[cfg(test)]
-            Self::Test(test) => test.intersect(ray),
-        }
-    }
-
-    fn normal_at(&self, point: &Point) -> Vector {
-        match self {
-            Self::Plane(plane) => plane.normal_at(point),
-            Self::Sphere(sphere) => sphere.normal_at(point),
-            #[cfg(test)]
-            Self::Test(test) => test.normal_at(point),
-        }
     }
 }
 
