@@ -2,7 +2,8 @@ use derive_more::Constructor;
 
 use crate::{math::Point, Colour};
 
-/// An alternating striped pattern that switches between two different colours.
+/// A `Stripe` pattern alternates between two different `Colour`s as the x value
+/// changes.
 #[derive(Clone, Copy, Debug, Constructor)]
 pub struct Stripe {
     a: Colour,
@@ -25,7 +26,7 @@ mod tests {
     use crate::math::float::*;
 
     #[test]
-    fn creating_a_stripe() {
+    fn creating_a_stripe_pattern() {
         let s = Stripe::new(Colour::white(), Colour::black());
 
         assert_approx_eq!(s.a, Colour::white());

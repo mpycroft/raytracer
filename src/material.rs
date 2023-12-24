@@ -2,6 +2,7 @@ use derive_more::Constructor;
 
 use crate::{
     math::{float::impl_approx_eq, Point, Vector},
+    pattern::Stripe,
     Colour, PointLight,
 };
 
@@ -14,6 +15,7 @@ pub struct Material {
     pub diffuse: f64,
     pub specular: f64,
     pub shininess: f64,
+    pub pattern: Option<Stripe>,
 }
 
 impl Material {
@@ -26,7 +28,13 @@ impl Material {
         normal: &Vector,
         in_shadow: bool,
     ) -> Colour {
-        let colour = self.colour * light.intensity;
+        let colour = if let Some(pattern) = self.pattern {
+            pattern.pattern_at(point)
+        } else {
+            self.colour
+        };
+
+        let colour = colour * light.intensity;
 
         let ambient = colour * self.ambient;
 
@@ -62,7 +70,7 @@ impl Material {
 
 impl Default for Material {
     fn default() -> Self {
-        Self::new(Colour::white(), 0.1, 0.9, 0.9, 200.0)
+        Self::new(Colour::white(), 0.1, 0.9, 0.9, 200.0, None)
     }
 }
 
@@ -77,7 +85,7 @@ mod tests {
 
     #[test]
     fn creating_a_material() {
-        let m = Material::new(Colour::red(), 1.0, 1.0, 1.5, 25.6);
+        let m = Material::new(Colour::red(), 1.0, 1.0, 1.5, 25.6, None);
 
         assert_approx_eq!(m.colour, Colour::red());
         assert_approx_eq!(m.ambient, 1.0);
@@ -87,7 +95,7 @@ mod tests {
 
         assert_approx_eq!(
             Material::default(),
-            Material::new(Colour::white(), 0.1, 0.9, 0.9, 200.0)
+            Material::new(Colour::white(), 0.1, 0.9, 0.9, 200.0, None)
         );
     }
 
@@ -195,10 +203,37 @@ mod tests {
     }
 
     #[test]
+    fn lighting_with_a_pattern_applied() {
+        let m = Material {
+            colour: Colour::green(),
+            pattern: Some(Stripe::new(Colour::white(), Colour::black())),
+            ambient: 1.0,
+            diffuse: 0.0,
+            specular: 0.0,
+            ..Default::default()
+        };
+
+        let e = -Vector::z_axis();
+        let n = -Vector::z_axis();
+
+        let l = PointLight::new(Point::new(0.0, 0.0, -10.0), Colour::white());
+
+        assert_approx_eq!(
+            m.lighting(&l, &Point::new(0.9, 0.0, 0.0), &e, &n, false),
+            Colour::white()
+        );
+
+        assert_approx_eq!(
+            m.lighting(&l, &Point::new(1.1, 0.0, 0.0), &e, &n, false),
+            Colour::black()
+        );
+    }
+
+    #[test]
     fn comparing_materials() {
-        let m1 = Material::new(Colour::cyan(), 0.6, 0.3, 1.2, 142.7);
-        let m2 = Material::new(Colour::cyan(), 0.6, 0.3, 1.2, 142.7);
-        let m3 = Material::new(Colour::cyan(), 0.600_1, 0.3, 1.2, 142.7);
+        let m1 = Material::new(Colour::cyan(), 0.6, 0.3, 1.2, 142.7, None);
+        let m2 = Material::new(Colour::cyan(), 0.6, 0.3, 1.2, 142.7, None);
+        let m3 = Material::new(Colour::cyan(), 0.600_1, 0.3, 1.2, 142.7, None);
 
         assert_approx_eq!(m1, m2);
 
