@@ -7,6 +7,7 @@ pub mod intersection;
 mod material;
 pub mod math;
 mod object;
+mod pattern;
 mod point_light;
 mod shape;
 mod world;
