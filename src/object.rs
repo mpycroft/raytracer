@@ -118,19 +118,29 @@ mod tests {
     #[test]
     fn creating_an_object() {
         let t = Transformation::new().translate(2.0, 3.0, 0.0);
+        let ti = t.invert();
         let m = Material { colour: Colour::red(), ..Default::default() };
 
         let s = Shape::new_plane();
 
+        let o = Object::new(t, m, s);
+
+        assert_approx_eq!(o.transformation, t);
+        assert_approx_eq!(o.inverse_transformation, ti);
+        assert_approx_eq!(o.material, m);
+        assert_approx_eq!(o.shape, s);
+
         let o = Object::new_plane(t, m);
 
         assert_approx_eq!(o.transformation, t);
+        assert_approx_eq!(o.inverse_transformation, ti);
         assert_approx_eq!(o.material, m);
         assert_approx_eq!(o.shape, s);
 
         let o = Object::default_plane();
 
         assert_approx_eq!(o.transformation, Transformation::new());
+        assert_approx_eq!(o.inverse_transformation, Transformation::new());
         assert_approx_eq!(o.material, Material::default());
         assert_approx_eq!(o.shape, s);
 
@@ -139,12 +149,14 @@ mod tests {
         let o = Object::new_sphere(t, m);
 
         assert_approx_eq!(o.transformation, t);
+        assert_approx_eq!(o.inverse_transformation, ti);
         assert_approx_eq!(o.material, m);
         assert_approx_eq!(o.shape, s);
 
         let o = Object::default_sphere();
 
         assert_approx_eq!(o.transformation, Transformation::new());
+        assert_approx_eq!(o.inverse_transformation, Transformation::new());
         assert_approx_eq!(o.material, Material::default());
         assert_approx_eq!(o.shape, s);
 
@@ -153,12 +165,14 @@ mod tests {
         let o = Object::new_test(t, m);
 
         assert_approx_eq!(o.transformation, t);
+        assert_approx_eq!(o.inverse_transformation, ti);
         assert_approx_eq!(o.material, m);
         assert_approx_eq!(o.shape, s);
 
         let o = Object::default_test();
 
         assert_approx_eq!(o.transformation, Transformation::new());
+        assert_approx_eq!(o.inverse_transformation, Transformation::new());
         assert_approx_eq!(o.material, Material::default());
         assert_approx_eq!(o.shape, s);
     }
