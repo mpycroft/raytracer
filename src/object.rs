@@ -70,11 +70,21 @@ impl Object {
     pub fn default_test() -> Self {
         Self::new_test(Transformation::new(), Material::default())
     }
+
+    #[must_use]
+    pub fn to_object_space<'a, T: Transformable<'a>>(&self, value: &'a T) -> T {
+        value.apply(&self.inverse_transformation)
+    }
+
+    #[must_use]
+    pub fn to_world_space<'a, T: Transformable<'a>>(&self, value: &'a T) -> T {
+        value.apply(&self.inverse_transformation.transpose())
+    }
 }
 
 impl Intersectable for Object {
     fn intersect<'a>(&'a self, ray: &Ray) -> Option<ListBuilder<'a>> {
-        let ray = ray.apply(&self.inverse_transformation);
+        let ray = self.to_object_space(ray);
 
         let Some(builder) = self.shape.intersect(&ray) else {
             return None;
@@ -84,13 +94,11 @@ impl Intersectable for Object {
     }
 
     fn normal_at(&self, point: &Point) -> Vector {
-        let object_point = point.apply(&self.inverse_transformation);
+        let object_point = self.to_object_space(point);
 
         let object_normal = self.shape.normal_at(&object_point);
 
-        object_normal
-            .apply(&self.inverse_transformation.transpose())
-            .normalise()
+        self.to_world_space(&object_normal).normalise()
     }
 }
 

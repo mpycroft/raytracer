@@ -3,7 +3,7 @@ use derive_more::Constructor;
 use crate::{
     math::{float::impl_approx_eq, Point, Vector},
     pattern::Stripe,
-    Colour, PointLight,
+    Colour, Object, PointLight,
 };
 
 /// A `Material` represents what a given object is made up of including what
@@ -22,6 +22,7 @@ impl Material {
     #[must_use]
     pub fn lighting(
         &self,
+        object: &Object,
         light: &PointLight,
         point: &Point,
         eye: &Vector,
@@ -29,7 +30,7 @@ impl Material {
         in_shadow: bool,
     ) -> Colour {
         let colour = if let Some(pattern) = self.pattern {
-            pattern.pattern_at(point)
+            pattern.pattern_at(object, point)
         } else {
             self.colour
         };
@@ -81,7 +82,7 @@ mod tests {
     use std::f64::consts::SQRT_2;
 
     use super::*;
-    use crate::math::float::*;
+    use crate::math::{float::*, Transformation};
 
     #[test]
     fn creating_a_material() {
@@ -109,9 +110,10 @@ mod tests {
         let n = -Vector::z_axis();
 
         let l = PointLight::new(Point::new(0.0, 0.0, -10.0), Colour::white());
+        let o = Object::default_test();
 
         assert_approx_eq!(
-            m.lighting(&l, &p, &e, &n, true),
+            m.lighting(&o, &l, &p, &e, &n, true),
             Colour::new(0.1, 0.1, 0.1)
         );
     }
@@ -126,9 +128,10 @@ mod tests {
         let n = -Vector::z_axis();
 
         let l = PointLight::new(Point::new(0.0, 0.0, -10.0), Colour::white());
+        let o = Object::default_test();
 
         assert_approx_eq!(
-            m.lighting(&l, &p, &e, &n, false),
+            m.lighting(&o, &l, &p, &e, &n, false),
             Colour::new(1.9, 1.9, 1.9)
         );
     }
@@ -144,8 +147,12 @@ mod tests {
         let n = -Vector::z_axis();
 
         let l = PointLight::new(Point::new(0.0, 0.0, -10.0), Colour::white());
+        let o = Object::default_test();
 
-        assert_approx_eq!(m.lighting(&l, &p, &e, &n, false), Colour::white());
+        assert_approx_eq!(
+            m.lighting(&o, &l, &p, &e, &n, false),
+            Colour::white()
+        );
     }
 
     #[test]
@@ -158,9 +165,10 @@ mod tests {
         let n = -Vector::z_axis();
 
         let l = PointLight::new(Point::new(0.0, 10.0, -10.0), Colour::white());
+        let o = Object::default_test();
 
         assert_approx_eq!(
-            m.lighting(&l, &p, &e, &n, false),
+            m.lighting(&o, &l, &p, &e, &n, false),
             Colour::new(0.736_4, 0.736_4, 0.736_4),
             epsilon = 0.000_1
         );
@@ -177,9 +185,10 @@ mod tests {
         let n = -Vector::z_axis();
 
         let l = PointLight::new(Point::new(0.0, 10.0, -10.0), Colour::white());
+        let o = Object::default_test();
 
         assert_approx_eq!(
-            m.lighting(&l, &p, &e, &n, false),
+            m.lighting(&o, &l, &p, &e, &n, false),
             Colour::new(1.636_4, 1.636_4, 1.636_4),
             epsilon = 0.000_1
         );
@@ -195,18 +204,24 @@ mod tests {
         let n = -Vector::z_axis();
 
         let l = PointLight::new(Point::new(0.0, 0.0, 10.0), Colour::white());
+        let o = Object::default_test();
 
         assert_approx_eq!(
-            m.lighting(&l, &p, &e, &n, false),
+            m.lighting(&o, &l, &p, &e, &n, false),
             Colour::new(0.1, 0.1, 0.1)
         );
     }
 
     #[test]
+    #[allow(clippy::many_single_char_names)]
     fn lighting_with_a_pattern_applied() {
         let m = Material {
             colour: Colour::green(),
-            pattern: Some(Stripe::new(Colour::white(), Colour::black())),
+            pattern: Some(Stripe::new(
+                Transformation::new(),
+                Colour::white(),
+                Colour::black(),
+            )),
             ambient: 1.0,
             diffuse: 0.0,
             specular: 0.0,
@@ -217,14 +232,15 @@ mod tests {
         let n = -Vector::z_axis();
 
         let l = PointLight::new(Point::new(0.0, 0.0, -10.0), Colour::white());
+        let o = Object::default_test();
 
         assert_approx_eq!(
-            m.lighting(&l, &Point::new(0.9, 0.0, 0.0), &e, &n, false),
+            m.lighting(&o, &l, &Point::new(0.9, 0.0, 0.0), &e, &n, false),
             Colour::white()
         );
 
         assert_approx_eq!(
-            m.lighting(&l, &Point::new(1.1, 0.0, 0.0), &e, &n, false),
+            m.lighting(&o, &l, &Point::new(1.1, 0.0, 0.0), &e, &n, false),
             Colour::black()
         );
     }
