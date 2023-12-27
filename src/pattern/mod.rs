@@ -1,18 +1,21 @@
+mod solid;
 mod stripe;
 #[cfg(test)]
 mod test;
 
 use enum_dispatch::enum_dispatch;
 use float_cmp::{ApproxEq, F64Margin};
+use paste::paste;
 
-pub use self::stripe::Stripe;
 #[cfg(test)]
-pub use self::test::Test;
+use self::test::Test;
+use self::{solid::Solid, stripe::Stripe};
 use crate::{
     math::{float::impl_approx_eq, Point, Transformable, Transformation},
     Colour, Object,
 };
 
+/// A trait that all types of `Patterns` are required to implement.
 #[enum_dispatch]
 #[allow(clippy::module_name_repetitions)]
 pub trait PatternAt {
@@ -20,11 +23,33 @@ pub trait PatternAt {
     fn pattern_at(&self, point: &Point) -> Colour;
 }
 
+/// A `Pattern` describes a specific pattern that can be applied to a `Material`
+/// to change how it is rendered.
 #[derive(Clone, Copy, Debug)]
 pub struct Pattern {
     transformation: Transformation,
     inverse_transformation: Transformation,
     pattern: Patterns,
+}
+
+macro_rules! add_pattern_fns {
+    ($pattern:ident ($($arg:ident: $ty:ty),+)) => {
+        paste! {
+            #[must_use]
+            pub fn [<new_ $pattern:lower>](
+                transformation: Transformation, $($arg: $ty),+
+            ) -> Self {
+                Self::new(
+                    transformation, Patterns::$pattern($pattern::new($($arg),+))
+                )
+            }
+
+            #[must_use]
+            pub fn [<default_ $pattern:lower>]($($arg: $ty),+) -> Self {
+                Self::[<new_ $pattern:lower>](Transformation::new(), $($arg),+)
+            }
+        }
+    };
 }
 
 impl Pattern {
@@ -37,19 +62,8 @@ impl Pattern {
         }
     }
 
-    #[must_use]
-    pub fn new_stripe(
-        transformation: Transformation,
-        a: Colour,
-        b: Colour,
-    ) -> Self {
-        Self::new(transformation, Patterns::Stripe(Stripe::new(a, b)))
-    }
-
-    #[must_use]
-    pub fn default_stripe(a: Colour, b: Colour) -> Self {
-        Self::new_stripe(Transformation::new(), a, b)
-    }
+    add_pattern_fns!(Stripe(a: Colour, b: Colour));
+    add_pattern_fns!(Solid(colour: Colour));
 
     #[cfg(test)]
     #[must_use]
@@ -73,12 +87,23 @@ impl Pattern {
     }
 }
 
+/// This is a convenience conversion so we don't need to use
+/// `Pattern::default_solid(Colour::new(...))` when all we want is a solid
+/// `Colour`.
+impl From<Colour> for Pattern {
+    fn from(value: Colour) -> Self {
+        Self::default_solid(value)
+    }
+}
+
 impl_approx_eq!(Pattern { pattern, transformation, inverse_transformation });
 
+/// The set of all patterns we know how to render.
 #[derive(Clone, Copy, Debug)]
 #[enum_dispatch(PatternAt)]
 pub enum Patterns {
     Stripe(Stripe),
+    Solid(Solid),
     #[cfg(test)]
     Test(Test),
 }
@@ -90,12 +115,12 @@ impl ApproxEq for Patterns {
         let margin = margin.into();
 
         match (self, other) {
-            (Patterns::Stripe(lhs), Patterns::Stripe(rhs)) => {
+            (Self::Stripe(lhs), Self::Stripe(rhs)) => {
                 lhs.approx_eq(rhs, margin)
             }
+            (Self::Solid(lhs), Self::Solid(rhs)) => lhs.approx_eq(rhs, margin),
             #[cfg(test)]
-            (Patterns::Test(_), Patterns::Test(_)) => true,
-            #[cfg(test)]
+            (Self::Test(_), Self::Test(_)) => true,
             (_, _) => false,
         }
     }
@@ -126,6 +151,20 @@ mod tests {
         assert_approx_eq!(pn.pattern, p);
 
         let pn = Pattern::default_stripe(Colour::white(), Colour::green());
+
+        assert_approx_eq!(pn.transformation, Transformation::new());
+        assert_approx_eq!(pn.inverse_transformation, Transformation::new());
+        assert_approx_eq!(pn.pattern, p);
+
+        let p = Patterns::Solid(Solid::new(Colour::purple()));
+
+        let pn = Pattern::new_solid(t, Colour::purple());
+
+        assert_approx_eq!(pn.transformation, t);
+        assert_approx_eq!(pn.inverse_transformation, ti);
+        assert_approx_eq!(pn.pattern, p);
+
+        let pn = Pattern::default_solid(Colour::purple());
 
         assert_approx_eq!(pn.transformation, Transformation::new());
         assert_approx_eq!(pn.inverse_transformation, Transformation::new());

@@ -120,7 +120,8 @@ mod tests {
     fn creating_an_object() {
         let t = Transformation::new().translate(2.0, 3.0, 0.0);
         let ti = t.invert();
-        let m = Material { colour: Colour::red(), ..Default::default() };
+        let m =
+            Material { pattern: Colour::red().into(), ..Default::default() };
 
         let s = Shape::new_plane();
 

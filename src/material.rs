@@ -9,12 +9,11 @@ use crate::{
 /// colour it is and how it reacts to light.
 #[derive(Clone, Copy, Debug, Constructor)]
 pub struct Material {
-    pub colour: Colour,
+    pub pattern: Pattern,
     pub ambient: f64,
     pub diffuse: f64,
     pub specular: f64,
     pub shininess: f64,
-    pub pattern: Option<Pattern>,
 }
 
 impl Material {
@@ -28,13 +27,7 @@ impl Material {
         normal: &Vector,
         in_shadow: bool,
     ) -> Colour {
-        let colour = if let Some(pattern) = self.pattern {
-            pattern.pattern_at(object, point)
-        } else {
-            self.colour
-        };
-
-        let colour = colour * light.intensity;
+        let colour = self.pattern.pattern_at(object, point) * light.intensity;
 
         let ambient = colour * self.ambient;
 
@@ -70,11 +63,11 @@ impl Material {
 
 impl Default for Material {
     fn default() -> Self {
-        Self::new(Colour::white(), 0.1, 0.9, 0.9, 200.0, None)
+        Self::new(Colour::white().into(), 0.1, 0.9, 0.9, 200.0)
     }
 }
 
-impl_approx_eq!(Material { colour, ambient, diffuse, specular, shininess });
+impl_approx_eq!(Material { pattern, ambient, diffuse, specular, shininess });
 
 #[cfg(test)]
 mod tests {
@@ -85,9 +78,9 @@ mod tests {
 
     #[test]
     fn creating_a_material() {
-        let m = Material::new(Colour::red(), 1.0, 1.0, 1.5, 25.6, None);
+        let m = Material::new(Colour::red().into(), 1.0, 1.0, 1.5, 25.6);
 
-        assert_approx_eq!(m.colour, Colour::red());
+        assert_approx_eq!(m.pattern, Pattern::default_solid(Colour::red()));
         assert_approx_eq!(m.ambient, 1.0);
         assert_approx_eq!(m.diffuse, 1.0);
         assert_approx_eq!(m.specular, 1.5);
@@ -95,7 +88,7 @@ mod tests {
 
         assert_approx_eq!(
             Material::default(),
-            Material::new(Colour::white(), 0.1, 0.9, 0.9, 200.0, None)
+            Material::new(Colour::white().into(), 0.1, 0.9, 0.9, 200.0)
         );
     }
 
@@ -215,11 +208,7 @@ mod tests {
     #[allow(clippy::many_single_char_names)]
     fn lighting_with_a_pattern_applied() {
         let m = Material {
-            colour: Colour::green(),
-            pattern: Some(Pattern::default_stripe(
-                Colour::white(),
-                Colour::black(),
-            )),
+            pattern: Pattern::default_stripe(Colour::white(), Colour::black()),
             ambient: 1.0,
             diffuse: 0.0,
             specular: 0.0,
@@ -245,9 +234,9 @@ mod tests {
 
     #[test]
     fn comparing_materials() {
-        let m1 = Material::new(Colour::cyan(), 0.6, 0.3, 1.2, 142.7, None);
-        let m2 = Material::new(Colour::cyan(), 0.6, 0.3, 1.2, 142.7, None);
-        let m3 = Material::new(Colour::cyan(), 0.600_1, 0.3, 1.2, 142.7, None);
+        let m1 = Material::new(Colour::cyan().into(), 0.6, 0.3, 1.2, 142.7);
+        let m2 = Material::new(Colour::cyan().into(), 0.6, 0.3, 1.2, 142.7);
+        let m3 = Material::new(Colour::cyan().into(), 0.600_1, 0.3, 1.2, 142.7);
 
         assert_approx_eq!(m1, m2);
 

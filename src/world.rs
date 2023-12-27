@@ -119,7 +119,7 @@ mod tests {
         w.add_object(Object::new_sphere(
             Transformation::new(),
             Material {
-                colour: Colour::new(0.8, 1.0, 0.6),
+                pattern: Colour::new(0.8, 1.0, 0.6).into(),
                 diffuse: 0.7,
                 specular: 0.2,
                 ..Default::default()
@@ -208,7 +208,7 @@ mod tests {
 
         let r = Ray::new(Point::new(0.0, 0.0, 0.75), -Vector::z_axis());
 
-        assert_approx_eq!(w.colour_at(&r), w.objects[1].material.colour);
+        assert_approx_eq!(w.colour_at(&r), Colour::white());
     }
 
     #[test]

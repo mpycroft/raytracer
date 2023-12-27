@@ -1,6 +1,7 @@
 use super::PatternAt;
 use crate::{math::Point, Colour};
 
+/// A testing pattern that returns the passed in `Point` as a `Colour`.
 #[derive(Clone, Copy, Debug)]
 pub struct Test;
 
