@@ -2,8 +2,8 @@ use derive_more::Constructor;
 
 use super::PatternAt;
 use crate::{
-    math::{float::impl_approx_eq, Point, Transformable, Transformation},
-    Colour, Object,
+    math::{float::impl_approx_eq, Point},
+    Colour,
 };
 
 /// A `Stripe` pattern alternates between two different `Colour`s as the x value
@@ -29,10 +29,7 @@ impl_approx_eq!(Stripe { a, b });
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        math::{float::*, Transformation},
-        Material,
-    };
+    use crate::math::float::*;
 
     #[test]
     fn creating_a_stripe_pattern() {
@@ -107,72 +104,6 @@ mod tests {
             Colour::white()
         );
     }
-
-    // #[test]
-    // fn a_stripe_pattern_with_an_object_transformation() {
-    //     let o = Object::new_sphere(
-    //         Transformation::new().scale(2.0, 2.0, 2.0),
-    //         Material {
-    //             pattern: Some(Stripe::new(
-    //                 Transformation::new(),
-    //                 Colour::white(),
-    //                 Colour::black(),
-    //             )),
-    //             ..Default::default()
-    //         },
-    //     );
-
-    //     let Some(s) = o.material.pattern else { unreachable!() };
-
-    //     assert_approx_eq!(
-    //         s.pattern_at(&o, &Point::new(1.5, 0.0, 0.0)),
-    //         Colour::white()
-    //     );
-    // }
-
-    // #[test]
-    // fn a_stripe_pattern_with_a_pattern_transformation() {
-    //     let o = Object::new_sphere(
-    //         Transformation::new(),
-    //         Material {
-    //             pattern: Some(Stripe::new(
-    //                 Transformation::new().scale(2.0, 2.0, 2.0),
-    //                 Colour::white(),
-    //                 Colour::black(),
-    //             )),
-    //             ..Default::default()
-    //         },
-    //     );
-
-    //     let Some(s) = o.material.pattern else { unreachable!() };
-
-    //     assert_approx_eq!(
-    //         s.pattern_at(&o, &Point::new(1.5, 0.0, 0.0)),
-    //         Colour::white()
-    //     );
-    // }
-
-    // #[test]
-    // fn a_stripe_pattern_with_both_an_object_and_pattern_transformation() {
-    //     let o = Object::new_sphere(
-    //         Transformation::new().scale(2.0, 2.0, 2.0),
-    //         Material {
-    //             pattern: Some(Stripe::new(
-    //                 Transformation::new().translate(0.5, 0.0, 0.0),
-    //                 Colour::white(),
-    //                 Colour::black(),
-    //             )),
-    //             ..Default::default()
-    //         },
-    //     );
-
-    //     let Some(s) = o.material.pattern else { unreachable!() };
-
-    //     assert_approx_eq!(
-    //         s.pattern_at(&o, &Point::new(2.5, 0.0, 0.0)),
-    //         Colour::white()
-    //     );
-    // }
 
     #[test]
     fn comparing_stripe_patterns() {
