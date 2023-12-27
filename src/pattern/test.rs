@@ -1,11 +1,11 @@
+use super::PatternAt;
 use crate::{math::Point, Colour};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Test;
 
-impl Test {
-    #[must_use]
-    pub fn pattern_at(&self, point: &Point) -> Colour {
+impl PatternAt for Test {
+    fn pattern_at(&self, point: &Point) -> Colour {
         Colour::new(point.x, point.y, point.z)
     }
 }

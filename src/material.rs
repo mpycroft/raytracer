@@ -2,8 +2,7 @@ use derive_more::Constructor;
 
 use crate::{
     math::{float::impl_approx_eq, Point, Vector},
-    pattern::Stripe,
-    Colour, Object, PointLight,
+    Colour, Object, Pattern, PointLight,
 };
 
 /// A `Material` represents what a given object is made up of including what
@@ -15,7 +14,7 @@ pub struct Material {
     pub diffuse: f64,
     pub specular: f64,
     pub shininess: f64,
-    pub pattern: Option<Stripe>,
+    pub pattern: Option<Pattern>,
 }
 
 impl Material {
@@ -82,7 +81,7 @@ mod tests {
     use std::f64::consts::SQRT_2;
 
     use super::*;
-    use crate::math::{float::*, Transformation};
+    use crate::{math::float::*, pattern::Pattern};
 
     #[test]
     fn creating_a_material() {
@@ -217,8 +216,7 @@ mod tests {
     fn lighting_with_a_pattern_applied() {
         let m = Material {
             colour: Colour::green(),
-            pattern: Some(Stripe::new(
-                Transformation::new(),
+            pattern: Some(Pattern::default_stripe(
                 Colour::white(),
                 Colour::black(),
             )),

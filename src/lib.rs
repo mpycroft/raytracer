@@ -18,6 +18,7 @@ pub use colour::Colour;
 pub use intersection::Intersection;
 pub use material::Material;
 pub use object::Object;
+pub use pattern::Pattern;
 pub use point_light::PointLight;
 pub use shape::Shape;
 pub use world::World;

@@ -18,6 +18,7 @@ pub struct Object {
 
 impl Object {
     #[must_use]
+    #[allow(clippy::large_types_passed_by_value)]
     fn new(
         transformation: Transformation,
         material: Material,
