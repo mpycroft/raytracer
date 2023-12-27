@@ -109,6 +109,8 @@ impl_approx_eq!(Object { shape, transformation, material });
 mod tests {
     use std::f64::consts::{FRAC_1_SQRT_2, PI, SQRT_2};
 
+    use paste::paste;
+
     use super::*;
     use crate::{
         math::{float::*, Angle},
@@ -123,6 +125,30 @@ mod tests {
         let m =
             Material { pattern: Colour::red().into(), ..Default::default() };
 
+        macro_rules! test_object {
+            ($shape:ident) => {{
+                paste! {
+                    let s = Shape::[<new_ $shape:lower>]();
+
+                    let o = Object::[<new_ $shape:lower>](t, m);
+
+                    assert_approx_eq!(o.transformation, t);
+                    assert_approx_eq!(o.inverse_transformation, ti);
+                    assert_approx_eq!(o.material, m);
+                    assert_approx_eq!(o.shape, s);
+
+                    let o = Object::[<default_ $shape:lower>]();
+
+                    assert_approx_eq!(o.transformation, Transformation::new());
+                    assert_approx_eq!(
+                        o.inverse_transformation, Transformation::new()
+                    );
+                    assert_approx_eq!(o.material, Material::default());
+                    assert_approx_eq!(o.shape, s);
+                }
+            }};
+        }
+
         let s = Shape::new_plane();
 
         let o = Object::new(t, m, s);
@@ -132,51 +158,9 @@ mod tests {
         assert_approx_eq!(o.material, m);
         assert_approx_eq!(o.shape, s);
 
-        let o = Object::new_plane(t, m);
-
-        assert_approx_eq!(o.transformation, t);
-        assert_approx_eq!(o.inverse_transformation, ti);
-        assert_approx_eq!(o.material, m);
-        assert_approx_eq!(o.shape, s);
-
-        let o = Object::default_plane();
-
-        assert_approx_eq!(o.transformation, Transformation::new());
-        assert_approx_eq!(o.inverse_transformation, Transformation::new());
-        assert_approx_eq!(o.material, Material::default());
-        assert_approx_eq!(o.shape, s);
-
-        let s = Shape::new_sphere();
-
-        let o = Object::new_sphere(t, m);
-
-        assert_approx_eq!(o.transformation, t);
-        assert_approx_eq!(o.inverse_transformation, ti);
-        assert_approx_eq!(o.material, m);
-        assert_approx_eq!(o.shape, s);
-
-        let o = Object::default_sphere();
-
-        assert_approx_eq!(o.transformation, Transformation::new());
-        assert_approx_eq!(o.inverse_transformation, Transformation::new());
-        assert_approx_eq!(o.material, Material::default());
-        assert_approx_eq!(o.shape, s);
-
-        let s = Shape::new_test();
-
-        let o = Object::new_test(t, m);
-
-        assert_approx_eq!(o.transformation, t);
-        assert_approx_eq!(o.inverse_transformation, ti);
-        assert_approx_eq!(o.material, m);
-        assert_approx_eq!(o.shape, s);
-
-        let o = Object::default_test();
-
-        assert_approx_eq!(o.transformation, Transformation::new());
-        assert_approx_eq!(o.inverse_transformation, Transformation::new());
-        assert_approx_eq!(o.material, Material::default());
-        assert_approx_eq!(o.shape, s);
+        test_object!(Plane);
+        test_object!(Sphere);
+        test_object!(Test);
     }
 
     #[test]

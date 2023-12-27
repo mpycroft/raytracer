@@ -1,3 +1,4 @@
+mod gradient;
 mod solid;
 mod stripe;
 #[cfg(test)]
@@ -9,7 +10,7 @@ use paste::paste;
 
 #[cfg(test)]
 use self::test::Test;
-use self::{solid::Solid, stripe::Stripe};
+use self::{gradient::Gradient, solid::Solid, stripe::Stripe};
 use crate::{
     math::{float::impl_approx_eq, Point, Transformable, Transformation},
     Colour, Object,
@@ -62,6 +63,7 @@ impl Pattern {
         }
     }
 
+    add_pattern_fns!(Gradient(a: Colour, b: Colour));
     add_pattern_fns!(Stripe(a: Colour, b: Colour));
     add_pattern_fns!(Solid(colour: Colour));
 
@@ -102,6 +104,7 @@ impl_approx_eq!(Pattern { pattern, transformation, inverse_transformation });
 #[derive(Clone, Copy, Debug)]
 #[enum_dispatch(PatternAt)]
 pub enum Patterns {
+    Gradient(Gradient),
     Stripe(Stripe),
     Solid(Solid),
     #[cfg(test)]
@@ -115,6 +118,9 @@ impl ApproxEq for Patterns {
         let margin = margin.into();
 
         match (self, other) {
+            (Self::Gradient(lhs), Self::Gradient(rhs)) => {
+                lhs.approx_eq(rhs, margin)
+            }
             (Self::Stripe(lhs), Self::Stripe(rhs)) => {
                 lhs.approx_eq(rhs, margin)
             }
@@ -136,6 +142,28 @@ mod tests {
         let t = Transformation::new().translate(1.0, 2.0, 3.0);
         let ti = t.invert();
 
+        macro_rules! test_pattern {
+            ($pattern:ident ($($arg:tt),*)) => {{
+                paste! {
+                    let p = Patterns::$pattern($pattern::new($($arg),*));
+
+                    let pn = Pattern::[<new_ $pattern:lower>](t, $($arg),*);
+
+                    assert_approx_eq!(pn.transformation, t);
+                    assert_approx_eq!(pn.inverse_transformation, ti);
+                    assert_approx_eq!(pn.pattern, p);
+
+                    let pn = Pattern::[<default_ $pattern:lower>]($($arg),*);
+
+                    assert_approx_eq!(pn.transformation, Transformation::new());
+                    assert_approx_eq!(
+                        pn.inverse_transformation, Transformation::new()
+                    );
+                    assert_approx_eq!(pn.pattern, p);
+                }
+            }};
+        }
+
         let p = Patterns::Stripe(Stripe::new(Colour::white(), Colour::green()));
 
         let pn = Pattern::new(t, p);
@@ -144,45 +172,13 @@ mod tests {
         assert_approx_eq!(pn.inverse_transformation, ti);
         assert_approx_eq!(pn.pattern, p);
 
-        let pn = Pattern::new_stripe(t, Colour::white(), Colour::green());
+        let w = Colour::white();
+        let b = Colour::black();
 
-        assert_approx_eq!(pn.transformation, t);
-        assert_approx_eq!(pn.inverse_transformation, ti);
-        assert_approx_eq!(pn.pattern, p);
-
-        let pn = Pattern::default_stripe(Colour::white(), Colour::green());
-
-        assert_approx_eq!(pn.transformation, Transformation::new());
-        assert_approx_eq!(pn.inverse_transformation, Transformation::new());
-        assert_approx_eq!(pn.pattern, p);
-
-        let p = Patterns::Solid(Solid::new(Colour::purple()));
-
-        let pn = Pattern::new_solid(t, Colour::purple());
-
-        assert_approx_eq!(pn.transformation, t);
-        assert_approx_eq!(pn.inverse_transformation, ti);
-        assert_approx_eq!(pn.pattern, p);
-
-        let pn = Pattern::default_solid(Colour::purple());
-
-        assert_approx_eq!(pn.transformation, Transformation::new());
-        assert_approx_eq!(pn.inverse_transformation, Transformation::new());
-        assert_approx_eq!(pn.pattern, p);
-
-        let p = Patterns::Test(Test);
-
-        let pn = Pattern::new_test(t);
-
-        assert_approx_eq!(pn.transformation, t);
-        assert_approx_eq!(pn.inverse_transformation, ti);
-        assert_approx_eq!(pn.pattern, p);
-
-        let pn = Pattern::default_test();
-
-        assert_approx_eq!(pn.transformation, Transformation::new());
-        assert_approx_eq!(pn.inverse_transformation, Transformation::new());
-        assert_approx_eq!(pn.pattern, p);
+        test_pattern!(Gradient(w, b));
+        test_pattern!(Stripe(w, b));
+        test_pattern!(Solid(w));
+        test_pattern!(Test());
     }
 
     #[test]

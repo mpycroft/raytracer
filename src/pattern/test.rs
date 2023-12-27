@@ -1,8 +1,10 @@
+use derive_more::Constructor;
+
 use super::PatternAt;
 use crate::{math::Point, Colour};
 
 /// A testing pattern that returns the passed in `Point` as a `Colour`.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Constructor)]
 pub struct Test;
 
 impl PatternAt for Test {
@@ -18,7 +20,7 @@ mod tests {
 
     #[test]
     fn test_pattern_returns_point_as_colour() {
-        let t = Test;
+        let t = Test::new();
 
         assert_approx_eq!(
             t.pattern_at(&Point::new(1.0, 2.0, 3.0)),
