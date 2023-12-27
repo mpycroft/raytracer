@@ -1,30 +1,35 @@
-use std::cell::Cell;
-
-use float_cmp::{ApproxEq, F64Margin};
-
 use crate::{
-    intersection::{Intersectable, ListBuilder},
+    intersection::{Intersectable, List, ListBuilder},
     math::{Point, Ray, Vector},
 };
 
 /// A `Test` is a shape intended purely for testing functions on `Object`.
-#[derive(Clone, Debug)]
-pub struct Test {
-    pub ray: Cell<Option<Ray>>,
-}
+#[derive(Clone, Copy, Debug)]
+pub struct Test;
 
 impl Test {
     #[must_use]
-    pub fn new() -> Self {
-        Self { ray: Cell::new(None) }
+    pub fn intersection_to_ray(list: &List) -> Ray {
+        assert_eq!(list.len(), 6);
+
+        Ray::new(
+            Point::new(list[0].t, list[1].t, list[2].t),
+            Vector::new(list[3].t, list[4].t, list[5].t),
+        )
     }
 }
 
 impl Intersectable for Test {
     fn intersect<'a>(&'a self, ray: &Ray) -> Option<ListBuilder<'a>> {
-        self.ray.replace(Some(*ray));
-
-        None
+        Some(
+            ListBuilder::new()
+                .add_t(ray.origin.x)
+                .add_t(ray.origin.y)
+                .add_t(ray.origin.z)
+                .add_t(ray.direction.x)
+                .add_t(ray.direction.y)
+                .add_t(ray.direction.z),
+        )
     }
 
     fn normal_at(&self, point: &Point) -> Vector {
@@ -32,72 +37,33 @@ impl Intersectable for Test {
     }
 }
 
-impl Default for Test {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl ApproxEq for &Test {
-    type Margin = F64Margin;
-
-    fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
-        let margin = margin.into();
-
-        match (self.ray.get(), other.ray.get()) {
-            (None, None) => true,
-            (Some(lhs), Some(rhs)) => lhs.approx_eq(rhs, margin),
-            (_, _) => false,
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::float::*;
+    use crate::{math::float::*, Object};
 
     #[test]
-    fn creating_a_test_shape() {
-        let t = Test::new();
-        assert!(t.ray.get().is_none());
-
-        let t = Test::default();
-        assert!(t.ray.get().is_none());
-    }
-
-    #[test]
+    #[allow(clippy::many_single_char_names)]
     fn intersecting_a_test_shape() {
-        let t = Test::new();
+        let t = Test;
 
         let r = Ray::new(Point::new(1.0, 2.0, 1.0), Vector::x_axis());
 
         let i = t.intersect(&r);
 
-        assert!(i.is_none());
+        assert!(i.is_some());
 
-        assert_approx_eq!(t.ray.get().unwrap(), r);
+        let o = Object::default_test();
+        let l = i.unwrap().object(&o).build();
+
+        assert_approx_eq!(Test::intersection_to_ray(&l), r);
     }
 
     #[test]
     fn normal_at_on_a_test_shape() {
         assert_approx_eq!(
-            Test::new().normal_at(&Point::new(1.0, 2.0, 3.0)),
+            Test.normal_at(&Point::new(1.0, 2.0, 3.0)),
             Vector::new(1.0, 2.0, 3.0)
         );
-    }
-
-    #[test]
-    fn comparing_test_shapes() {
-        let r = Ray::new(Point::origin(), Vector::y_axis());
-        let t1 = Test::new();
-        t1.ray.set(Some(r));
-        let t2 = Test::new();
-        t2.ray.set(Some(r));
-        let t3 = Test::new();
-
-        assert_approx_eq!(t1, &t2);
-
-        assert_approx_ne!(t1, &t3);
     }
 }

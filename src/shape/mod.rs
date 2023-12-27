@@ -4,14 +4,14 @@ mod test;
 use float_cmp::{ApproxEq, F64Margin};
 
 use self::sphere::Sphere;
-use self::test::Test;
+pub(super) use self::test::Test;
 use crate::{
     intersection::{Intersectable, ListBuilder},
     math::{Point, Ray, Vector},
 };
 
 /// `Shape` is the list of the various geometries that can be rendered.
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug)]
 pub enum Shape {
     Sphere(Sphere),
     Test(Test),
@@ -25,7 +25,7 @@ impl Shape {
 
     #[must_use]
     pub fn new_test() -> Self {
-        Self::Test(Test::new())
+        Self::Test(Test)
     }
 }
 
@@ -45,15 +45,13 @@ impl Intersectable for Shape {
     }
 }
 
-impl ApproxEq for &Shape {
+impl ApproxEq for Shape {
     type Margin = F64Margin;
 
-    fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
-        let margin = margin.into();
-
+    fn approx_eq<M: Into<Self::Margin>>(self, other: Self, _margin: M) -> bool {
         match (self, other) {
-            (Shape::Sphere(_), Shape::Sphere(_)) => true,
-            (Shape::Test(lhs), Shape::Test(rhs)) => lhs.approx_eq(rhs, margin),
+            (Shape::Sphere(_), Shape::Sphere(_))
+            | (Shape::Test(_), Shape::Test(_)) => true,
             (_, _) => false,
         }
     }
@@ -70,8 +68,8 @@ mod tests {
         let s2 = Shape::new_test();
         let s3 = Shape::new_sphere();
 
-        assert_approx_eq!(s1, &s2);
+        assert_approx_eq!(s1, s2);
 
-        assert_approx_ne!(s1, &s3);
+        assert_approx_ne!(s1, s3);
     }
 }

@@ -161,12 +161,12 @@ mod tests {
             Shape::new_sphere(),
         );
 
-        w.add_object(o1.clone());
-        w.add_object(o2.clone());
+        w.add_object(o1);
+        w.add_object(o2);
 
         assert_eq!(w.objects.len(), 2);
-        assert_approx_eq!(w.objects[0], &o1);
-        assert_approx_eq!(w.objects[1], &o2);
+        assert_approx_eq!(w.objects[0], o1);
+        assert_approx_eq!(w.objects[1], o2);
 
         let l1 = PointLight::new(Point::origin(), Colour::blue());
         let l2 = PointLight::new(Point::new(1.0, 2.0, 3.0), Colour::green());
@@ -270,7 +270,7 @@ mod tests {
             Material::default(),
             Shape::new_sphere(),
         );
-        w.add_object(o.clone());
+        w.add_object(o);
 
         let r = Ray::new(Point::new(0.0, 0.0, 5.0), Vector::z_axis());
 
