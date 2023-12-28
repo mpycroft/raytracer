@@ -1,3 +1,4 @@
+mod checker;
 mod gradient;
 mod ring;
 mod solid;
@@ -11,7 +12,10 @@ use paste::paste;
 
 #[cfg(test)]
 use self::test::Test;
-use self::{gradient::Gradient, ring::Ring, solid::Solid, stripe::Stripe};
+use self::{
+    checker::Checker, gradient::Gradient, ring::Ring, solid::Solid,
+    stripe::Stripe,
+};
 use crate::{
     math::{float::impl_approx_eq, Point, Transformable, Transformation},
     Colour, Object,
@@ -64,6 +68,7 @@ impl Pattern {
         }
     }
 
+    add_pattern_fns!(Checker(a: Colour, b: Colour));
     add_pattern_fns!(Gradient(a: Colour, b: Colour));
     add_pattern_fns!(Ring(a: Colour, b: Colour));
     add_pattern_fns!(Stripe(a: Colour, b: Colour));
@@ -106,6 +111,7 @@ impl_approx_eq!(Pattern { pattern, transformation, inverse_transformation });
 #[derive(Clone, Copy, Debug)]
 #[enum_dispatch(PatternAt)]
 pub enum Patterns {
+    Checker(Checker),
     Gradient(Gradient),
     Ring(Ring),
     Stripe(Stripe),
@@ -121,6 +127,9 @@ impl ApproxEq for Patterns {
         let margin = margin.into();
 
         match (self, other) {
+            (Self::Checker(lhs), Self::Checker(rhs)) => {
+                lhs.approx_eq(rhs, margin)
+            }
             (Self::Gradient(lhs), Self::Gradient(rhs)) => {
                 lhs.approx_eq(rhs, margin)
             }
@@ -179,6 +188,7 @@ mod tests {
         let w = Colour::white();
         let b = Colour::black();
 
+        test_pattern!(Checker(w, b));
         test_pattern!(Gradient(w, b));
         test_pattern!(Ring(w, b));
         test_pattern!(Stripe(w, b));
