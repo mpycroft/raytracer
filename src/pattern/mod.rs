@@ -1,5 +1,6 @@
 mod checker;
 mod gradient;
+mod radial_gradient;
 mod ring;
 mod solid;
 mod stripe;
@@ -13,8 +14,8 @@ use paste::paste;
 #[cfg(test)]
 use self::test::Test;
 use self::{
-    checker::Checker, gradient::Gradient, ring::Ring, solid::Solid,
-    stripe::Stripe,
+    checker::Checker, gradient::Gradient, radial_gradient::RadialGradient,
+    ring::Ring, solid::Solid, stripe::Stripe,
 };
 use crate::{
     math::{float::impl_approx_eq, Point, Transformable, Transformation},
@@ -42,7 +43,7 @@ macro_rules! add_pattern_fns {
     ($pattern:ident ($($arg:ident: $ty:ty),+)) => {
         paste! {
             #[must_use]
-            pub fn [<new_ $pattern:lower>](
+            pub fn [<new_ $pattern:snake>](
                 transformation: Transformation, $($arg: $ty),+
             ) -> Self {
                 Self::new(
@@ -51,8 +52,8 @@ macro_rules! add_pattern_fns {
             }
 
             #[must_use]
-            pub fn [<default_ $pattern:lower>]($($arg: $ty),+) -> Self {
-                Self::[<new_ $pattern:lower>](Transformation::new(), $($arg),+)
+            pub fn [<default_ $pattern:snake>]($($arg: $ty),+) -> Self {
+                Self::[<new_ $pattern:snake>](Transformation::new(), $($arg),+)
             }
         }
     };
@@ -70,6 +71,7 @@ impl Pattern {
 
     add_pattern_fns!(Checker(a: Colour, b: Colour));
     add_pattern_fns!(Gradient(a: Colour, b: Colour));
+    add_pattern_fns!(RadialGradient(a: Colour, b: Colour));
     add_pattern_fns!(Ring(a: Colour, b: Colour));
     add_pattern_fns!(Stripe(a: Colour, b: Colour));
     add_pattern_fns!(Solid(colour: Colour));
@@ -113,6 +115,7 @@ impl_approx_eq!(Pattern { pattern, transformation, inverse_transformation });
 pub enum Patterns {
     Checker(Checker),
     Gradient(Gradient),
+    RadialGradient(RadialGradient),
     Ring(Ring),
     Stripe(Stripe),
     Solid(Solid),
@@ -131,6 +134,9 @@ impl ApproxEq for Patterns {
                 lhs.approx_eq(rhs, margin)
             }
             (Self::Gradient(lhs), Self::Gradient(rhs)) => {
+                lhs.approx_eq(rhs, margin)
+            }
+            (Self::RadialGradient(lhs), Self::RadialGradient(rhs)) => {
                 lhs.approx_eq(rhs, margin)
             }
             (Self::Ring(lhs), Self::Ring(rhs)) => lhs.approx_eq(rhs, margin),
@@ -160,13 +166,13 @@ mod tests {
                 paste! {
                     let p = Patterns::$pattern($pattern::new($($arg),*));
 
-                    let pn = Pattern::[<new_ $pattern:lower>](t, $($arg),*);
+                    let pn = Pattern::[<new_ $pattern:snake>](t, $($arg),*);
 
                     assert_approx_eq!(pn.transformation, t);
                     assert_approx_eq!(pn.inverse_transformation, ti);
                     assert_approx_eq!(pn.pattern, p);
 
-                    let pn = Pattern::[<default_ $pattern:lower>]($($arg),*);
+                    let pn = Pattern::[<default_ $pattern:snake>]($($arg),*);
 
                     assert_approx_eq!(pn.transformation, Transformation::new());
                     assert_approx_eq!(
@@ -190,6 +196,7 @@ mod tests {
 
         test_pattern!(Checker(w, b));
         test_pattern!(Gradient(w, b));
+        test_pattern!(RadialGradient(w, b));
         test_pattern!(Ring(w, b));
         test_pattern!(Stripe(w, b));
         test_pattern!(Solid(w));

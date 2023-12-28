@@ -60,6 +60,21 @@ mod tests {
             g.pattern_at(&Point::new(0.75, 0.0, 0.0)),
             Colour::new(0.25, 0.25, 0.25)
         );
+
+        assert_approx_eq!(
+            g.pattern_at(&Point::new(-0.25, 0.0, 0.0)),
+            Colour::new(0.25, 0.25, 0.25)
+        );
+
+        assert_approx_eq!(
+            g.pattern_at(&Point::new(-0.5, 0.0, 0.0)),
+            Colour::new(0.5, 0.5, 0.5)
+        );
+
+        assert_approx_eq!(
+            g.pattern_at(&Point::new(-0.75, 0.0, 0.0)),
+            Colour::new(0.75, 0.75, 0.75)
+        );
     }
 
     #[test]

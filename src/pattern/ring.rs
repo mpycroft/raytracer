@@ -16,7 +16,7 @@ pub struct Ring {
 impl PatternAt for Ring {
     #[must_use]
     fn pattern_at(&self, point: &Point) -> Colour {
-        if (point.x * point.x + point.z * point.z).sqrt().floor() % 2.0 == 0.0 {
+        if point.x.hypot(point.z).floor() % 2.0 == 0.0 {
             return self.a;
         }
 
