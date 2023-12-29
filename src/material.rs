@@ -7,7 +7,7 @@ use crate::{
 
 /// A `Material` represents what a given object is made up of including what
 /// colour it is and how it reacts to light.
-#[derive(Clone, Copy, Debug, Constructor)]
+#[derive(Clone, Debug, Constructor)]
 pub struct Material {
     pub pattern: Pattern,
     pub ambient: f64,
@@ -67,7 +67,9 @@ impl Default for Material {
     }
 }
 
-impl_approx_eq!(Material { pattern, ambient, diffuse, specular, shininess });
+impl_approx_eq!(
+    &Material { ref pattern, ambient, diffuse, specular, shininess }
+);
 
 #[cfg(test)]
 mod tests {
@@ -80,7 +82,7 @@ mod tests {
     fn creating_a_material() {
         let m = Material::new(Colour::red().into(), 1.0, 1.0, 1.5, 25.6);
 
-        assert_approx_eq!(m.pattern, Pattern::default_solid(Colour::red()));
+        assert_approx_eq!(m.pattern, &Pattern::default_solid(Colour::red()));
         assert_approx_eq!(m.ambient, 1.0);
         assert_approx_eq!(m.diffuse, 1.0);
         assert_approx_eq!(m.specular, 1.5);
@@ -88,7 +90,7 @@ mod tests {
 
         assert_approx_eq!(
             Material::default(),
-            Material::new(Colour::white().into(), 0.1, 0.9, 0.9, 200.0)
+            &Material::new(Colour::white().into(), 0.1, 0.9, 0.9, 200.0)
         );
     }
 
@@ -238,8 +240,8 @@ mod tests {
         let m2 = Material::new(Colour::cyan().into(), 0.6, 0.3, 1.2, 142.7);
         let m3 = Material::new(Colour::cyan().into(), 0.600_1, 0.3, 1.2, 142.7);
 
-        assert_approx_eq!(m1, m2);
+        assert_approx_eq!(m1, &m2);
 
-        assert_approx_ne!(m1, m3);
+        assert_approx_ne!(m1, &m3);
     }
 }

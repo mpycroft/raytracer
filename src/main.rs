@@ -33,7 +33,8 @@ fn main() -> Result<(), Error> {
         ..Default::default()
     };
 
-    world.add_object(Object::new_plane(Transformation::new(), material));
+    world
+        .add_object(Object::new_plane(Transformation::new(), material.clone()));
     world.add_object(Object::new_plane(
         Transformation::new()
             .rotate_x(Angle(FRAC_PI_2))

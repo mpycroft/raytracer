@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// An 'Object' represents some entity in the scene that can be rendered.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 pub struct Object {
     transformation: Transformation,
     inverse_transformation: Transformation,
@@ -103,7 +103,7 @@ impl Intersectable for Object {
     }
 }
 
-impl_approx_eq!(Object { shape, transformation, material });
+impl_approx_eq!(&Object { shape, transformation, ref material });
 
 #[cfg(test)]
 mod tests {
@@ -130,11 +130,11 @@ mod tests {
                 paste! {
                     let s = Shape::[<new_ $shape:lower>]();
 
-                    let o = Object::[<new_ $shape:lower>](t, m);
+                    let o = Object::[<new_ $shape:lower>](t, m.clone());
 
                     assert_approx_eq!(o.transformation, t);
                     assert_approx_eq!(o.inverse_transformation, ti);
-                    assert_approx_eq!(o.material, m);
+                    assert_approx_eq!(o.material, &m);
                     assert_approx_eq!(o.shape, s);
 
                     let o = Object::[<default_ $shape:lower>]();
@@ -143,7 +143,7 @@ mod tests {
                     assert_approx_eq!(
                         o.inverse_transformation, Transformation::new()
                     );
-                    assert_approx_eq!(o.material, Material::default());
+                    assert_approx_eq!(o.material, &Material::default());
                     assert_approx_eq!(o.shape, s);
                 }
             }};
@@ -151,11 +151,11 @@ mod tests {
 
         let s = Shape::new_plane();
 
-        let o = Object::new(t, m, s);
+        let o = Object::new(t, m.clone(), s);
 
         assert_approx_eq!(o.transformation, t);
         assert_approx_eq!(o.inverse_transformation, ti);
-        assert_approx_eq!(o.material, m);
+        assert_approx_eq!(o.material, &m);
         assert_approx_eq!(o.shape, s);
 
         test_object!(Plane);
@@ -236,8 +236,8 @@ mod tests {
         let i = i.unwrap().build();
         assert_eq!(i.len(), 2);
 
-        assert_approx_eq!(i[0].object, o);
-        assert_approx_eq!(i[1].object, o);
+        assert_approx_eq!(i[0].object, &o);
+        assert_approx_eq!(i[1].object, &o);
 
         assert_approx_eq!(i[0].t, 3.0);
         assert_approx_eq!(i[1].t, 7.0);
@@ -295,8 +295,8 @@ mod tests {
             Material::default(),
         );
 
-        assert_approx_eq!(o1, o2);
+        assert_approx_eq!(o1, &o2);
 
-        assert_approx_ne!(o1, o3);
+        assert_approx_ne!(o1, &o3);
     }
 }

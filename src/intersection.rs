@@ -78,7 +78,7 @@ impl<'a> ApproxEq for Intersection<'a> {
     fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
         let margin = margin.into();
 
-        self.object.approx_eq(*other.object, margin)
+        self.object.approx_eq(other.object, margin)
             && self.t.approx_eq(other.t, margin)
     }
 }
@@ -191,7 +191,7 @@ mod tests {
         let o = Object::default_test();
         let i = Intersection::new(&o, 1.5);
 
-        assert_approx_eq!(i.object, o);
+        assert_approx_eq!(i.object, &o);
         assert_approx_eq!(i.t, 1.5);
     }
 
@@ -205,7 +205,7 @@ mod tests {
 
         let c = i.prepare_computations(&r);
 
-        assert_approx_eq!(c.object, o);
+        assert_approx_eq!(c.object, &o);
         assert_approx_eq!(c.t, t);
         assert_approx_eq!(c.point, Point::new(0.0, 0.0, -1.0));
         assert_approx_eq!(c.eye, -Vector::z_axis());
@@ -224,7 +224,7 @@ mod tests {
 
         let c = i.prepare_computations(&r);
 
-        assert_approx_eq!(c.object, o);
+        assert_approx_eq!(c.object, &o);
         assert_approx_eq!(c.t, t);
         assert_approx_eq!(c.point, Point::new(0.0, 0.0, 1.0));
         assert_approx_eq!(c.eye, -Vector::z_axis());
@@ -258,7 +258,7 @@ mod tests {
         l.push(Intersection::new(&o, 1.2));
 
         assert_eq!(l.len(), 1);
-        assert_approx_eq!(l[0].object, o);
+        assert_approx_eq!(l[0].object, &o);
         assert_approx_eq!(l[0].t, 1.2);
 
         let l = List::default();
@@ -283,7 +283,7 @@ mod tests {
         let l = b.build();
 
         assert_eq!(l.len(), 1);
-        assert_approx_eq!(l[0].object, o);
+        assert_approx_eq!(l[0].object, &o);
         assert_approx_eq!(l[0].t, 1.0);
 
         let l = ListBuilder::new()
@@ -295,13 +295,13 @@ mod tests {
 
         assert_eq!(l.len(), 3);
 
-        assert_approx_eq!(l[0].object, o);
+        assert_approx_eq!(l[0].object, &o);
         assert_approx_eq!(l[0].t, 1.0);
 
-        assert_approx_eq!(l[1].object, o);
+        assert_approx_eq!(l[1].object, &o);
         assert_approx_eq!(l[1].t, 2.0);
 
-        assert_approx_eq!(l[2].object, o);
+        assert_approx_eq!(l[2].object, &o);
         assert_approx_eq!(l[2].t, -2.0);
     }
 
@@ -391,7 +391,7 @@ mod tests {
 
         let h = h.unwrap();
 
-        assert_approx_eq!(h.object, o);
+        assert_approx_eq!(h.object, &o);
         assert_approx_eq!(h.t, 2.0);
     }
 
