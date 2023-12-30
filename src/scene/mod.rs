@@ -1,4 +1,5 @@
 mod chapter10;
+mod chapter6;
 
 use clap::ValueEnum;
 use derive_more::{Constructor, Display};
@@ -7,6 +8,7 @@ use raytracer::{Camera, Canvas, World};
 /// `Scene` is a list of all the scenes we know about.
 #[derive(Clone, Copy, Debug, ValueEnum, Display)]
 pub enum Scene {
+    Chapter6,
     Chapter10,
 }
 
@@ -14,7 +16,8 @@ impl Scene {
     #[must_use]
     pub fn generate(&self) -> SceneData {
         match self {
-            Scene::Chapter10 => chapter10::generate_scene(),
+            Self::Chapter6 => chapter6::generate_scene(),
+            Self::Chapter10 => chapter10::generate_scene(),
         }
     }
 }
