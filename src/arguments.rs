@@ -3,6 +3,8 @@ use clap::{
     Parser,
 };
 
+use crate::scene::Scene;
+
 fn styles() -> Styles {
     Styles::styled()
         .header(AnsiColor::Yellow.on_default())
@@ -11,7 +13,7 @@ fn styles() -> Styles {
         .placeholder(AnsiColor::Cyan.on_default())
 }
 
-#[derive(Parser, Debug)]
+#[derive(Clone, Debug, Parser)]
 #[command(author, version, about, styles = styles())]
 pub struct Arguments {
     /// Output FILE to write to
@@ -20,4 +22,7 @@ pub struct Arguments {
     /// Suppress program output
     #[arg(short, long)]
     pub quiet: bool,
+    /// Which scene to generate.
+    #[arg(short, long, default_value = "chapter10")]
+    pub scene: Scene,
 }
