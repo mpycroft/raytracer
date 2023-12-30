@@ -1,3 +1,6 @@
+//! This module contains helper macros used to generate code for the `Pattern`
+//! module.
+
 /// This macro implements a given pattern that contains two sub patterns. It
 /// defines the struct, a new function and implements `ApproxEq` for the struct.
 /// The only additional thing that should be needed is implementing the actual

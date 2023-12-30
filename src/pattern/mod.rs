@@ -1,3 +1,4 @@
+mod blend;
 mod checker;
 mod gradient;
 mod radial_gradient;
@@ -15,8 +16,9 @@ use paste::paste;
 #[cfg(test)]
 use self::test::Test;
 use self::{
-    checker::Checker, gradient::Gradient, radial_gradient::RadialGradient,
-    ring::Ring, solid::Solid, stripe::Stripe, util::impl_approx_eq_patterns,
+    blend::Blend, checker::Checker, gradient::Gradient,
+    radial_gradient::RadialGradient, ring::Ring, solid::Solid, stripe::Stripe,
+    util::impl_approx_eq_patterns,
 };
 use crate::{
     math::{float::impl_approx_eq, Point, Transformable, Transformation},
@@ -40,7 +42,12 @@ pub struct Pattern {
     pattern: Patterns,
 }
 
+/// The `add_pattern_fns` macro adds new_ and default_ functions for a given
+/// pattern.
 macro_rules! add_pattern_fns {
+    ($pattern:ident) => {
+        add_pattern_fns!($pattern(a: Pattern, b: Pattern));
+    };
     ($pattern:ident ($($arg:ident: $ty:ty),+)) => {
         paste! {
             #[must_use]
@@ -70,11 +77,12 @@ impl Pattern {
         }
     }
 
-    add_pattern_fns!(Checker(a: Pattern, b: Pattern));
-    add_pattern_fns!(Gradient(a: Pattern, b: Pattern));
-    add_pattern_fns!(RadialGradient(a: Pattern, b: Pattern));
-    add_pattern_fns!(Ring(a: Pattern, b: Pattern));
-    add_pattern_fns!(Stripe(a: Pattern, b: Pattern));
+    add_pattern_fns!(Blend);
+    add_pattern_fns!(Checker);
+    add_pattern_fns!(Gradient);
+    add_pattern_fns!(RadialGradient);
+    add_pattern_fns!(Ring);
+    add_pattern_fns!(Stripe);
     add_pattern_fns!(Solid(colour: Colour));
 
     #[cfg(test)]
@@ -121,6 +129,7 @@ impl_approx_eq!(
 #[derive(Clone, Debug)]
 #[enum_dispatch(PatternAt)]
 pub enum Patterns {
+    Blend(Blend),
     Checker(Checker),
     Gradient(Gradient),
     RadialGradient(RadialGradient),
@@ -132,6 +141,7 @@ pub enum Patterns {
 }
 
 impl_approx_eq_patterns! {
+    Blend,
     Checker,
     Gradient,
     RadialGradient,
@@ -152,6 +162,7 @@ mod tests {
         let t = Transformation::new().translate(1.0, 2.0, 3.0);
         let ti = t.invert();
 
+        /// Test creation of `Pattern`s using new_ and default_ functions.
         macro_rules! test_pattern {
             ($pattern:ident ($($arg:tt),*)) => {{
                 paste! {
@@ -194,6 +205,7 @@ mod tests {
         let w = Pattern::default_solid(Colour::white());
         let b = Pattern::default_solid(Colour::black());
 
+        test_pattern!(Blend(w, b));
         test_pattern!(Checker(w, b));
         test_pattern!(Gradient(w, b));
         test_pattern!(RadialGradient(w, b));

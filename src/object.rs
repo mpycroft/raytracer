@@ -125,6 +125,7 @@ mod tests {
         let m =
             Material { pattern: Colour::red().into(), ..Default::default() };
 
+        /// Test the creation of objects using new_ and default_ functions.
         macro_rules! test_object {
             ($shape:ident) => {{
                 paste! {

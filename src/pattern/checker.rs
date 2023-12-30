@@ -2,7 +2,7 @@ use super::{util::impl_pattern, PatternAt};
 use crate::{math::Point, Colour};
 
 impl_pattern!(
-    /// A `Checker` patterns produces a checker board pattern where no square
+    /// A `Checker` pattern produces a checker board pattern where no square
     /// touches another of the same `Colour`.
     Checker
 );

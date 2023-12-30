@@ -2,7 +2,7 @@ use super::{util::impl_pattern, PatternAt};
 use crate::{math::Point, Colour};
 
 impl_pattern!(
-    /// A `Ring` patterns alternates two `Colour`s in concentric rings in x and
+    /// A `Ring` pattern alternates two `Colour`s in concentric rings in x and
     /// z.
     Ring
 );
