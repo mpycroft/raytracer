@@ -16,7 +16,7 @@ use paste::paste;
 use self::test::Test;
 use self::{
     checker::Checker, gradient::Gradient, radial_gradient::RadialGradient,
-    ring::Ring, solid::Solid, stripe::Stripe,
+    ring::Ring, solid::Solid, stripe::Stripe, util::impl_approx_eq_patterns,
 };
 use crate::{
     math::{float::impl_approx_eq, Point, Transformable, Transformation},
@@ -131,38 +131,15 @@ pub enum Patterns {
     Test(Test),
 }
 
-impl ApproxEq for &Patterns {
-    type Margin = F64Margin;
-
-    fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
-        let margin = margin.into();
-
-        match (self, other) {
-            (Patterns::Checker(lhs), Patterns::Checker(rhs)) => {
-                lhs.approx_eq(rhs, margin)
-            }
-            (Patterns::Gradient(lhs), Patterns::Gradient(rhs)) => {
-                lhs.approx_eq(rhs, margin)
-            }
-            (Patterns::RadialGradient(lhs), Patterns::RadialGradient(rhs)) => {
-                lhs.approx_eq(rhs, margin)
-            }
-            (Patterns::Ring(lhs), Patterns::Ring(rhs)) => {
-                lhs.approx_eq(rhs, margin)
-            }
-            (Patterns::Stripe(lhs), Patterns::Stripe(rhs)) => {
-                lhs.approx_eq(rhs, margin)
-            }
-            (Patterns::Solid(lhs), Patterns::Solid(rhs)) => {
-                lhs.approx_eq(rhs, margin)
-            }
-            #[cfg(test)]
-            (Patterns::Test(lhs), Patterns::Test(rhs)) => {
-                lhs.approx_eq(rhs, margin)
-            }
-            (_, _) => false,
-        }
-    }
+impl_approx_eq_patterns! {
+    Checker,
+    Gradient,
+    RadialGradient,
+    Ring,
+    Stripe,
+    Solid,
+    #[cfg(test)]
+    Test
 }
 
 #[cfg(test)]
