@@ -1,4 +1,5 @@
 use derive_more::Constructor;
+use float_cmp::{ApproxEq, F64Margin};
 
 use super::PatternAt;
 use crate::{math::Point, Colour};
@@ -13,10 +14,22 @@ impl PatternAt for Test {
     }
 }
 
+impl ApproxEq for &Test {
+    type Margin = F64Margin;
+
+    fn approx_eq<M: Into<Self::Margin>>(
+        self,
+        _other: Self,
+        _margin: M,
+    ) -> bool {
+        true
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::float::assert_approx_eq;
+    use crate::math::float::*;
 
     #[test]
     fn test_pattern_returns_point_as_colour() {

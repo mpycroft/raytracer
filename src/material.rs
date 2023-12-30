@@ -210,7 +210,10 @@ mod tests {
     #[allow(clippy::many_single_char_names)]
     fn lighting_with_a_pattern_applied() {
         let m = Material {
-            pattern: Pattern::default_stripe(Colour::white(), Colour::black()),
+            pattern: Pattern::default_stripe(
+                Colour::white().into(),
+                Colour::black().into(),
+            ),
             ambient: 1.0,
             diffuse: 0.0,
             specular: 0.0,

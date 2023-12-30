@@ -1,48 +1,32 @@
-use derive_more::Constructor;
+use super::{util::impl_pattern, PatternAt};
+use crate::{math::Point, Colour};
 
-use super::PatternAt;
-use crate::{
-    math::{float::impl_approx_eq, Point},
-    Colour,
-};
-
-/// A `Gradient` pattern smoothly changes between two `Colour`s as the x value
-/// changes.
-#[derive(Clone, Copy, Debug, Constructor)]
-pub struct Gradient {
-    a: Colour,
-    b: Colour,
-}
+impl_pattern!(
+    /// A `Gradient` pattern smoothly changes between two `Colour`s as the x
+    /// value changes.
+    Gradient
+);
 
 impl PatternAt for Gradient {
     #[must_use]
     fn pattern_at(&self, point: &Point) -> Colour {
-        let distance = self.b - self.a;
+        let distance =
+            self.b.sub_pattern_at(point) - self.a.sub_pattern_at(point);
 
         let fraction = point.x - point.x.floor();
 
-        self.a + distance * fraction
+        self.a.sub_pattern_at(point) + distance * fraction
     }
 }
-
-impl_approx_eq!(Gradient { a, b });
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::float::*;
-
-    #[test]
-    fn creating_a_gradient_pattern() {
-        let g = Gradient::new(Colour::red(), Colour::blue());
-
-        assert_approx_eq!(g.a, Colour::red());
-        assert_approx_eq!(g.b, Colour::blue());
-    }
+    use crate::{math::float::*, pattern::util::add_pattern_tests};
 
     #[test]
     fn a_gradient_linearly_interpolates_between_colours() {
-        let g = Gradient::new(Colour::white(), Colour::black());
+        let g = Gradient::new(Colour::white().into(), Colour::black().into());
 
         assert_approx_eq!(g.pattern_at(&Point::origin()), Colour::white());
 
@@ -79,7 +63,7 @@ mod tests {
 
     #[test]
     fn a_gradient_is_constant_in_y_and_z() {
-        let g = Gradient::new(Colour::white(), Colour::black());
+        let g = Gradient::new(Colour::white().into(), Colour::black().into());
 
         assert_approx_eq!(
             g.pattern_at(&Point::new(0.0, 3.0, 0.0)),
@@ -105,14 +89,5 @@ mod tests {
         );
     }
 
-    #[test]
-    fn comparing_gradient_patterns() {
-        let g1 = Gradient::new(Colour::purple(), Colour::cyan());
-        let g2 = Gradient::new(Colour::purple(), Colour::cyan());
-        let g3 = Gradient::new(Colour::purple(), Colour::green());
-
-        assert_approx_eq!(g1, g2);
-
-        assert_approx_ne!(g1, g3);
-    }
+    add_pattern_tests!(Gradient);
 }

@@ -21,7 +21,7 @@ impl PatternAt for Solid {
     }
 }
 
-impl_approx_eq!(Solid { colour });
+impl_approx_eq!(&Solid { colour });
 
 #[cfg(test)]
 mod tests {
@@ -80,8 +80,8 @@ mod tests {
         let s2 = Solid::new(Colour::cyan());
         let s3 = Solid::new(Colour::white());
 
-        assert_approx_eq!(s1, s2);
+        assert_approx_eq!(s1, &s2);
 
-        assert_approx_ne!(s1, s3);
+        assert_approx_ne!(s1, &s3);
     }
 }

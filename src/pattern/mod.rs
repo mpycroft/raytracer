@@ -6,6 +6,7 @@ mod solid;
 mod stripe;
 #[cfg(test)]
 mod test;
+mod util;
 
 use enum_dispatch::enum_dispatch;
 use float_cmp::{ApproxEq, F64Margin};
@@ -69,11 +70,11 @@ impl Pattern {
         }
     }
 
-    add_pattern_fns!(Checker(a: Colour, b: Colour));
-    add_pattern_fns!(Gradient(a: Colour, b: Colour));
-    add_pattern_fns!(RadialGradient(a: Colour, b: Colour));
-    add_pattern_fns!(Ring(a: Colour, b: Colour));
-    add_pattern_fns!(Stripe(a: Colour, b: Colour));
+    add_pattern_fns!(Checker(a: Pattern, b: Pattern));
+    add_pattern_fns!(Gradient(a: Pattern, b: Pattern));
+    add_pattern_fns!(RadialGradient(a: Pattern, b: Pattern));
+    add_pattern_fns!(Ring(a: Pattern, b: Pattern));
+    add_pattern_fns!(Stripe(a: Pattern, b: Pattern));
     add_pattern_fns!(Solid(colour: Colour));
 
     #[cfg(test)]
@@ -92,7 +93,12 @@ impl Pattern {
     pub fn pattern_at(&self, object: &Object, point: &Point) -> Colour {
         let object_point = object.to_object_space(point);
 
-        let pattern_point = object_point.apply(&self.inverse_transformation);
+        self.sub_pattern_at(&object_point)
+    }
+
+    #[must_use]
+    pub fn sub_pattern_at(&self, point: &Point) -> Colour {
+        let pattern_point = point.apply(&self.inverse_transformation);
 
         self.pattern.pattern_at(&pattern_point)
     }
@@ -133,25 +139,27 @@ impl ApproxEq for &Patterns {
 
         match (self, other) {
             (Patterns::Checker(lhs), Patterns::Checker(rhs)) => {
-                lhs.approx_eq(*rhs, margin)
+                lhs.approx_eq(rhs, margin)
             }
             (Patterns::Gradient(lhs), Patterns::Gradient(rhs)) => {
-                lhs.approx_eq(*rhs, margin)
+                lhs.approx_eq(rhs, margin)
             }
             (Patterns::RadialGradient(lhs), Patterns::RadialGradient(rhs)) => {
-                lhs.approx_eq(*rhs, margin)
+                lhs.approx_eq(rhs, margin)
             }
             (Patterns::Ring(lhs), Patterns::Ring(rhs)) => {
-                lhs.approx_eq(*rhs, margin)
+                lhs.approx_eq(rhs, margin)
             }
             (Patterns::Stripe(lhs), Patterns::Stripe(rhs)) => {
-                lhs.approx_eq(*rhs, margin)
+                lhs.approx_eq(rhs, margin)
             }
             (Patterns::Solid(lhs), Patterns::Solid(rhs)) => {
-                lhs.approx_eq(*rhs, margin)
+                lhs.approx_eq(rhs, margin)
             }
             #[cfg(test)]
-            (Patterns::Test(_), Patterns::Test(_)) => true,
+            (Patterns::Test(lhs), Patterns::Test(rhs)) => {
+                lhs.approx_eq(rhs, margin)
+            }
             (_, _) => false,
         }
     }
@@ -170,15 +178,21 @@ mod tests {
         macro_rules! test_pattern {
             ($pattern:ident ($($arg:tt),*)) => {{
                 paste! {
-                    let p = Patterns::$pattern($pattern::new($($arg),*));
+                    let p = Patterns::$pattern(
+                        $pattern::new($($arg.clone()),*)
+                    );
 
-                    let pn = Pattern::[<new_ $pattern:snake>](t, $($arg),*);
+                    let pn = Pattern::[<new_ $pattern:snake>](
+                        t, $($arg.clone()),*
+                    );
 
                     assert_approx_eq!(pn.transformation, t);
                     assert_approx_eq!(pn.inverse_transformation, ti);
                     assert_approx_eq!(pn.pattern, &p);
 
-                    let pn = Pattern::[<default_ $pattern:snake>]($($arg),*);
+                    let pn = Pattern::[<default_ $pattern:snake>](
+                        $($arg.clone()),*
+                    );
 
                     assert_approx_eq!(pn.transformation, Transformation::new());
                     assert_approx_eq!(
@@ -189,7 +203,10 @@ mod tests {
             }};
         }
 
-        let p = Patterns::Stripe(Stripe::new(Colour::white(), Colour::green()));
+        let p = Patterns::Stripe(Stripe::new(
+            Colour::white().into(),
+            Colour::green().into(),
+        ));
 
         let pn = Pattern::new(t, p.clone());
 
@@ -197,14 +214,17 @@ mod tests {
         assert_approx_eq!(pn.inverse_transformation, ti);
         assert_approx_eq!(pn.pattern, &p);
 
-        let w = Colour::white();
-        let b = Colour::black();
+        let w = Pattern::default_solid(Colour::white());
+        let b = Pattern::default_solid(Colour::black());
 
         test_pattern!(Checker(w, b));
         test_pattern!(Gradient(w, b));
         test_pattern!(RadialGradient(w, b));
         test_pattern!(Ring(w, b));
         test_pattern!(Stripe(w, b));
+
+        let w = Colour::white();
+
         test_pattern!(Solid(w));
         test_pattern!(Test());
     }
@@ -259,7 +279,10 @@ mod tests {
             Material::default(),
         );
 
-        let p = Pattern::default_stripe(Colour::white(), Colour::black());
+        let p = Pattern::default_stripe(
+            Colour::white().into(),
+            Colour::black().into(),
+        );
 
         assert_approx_eq!(
             p.pattern_at(&o, &Point::new(1.5, 0.0, 0.0)),
@@ -273,8 +296,8 @@ mod tests {
 
         let p = Pattern::new_stripe(
             Transformation::new().scale(2.0, 2.0, 2.0),
-            Colour::white(),
-            Colour::black(),
+            Colour::white().into(),
+            Colour::black().into(),
         );
 
         assert_approx_eq!(
@@ -292,8 +315,8 @@ mod tests {
 
         let p = Pattern::new_stripe(
             Transformation::new().translate(0.5, 0.0, 0.0),
-            Colour::white(),
-            Colour::black(),
+            Colour::white().into(),
+            Colour::black().into(),
         );
 
         assert_approx_eq!(
@@ -312,8 +335,14 @@ mod tests {
 
         assert_approx_ne!(p1, &p3);
 
-        let p1 = Patterns::Stripe(Stripe::new(Colour::black(), Colour::blue()));
-        let p2 = Patterns::Stripe(Stripe::new(Colour::black(), Colour::blue()));
+        let p1 = Patterns::Stripe(Stripe::new(
+            Colour::black().into(),
+            Colour::blue().into(),
+        ));
+        let p2 = Patterns::Stripe(Stripe::new(
+            Colour::black().into(),
+            Colour::blue().into(),
+        ));
         let p3 = Patterns::Test(Test);
 
         assert_approx_eq!(p1, &p2);
