@@ -1,6 +1,7 @@
 mod blend;
 mod checker;
 mod gradient;
+mod perturbed;
 mod radial_gradient;
 mod ring;
 mod solid;
@@ -16,7 +17,7 @@ use paste::paste;
 #[cfg(test)]
 use self::test::Test;
 use self::{
-    blend::Blend, checker::Checker, gradient::Gradient,
+    blend::Blend, checker::Checker, gradient::Gradient, perturbed::Perturbed,
     radial_gradient::RadialGradient, ring::Ring, solid::Solid, stripe::Stripe,
     util::impl_approx_eq_patterns,
 };
@@ -46,7 +47,7 @@ pub struct Pattern {
 /// pattern.
 macro_rules! add_pattern_fns {
     ($pattern:ident) => {
-        add_pattern_fns!($pattern(a: Pattern, b: Pattern));
+        add_pattern_fns!($pattern(a: Self, b: Self));
     };
     ($pattern:ident ($($arg:ident: $ty:ty),+)) => {
         paste! {
@@ -80,6 +81,7 @@ impl Pattern {
     add_pattern_fns!(Blend);
     add_pattern_fns!(Checker);
     add_pattern_fns!(Gradient);
+    add_pattern_fns!(Perturbed(scale: f64, pattern: Self));
     add_pattern_fns!(RadialGradient);
     add_pattern_fns!(Ring);
     add_pattern_fns!(Stripe);
@@ -132,6 +134,7 @@ pub enum Patterns {
     Blend(Blend),
     Checker(Checker),
     Gradient(Gradient),
+    Perturbed(Perturbed),
     RadialGradient(RadialGradient),
     Ring(Ring),
     Stripe(Stripe),
@@ -144,6 +147,7 @@ impl_approx_eq_patterns! {
     Blend,
     Checker,
     Gradient,
+    Perturbed,
     RadialGradient,
     Ring,
     Stripe,
@@ -208,6 +212,7 @@ mod tests {
         test_pattern!(Blend(w, b));
         test_pattern!(Checker(w, b));
         test_pattern!(Gradient(w, b));
+        test_pattern!(Perturbed(0.3, w));
         test_pattern!(RadialGradient(w, b));
         test_pattern!(Ring(w, b));
         test_pattern!(Stripe(w, b));
