@@ -83,3 +83,7 @@ On a release build rendering at 3000x1500.
 
 Storing the inverted transpose matrix didn't have any notable speedup so we will
 continue to calculate that as needed.
+
+While doing the above I missed an inversion in Camera. Fixing this to also store
+the inverted transformation cuts debug builds down to 2.71s and release builds
+to 2.37s (at 3x the pixels of the debug build as above).

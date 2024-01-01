@@ -16,7 +16,7 @@ use crate::{
 pub struct Camera {
     horizontal_size: usize,
     vertical_size: usize,
-    transformation: Transformation,
+    inverse_transformation: Transformation,
     half_width: f64,
     half_height: f64,
     pixel_size: f64,
@@ -45,7 +45,7 @@ impl Camera {
         Self {
             horizontal_size,
             vertical_size,
-            transformation,
+            inverse_transformation: transformation.invert(),
             half_width,
             half_height,
             pixel_size: half_width * 2.0 / horizontal_float,
@@ -125,11 +125,10 @@ Elapsed: {elapsed}, estimated: {eta}, rows/sec: {per_sec}",
         let world_x = self.half_width - x_offset;
         let world_y = self.half_height - y_offset;
 
-        let transformation = self.transformation.invert();
+        let pixel = Point::new(world_x, world_y, -1.0)
+            .apply(&self.inverse_transformation);
 
-        let pixel = Point::new(world_x, world_y, -1.0).apply(&transformation);
-
-        let origin = Point::origin().apply(&transformation);
+        let origin = Point::origin().apply(&self.inverse_transformation);
 
         Ray::new(origin, (pixel - origin).normalise())
     }
@@ -154,7 +153,7 @@ mod tests {
 
         assert_eq!(c.horizontal_size, h);
         assert_eq!(c.vertical_size, v);
-        assert_approx_eq!(c.transformation, t);
+        assert_approx_eq!(c.inverse_transformation, t);
         assert_approx_eq!(c.half_width, 1.0);
         assert_approx_eq!(c.half_height, 0.75);
         assert_approx_eq!(c.pixel_size, 0.012_5);
@@ -194,10 +193,10 @@ mod tests {
         );
 
         let mut c = c;
-        c.transformation = c
-            .transformation
+        c.inverse_transformation = Transformation::new()
             .translate(0.0, -2.0, 5.0)
-            .rotate_y(Angle(FRAC_PI_4));
+            .rotate_y(Angle(FRAC_PI_4))
+            .invert();
 
         let sqrt_2_div_2 = SQRT_2 / 2.0;
         assert_approx_eq!(
