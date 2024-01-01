@@ -286,7 +286,7 @@ mod tests {
         assert_approx_eq!(l[0].object, &o);
         assert_approx_eq!(l[0].t, 1.0);
 
-        let l = ListBuilder::new()
+        let l = ListBuilder::default()
             .object(&o)
             .add_t(1.0)
             .add_t(2.0)

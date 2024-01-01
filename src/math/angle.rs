@@ -158,6 +158,16 @@ mod tests {
         assert_approx_eq!(Angle(FRAC_PI_2).sin(), FRAC_PI_2.sin());
         assert_approx_eq!(Angle(FRAC_PI_3).tan(), FRAC_PI_3.tan());
 
+        assert_approx_eq!(Angle::acos(Angle(PI).cos()), Angle(PI.cos().acos()));
+        assert_approx_eq!(
+            Angle::asin(Angle(FRAC_PI_2).sin()),
+            Angle(FRAC_PI_2.sin().asin())
+        );
+        assert_approx_eq!(
+            Angle::atan(Angle(FRAC_PI_3).tan()),
+            Angle(FRAC_PI_3.tan().atan())
+        );
+
         let (s1, c1) = Angle::from_degrees(163.5).sin_cos();
         let (s2, c2) = 163.5f64.to_radians().sin_cos();
         assert_approx_eq!(s1, s2);
