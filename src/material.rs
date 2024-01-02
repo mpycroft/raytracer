@@ -14,6 +14,7 @@ pub struct Material {
     pub diffuse: f64,
     pub specular: f64,
     pub shininess: f64,
+    pub reflective: f64,
 }
 
 impl Material {
@@ -63,12 +64,12 @@ impl Material {
 
 impl Default for Material {
     fn default() -> Self {
-        Self::new(Colour::white().into(), 0.1, 0.9, 0.9, 200.0)
+        Self::new(Colour::white().into(), 0.1, 0.9, 0.9, 200.0, 0.0)
     }
 }
 
 impl_approx_eq!(
-    &Material { ref pattern, ambient, diffuse, specular, shininess }
+    &Material { ref pattern, ambient, diffuse, specular, shininess, reflective }
 );
 
 #[cfg(test)]
@@ -80,17 +81,18 @@ mod tests {
 
     #[test]
     fn creating_a_material() {
-        let m = Material::new(Colour::red().into(), 1.0, 1.0, 1.5, 25.6);
+        let m = Material::new(Colour::red().into(), 1.0, 1.0, 1.5, 25.6, 0.6);
 
         assert_approx_eq!(m.pattern, &Pattern::default_solid(Colour::red()));
         assert_approx_eq!(m.ambient, 1.0);
         assert_approx_eq!(m.diffuse, 1.0);
         assert_approx_eq!(m.specular, 1.5);
         assert_approx_eq!(m.shininess, 25.6);
+        assert_approx_eq!(m.reflective, 0.6);
 
         assert_approx_eq!(
             Material::default(),
-            &Material::new(Colour::white().into(), 0.1, 0.9, 0.9, 200.0)
+            &Material::new(Colour::white().into(), 0.1, 0.9, 0.9, 200.0, 0.0)
         );
     }
 
@@ -239,9 +241,12 @@ mod tests {
 
     #[test]
     fn comparing_materials() {
-        let m1 = Material::new(Colour::cyan().into(), 0.6, 0.3, 1.2, 142.7);
-        let m2 = Material::new(Colour::cyan().into(), 0.6, 0.3, 1.2, 142.7);
-        let m3 = Material::new(Colour::cyan().into(), 0.600_1, 0.3, 1.2, 142.7);
+        let m1 =
+            Material::new(Colour::cyan().into(), 0.6, 0.3, 1.2, 142.7, 0.3);
+        let m2 =
+            Material::new(Colour::cyan().into(), 0.6, 0.3, 1.2, 142.7, 0.3);
+        let m3 =
+            Material::new(Colour::cyan().into(), 0.600_1, 0.3, 1.2, 142.7, 0.3);
 
         assert_approx_eq!(m1, &m2);
 
