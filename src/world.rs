@@ -41,10 +41,10 @@ impl World {
 
     #[must_use]
     pub fn shade_hit(&self, computations: &Computations) -> Colour {
-        let mut colour = Colour::black();
+        let mut surface = Colour::black();
 
         for light in &self.lights {
-            colour += computations.object.material.lighting(
+            surface += computations.object.material.lighting(
                 computations.object,
                 light,
                 &computations.over_point,
@@ -54,7 +54,9 @@ impl World {
             );
         }
 
-        colour
+        let reflected = self.reflected_colour(computations);
+
+        surface + reflected
     }
 
     #[must_use]
@@ -290,6 +292,33 @@ mod tests {
         let c = i.prepare_computations(&r);
 
         assert_approx_eq!(w.shade_hit(&c), Colour::new(0.1, 0.1, 0.1));
+    }
+
+    #[test]
+    fn shade_hit_with_a_reflective_material() {
+        let mut w = test_world();
+
+        w.add_object(Object::new_plane(
+            Transformation::new().translate(0.0, -1.0, 0.0),
+            Material { reflective: 0.5, ..Default::default() },
+        ));
+
+        let sqrt_2_div_2 = SQRT_2 / 2.0;
+
+        let r = Ray::new(
+            Point::new(0.0, 0.0, -3.0),
+            Vector::new(0.0, -sqrt_2_div_2, sqrt_2_div_2),
+        );
+
+        let i = Intersection::new(&w.objects[2], SQRT_2);
+
+        let c = i.prepare_computations(&r);
+
+        assert_approx_eq!(
+            w.shade_hit(&c),
+            Colour::new(0.876_76, 0.924_34, 0.829_17),
+            epsilon = 0.000_01
+        );
     }
 
     #[test]
