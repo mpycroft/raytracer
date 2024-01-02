@@ -95,6 +95,20 @@ impl World {
 
         false
     }
+
+    #[must_use]
+    pub fn reflected_colour(&self, computations: &Computations) -> Colour {
+        if computations.object.material.reflective <= 0.0 {
+            return Colour::black();
+        }
+
+        let reflect_ray =
+            Ray::new(computations.over_point, computations.reflect);
+
+        let colour = self.colour_at(&reflect_ray);
+
+        colour * computations.object.material.reflective
+    }
 }
 
 impl Default for World {
@@ -105,7 +119,7 @@ impl Default for World {
 
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::FRAC_PI_2;
+    use std::f64::consts::{FRAC_PI_2, SQRT_2};
 
     use super::*;
     use crate::{
@@ -345,5 +359,49 @@ mod tests {
         let w = test_world();
 
         assert!(!w.is_shadowed(&w.lights[0], &Point::new(-2.0, 2.0, -2.0)));
+    }
+
+    #[test]
+    #[allow(clippy::many_single_char_names)]
+    fn the_reflected_colour_for_a_non_reflective_material() {
+        let mut w = test_world();
+
+        let r = Ray::new(Point::origin(), Vector::z_axis());
+
+        w.objects[1].material.ambient = 1.0;
+        let o = &w.objects[1];
+
+        let i = Intersection::new(o, 1.0);
+
+        let c = i.prepare_computations(&r);
+
+        assert_approx_eq!(w.reflected_colour(&c), Colour::black());
+    }
+
+    #[test]
+    fn the_reflected_colour_for_a_reflective_material() {
+        let mut w = test_world();
+
+        w.add_object(Object::new_plane(
+            Transformation::new().translate(0.0, -1.0, 0.0),
+            Material { reflective: 0.5, ..Default::default() },
+        ));
+
+        let sqrt_2_div_2 = SQRT_2 / 2.0;
+
+        let r = Ray::new(
+            Point::new(0.0, 0.0, -3.0),
+            Vector::new(0.0, -sqrt_2_div_2, sqrt_2_div_2),
+        );
+
+        let i = Intersection::new(&w.objects[2], SQRT_2);
+
+        let c = i.prepare_computations(&r);
+
+        assert_approx_eq!(
+            w.reflected_colour(&c),
+            Colour::new(0.190_33, 0.237_91, 0.142_74),
+            epsilon = 0.000_01
+        );
     }
 }
