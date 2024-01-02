@@ -39,7 +39,7 @@ pub struct SceneData {
 
 impl SceneData {
     #[must_use]
-    pub fn render(&self, quiet: bool) -> Canvas {
-        self.camera.render(&self.world, quiet)
+    pub fn render(&self, depth: u32, quiet: bool) -> Canvas {
+        self.camera.render(&self.world, depth, quiet)
     }
 }

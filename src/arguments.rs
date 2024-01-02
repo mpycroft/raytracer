@@ -25,4 +25,7 @@ pub struct Arguments {
     /// Which scene to generate.
     #[arg(short, long, default_value = "chapter10")]
     pub scene: Scene,
+    /// The number of reflection rays to produce.
+    #[arg(short, long, default_value = "5")]
+    pub depth: u32,
 }

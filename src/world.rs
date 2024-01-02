@@ -27,12 +27,12 @@ impl World {
     }
 
     #[must_use]
-    pub fn colour_at(&self, ray: &Ray) -> Colour {
+    pub fn colour_at(&self, ray: &Ray, depth: u32) -> Colour {
         if let Some(intersections) = self.intersect(ray) {
             if let Some(hit) = intersections.hit() {
                 let computations = hit.prepare_computations(ray);
 
-                return self.shade_hit(&computations);
+                return self.shade_hit(&computations, depth);
             }
         }
 
@@ -40,7 +40,7 @@ impl World {
     }
 
     #[must_use]
-    pub fn shade_hit(&self, computations: &Computations) -> Colour {
+    pub fn shade_hit(&self, computations: &Computations, depth: u32) -> Colour {
         let mut surface = Colour::black();
 
         for light in &self.lights {
@@ -54,7 +54,7 @@ impl World {
             );
         }
 
-        let reflected = self.reflected_colour(computations);
+        let reflected = self.reflected_colour(computations, depth);
 
         surface + reflected
     }
@@ -99,15 +99,19 @@ impl World {
     }
 
     #[must_use]
-    pub fn reflected_colour(&self, computations: &Computations) -> Colour {
-        if computations.object.material.reflective <= 0.0 {
+    pub fn reflected_colour(
+        &self,
+        computations: &Computations,
+        depth: u32,
+    ) -> Colour {
+        if depth == 0 || computations.object.material.reflective <= 0.0 {
             return Colour::black();
         }
 
         let reflect_ray =
             Ray::new(computations.over_point, computations.reflect);
 
-        let colour = self.colour_at(&reflect_ray);
+        let colour = self.colour_at(&reflect_ray, depth - 1);
 
         colour * computations.object.material.reflective
     }
@@ -199,7 +203,7 @@ mod tests {
 
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::y_axis());
 
-        assert_approx_eq!(w.colour_at(&r), Colour::black());
+        assert_approx_eq!(w.colour_at(&r, 5), Colour::black());
     }
 
     #[test]
@@ -209,7 +213,7 @@ mod tests {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
 
         assert_approx_eq!(
-            w.colour_at(&r),
+            w.colour_at(&r, 2),
             Colour::new(0.380_66, 0.475_83, 0.285_5),
             epsilon = 0.000_01
         );
@@ -224,7 +228,27 @@ mod tests {
 
         let r = Ray::new(Point::new(0.0, 0.0, 0.75), -Vector::z_axis());
 
-        assert_approx_eq!(w.colour_at(&r), Colour::white());
+        assert_approx_eq!(w.colour_at(&r, 1), Colour::white());
+    }
+
+    #[test]
+    fn colour_at_with_mutually_reflective_surfaces() {
+        let mut w = World::new();
+
+        w.add_light(PointLight::new(Point::origin(), Colour::white()));
+
+        w.add_object(Object::new_plane(
+            Transformation::new().translate(0.0, 1.0, 0.0),
+            Material { reflective: 1.0, ..Default::default() },
+        ));
+        w.add_object(Object::new_plane(
+            Transformation::new().translate(0.0, -1.0, 0.0),
+            Material { reflective: 1.0, ..Default::default() },
+        ));
+
+        let r = Ray::new(Point::origin(), Vector::y_axis());
+
+        let _ = w.colour_at(&r, 5);
     }
 
     #[test]
@@ -238,7 +262,7 @@ mod tests {
         let c = i.prepare_computations(&r);
 
         assert_approx_eq!(
-            w.shade_hit(&c),
+            w.shade_hit(&c, 5),
             Colour::new(0.380_66, 0.475_83, 0.285_5),
             epsilon = 0.000_01
         );
@@ -261,7 +285,7 @@ mod tests {
         let c = i.prepare_computations(&r);
 
         assert_approx_eq!(
-            w.shade_hit(&c),
+            w.shade_hit(&c, 5),
             Colour::new(0.904_98, 0.904_98, 0.904_98),
             epsilon = 0.000_01
         );
@@ -291,7 +315,7 @@ mod tests {
 
         let c = i.prepare_computations(&r);
 
-        assert_approx_eq!(w.shade_hit(&c), Colour::new(0.1, 0.1, 0.1));
+        assert_approx_eq!(w.shade_hit(&c, 3), Colour::new(0.1, 0.1, 0.1));
     }
 
     #[test]
@@ -315,7 +339,7 @@ mod tests {
         let c = i.prepare_computations(&r);
 
         assert_approx_eq!(
-            w.shade_hit(&c),
+            w.shade_hit(&c, 5),
             Colour::new(0.876_76, 0.924_34, 0.829_17),
             epsilon = 0.000_01
         );
@@ -353,7 +377,7 @@ mod tests {
             ),
         );
 
-        let i = c.render(&w, true);
+        let i = c.render(&w, 5, true);
 
         assert_approx_eq!(
             i.get_pixel(5, 5),
@@ -404,7 +428,7 @@ mod tests {
 
         let c = i.prepare_computations(&r);
 
-        assert_approx_eq!(w.reflected_colour(&c), Colour::black());
+        assert_approx_eq!(w.reflected_colour(&c, 3), Colour::black());
     }
 
     #[test]
@@ -428,9 +452,32 @@ mod tests {
         let c = i.prepare_computations(&r);
 
         assert_approx_eq!(
-            w.reflected_colour(&c),
+            w.reflected_colour(&c, 4),
             Colour::new(0.190_33, 0.237_91, 0.142_74),
             epsilon = 0.000_01
         );
+    }
+
+    #[test]
+    fn the_reflected_colour_at_the_maximum_recursion_depth() {
+        let mut w = test_world();
+
+        w.add_object(Object::new_plane(
+            Transformation::new().translate(0.0, -1.0, 0.0),
+            Material { reflective: 0.5, ..Default::default() },
+        ));
+
+        let sqrt_2_div_2 = SQRT_2 / 2.0;
+
+        let r = Ray::new(
+            Point::new(0.0, 0.0, -3.0),
+            Vector::new(0.0, -sqrt_2_div_2, sqrt_2_div_2),
+        );
+
+        let i = Intersection::new(&w.objects[2], SQRT_2);
+
+        let c = i.prepare_computations(&r);
+
+        assert_approx_eq!(w.reflected_colour(&c, 0), Colour::black());
     }
 }

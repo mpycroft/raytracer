@@ -60,7 +60,7 @@ impl Camera {
     /// valid but will if there is an error in the formatting for progress
     /// somewhere.
     #[must_use]
-    pub fn render(&self, world: &World, quiet: bool) -> Canvas {
+    pub fn render(&self, world: &World, depth: u32, quiet: bool) -> Canvas {
         if !quiet {
             println!(
                 "Size {} by {}",
@@ -96,7 +96,7 @@ Elapsed: {elapsed}, estimated: {eta}, rows/sec: {per_sec}",
             for y in 0..self.vertical_size {
                 let ray = self.ray_for_pixel(x, y);
 
-                let colour = world.colour_at(&ray);
+                let colour = world.colour_at(&ray, depth);
 
                 canvas.write_pixel(x, y, &colour);
             }
