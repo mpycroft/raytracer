@@ -57,6 +57,24 @@ impl Object {
         Self::new_sphere(Transformation::new(), Material::default())
     }
 
+    #[must_use]
+    pub fn new_glass_sphere(transformation: Transformation) -> Self {
+        Self::new(
+            transformation,
+            Material {
+                transparency: 1.0,
+                refractive_index: 1.5,
+                ..Default::default()
+            },
+            Shape::new_sphere(),
+        )
+    }
+
+    #[must_use]
+    pub fn default_glass_sphere() -> Self {
+        Self::new_glass_sphere(Transformation::new())
+    }
+
     #[cfg(test)]
     #[must_use]
     pub fn new_test(
@@ -162,6 +180,28 @@ mod tests {
         test_object!(Plane);
         test_object!(Sphere);
         test_object!(Test);
+
+        let m = Material {
+            transparency: 1.0,
+            refractive_index: 1.5,
+            ..Default::default()
+        };
+        let t = Transformation::new().shear(1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
+        let s = Shape::new_sphere();
+
+        let o = Object::new_glass_sphere(t);
+
+        assert_approx_eq!(o.transformation, t);
+        assert_approx_eq!(o.inverse_transformation, t.invert());
+        assert_approx_eq!(o.material, &m);
+        assert_approx_eq!(o.shape, s);
+
+        let o = Object::default_glass_sphere();
+
+        assert_approx_eq!(o.transformation, Transformation::new());
+        assert_approx_eq!(o.inverse_transformation, Transformation::new());
+        assert_approx_eq!(o.material, &m);
+        assert_approx_eq!(o.shape, s);
     }
 
     #[test]
