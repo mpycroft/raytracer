@@ -30,7 +30,8 @@ impl World {
     pub fn colour_at(&self, ray: &Ray, depth: u32) -> Colour {
         if let Some(intersections) = self.intersect(ray) {
             if let Some(hit) = intersections.hit() {
-                let computations = hit.prepare_computations(ray);
+                let computations =
+                    hit.prepare_computations(ray, &intersections);
 
                 return self.shade_hit(&computations, depth);
             }
@@ -259,7 +260,7 @@ mod tests {
 
         let i = Intersection::new(&w.objects[0], 4.0);
 
-        let c = i.prepare_computations(&r);
+        let c = i.prepare_computations(&r, &List::from(i));
 
         assert_approx_eq!(
             w.shade_hit(&c, 5),
@@ -282,7 +283,7 @@ mod tests {
 
         let i = Intersection::new(&w.objects[1], 0.5);
 
-        let c = i.prepare_computations(&r);
+        let c = i.prepare_computations(&r, &List::from(i));
 
         assert_approx_eq!(
             w.shade_hit(&c, 5),
@@ -313,7 +314,7 @@ mod tests {
 
         let i = Intersection::new(&o, 4.0);
 
-        let c = i.prepare_computations(&r);
+        let c = i.prepare_computations(&r, &List::from(i));
 
         assert_approx_eq!(w.shade_hit(&c, 3), Colour::new(0.1, 0.1, 0.1));
     }
@@ -336,7 +337,7 @@ mod tests {
 
         let i = Intersection::new(&w.objects[2], SQRT_2);
 
-        let c = i.prepare_computations(&r);
+        let c = i.prepare_computations(&r, &List::from(i));
 
         assert_approx_eq!(
             w.shade_hit(&c, 5),
@@ -426,7 +427,7 @@ mod tests {
 
         let i = Intersection::new(o, 1.0);
 
-        let c = i.prepare_computations(&r);
+        let c = i.prepare_computations(&r, &List::from(i));
 
         assert_approx_eq!(w.reflected_colour(&c, 3), Colour::black());
     }
@@ -449,7 +450,7 @@ mod tests {
 
         let i = Intersection::new(&w.objects[2], SQRT_2);
 
-        let c = i.prepare_computations(&r);
+        let c = i.prepare_computations(&r, &List::from(i));
 
         assert_approx_eq!(
             w.reflected_colour(&c, 4),
@@ -476,7 +477,7 @@ mod tests {
 
         let i = Intersection::new(&w.objects[2], SQRT_2);
 
-        let c = i.prepare_computations(&r);
+        let c = i.prepare_computations(&r, &List::from(i));
 
         assert_approx_eq!(w.reflected_colour(&c, 0), Colour::black());
     }

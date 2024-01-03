@@ -6,7 +6,7 @@ use enum_dispatch::enum_dispatch;
 use float_cmp::{ApproxEq, F64Margin};
 
 use crate::{
-    math::{Point, Ray, Vector},
+    math::{float::approx_eq, Point, Ray, Vector},
     Object,
 };
 
@@ -44,11 +44,17 @@ pub struct Computations<'a> {
     pub normal: Vector,
     pub inside: bool,
     pub reflect: Vector,
+    pub n1: f64,
+    pub n2: f64,
 }
 
 impl<'a> Intersection<'a> {
     #[must_use]
-    pub fn prepare_computations(&self, ray: &Ray) -> Computations {
+    pub fn prepare_computations(
+        &self,
+        ray: &Ray,
+        intersections: &List,
+    ) -> Computations {
         let point = ray.position(self.t);
 
         let eye = -ray.direction;
@@ -63,6 +69,40 @@ impl<'a> Intersection<'a> {
 
         let over_point = point + normal * 100_000.0 * EPSILON;
 
+        let mut container = Vec::<&Object>::new();
+
+        let mut n1 = f64::NAN;
+        let mut n2 = f64::NAN;
+
+        for intersection in intersections.iter() {
+            let is_hit = approx_eq!(intersection, *self);
+
+            if is_hit {
+                n1 = container.last().map_or_else(
+                    || 1.0,
+                    |object| object.material.refractive_index,
+                );
+            }
+
+            if let Some(index) = container
+                .iter()
+                .position(|object| approx_eq!(object, intersection.object))
+            {
+                container.remove(index);
+            } else {
+                container.push(intersection.object);
+            }
+
+            if is_hit {
+                n2 = container.last().map_or_else(
+                    || 1.0,
+                    |object| object.material.refractive_index,
+                );
+
+                break;
+            }
+        }
+
         Computations::new(
             self.object,
             self.t,
@@ -72,6 +112,8 @@ impl<'a> Intersection<'a> {
             normal,
             inside,
             ray.direction.reflect(&normal),
+            n1,
+            n2,
         )
     }
 }
@@ -112,6 +154,12 @@ impl<'a> List<'a> {
             .filter(|val| val.t > 0.0)
             .min_by(|a, b| a.t.partial_cmp(&b.t).unwrap())
             .copied()
+    }
+}
+
+impl<'a> From<Intersection<'a>> for List<'a> {
+    fn from(value: Intersection<'a>) -> Self {
+        Self::from(vec![value])
     }
 }
 
@@ -209,7 +257,7 @@ mod tests {
         let t = 4.0;
         let i = Intersection::new(&o, t);
 
-        let c = i.prepare_computations(&r);
+        let c = i.prepare_computations(&r, &List::from(i));
 
         assert_approx_eq!(c.object, &o);
         assert_approx_eq!(c.t, t);
@@ -228,7 +276,7 @@ mod tests {
 
         let i = Intersection::new(&o, t);
 
-        let c = i.prepare_computations(&r);
+        let c = i.prepare_computations(&r, &List::from(i));
 
         assert_approx_eq!(c.object, &o);
         assert_approx_eq!(c.t, t);
@@ -249,7 +297,7 @@ mod tests {
 
         let i = Intersection::new(&o, 5.0);
 
-        let c = i.prepare_computations(&r);
+        let c = i.prepare_computations(&r, &List::from(i));
 
         assert!(c.over_point.z < -EPSILON / 2.0);
         assert!(c.point.z > c.over_point.z);
@@ -267,12 +315,55 @@ mod tests {
 
         let i = Intersection::new(&o, SQRT_2);
 
-        let c = i.prepare_computations(&r);
+        let c = i.prepare_computations(&r, &List::from(i));
 
         assert_approx_eq!(
             c.reflect,
             Vector::new(0.0, sqrt_2_div_2, sqrt_2_div_2)
         );
+    }
+
+    #[test]
+    #[allow(clippy::many_single_char_names)]
+    fn finding_n1_and_n2_at_various_intersections() {
+        let a = Object::new_glass_sphere(
+            Transformation::new().scale(2.0, 2.0, 2.0),
+        );
+
+        let mut b = Object::new_glass_sphere(
+            Transformation::new().translate(0.0, 0.0, -0.25),
+        );
+        b.material.refractive_index = 2.0;
+
+        let mut c = Object::new_glass_sphere(
+            Transformation::new().translate(0.0, 0.0, 0.25),
+        );
+        c.material.refractive_index = 2.5;
+
+        let r = Ray::new(Point::new(0.0, 0.0, -4.0), Vector::z_axis());
+
+        let l = List::from(vec![
+            Intersection::new(&a, 2.0),
+            Intersection::new(&b, 2.75),
+            Intersection::new(&c, 3.25),
+            Intersection::new(&b, 4.75),
+            Intersection::new(&c, 5.25),
+            Intersection::new(&a, 6.0),
+        ]);
+
+        let test = |idx: usize, n1: f64, n2: f64| {
+            let c = l[idx].prepare_computations(&r, &l);
+
+            assert_approx_eq!(c.n1, n1);
+            assert_approx_eq!(c.n2, n2);
+        };
+
+        test(0, 1.0, 1.5);
+        test(1, 1.5, 2.0);
+        test(2, 2.0, 2.5);
+        test(3, 2.5, 2.5);
+        test(4, 2.5, 1.5);
+        test(5, 1.5, 1.0);
     }
 
     #[test]
