@@ -1,4 +1,4 @@
-use derive_more::Constructor;
+use derive_new::new;
 
 use crate::{
     math::{float::impl_approx_eq, Point, Vector},
@@ -7,7 +7,8 @@ use crate::{
 
 /// A `Material` represents what a given object is made up of including what
 /// colour it is and how it reacts to light.
-#[derive(Clone, Debug, Constructor)]
+#[derive(Clone, Debug, new)]
+#[allow(clippy::too_many_arguments)]
 pub struct Material {
     pub pattern: Pattern,
     pub ambient: f64,
@@ -15,6 +16,8 @@ pub struct Material {
     pub specular: f64,
     pub shininess: f64,
     pub reflective: f64,
+    pub transparency: f64,
+    pub refractive_index: f64,
 }
 
 impl Material {
@@ -64,7 +67,7 @@ impl Material {
 
 impl Default for Material {
     fn default() -> Self {
-        Self::new(Colour::white().into(), 0.1, 0.9, 0.9, 200.0, 0.0)
+        Self::new(Colour::white().into(), 0.1, 0.9, 0.9, 200.0, 0.0, 0.0, 1.0)
     }
 }
 
@@ -81,7 +84,16 @@ mod tests {
 
     #[test]
     fn creating_a_material() {
-        let m = Material::new(Colour::red().into(), 1.0, 1.0, 1.5, 25.6, 0.6);
+        let m = Material::new(
+            Colour::red().into(),
+            1.0,
+            1.0,
+            1.5,
+            25.6,
+            0.6,
+            0.5,
+            1.5,
+        );
 
         assert_approx_eq!(m.pattern, &Pattern::default_solid(Colour::red()));
         assert_approx_eq!(m.ambient, 1.0);
@@ -89,10 +101,21 @@ mod tests {
         assert_approx_eq!(m.specular, 1.5);
         assert_approx_eq!(m.shininess, 25.6);
         assert_approx_eq!(m.reflective, 0.6);
+        assert_approx_eq!(m.transparency, 0.5);
+        assert_approx_eq!(m.refractive_index, 1.5);
 
         assert_approx_eq!(
             Material::default(),
-            &Material::new(Colour::white().into(), 0.1, 0.9, 0.9, 200.0, 0.0)
+            &Material::new(
+                Colour::white().into(),
+                0.1,
+                0.9,
+                0.9,
+                200.0,
+                0.0,
+                0.0,
+                1.0
+            )
         );
     }
 
@@ -241,12 +264,36 @@ mod tests {
 
     #[test]
     fn comparing_materials() {
-        let m1 =
-            Material::new(Colour::cyan().into(), 0.6, 0.3, 1.2, 142.7, 0.3);
-        let m2 =
-            Material::new(Colour::cyan().into(), 0.6, 0.3, 1.2, 142.7, 0.3);
-        let m3 =
-            Material::new(Colour::cyan().into(), 0.600_1, 0.3, 1.2, 142.7, 0.3);
+        let m1 = Material::new(
+            Colour::cyan().into(),
+            0.6,
+            0.3,
+            1.2,
+            142.7,
+            0.3,
+            0.1,
+            1.1,
+        );
+        let m2 = Material::new(
+            Colour::cyan().into(),
+            0.6,
+            0.3,
+            1.2,
+            142.7,
+            0.3,
+            0.1,
+            1.1,
+        );
+        let m3 = Material::new(
+            Colour::cyan().into(),
+            0.600_1,
+            0.3,
+            1.2,
+            142.7,
+            0.3,
+            0.1,
+            1.1,
+        );
 
         assert_approx_eq!(m1, &m2);
 

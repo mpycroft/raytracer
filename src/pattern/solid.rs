@@ -1,4 +1,4 @@
-use derive_more::Constructor;
+use derive_new::new;
 
 use super::PatternAt;
 use crate::{
@@ -9,7 +9,7 @@ use crate::{
 /// A `Solid` pattern returns the same colour everywhere, it allows us to
 /// replace direct `Colour` usage in `Material` with a `Pattern` and simplify
 /// code.
-#[derive(Clone, Copy, Debug, Constructor)]
+#[derive(Clone, Copy, Debug, new)]
 pub struct Solid {
     colour: Colour,
 }

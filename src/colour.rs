@@ -1,15 +1,16 @@
 use std::ops::{Mul, MulAssign};
 
 use derive_more::{
-    Add, AddAssign, Constructor, Div, DivAssign, Mul, MulAssign, Sub, SubAssign,
+    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign,
 };
+use derive_new::new;
 
 use crate::math::float::impl_approx_eq;
 
 /// A Colour represents an RGB colour in the image, values generally range from
 /// 0.0..1.0 but can go outside this range before final processing.
 #[rustfmt::skip]
-#[derive(Clone, Copy, Debug, Constructor)]
+#[derive(Clone, Copy, Debug, new)]
 #[derive(Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div, DivAssign)]
 pub struct Colour {
     pub red: f64,

@@ -1,4 +1,4 @@
-use derive_more::Constructor;
+use derive_new::new;
 
 use super::{
     float::impl_approx_eq, Point, Transformable, Transformation, Vector,
@@ -6,7 +6,7 @@ use super::{
 
 /// A Ray represents a geometric vector with a specific origin point and
 /// pointing in some direction.
-#[derive(Clone, Copy, Debug, Constructor)]
+#[derive(Clone, Copy, Debug, new)]
 pub struct Ray {
     pub origin: Point,
     pub direction: Vector,

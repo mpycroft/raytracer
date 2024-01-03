@@ -1,4 +1,4 @@
-use derive_more::Constructor;
+use derive_new::new;
 
 use crate::{
     math::{float::impl_approx_eq, Point},
@@ -7,7 +7,7 @@ use crate::{
 
 /// A `PointLight` is a light source that has no size and radiates light in all
 /// directions equally.
-#[derive(Clone, Copy, Debug, Constructor)]
+#[derive(Clone, Copy, Debug, new)]
 pub struct PointLight {
     pub position: Point,
     pub intensity: Colour,

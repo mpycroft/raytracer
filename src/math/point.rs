@@ -1,12 +1,12 @@
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
-use derive_more::Constructor;
+use derive_new::new;
 
 use super::{float::impl_approx_eq, Vector};
 
 /// A Point is a representation of a geometric position within the 3 dimensional
 /// scene we are working on.
-#[derive(Clone, Copy, Debug, Constructor)]
+#[derive(Clone, Copy, Debug, new)]
 pub struct Point {
     pub x: f64,
     pub y: f64,

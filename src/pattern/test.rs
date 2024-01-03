@@ -1,11 +1,11 @@
-use derive_more::Constructor;
+use derive_new::new;
 use float_cmp::{ApproxEq, F64Margin};
 
 use super::PatternAt;
 use crate::{math::Point, Colour};
 
 /// A testing pattern that returns the passed in `Point` as a `Colour`.
-#[derive(Clone, Copy, Debug, Constructor)]
+#[derive(Clone, Copy, Debug, new)]
 pub struct Test;
 
 impl PatternAt for Test {

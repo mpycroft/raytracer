@@ -5,7 +5,8 @@ mod chapter8;
 mod chapter9;
 
 use clap::ValueEnum;
-use derive_more::{Constructor, Display};
+use derive_more::Display;
+use derive_new::new;
 use raytracer::{Camera, Canvas, World};
 
 /// `Scene` is a list of all the scenes we know about.
@@ -34,7 +35,7 @@ impl Scene {
 /// `SceneData` contains all the information needed to render a given scene
 /// including the `Camera` and all the objects and lights present in the
 /// `World`.
-#[derive(Clone, Debug, Constructor)]
+#[derive(Clone, Debug, new)]
 #[allow(clippy::module_name_repetitions)]
 pub struct SceneData {
     pub camera: Camera,
