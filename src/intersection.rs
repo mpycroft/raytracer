@@ -46,6 +46,7 @@ pub struct Computations<'a> {
     pub reflect: Vector,
     pub n1: f64,
     pub n2: f64,
+    pub under_point: Point,
 }
 
 impl<'a> Intersection<'a> {
@@ -68,6 +69,7 @@ impl<'a> Intersection<'a> {
         };
 
         let over_point = point + normal * 100_000.0 * EPSILON;
+        let under_point = point - normal * 100_000.0 * EPSILON;
 
         let mut container = Vec::<&Object>::new();
 
@@ -114,6 +116,7 @@ impl<'a> Intersection<'a> {
             ray.direction.reflect(&normal),
             n1,
             n2,
+            under_point,
         )
     }
 }
@@ -364,6 +367,22 @@ mod tests {
         test(3, 2.5, 2.5);
         test(4, 2.5, 1.5);
         test(5, 1.5, 1.0);
+    }
+
+    #[test]
+    fn the_under_point_is_offset_below_the_surface() {
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
+
+        let o = Object::new_glass_sphere(
+            Transformation::new().translate(0.0, 0.0, 1.0),
+        );
+
+        let i = Intersection::new(&o, 5.0);
+
+        let c = i.prepare_computations(&r, &List::from(i));
+
+        assert!(c.under_point.z > EPSILON / 2.0);
+        assert!(c.point.z < c.under_point.z);
     }
 
     #[test]
