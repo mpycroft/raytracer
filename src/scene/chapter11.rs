@@ -55,7 +55,7 @@ pub fn generate_scene() -> SceneData {
     ));
 
     world.add_object(Object::new_sphere(
-        Transformation::new().scale(0.5, 0.5, 0.5).translate(1.5, 0.5, -0.5),
+        Transformation::new().scale(0.4, 0.4, 0.4).translate(2.5, 0.5, 1.5),
         Material {
             pattern: Colour::new(0.5, 1.0, 0.1).into(),
             diffuse: 0.7,
@@ -63,6 +63,20 @@ pub fn generate_scene() -> SceneData {
             reflective: 0.2,
             ..Default::default()
         },
+    ));
+
+    world.add_object(Object::new_sphere(
+        Transformation::new().scale(0.3, 0.3, 0.3).translate(1.3, 0.5, 0.5),
+        Material {
+            pattern: Colour::new(0.5, 0.4, 0.8).into(),
+            diffuse: 0.7,
+            specular: 0.4,
+            ..Default::default()
+        },
+    ));
+
+    world.add_object(Object::new_glass_sphere(
+        Transformation::new().scale(0.5, 0.5, 0.5).translate(1.5, 0.5, -0.5),
     ));
 
     world.add_object(Object::new_sphere(
