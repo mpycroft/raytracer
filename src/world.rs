@@ -1,6 +1,6 @@
 use crate::{
     intersection::{Computations, Intersectable, List},
-    math::{Point, Ray},
+    math::{float::approx_eq, Point, Ray},
     Colour, Object, PointLight,
 };
 
@@ -115,6 +115,21 @@ impl World {
         let colour = self.colour_at(&reflect_ray, depth - 1);
 
         colour * computations.object.material.reflective
+    }
+
+    #[must_use]
+    pub fn refracted_colour(
+        &self,
+        computations: &Computations,
+        depth: u32,
+    ) -> Colour {
+        if depth == 0
+            || approx_eq!(computations.object.material.transparency, 0.0)
+        {
+            return Colour::black();
+        }
+
+        Colour::white()
     }
 }
 
@@ -480,5 +495,45 @@ mod tests {
         let c = i.prepare_computations(&r, &List::from(i));
 
         assert_approx_eq!(w.reflected_colour(&c, 0), Colour::black());
+    }
+
+    #[test]
+    #[allow(clippy::many_single_char_names)]
+    fn the_refracted_colour_with_an_opaque_surface() {
+        let w = test_world();
+
+        let o = &w.objects[0];
+
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
+
+        let l = List::from(vec![
+            Intersection::new(o, 4.0),
+            Intersection::new(o, 6.0),
+        ]);
+
+        let c = l[0].prepare_computations(&r, &l);
+
+        assert_approx_eq!(w.refracted_colour(&c, 5), Colour::black());
+    }
+
+    #[test]
+    #[allow(clippy::many_single_char_names)]
+    fn the_refracted_colour_at_the_maximum_recursion_depth() {
+        let mut w = test_world();
+        w.objects[0].material.transparency = 1.0;
+        w.objects[0].material.refractive_index = 1.5;
+
+        let o = &w.objects[0];
+
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
+
+        let l = List::from(vec![
+            Intersection::new(o, 4.0),
+            Intersection::new(o, 6.0),
+        ]);
+
+        let c = l[0].prepare_computations(&r, &l);
+
+        assert_approx_eq!(w.refracted_colour(&c, 0), Colour::black());
     }
 }
