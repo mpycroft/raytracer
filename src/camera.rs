@@ -30,7 +30,7 @@ impl Camera {
         field_of_view: Angle,
         transformation: Transformation,
     ) -> Self {
-        let half_view = (field_of_view.0 / 2.0).tan();
+        let half_view = (field_of_view / 2.0).tan();
         #[allow(clippy::cast_precision_loss)]
         let horizontal_float = horizontal_size as f64;
         #[allow(clippy::cast_precision_loss)]

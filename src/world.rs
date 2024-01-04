@@ -129,6 +129,15 @@ impl World {
             return Colour::black();
         }
 
+        // Use Snell's Law to determine if we have total internal reflection.
+        let n_ratio = computations.n1 / computations.n2;
+        let cos_i = computations.eye.dot(&computations.normal);
+        let sin_t = n_ratio.powi(2) * (1.0 - cos_i.powi(2));
+
+        if sin_t > 1.0 {
+            return Colour::black();
+        }
+
         Colour::white()
     }
 }
@@ -535,5 +544,28 @@ mod tests {
         let c = l[0].prepare_computations(&r, &l);
 
         assert_approx_eq!(w.refracted_colour(&c, 0), Colour::black());
+    }
+
+    #[test]
+    #[allow(clippy::many_single_char_names)]
+    fn the_refracted_colour_under_total_internal_reflection() {
+        let mut w = test_world();
+        w.objects[0].material.transparency = 1.0;
+        w.objects[0].material.refractive_index = 1.5;
+
+        let o = &w.objects[0];
+
+        let sqrt_2_div_2 = SQRT_2 / 2.0;
+
+        let r = Ray::new(Point::new(0.0, 0.0, sqrt_2_div_2), Vector::y_axis());
+
+        let l = List::from(vec![
+            Intersection::new(o, -sqrt_2_div_2),
+            Intersection::new(o, sqrt_2_div_2),
+        ]);
+
+        let c = l[1].prepare_computations(&r, &l);
+
+        assert_approx_eq!(w.refracted_colour(&c, 5), Colour::black());
     }
 }
