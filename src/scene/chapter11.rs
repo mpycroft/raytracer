@@ -22,34 +22,43 @@ pub fn generate_scene() -> SceneData {
 
     let mut world = World::new();
 
-    let floor_material = Material {
-        pattern: Pattern::default_checker(
-            Colour::white().into(),
-            Colour::black().into(),
-        ),
-        specular: 0.0,
-        reflective: 0.4,
-        ..Default::default()
-    };
-
     world.add_object(Object::new_plane(
         Transformation::new(),
-        floor_material.clone(),
+        Material {
+            pattern: Pattern::default_checker(
+                Colour::white().into(),
+                Colour::black().into(),
+            ),
+            specular: 0.0,
+            reflective: 0.4,
+            ..Default::default()
+        },
     ));
+
     world.add_object(Object::new_plane(
         Transformation::new()
             .rotate_x(Angle(FRAC_PI_2))
             .translate(0.0, 0.0, 5.0),
-        floor_material,
+        Material {
+            pattern: Colour::new(0.1, 0.1, 0.1).into(),
+            reflective: 1.0,
+            transparency: 0.0,
+            ..Default::default()
+        },
+    ));
+
+    world.add_object(Object::new_glass_sphere(
+        Transformation::new().translate(-0.5, 1.0, 0.5),
     ));
 
     world.add_object(Object::new_sphere(
-        Transformation::new().translate(-0.5, 1.0, 0.5),
+        Transformation::new().scale(0.5, 0.5, 0.5).translate(-0.5, 1.0, 0.5),
         Material {
-            pattern: Colour::new(0.1, 1.0, 0.5).into(),
-            diffuse: 0.7,
-            specular: 0.3,
-            reflective: 0.0,
+            ambient: 0.0,
+            diffuse: 0.0,
+            reflective: 0.5,
+            transparency: 1.0,
+            refractive_index: 1.0,
             ..Default::default()
         },
     ));

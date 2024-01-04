@@ -59,6 +59,16 @@ impl World {
 
         let refracted = self.refracted_colour(computations, depth);
 
+        if computations.object.material.reflective > 0.0
+            && computations.object.material.transparency > 0.0
+        {
+            let reflectance = computations.schlick();
+
+            return surface
+                + reflected * reflectance
+                + refracted * (1.0 - reflectance);
+        }
+
         surface + reflected + refracted
     }
 
@@ -417,6 +427,49 @@ mod tests {
         assert_approx_eq!(
             w.shade_hit(&c, 5),
             Colour::new(0.936_43, 0.686_43, 0.686_43),
+            epsilon = 0.000_01
+        );
+    }
+
+    #[test]
+    #[allow(clippy::many_single_char_names)]
+    fn shade_hit_with_a_reflective_transparent_material() {
+        let mut w = test_world();
+
+        w.add_object(Object::new_plane(
+            Transformation::new().translate(0.0, -1.0, 0.0),
+            Material {
+                reflective: 0.5,
+                transparency: 0.5,
+                refractive_index: 1.5,
+                ..Default::default()
+            },
+        ));
+        w.add_object(Object::new_sphere(
+            Transformation::new().translate(0.0, -3.5, -0.5),
+            Material {
+                pattern: Colour::red().into(),
+                ambient: 0.5,
+                ..Default::default()
+            },
+        ));
+
+        let o = &w.objects[2];
+
+        let sqrt_2_div_2 = SQRT_2 / 2.0;
+
+        let r = Ray::new(
+            Point::new(0.0, 0.0, -3.0),
+            Vector::new(0.0, -sqrt_2_div_2, sqrt_2_div_2),
+        );
+
+        let l = List::from(Intersection::new(o, SQRT_2));
+
+        let c = l[0].prepare_computations(&r, &l);
+
+        assert_approx_eq!(
+            w.shade_hit(&c, 5),
+            Colour::new(0.933_92, 0.696_43, 0.692_43),
             epsilon = 0.000_01
         );
     }

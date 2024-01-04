@@ -62,6 +62,8 @@ impl Object {
         Self::new(
             transformation,
             Material {
+                ambient: 0.01,
+                diffuse: 0.01,
                 transparency: 1.0,
                 refractive_index: 1.5,
                 ..Default::default()
@@ -182,6 +184,8 @@ mod tests {
         test_object!(Test);
 
         let m = Material {
+            ambient: 0.01,
+            diffuse: 0.01,
             transparency: 1.0,
             refractive_index: 1.5,
             ..Default::default()
