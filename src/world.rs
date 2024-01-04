@@ -132,13 +132,20 @@ impl World {
         // Use Snell's Law to determine if we have total internal reflection.
         let n_ratio = computations.n1 / computations.n2;
         let cos_i = computations.eye.dot(&computations.normal);
-        let sin_t = n_ratio.powi(2) * (1.0 - cos_i.powi(2));
+        let sin2_t = n_ratio.powi(2) * (1.0 - cos_i.powi(2));
 
-        if sin_t > 1.0 {
+        if sin2_t > 1.0 {
             return Colour::black();
         }
 
-        Colour::white()
+        let cos_t = (1.0 - sin2_t).sqrt();
+        let direction = computations.normal * (n_ratio * cos_i - cos_t)
+            - computations.eye * n_ratio;
+
+        let refracted_ray = Ray::new(computations.under_point, direction);
+
+        self.colour_at(&refracted_ray, depth - 1)
+            * computations.object.material.transparency
     }
 }
 
@@ -155,7 +162,7 @@ mod tests {
     use super::*;
     use crate::{
         math::{float::*, Angle, Transformation, Vector},
-        Camera, Intersection, Material,
+        Camera, Intersection, Material, Pattern,
     };
 
     fn test_world() -> World {
@@ -567,5 +574,37 @@ mod tests {
         let c = l[1].prepare_computations(&r, &l);
 
         assert_approx_eq!(w.refracted_colour(&c, 5), Colour::black());
+    }
+
+    #[test]
+    fn the_refracted_colour_with_a_reflected_ray() {
+        let mut w = test_world();
+        w.objects[0].material = Material {
+            pattern: Pattern::default_test(),
+            ambient: 1.0,
+            ..Default::default()
+        };
+        w.objects[1].material.transparency = 1.0;
+        w.objects[1].material.refractive_index = 1.5;
+
+        let o1 = &w.objects[0];
+        let o2 = &w.objects[1];
+
+        let r = Ray::new(Point::new(0.0, 0.0, 0.1), Vector::y_axis());
+
+        let l = List::from(vec![
+            Intersection::new(o1, -0.989_9),
+            Intersection::new(o2, -0.489_9),
+            Intersection::new(o2, 0.489_9),
+            Intersection::new(o1, 0.989_9),
+        ]);
+
+        let c = l[2].prepare_computations(&r, &l);
+
+        assert_approx_eq!(
+            w.refracted_colour(&c, 5),
+            Colour::new(0.0, 0.998_88, 0.047_22),
+            epsilon = 0.000_01
+        );
     }
 }
