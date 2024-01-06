@@ -14,8 +14,8 @@ use crate::{
 /// `Camera` holds all the data representing our view into the scene.
 #[derive(Clone, Copy, Debug)]
 pub struct Camera {
-    horizontal_size: usize,
-    vertical_size: usize,
+    pub horizontal_size: usize,
+    pub vertical_size: usize,
     field_of_view: Angle,
     inverse_transformation: Transformation,
     half_width: f64,

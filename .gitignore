@@ -1,5 +1,6 @@
 # Ignore images we make
 *.ppm
+/*.png
 
 # Ignore coverage file
 lcov.info

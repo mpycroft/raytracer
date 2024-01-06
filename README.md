@@ -10,6 +10,10 @@ seemed a natural fit when trying to find a project to learn Rust with. In
 addition ray tracing produces beautiful images rather than files full of numeric
 values or unexciting csv data or the like.
 
+## Images
+
+Scene renders can be seen [here](images/README.md).
+
 ## Implementation
 
 I will be working primarily from [The Ray Tracer

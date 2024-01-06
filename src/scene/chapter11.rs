@@ -46,9 +46,9 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
             .rotate_x(Angle(FRAC_PI_2))
             .translate(0.0, 0.0, 5.0),
         Material {
-            pattern: Colour::new(0.1, 0.1, 0.1).into(),
+            ambient: 0.0,
+            diffuse: 0.0,
             reflective: 1.0,
-            transparency: 0.0,
             ..Default::default()
         },
         true,
@@ -64,7 +64,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
         Material {
             ambient: 0.0,
             diffuse: 0.0,
-            reflective: 0.5,
+            reflective: 0.8,
             transparency: 1.0,
             refractive_index: 1.0,
             ..Default::default()
@@ -85,7 +85,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     ));
 
     world.add_object(Object::new_sphere(
-        Transformation::new().scale(0.3, 0.3, 0.3).translate(1.3, 0.5, 0.5),
+        Transformation::new().scale(0.3, 0.3, 0.3).translate(1.3, 0.5, 1.0),
         Material {
             pattern: Colour::new(0.5, 0.4, 0.8).into(),
             diffuse: 0.7,

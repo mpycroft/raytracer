@@ -60,7 +60,7 @@ impl Colour {
     }
 
     #[must_use]
-    pub fn to_u8(&self) -> (u8, u8, u8) {
+    pub fn to_u8(&self) -> [u8; 3] {
         // There is no nice way to do a conversion from f64 to a u8 so we are
         // forced to use `as` and the clamp and multiplication guarantee that we
         // are within the value of a u8.
@@ -68,7 +68,7 @@ impl Colour {
         #[allow(clippy::cast_sign_loss)]
         let convert = |c: f64| (c.clamp(0.0, 1.0) * 255.0).round() as u8;
 
-        (convert(self.red), convert(self.green), convert(self.blue))
+        [convert(self.red), convert(self.green), convert(self.blue)]
     }
 }
 
@@ -127,11 +127,11 @@ mod tests {
 
     #[test]
     fn generating_u8_values_from_a_colour() {
-        assert_eq!(Colour::black().to_u8(), (0, 0, 0));
-        assert_eq!(Colour::white().to_u8(), (255, 255, 255));
+        assert_eq!(Colour::black().to_u8(), [0, 0, 0]);
+        assert_eq!(Colour::white().to_u8(), [255, 255, 255]);
 
-        assert_eq!(Colour::new(-0.3, 0.5, 1.0).to_u8(), (0, 128, 255));
-        assert_eq!(Colour::new(0.2, 0.51, 0.9).to_u8(), (51, 130, 230));
+        assert_eq!(Colour::new(-0.3, 0.5, 1.0).to_u8(), [0, 128, 255]);
+        assert_eq!(Colour::new(0.2, 0.51, 0.9).to_u8(), [51, 130, 230]);
     }
 
     #[test]
