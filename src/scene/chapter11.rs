@@ -6,12 +6,16 @@ use raytracer::{
 };
 
 use super::SceneData;
+use crate::arguments::Arguments;
 
 #[must_use]
-pub fn generate_scene() -> SceneData {
+pub fn generate_scene(arguments: &Arguments) -> SceneData {
+    let horizontal_size = arguments.width.unwrap_or(1000);
+    let vertical_size = arguments.height.unwrap_or(500);
+
     let camera = Camera::new(
-        1000,
-        500,
+        horizontal_size,
+        vertical_size,
         Angle(FRAC_PI_3),
         Transformation::view_transformation(
             &Point::new(0.0, 1.5, -5.0),
@@ -118,10 +122,13 @@ pub fn generate_scene() -> SceneData {
 }
 
 #[must_use]
-pub fn generate_water_scene() -> SceneData {
+pub fn generate_water_scene(arguments: &Arguments) -> SceneData {
+    let horizontal_size = arguments.width.unwrap_or(1000);
+    let vertical_size = arguments.height.unwrap_or(500);
+
     let camera = Camera::new(
-        1000,
-        500,
+        horizontal_size,
+        vertical_size,
         Angle(FRAC_PI_3),
         Transformation::view_transformation(
             &Point::new(0.0, 0.5, -5.0),

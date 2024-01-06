@@ -15,7 +15,7 @@ fn main() -> Result<()> {
         print!("Generating scene '{}'...", arguments.scene);
     }
 
-    let scene = arguments.scene.generate();
+    let scene = arguments.scene.generate(&arguments);
 
     if !arguments.quiet {
         println!("done");

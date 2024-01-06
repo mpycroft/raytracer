@@ -9,6 +9,8 @@ use derive_more::Display;
 use derive_new::new;
 use raytracer::{Camera, Canvas, World};
 
+use crate::arguments::Arguments;
+
 /// `Scene` is a list of all the scenes we know about.
 #[derive(Clone, Copy, Debug, ValueEnum, Display)]
 pub enum Scene {
@@ -22,14 +24,14 @@ pub enum Scene {
 
 impl Scene {
     #[must_use]
-    pub fn generate(self) -> SceneData {
+    pub fn generate(self, arguments: &Arguments) -> SceneData {
         match self {
-            Self::Chapter6 => chapter6::generate_scene(),
-            Self::Chapter8 => chapter8::generate_scene(),
-            Self::Chapter9 => chapter9::generate_scene(),
-            Self::Chapter10 => chapter10::generate_scene(),
-            Self::Chapter11 => chapter11::generate_scene(),
-            Self::Chapter11Water => chapter11::generate_water_scene(),
+            Self::Chapter6 => chapter6::generate_scene(arguments),
+            Self::Chapter8 => chapter8::generate_scene(arguments),
+            Self::Chapter9 => chapter9::generate_scene(arguments),
+            Self::Chapter10 => chapter10::generate_scene(arguments),
+            Self::Chapter11 => chapter11::generate_scene(arguments),
+            Self::Chapter11Water => chapter11::generate_water_scene(arguments),
         }
     }
 }

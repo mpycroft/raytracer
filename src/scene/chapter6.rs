@@ -4,12 +4,16 @@ use raytracer::{
 };
 
 use super::SceneData;
+use crate::arguments::Arguments;
 
 #[must_use]
-pub fn generate_scene() -> SceneData {
+pub fn generate_scene(arguments: &Arguments) -> SceneData {
+    let horizontal_size = arguments.width.unwrap_or(500);
+    let vertical_size = arguments.height.unwrap_or(500);
+
     let camera = Camera::new(
-        500,
-        500,
+        horizontal_size,
+        vertical_size,
         Angle(0.5),
         Transformation::view_transformation(
             &Point::new(0.0, 0.0, -5.0),
