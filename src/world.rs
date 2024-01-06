@@ -102,7 +102,7 @@ impl World {
 
         if let Some(intersections) = self.intersect(&ray) {
             if let Some(hit) = intersections.hit() {
-                if hit.t < distance {
+                if hit.object.casts_shadow && hit.t < distance {
                     return true;
                 }
             }
@@ -188,10 +188,12 @@ mod tests {
                 specular: 0.2,
                 ..Default::default()
             },
+            true,
         ));
         w.add_object(Object::new_sphere(
             Transformation::new().scale(0.5, 0.5, 0.5),
             Material::default(),
+            true,
         ));
 
         w.add_light(PointLight::new(
@@ -221,6 +223,7 @@ mod tests {
         let o2 = Object::new_sphere(
             Transformation::new().translate(1.0, 2.0, 3.0),
             Material::default(),
+            true,
         );
 
         w.add_object(o1.clone());
@@ -284,10 +287,12 @@ mod tests {
         w.add_object(Object::new_plane(
             Transformation::new().translate(0.0, 1.0, 0.0),
             Material { reflective: 1.0, ..Default::default() },
+            true,
         ));
         w.add_object(Object::new_plane(
             Transformation::new().translate(0.0, -1.0, 0.0),
             Material { reflective: 1.0, ..Default::default() },
+            true,
         ));
 
         let r = Ray::new(Point::origin(), Vector::y_axis());
@@ -350,6 +355,7 @@ mod tests {
         let o = Object::new_sphere(
             Transformation::new().translate(0.0, 0.0, 10.0),
             Material::default(),
+            true,
         );
         w.add_object(o.clone());
 
@@ -369,6 +375,7 @@ mod tests {
         w.add_object(Object::new_plane(
             Transformation::new().translate(0.0, -1.0, 0.0),
             Material { reflective: 0.5, ..Default::default() },
+            true,
         ));
 
         let sqrt_2_div_2 = SQRT_2 / 2.0;
@@ -401,6 +408,7 @@ mod tests {
                 refractive_index: 1.5,
                 ..Default::default()
             },
+            true,
         ));
         w.add_object(Object::new_sphere(
             Transformation::new().translate(0.0, -3.5, -0.5),
@@ -409,6 +417,7 @@ mod tests {
                 ambient: 0.5,
                 ..Default::default()
             },
+            true,
         ));
 
         let o = &w.objects[2];
@@ -444,6 +453,7 @@ mod tests {
                 refractive_index: 1.5,
                 ..Default::default()
             },
+            true,
         ));
         w.add_object(Object::new_sphere(
             Transformation::new().translate(0.0, -3.5, -0.5),
@@ -452,6 +462,7 @@ mod tests {
                 ambient: 0.5,
                 ..Default::default()
             },
+            true,
         ));
 
         let o = &w.objects[2];
@@ -530,6 +541,14 @@ mod tests {
     }
 
     #[test]
+    fn no_shadow_when_an_object_does_not_cast_shadow() {
+        let mut w = test_world();
+        w.objects[0].casts_shadow = false;
+
+        assert!(!w.is_shadowed(&w.lights[0], &Point::new(10.0, -10.0, 10.0)));
+    }
+
+    #[test]
     fn no_shadow_when_an_object_is_behind_the_light() {
         let w = test_world();
 
@@ -567,6 +586,7 @@ mod tests {
         w.add_object(Object::new_plane(
             Transformation::new().translate(0.0, -1.0, 0.0),
             Material { reflective: 0.5, ..Default::default() },
+            true,
         ));
 
         let sqrt_2_div_2 = SQRT_2 / 2.0;
@@ -594,6 +614,7 @@ mod tests {
         w.add_object(Object::new_plane(
             Transformation::new().translate(0.0, -1.0, 0.0),
             Material { reflective: 0.5, ..Default::default() },
+            true,
         ));
 
         let sqrt_2_div_2 = SQRT_2 / 2.0;

@@ -13,6 +13,7 @@ pub struct Object {
     transformation: Transformation,
     inverse_transformation: Transformation,
     pub material: Material,
+    pub casts_shadow: bool,
     shape: Shape,
 }
 
@@ -22,12 +23,14 @@ impl Object {
     fn new(
         transformation: Transformation,
         material: Material,
+        casts_shadow: bool,
         shape: Shape,
     ) -> Self {
         Self {
             transformation,
             inverse_transformation: transformation.invert(),
             material,
+            casts_shadow,
             shape,
         }
     }
@@ -35,30 +38,35 @@ impl Object {
     pub fn new_plane(
         transformation: Transformation,
         material: Material,
+        casts_shadow: bool,
     ) -> Self {
-        Self::new(transformation, material, Shape::new_plane())
+        Self::new(transformation, material, casts_shadow, Shape::new_plane())
     }
 
     #[must_use]
     pub fn default_plane() -> Self {
-        Self::new_plane(Transformation::new(), Material::default())
+        Self::new_plane(Transformation::new(), Material::default(), true)
     }
 
     #[must_use]
     pub fn new_sphere(
         transformation: Transformation,
         material: Material,
+        casts_shadow: bool,
     ) -> Self {
-        Self::new(transformation, material, Shape::new_sphere())
+        Self::new(transformation, material, casts_shadow, Shape::new_sphere())
     }
 
     #[must_use]
     pub fn default_sphere() -> Self {
-        Self::new_sphere(Transformation::new(), Material::default())
+        Self::new_sphere(Transformation::new(), Material::default(), true)
     }
 
     #[must_use]
-    pub fn new_glass_sphere(transformation: Transformation) -> Self {
+    pub fn new_glass_sphere(
+        transformation: Transformation,
+        casts_shadow: bool,
+    ) -> Self {
         Self::new(
             transformation,
             Material {
@@ -68,13 +76,14 @@ impl Object {
                 refractive_index: 1.5,
                 ..Default::default()
             },
+            casts_shadow,
             Shape::new_sphere(),
         )
     }
 
     #[must_use]
     pub fn default_glass_sphere() -> Self {
-        Self::new_glass_sphere(Transformation::new())
+        Self::new_glass_sphere(Transformation::new(), true)
     }
 
     #[cfg(test)]
@@ -82,14 +91,15 @@ impl Object {
     pub fn new_test(
         transformation: Transformation,
         material: Material,
+        casts_shadow: bool,
     ) -> Self {
-        Self::new(transformation, material, Shape::new_test())
+        Self::new(transformation, material, casts_shadow, Shape::new_test())
     }
 
     #[cfg(test)]
     #[must_use]
     pub fn default_test() -> Self {
-        Self::new_test(Transformation::new(), Material::default())
+        Self::new_test(Transformation::new(), Material::default(), true)
     }
 
     #[must_use]
@@ -151,11 +161,12 @@ mod tests {
                 paste! {
                     let s = Shape::[<new_ $shape:lower>]();
 
-                    let o = Object::[<new_ $shape:lower>](t, m.clone());
+                    let o = Object::[<new_ $shape:lower>](t, m.clone(), false);
 
                     assert_approx_eq!(o.transformation, t);
                     assert_approx_eq!(o.inverse_transformation, ti);
                     assert_approx_eq!(o.material, &m);
+                    assert!(!o.casts_shadow);
                     assert_approx_eq!(o.shape, s);
 
                     let o = Object::[<default_ $shape:lower>]();
@@ -165,6 +176,7 @@ mod tests {
                         o.inverse_transformation, Transformation::new()
                     );
                     assert_approx_eq!(o.material, &Material::default());
+                    assert!(o.casts_shadow);
                     assert_approx_eq!(o.shape, s);
                 }
             }};
@@ -172,11 +184,12 @@ mod tests {
 
         let s = Shape::new_plane();
 
-        let o = Object::new(t, m.clone(), s);
+        let o = Object::new(t, m.clone(), true, s);
 
         assert_approx_eq!(o.transformation, t);
         assert_approx_eq!(o.inverse_transformation, ti);
         assert_approx_eq!(o.material, &m);
+        assert!(o.casts_shadow);
         assert_approx_eq!(o.shape, s);
 
         test_object!(Plane);
@@ -193,11 +206,12 @@ mod tests {
         let t = Transformation::new().shear(1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
         let s = Shape::new_sphere();
 
-        let o = Object::new_glass_sphere(t);
+        let o = Object::new_glass_sphere(t, false);
 
         assert_approx_eq!(o.transformation, t);
         assert_approx_eq!(o.inverse_transformation, t.invert());
         assert_approx_eq!(o.material, &m);
+        assert!(!o.casts_shadow);
         assert_approx_eq!(o.shape, s);
 
         let o = Object::default_glass_sphere();
@@ -215,6 +229,7 @@ mod tests {
         let o = Object::new_test(
             Transformation::new().scale(2.0, 2.0, 2.0),
             Material::default(),
+            true,
         );
 
         let i = o.intersect(&r);
@@ -228,6 +243,7 @@ mod tests {
         let o = Object::new_test(
             Transformation::new().translate(5.0, 0.0, 0.0),
             Material::default(),
+            true,
         );
 
         let i = o.intersect(&r);
@@ -244,6 +260,7 @@ mod tests {
         let o = Object::new_test(
             Transformation::new().translate(0.0, 1.0, 0.0),
             Material::default(),
+            true,
         );
 
         assert_approx_eq!(
@@ -256,6 +273,7 @@ mod tests {
                 .rotate_z(Angle(PI / 5.0))
                 .scale(1.0, 0.5, 1.0),
             Material::default(),
+            true,
         );
 
         let sqrt_2_div_d = SQRT_2 / 2.0;
@@ -273,6 +291,7 @@ mod tests {
         let o = Object::new_sphere(
             Transformation::new().scale(2.0, 2.0, 2.0),
             Material::default(),
+            true,
         );
 
         let i = o.intersect(&r);
@@ -295,6 +314,7 @@ mod tests {
         let o = Object::new_sphere(
             Transformation::new().translate(5.0, 0.0, 0.0),
             Material::default(),
+            true,
         );
 
         let i = o.intersect(&r);
@@ -306,6 +326,7 @@ mod tests {
         let o = Object::new_sphere(
             Transformation::new().translate(0.0, 1.0, 0.0),
             Material::default(),
+            true,
         );
 
         assert_approx_eq!(
@@ -321,6 +342,7 @@ mod tests {
                 .rotate_z(Angle::from_degrees(36.0))
                 .scale(1.0, 0.5, 1.0),
             Material::default(),
+            true,
         );
 
         let sqrt_2_div_2 = SQRT_2 / 2.0;
@@ -338,6 +360,7 @@ mod tests {
         let o3 = Object::new_test(
             Transformation::new().scale(1.0, 2.0, 1.0),
             Material::default(),
+            true,
         );
 
         assert_approx_eq!(o1, &o2);

@@ -228,6 +228,7 @@ mod tests {
         let o = Object::new_test(
             Transformation::new().translate(1.0, 0.5, 1.5),
             Material::default(),
+            true,
         );
 
         let p = Pattern::default_test();
@@ -255,6 +256,7 @@ mod tests {
         let o = Object::new_test(
             Transformation::new().scale(2.0, 2.0, 2.0),
             Material::default(),
+            true,
         );
 
         let p =
@@ -271,6 +273,7 @@ mod tests {
         let o = Object::new_test(
             Transformation::new().scale(2.0, 2.0, 2.0),
             Material::default(),
+            true,
         );
 
         let p = Pattern::default_stripe(
@@ -305,6 +308,7 @@ mod tests {
         let o = Object::new_test(
             Transformation::new().scale(2.0, 2.0, 2.0),
             Material::default(),
+            true,
         );
 
         let p = Pattern::new_stripe(

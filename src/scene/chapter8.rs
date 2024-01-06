@@ -33,6 +33,7 @@ pub fn generate_scene() -> SceneData {
     world.add_object(Object::new_sphere(
         floor_transformation,
         floor_material.clone(),
+        true,
     ));
 
     world.add_object(Object::new_sphere(
@@ -41,6 +42,7 @@ pub fn generate_scene() -> SceneData {
             .rotate_y(Angle(-FRAC_PI_4))
             .translate(0.0, 0.0, 5.0),
         floor_material.clone(),
+        true,
     ));
 
     world.add_object(Object::new_sphere(
@@ -49,6 +51,7 @@ pub fn generate_scene() -> SceneData {
             .rotate_y(Angle(FRAC_PI_4))
             .translate(0.0, 0.0, 5.0),
         floor_material,
+        true,
     ));
 
     world.add_object(Object::new_sphere(
@@ -59,6 +62,7 @@ pub fn generate_scene() -> SceneData {
             specular: 0.3,
             ..Default::default()
         },
+        true,
     ));
 
     world.add_object(Object::new_sphere(
@@ -69,6 +73,7 @@ pub fn generate_scene() -> SceneData {
             specular: 0.3,
             ..Default::default()
         },
+        true,
     ));
 
     world.add_object(Object::new_sphere(
@@ -81,6 +86,7 @@ pub fn generate_scene() -> SceneData {
             specular: 0.3,
             ..Default::default()
         },
+        true,
     ));
 
     world.add_light(PointLight::new(

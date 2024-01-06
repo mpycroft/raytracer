@@ -318,6 +318,7 @@ mod tests {
         let o = Object::new_test(
             Transformation::new().translate(0.0, 0.0, 1.0),
             Material::default(),
+            true,
         );
 
         let i = Intersection::new(&o, 5.0);
@@ -353,15 +354,18 @@ mod tests {
     fn finding_n1_and_n2_at_various_intersections() {
         let a = Object::new_glass_sphere(
             Transformation::new().scale(2.0, 2.0, 2.0),
+            true,
         );
 
         let mut b = Object::new_glass_sphere(
             Transformation::new().translate(0.0, 0.0, -0.25),
+            true,
         );
         b.material.refractive_index = 2.0;
 
         let mut c = Object::new_glass_sphere(
             Transformation::new().translate(0.0, 0.0, 0.25),
+            true,
         );
         c.material.refractive_index = 2.5;
 
@@ -397,6 +401,7 @@ mod tests {
 
         let o = Object::new_glass_sphere(
             Transformation::new().translate(0.0, 0.0, 1.0),
+            true,
         );
 
         let i = Intersection::new(&o, 5.0);
@@ -608,6 +613,7 @@ mod tests {
         let o2 = Object::new_test(
             Transformation::new().translate(1.0, 0.0, 0.0),
             Material::default(),
+            true,
         );
         let i3 = Intersection::new(&o2, 3.2);
 

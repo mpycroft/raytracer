@@ -8,6 +8,7 @@ use raytracer::{
 use super::SceneData;
 
 #[must_use]
+#[allow(clippy::too_many_lines)]
 pub fn generate_scene() -> SceneData {
     let camera = Camera::new(
         1000,
@@ -44,6 +45,7 @@ pub fn generate_scene() -> SceneData {
             ),
             ..Default::default()
         },
+        true,
     ));
     world.add_object(Object::new_plane(
         Transformation::new()
@@ -56,6 +58,7 @@ pub fn generate_scene() -> SceneData {
             ),
             ..Default::default()
         },
+        true,
     ));
 
     world.add_object(Object::new_sphere(
@@ -73,6 +76,7 @@ pub fn generate_scene() -> SceneData {
             specular: 0.3,
             ..Default::default()
         },
+        true,
     ));
 
     world.add_object(Object::new_sphere(
@@ -87,6 +91,7 @@ pub fn generate_scene() -> SceneData {
             specular: 0.3,
             ..Default::default()
         },
+        true,
     ));
 
     world.add_object(Object::new_sphere(
@@ -103,6 +108,7 @@ pub fn generate_scene() -> SceneData {
             specular: 0.3,
             ..Default::default()
         },
+        true,
     ));
 
     world.add_light(PointLight::new(

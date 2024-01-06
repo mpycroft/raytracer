@@ -31,12 +31,14 @@ pub fn generate_scene() -> SceneData {
     world.add_object(Object::new_plane(
         Transformation::new(),
         floor_material.clone(),
+        true,
     ));
     world.add_object(Object::new_plane(
         Transformation::new()
             .rotate_x(Angle(FRAC_PI_2))
             .translate(0.0, 0.0, 10.0),
         floor_material,
+        true,
     ));
 
     world.add_object(Object::new_sphere(
@@ -47,6 +49,7 @@ pub fn generate_scene() -> SceneData {
             specular: 0.3,
             ..Default::default()
         },
+        true,
     ));
 
     world.add_object(Object::new_sphere(
@@ -57,6 +60,7 @@ pub fn generate_scene() -> SceneData {
             specular: 0.3,
             ..Default::default()
         },
+        true,
     ));
 
     world.add_object(Object::new_sphere(
@@ -69,6 +73,7 @@ pub fn generate_scene() -> SceneData {
             specular: 0.3,
             ..Default::default()
         },
+        true,
     ));
 
     world.add_light(PointLight::new(

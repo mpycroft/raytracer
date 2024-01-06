@@ -26,6 +26,7 @@ pub fn generate_scene() -> SceneData {
             pattern: Colour::new(1.0, 0.2, 1.0).into(),
             ..Default::default()
         },
+        true,
     ));
 
     world.add_light(PointLight::new(

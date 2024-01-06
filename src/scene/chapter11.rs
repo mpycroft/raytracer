@@ -33,6 +33,7 @@ pub fn generate_scene() -> SceneData {
             reflective: 0.4,
             ..Default::default()
         },
+        true,
     ));
 
     world.add_object(Object::new_plane(
@@ -45,10 +46,12 @@ pub fn generate_scene() -> SceneData {
             transparency: 0.0,
             ..Default::default()
         },
+        true,
     ));
 
     world.add_object(Object::new_glass_sphere(
         Transformation::new().translate(-0.5, 1.0, 0.5),
+        true,
     ));
 
     world.add_object(Object::new_sphere(
@@ -61,6 +64,7 @@ pub fn generate_scene() -> SceneData {
             refractive_index: 1.0,
             ..Default::default()
         },
+        true,
     ));
 
     world.add_object(Object::new_sphere(
@@ -72,6 +76,7 @@ pub fn generate_scene() -> SceneData {
             reflective: 0.2,
             ..Default::default()
         },
+        true,
     ));
 
     world.add_object(Object::new_sphere(
@@ -82,10 +87,12 @@ pub fn generate_scene() -> SceneData {
             specular: 0.4,
             ..Default::default()
         },
+        true,
     ));
 
     world.add_object(Object::new_glass_sphere(
         Transformation::new().scale(0.5, 0.5, 0.5).translate(1.5, 0.5, -0.5),
+        true,
     ));
 
     world.add_object(Object::new_sphere(
@@ -99,6 +106,7 @@ pub fn generate_scene() -> SceneData {
             reflective: 0.4,
             ..Default::default()
         },
+        true,
     ));
 
     world.add_light(PointLight::new(
@@ -134,6 +142,7 @@ pub fn generate_water_scene() -> SceneData {
             specular: 0.0,
             ..Default::default()
         },
+        true,
     ));
 
     world.add_object(Object::new_plane(
@@ -147,29 +156,34 @@ pub fn generate_water_scene() -> SceneData {
             ),
             ..Default::default()
         },
+        true,
     ));
 
     world.add_object(Object::new_sphere(
-        Transformation::new().scale(0.5, 0.5, 0.5).translate(0.0, -4.5, 30.0),
+        Transformation::new().scale(0.5, 0.5, 0.5).translate(0.0, -4.5, 20.0),
         Material { pattern: Colour::blue().into(), ..Default::default() },
+        true,
     ));
     world.add_object(Object::new_sphere(
-        Transformation::new().scale(0.5, 0.5, 0.5).translate(5.0, -4.5, 25.0),
+        Transformation::new().scale(0.5, 0.5, 0.5).translate(5.0, -4.5, 15.0),
         Material { pattern: Colour::green().into(), ..Default::default() },
+        true,
     ));
     world.add_object(Object::new_sphere(
-        Transformation::new().scale(0.5, 0.5, 0.5).translate(-9.0, -4.5, 20.0),
+        Transformation::new().scale(0.5, 0.5, 0.5).translate(-4.0, -4.5, 10.0),
         Material { pattern: Colour::red().into(), ..Default::default() },
+        true,
     ));
 
     world.add_object(Object::new_plane(
-        Transformation::new(),
+        Transformation::new().translate(0.0, -2.0, 0.0),
         Material {
             reflective: 0.1,
             transparency: 1.0,
             refractive_index: 1.5,
             ..Default::default()
         },
+        false,
     ));
 
     world.add_light(PointLight::new(
