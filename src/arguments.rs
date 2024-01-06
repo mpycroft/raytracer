@@ -1,7 +1,10 @@
+use anyhow::Result;
 use clap::{
     builder::{styling::AnsiColor, Styles},
     Parser,
 };
+use exmex::eval_str;
+use raytracer::math::Angle;
 
 use crate::scene::Scene;
 
@@ -32,6 +35,10 @@ pub struct Arguments {
     #[arg(long)]
     pub height: Option<usize>,
 
+    /// Field of view (in radians)
+    #[arg(long, value_parser = parse_fov)]
+    pub fov: Option<Angle>,
+
     /// The number of reflection rays to produce.
     #[arg(long, default_value = "5")]
     pub depth: u32,
@@ -39,4 +46,10 @@ pub struct Arguments {
     /// Suppress program output
     #[arg(short, long)]
     pub quiet: bool,
+}
+
+fn parse_fov(string: &str) -> Result<Angle> {
+    let result = eval_str::<f64>(string)?;
+
+    Ok(Angle(result))
 }

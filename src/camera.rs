@@ -16,6 +16,7 @@ use crate::{
 pub struct Camera {
     horizontal_size: usize,
     vertical_size: usize,
+    field_of_view: Angle,
     inverse_transformation: Transformation,
     half_width: f64,
     half_height: f64,
@@ -45,6 +46,7 @@ impl Camera {
         Self {
             horizontal_size,
             vertical_size,
+            field_of_view,
             inverse_transformation: transformation.invert(),
             half_width,
             half_height,
@@ -63,9 +65,10 @@ impl Camera {
     pub fn render(&self, world: &World, depth: u32, quiet: bool) -> Canvas {
         if !quiet {
             println!(
-                "Size {} by {}",
+                "Size {} by {}, field of view {:.1} degrees",
                 HumanCount(self.horizontal_size.try_into().unwrap()),
-                HumanCount(self.vertical_size.try_into().unwrap())
+                HumanCount(self.vertical_size.try_into().unwrap()),
+                self.field_of_view.to_degrees()
             );
 
             println!("Rendering scene...");

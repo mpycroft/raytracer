@@ -10,11 +10,12 @@ use crate::arguments::Arguments;
 pub fn generate_scene(arguments: &Arguments) -> SceneData {
     let horizontal_size = arguments.width.unwrap_or(500);
     let vertical_size = arguments.height.unwrap_or(500);
+    let field_of_view = arguments.fov.unwrap_or(Angle(0.5));
 
     let camera = Camera::new(
         horizontal_size,
         vertical_size,
-        Angle(0.5),
+        field_of_view,
         Transformation::view_transformation(
             &Point::new(0.0, 0.0, -5.0),
             &Point::origin(),
