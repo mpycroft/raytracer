@@ -17,6 +17,7 @@ pub enum Scene {
     Chapter9,
     Chapter10,
     Chapter11,
+    Chapter11Water,
 }
 
 impl Scene {
@@ -28,6 +29,7 @@ impl Scene {
             Self::Chapter9 => chapter9::generate_scene(),
             Self::Chapter10 => chapter10::generate_scene(),
             Self::Chapter11 => chapter11::generate_scene(),
+            Self::Chapter11Water => chapter11::generate_water_scene(),
         }
     }
 }

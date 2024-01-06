@@ -108,3 +108,74 @@ pub fn generate_scene() -> SceneData {
 
     SceneData::new(camera, world)
 }
+
+#[must_use]
+pub fn generate_water_scene() -> SceneData {
+    let camera = Camera::new(
+        1000,
+        500,
+        Angle(FRAC_PI_3),
+        Transformation::view_transformation(
+            &Point::new(0.0, 0.5, -5.0),
+            &Point::origin(),
+            &Vector::y_axis(),
+        ),
+    );
+
+    let mut world = World::new();
+
+    world.add_object(Object::new_plane(
+        Transformation::new().translate(0.0, -5.0, 0.0),
+        Material {
+            pattern: Pattern::default_checker(
+                Colour::green().into(),
+                Colour::white().into(),
+            ),
+            specular: 0.0,
+            ..Default::default()
+        },
+    ));
+
+    world.add_object(Object::new_plane(
+        Transformation::new()
+            .rotate_x(Angle(FRAC_PI_2))
+            .translate(0.0, 0.0, 100.0),
+        Material {
+            pattern: Pattern::default_checker(
+                Colour::white().into(),
+                Colour::black().into(),
+            ),
+            ..Default::default()
+        },
+    ));
+
+    world.add_object(Object::new_sphere(
+        Transformation::new().scale(0.5, 0.5, 0.5).translate(0.0, -4.5, 30.0),
+        Material { pattern: Colour::blue().into(), ..Default::default() },
+    ));
+    world.add_object(Object::new_sphere(
+        Transformation::new().scale(0.5, 0.5, 0.5).translate(5.0, -4.5, 25.0),
+        Material { pattern: Colour::green().into(), ..Default::default() },
+    ));
+    world.add_object(Object::new_sphere(
+        Transformation::new().scale(0.5, 0.5, 0.5).translate(-9.0, -4.5, 20.0),
+        Material { pattern: Colour::red().into(), ..Default::default() },
+    ));
+
+    world.add_object(Object::new_plane(
+        Transformation::new(),
+        Material {
+            reflective: 0.1,
+            transparency: 1.0,
+            refractive_index: 1.5,
+            ..Default::default()
+        },
+    ));
+
+    world.add_light(PointLight::new(
+        Point::new(-10.0, 5.0, -10.0),
+        Colour::new(0.8, 0.8, 0.8),
+    ));
+
+    SceneData::new(camera, world)
+}

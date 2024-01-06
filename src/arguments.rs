@@ -23,7 +23,7 @@ pub struct Arguments {
     #[arg(short, long)]
     pub quiet: bool,
     /// Which scene to generate.
-    #[arg(short, long, default_value = "chapter11")]
+    #[arg(short, long, default_value = "chapter11-water")]
     pub scene: Scene,
     /// The number of reflection rays to produce.
     #[arg(short, long, default_value = "5")]
