@@ -32,12 +32,12 @@ impl Intersectable for Cube {
         let (y_min, y_max) = check_axis(ray.origin.y, ray.direction.y);
         let (z_min, z_max) = check_axis(ray.origin.z, ray.direction.z);
 
-        println!("{x_min} {x_max}");
-        println!("{y_min} {y_max}");
-        println!("{z_min} {z_max}");
-
         let min = x_min.max(y_min).max(z_min);
         let max = x_max.min(y_max).min(z_max);
+
+        if min > max {
+            return None;
+        }
 
         Some(ListBuilder::new().add_t(min).add_t(max))
     }
@@ -74,5 +74,30 @@ mod tests {
         test(&Ray::new(Point::new(0.5, 0.0, -5.0), Vector::z_axis()), 4.0, 6.0);
 
         test(&Ray::new(Point::new(0.0, 0.5, 0.0), Vector::z_axis()), -1.0, 1.0);
+    }
+
+    #[test]
+    fn a_ray_misses_a_cube() {
+        let test = |r: &Ray| {
+            let l = Cube.intersect(r);
+
+            assert!(l.is_none());
+        };
+
+        test(&Ray::new(
+            Point::new(-2.0, 0.0, 0.0),
+            Vector::new(0.267_3, 0.534_5, 0.801_8),
+        ));
+        test(&Ray::new(
+            Point::new(0.0, -2.0, 0.0),
+            Vector::new(0.801_8, 0.267_3, 0.534_5),
+        ));
+        test(&Ray::new(
+            Point::new(0.0, 0.0, -2.0),
+            Vector::new(0.534_5, 0.801_8, 0.267_3),
+        ));
+        test(&Ray::new(Point::new(2.0, 0.0, 2.0), -Vector::z_axis()));
+        test(&Ray::new(Point::new(0.0, 2.0, 2.0), -Vector::y_axis()));
+        test(&Ray::new(Point::new(2.0, 2.0, 0.0), -Vector::x_axis()));
     }
 }
