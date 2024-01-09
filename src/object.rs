@@ -34,6 +34,21 @@ impl Object {
             shape,
         }
     }
+
+    #[must_use]
+    pub fn new_cube(
+        transformation: Transformation,
+        material: Material,
+        casts_shadow: bool,
+    ) -> Self {
+        Self::new(transformation, material, casts_shadow, Shape::new_cube())
+    }
+
+    #[must_use]
+    pub fn default_cube() -> Self {
+        Self::new_cube(Transformation::new(), Material::default(), true)
+    }
+
     #[must_use]
     pub fn new_plane(
         transformation: Transformation,
@@ -192,6 +207,7 @@ mod tests {
         assert!(o.casts_shadow);
         assert_approx_eq!(o.shape, s);
 
+        test_object!(Cube);
         test_object!(Plane);
         test_object!(Sphere);
         test_object!(Test);

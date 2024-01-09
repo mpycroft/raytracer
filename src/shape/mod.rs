@@ -9,7 +9,7 @@ use float_cmp::{ApproxEq, F64Margin};
 
 #[cfg(test)]
 pub(super) use self::test::Test;
-use self::{plane::Plane, sphere::Sphere};
+use self::{cube::Cube, plane::Plane, sphere::Sphere};
 use crate::{
     intersection::{Intersectable, ListBuilder},
     math::{Point, Ray, Vector},
@@ -19,6 +19,7 @@ use crate::{
 #[derive(Clone, Copy, Debug)]
 #[enum_dispatch]
 pub enum Shape {
+    Cube(Cube),
     Plane(Plane),
     Sphere(Sphere),
     #[cfg(test)]
@@ -26,6 +27,11 @@ pub enum Shape {
 }
 
 impl Shape {
+    #[must_use]
+    pub fn new_cube() -> Self {
+        Self::Cube(Cube)
+    }
+
     #[must_use]
     pub fn new_plane() -> Self {
         Self::Plane(Plane)
@@ -48,7 +54,8 @@ impl ApproxEq for Shape {
 
     fn approx_eq<M: Into<Self::Margin>>(self, other: Self, _margin: M) -> bool {
         match (self, other) {
-            (Self::Sphere(_), Self::Sphere(_))
+            (Self::Cube(_), Self::Cube(_))
+            | (Self::Sphere(_), Self::Sphere(_))
             | (Self::Plane(_), Self::Plane(_)) => true,
             #[cfg(test)]
             (Self::Test(_), Self::Test(_)) => true,
