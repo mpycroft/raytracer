@@ -43,7 +43,21 @@ impl Intersectable for Cube {
     }
 
     fn normal_at(&self, point: &Point) -> Vector {
-        todo!()
+        let abs_x = point.x.abs();
+        let abs_y = point.y.abs();
+        let abs_z = point.z.abs();
+
+        if abs_x >= abs_y {
+            if abs_x >= abs_z {
+                return Vector::new(point.x, 0.0, 0.0);
+            }
+
+            return Vector::new(0.0, 0.0, point.z);
+        } else if abs_y >= abs_z {
+            return Vector::new(0.0, point.y, 0.0);
+        }
+
+        Vector::new(0.0, 0.0, point.z)
     }
 }
 
@@ -99,5 +113,42 @@ mod tests {
         test(&Ray::new(Point::new(2.0, 0.0, 2.0), -Vector::z_axis()));
         test(&Ray::new(Point::new(0.0, 2.0, 2.0), -Vector::y_axis()));
         test(&Ray::new(Point::new(2.0, 2.0, 0.0), -Vector::x_axis()));
+    }
+
+    #[test]
+    fn the_normal_on_a_cube() {
+        assert_approx_eq!(
+            Cube.normal_at(&Point::new(1.0, 0.5, -0.8)),
+            Vector::x_axis()
+        );
+        assert_approx_eq!(
+            Cube.normal_at(&Point::new(-1.0, -0.2, 0.9)),
+            -Vector::x_axis()
+        );
+        assert_approx_eq!(
+            Cube.normal_at(&Point::new(-0.4, 1.0, -0.1)),
+            Vector::y_axis()
+        );
+        assert_approx_eq!(
+            Cube.normal_at(&Point::new(0.3, -1.0, -0.7)),
+            -Vector::y_axis()
+        );
+        assert_approx_eq!(
+            Cube.normal_at(&Point::new(-0.6, 0.3, 1.0)),
+            Vector::z_axis()
+        );
+        assert_approx_eq!(
+            Cube.normal_at(&Point::new(0.4, 0.4, -1.0)),
+            -Vector::z_axis()
+        );
+
+        assert_approx_eq!(
+            Cube.normal_at(&Point::new(1.0, 1.0, 1.0)),
+            Vector::x_axis()
+        );
+        assert_approx_eq!(
+            Cube.normal_at(&Point::new(-1.0, -1.0, -1.0)),
+            -Vector::x_axis()
+        );
     }
 }
