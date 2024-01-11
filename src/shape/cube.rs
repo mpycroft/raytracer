@@ -1,14 +1,13 @@
+//! A `Cube` is an axis aligned cube of size 2 (-1.0..1.0) on each axis.
+
 use std::f64::{EPSILON, INFINITY};
 
 use crate::{
-    intersection::{Intersectable, ListBuilder},
+    intersection::ListBuilder,
     math::{Point, Ray, Vector},
 };
 
-/// A `Cube` is an axis aligned cube of size 2 (-1.0..1.0) on each axis.
-#[derive(Clone, Copy, Debug)]
-pub struct Cube;
-
+#[must_use]
 fn check_axis(origin: f64, direction: f64) -> (f64, f64) {
     let min_numerator = -1.0 - origin;
     let max_numerator = 1.0 - origin;
@@ -26,39 +25,39 @@ fn check_axis(origin: f64, direction: f64) -> (f64, f64) {
     (min, max)
 }
 
-impl Intersectable for Cube {
-    fn intersect<'a>(&'a self, ray: &Ray) -> Option<ListBuilder<'a>> {
-        let (x_min, x_max) = check_axis(ray.origin.x, ray.direction.x);
-        let (y_min, y_max) = check_axis(ray.origin.y, ray.direction.y);
-        let (z_min, z_max) = check_axis(ray.origin.z, ray.direction.z);
+#[must_use]
+pub fn intersect<'a>(ray: &Ray) -> Option<ListBuilder<'a>> {
+    let (x_min, x_max) = check_axis(ray.origin.x, ray.direction.x);
+    let (y_min, y_max) = check_axis(ray.origin.y, ray.direction.y);
+    let (z_min, z_max) = check_axis(ray.origin.z, ray.direction.z);
 
-        let min = x_min.max(y_min).max(z_min);
-        let max = x_max.min(y_max).min(z_max);
+    let min = x_min.max(y_min).max(z_min);
+    let max = x_max.min(y_max).min(z_max);
 
-        if min > max {
-            return None;
-        }
-
-        Some(ListBuilder::new().add_t(min).add_t(max))
+    if min > max {
+        return None;
     }
 
-    fn normal_at(&self, point: &Point) -> Vector {
-        let abs_x = point.x.abs();
-        let abs_y = point.y.abs();
-        let abs_z = point.z.abs();
+    Some(ListBuilder::new().add_t(min).add_t(max))
+}
 
-        if abs_x >= abs_y {
-            if abs_x >= abs_z {
-                return Vector::new(point.x, 0.0, 0.0);
-            }
+#[must_use]
+pub fn normal_at(point: &Point) -> Vector {
+    let abs_x = point.x.abs();
+    let abs_y = point.y.abs();
+    let abs_z = point.z.abs();
 
-            return Vector::new(0.0, 0.0, point.z);
-        } else if abs_y >= abs_z {
-            return Vector::new(0.0, point.y, 0.0);
+    if abs_x >= abs_y {
+        if abs_x >= abs_z {
+            return Vector::new(point.x, 0.0, 0.0);
         }
 
-        Vector::new(0.0, 0.0, point.z)
+        return Vector::new(0.0, 0.0, point.z);
+    } else if abs_y >= abs_z {
+        return Vector::new(0.0, point.y, 0.0);
     }
+
+    Vector::new(0.0, 0.0, point.z)
 }
 
 #[cfg(test)]
@@ -74,7 +73,7 @@ mod tests {
         let o = Object::default_test();
 
         let test = |r: &Ray, t1: f64, t2: f64| {
-            let l = Cube.intersect(r).unwrap().object(&o).build();
+            let l = intersect(r).unwrap().object(&o).build();
 
             assert_approx_eq!(l[0].t, t1);
             assert_approx_eq!(l[1].t, t2);
@@ -93,7 +92,7 @@ mod tests {
     #[test]
     fn a_ray_misses_a_cube() {
         let test = |r: &Ray| {
-            let l = Cube.intersect(r);
+            let l = intersect(r);
 
             assert!(l.is_none());
         };
@@ -118,36 +117,36 @@ mod tests {
     #[test]
     fn the_normal_on_a_cube() {
         assert_approx_eq!(
-            Cube.normal_at(&Point::new(1.0, 0.5, -0.8)),
+            normal_at(&Point::new(1.0, 0.5, -0.8)),
             Vector::x_axis()
         );
         assert_approx_eq!(
-            Cube.normal_at(&Point::new(-1.0, -0.2, 0.9)),
+            normal_at(&Point::new(-1.0, -0.2, 0.9)),
             -Vector::x_axis()
         );
         assert_approx_eq!(
-            Cube.normal_at(&Point::new(-0.4, 1.0, -0.1)),
+            normal_at(&Point::new(-0.4, 1.0, -0.1)),
             Vector::y_axis()
         );
         assert_approx_eq!(
-            Cube.normal_at(&Point::new(0.3, -1.0, -0.7)),
+            normal_at(&Point::new(0.3, -1.0, -0.7)),
             -Vector::y_axis()
         );
         assert_approx_eq!(
-            Cube.normal_at(&Point::new(-0.6, 0.3, 1.0)),
+            normal_at(&Point::new(-0.6, 0.3, 1.0)),
             Vector::z_axis()
         );
         assert_approx_eq!(
-            Cube.normal_at(&Point::new(0.4, 0.4, -1.0)),
+            normal_at(&Point::new(0.4, 0.4, -1.0)),
             -Vector::z_axis()
         );
 
         assert_approx_eq!(
-            Cube.normal_at(&Point::new(1.0, 1.0, 1.0)),
+            normal_at(&Point::new(1.0, 1.0, 1.0)),
             Vector::x_axis()
         );
         assert_approx_eq!(
-            Cube.normal_at(&Point::new(-1.0, -1.0, -1.0)),
+            normal_at(&Point::new(-1.0, -1.0, -1.0)),
             -Vector::x_axis()
         );
     }

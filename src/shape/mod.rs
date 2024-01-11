@@ -2,50 +2,47 @@ mod cube;
 mod plane;
 mod sphere;
 #[cfg(test)]
-mod test;
+pub mod test;
 
-use enum_dispatch::enum_dispatch;
+use derive_new::new;
 use float_cmp::{ApproxEq, F64Margin};
 
-#[cfg(test)]
-pub(super) use self::test::Test;
-use self::{cube::Cube, plane::Plane, sphere::Sphere};
 use crate::{
     intersection::{Intersectable, ListBuilder},
     math::{Point, Ray, Vector},
 };
 
 /// `Shape` is the list of the various geometries that can be rendered.
-#[derive(Clone, Copy, Debug)]
-#[enum_dispatch]
+#[derive(Clone, Copy, Debug, new)]
 pub enum Shape {
-    Cube(Cube),
-    Plane(Plane),
-    Sphere(Sphere),
+    Cube,
+    Plane,
+    Sphere,
     #[cfg(test)]
-    Test(Test),
+    Test,
 }
 
-impl Shape {
+impl Intersectable for Shape {
     #[must_use]
-    pub fn new_cube() -> Self {
-        Self::Cube(Cube)
+    fn intersect<'a>(&'a self, ray: &Ray) -> Option<ListBuilder<'a>> {
+        match self {
+            Self::Cube => cube::intersect(ray),
+            Self::Plane => plane::intersect(ray),
+            Self::Sphere => sphere::intersect(ray),
+            #[cfg(test)]
+            Self::Test => test::intersect(ray),
+        }
     }
 
     #[must_use]
-    pub fn new_plane() -> Self {
-        Self::Plane(Plane)
-    }
-
-    #[must_use]
-    pub fn new_sphere() -> Self {
-        Self::Sphere(Sphere)
-    }
-
-    #[cfg(test)]
-    #[must_use]
-    pub fn new_test() -> Self {
-        Self::Test(Test)
+    fn normal_at(&self, point: &Point) -> Vector {
+        match self {
+            Self::Cube => cube::normal_at(point),
+            Self::Plane => plane::normal_at(point),
+            Self::Sphere => sphere::normal_at(point),
+            #[cfg(test)]
+            Self::Test => test::normal_at(point),
+        }
     }
 }
 
@@ -54,11 +51,11 @@ impl ApproxEq for Shape {
 
     fn approx_eq<M: Into<Self::Margin>>(self, other: Self, _margin: M) -> bool {
         match (self, other) {
-            (Self::Cube(_), Self::Cube(_))
-            | (Self::Sphere(_), Self::Sphere(_))
-            | (Self::Plane(_), Self::Plane(_)) => true,
+            (Self::Cube, Self::Cube)
+            | (Self::Sphere, Self::Sphere)
+            | (Self::Plane, Self::Plane) => true,
             #[cfg(test)]
-            (Self::Test(_), Self::Test(_)) => true,
+            (Self::Test, Self::Test) => true,
             (_, _) => false,
         }
     }

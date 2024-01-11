@@ -159,7 +159,7 @@ mod tests {
     use super::*;
     use crate::{
         math::{float::*, Angle},
-        shape::Test,
+        shape::test,
         Colour,
     };
 
@@ -252,7 +252,7 @@ mod tests {
         let l = i.unwrap().object(&o).build();
 
         assert_approx_eq!(
-            Test::intersection_to_ray(&l),
+            test::intersection_to_ray(&l),
             Ray::new(Point::new(0.0, 0.0, -2.5), Vector::new(0.0, 0.0, 0.5))
         );
 
@@ -266,7 +266,7 @@ mod tests {
         let l = i.unwrap().object(&o).build();
 
         assert_approx_eq!(
-            Test::intersection_to_ray(&l),
+            test::intersection_to_ray(&l),
             Ray::new(Point::new(-5.0, 0.0, -5.0), Vector::z_axis())
         );
     }
