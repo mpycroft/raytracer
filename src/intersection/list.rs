@@ -24,7 +24,15 @@ impl<'a> List<'a> {
         self.0
             .iter()
             .filter(|val| val.t > 0.0)
-            .min_by(|a, b| a.t.partial_cmp(&b.t).unwrap())
+            .min_by(|a, b| {
+                a.t.partial_cmp(&b.t).unwrap_or_else(|| {
+                    panic!(
+                        "\
+Failed to compare floating point values '{}' and '{}' when finding the hit.",
+                        a.t, b.t
+                    )
+                })
+            })
             .copied()
     }
 }

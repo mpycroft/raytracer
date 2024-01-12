@@ -22,7 +22,7 @@ fn main() -> Result<()> {
         println!("done");
     }
 
-    let canvas = scene.render(arguments.depth, arguments.quiet);
+    let canvas = scene.render(arguments.depth, arguments.quiet)?;
 
     if !arguments.quiet {
         println!("Writing to file {}", arguments.out);

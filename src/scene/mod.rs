@@ -5,6 +5,7 @@ mod chapter6;
 mod chapter8;
 mod chapter9;
 
+use anyhow::Result;
 use clap::ValueEnum;
 use derive_more::Display;
 use derive_new::new;
@@ -50,8 +51,7 @@ pub struct SceneData {
 }
 
 impl SceneData {
-    #[must_use]
-    pub fn render(&self, depth: u32, quiet: bool) -> Canvas {
+    pub fn render(&self, depth: u32, quiet: bool) -> Result<Canvas> {
         self.camera.render(&self.world, depth, quiet)
     }
 }

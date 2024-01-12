@@ -1,5 +1,6 @@
 use std::time::Instant;
 
+use anyhow::Result;
 use console::Term;
 use indicatif::{
     HumanCount, HumanDuration, ProgressBar, ProgressFinish, ProgressIterator,
@@ -56,18 +57,21 @@ impl Camera {
 
     /// Renders the given `World` using the given camera.
     ///
-    /// # Panics
+    /// # Errors
     ///
-    /// This function should not panic as all the values unwrapped should be
-    /// valid but will if there is an error in the formatting for progress
-    /// somewhere.
-    #[must_use]
-    pub fn render(&self, world: &World, depth: u32, quiet: bool) -> Canvas {
+    /// This function will return an error if it can't convert values. In
+    /// general this should not occur.
+    pub fn render(
+        &self,
+        world: &World,
+        depth: u32,
+        quiet: bool,
+    ) -> Result<Canvas> {
         if !quiet {
             println!(
                 "Size {} by {}, field of view {:.1} degrees",
-                HumanCount(self.horizontal_size.try_into().unwrap()),
-                HumanCount(self.vertical_size.try_into().unwrap()),
+                HumanCount(self.horizontal_size.try_into()?),
+                HumanCount(self.vertical_size.try_into()?),
                 self.field_of_view.to_degrees()
             );
 
@@ -77,14 +81,13 @@ impl Camera {
         let bar = if quiet {
             ProgressBar::hidden()
         } else {
-            ProgressBar::new(self.horizontal_size.try_into().unwrap())
+            ProgressBar::new(self.horizontal_size.try_into()?)
                 .with_style(
                     ProgressStyle::with_template(
                         "\
 {prefix} {bar:40.cyan/blue} {human_pos:>7}/{human_len:7} ({percent}%)
 Elapsed: {elapsed}, estimated: {eta}, rows/sec: {per_sec}",
-                    )
-                    .unwrap()
+                    )?
                     .progress_chars("#>-"),
                 )
                 .with_prefix("Rows")
@@ -106,16 +109,16 @@ Elapsed: {elapsed}, estimated: {eta}, rows/sec: {per_sec}",
         }
 
         if !quiet {
-            Term::stdout().clear_last_lines(1).unwrap();
+            Term::stdout().clear_last_lines(1)?;
 
             println!(
                 "Rendering scene...done\nRendered {} rows in {}",
-                HumanCount(self.horizontal_size.try_into().unwrap()),
+                HumanCount(self.horizontal_size.try_into()?),
                 HumanDuration(started.elapsed())
             );
         }
 
-        canvas
+        Ok(canvas)
     }
 
     #[must_use]

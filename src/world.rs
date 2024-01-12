@@ -86,7 +86,16 @@ impl World {
             return None;
         }
 
-        list.sort_by(|a, b| a.t.partial_cmp(&b.t).unwrap());
+        list.sort_by(|a, b| {
+            a.t.partial_cmp(&b.t).unwrap_or_else(|| {
+                panic!(
+                    "\
+Failed to compare floating point values '{}' and '{}' when sorting \
+intersection list.",
+                    a.t, b.t
+                )
+            })
+        });
 
         Some(list)
     }
@@ -529,7 +538,7 @@ mod tests {
             ),
         );
 
-        let i = c.render(&w, 5, true);
+        let i = c.render(&w, 5, true).unwrap();
 
         assert_approx_eq!(
             i.get_pixel(5, 5),
