@@ -66,12 +66,12 @@ macro_rules! add_pattern_tests {
 #[cfg(test)]
 pub(super) use add_pattern_tests;
 
-/// This macro implements the `ApproxEq` trait for the `Patterns` enum as it is
+/// This macro implements the `ApproxEq` trait for the `Kind` enum as it is
 /// quite tedious.
 macro_rules! impl_approx_eq_patterns {
     ($($(#[$outer:meta])* $pattern:ident $(,)?)+) => {
-        impl ApproxEq for &Patterns {
-            type Margin = F64Margin;
+        impl float_cmp::ApproxEq for &Kind {
+            type Margin = float_cmp::F64Margin;
 
             fn approx_eq<M: Into<Self::Margin>>(
                 self, other: Self, margin: M
@@ -81,7 +81,7 @@ macro_rules! impl_approx_eq_patterns {
                 match (self, other) {
                     $(
                         $(#[$outer])*
-                        (Patterns::$pattern(lhs), Patterns::$pattern(rhs)) => {
+                        (Kind::$pattern(lhs), Kind::$pattern(rhs)) => {
                             lhs.approx_eq(rhs, margin)
                         }
                     )+

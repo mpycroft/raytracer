@@ -1,6 +1,8 @@
 mod blend;
 mod checker;
 mod gradient;
+mod kind;
+mod pattern_at;
 mod perturbed;
 mod radial_gradient;
 mod ring;
@@ -10,29 +12,19 @@ mod stripe;
 mod test;
 mod util;
 
-use enum_dispatch::enum_dispatch;
-use float_cmp::{ApproxEq, F64Margin};
 use paste::paste;
 
 #[cfg(test)]
 use self::test::Test;
 use self::{
-    blend::Blend, checker::Checker, gradient::Gradient, perturbed::Perturbed,
+    blend::Blend, checker::Checker, gradient::Gradient, kind::Kind,
+    pattern_at::PatternAt, perturbed::Perturbed,
     radial_gradient::RadialGradient, ring::Ring, solid::Solid, stripe::Stripe,
-    util::impl_approx_eq_patterns,
 };
 use crate::{
     math::{float::impl_approx_eq, Point, Transformable, Transformation},
     Colour, Object,
 };
-
-/// A trait that all types of `Patterns` are required to implement.
-#[enum_dispatch]
-#[allow(clippy::module_name_repetitions)]
-pub trait PatternAt {
-    #[must_use]
-    fn pattern_at(&self, point: &Point) -> Colour;
-}
 
 /// A `Pattern` describes a specific pattern that can be applied to a `Material`
 /// to change how it is rendered.
@@ -40,7 +32,7 @@ pub trait PatternAt {
 pub struct Pattern {
     transformation: Transformation,
     inverse_transformation: Transformation,
-    pattern: Patterns,
+    kind: Kind,
 }
 
 /// The `add_pattern_fns` macro adds new_ and default_ functions for a given
@@ -56,7 +48,7 @@ macro_rules! add_pattern_fns {
                 transformation: Transformation, $($arg: $ty),+
             ) -> Self {
                 Self::new(
-                    transformation, Patterns::$pattern($pattern::new($($arg),+))
+                    transformation, Kind::$pattern($pattern::new($($arg),+))
                 )
             }
 
@@ -70,11 +62,11 @@ macro_rules! add_pattern_fns {
 
 impl Pattern {
     #[must_use]
-    fn new(transformation: Transformation, pattern: Patterns) -> Self {
+    fn new(transformation: Transformation, pattern: Kind) -> Self {
         Self {
             transformation,
             inverse_transformation: transformation.invert(),
-            pattern,
+            kind: pattern,
         }
     }
 
@@ -90,7 +82,7 @@ impl Pattern {
     #[cfg(test)]
     #[must_use]
     pub fn new_test(transformation: Transformation) -> Self {
-        Self::new(transformation, Patterns::Test(Test))
+        Self::new(transformation, Kind::Test(Test))
     }
 
     #[cfg(test)]
@@ -110,7 +102,7 @@ impl Pattern {
     pub fn sub_pattern_at(&self, point: &Point) -> Colour {
         let pattern_point = point.apply(&self.inverse_transformation);
 
-        self.pattern.pattern_at(&pattern_point)
+        self.kind.pattern_at(&pattern_point)
     }
 }
 
@@ -124,37 +116,8 @@ impl From<Colour> for Pattern {
 }
 
 impl_approx_eq!(
-    &Pattern { ref pattern, transformation, inverse_transformation }
+    &Pattern { ref kind, transformation, inverse_transformation }
 );
-
-/// The set of all patterns we know how to render.
-#[derive(Clone, Debug)]
-#[enum_dispatch(PatternAt)]
-pub enum Patterns {
-    Blend(Blend),
-    Checker(Checker),
-    Gradient(Gradient),
-    Perturbed(Perturbed),
-    RadialGradient(RadialGradient),
-    Ring(Ring),
-    Stripe(Stripe),
-    Solid(Solid),
-    #[cfg(test)]
-    Test(Test),
-}
-
-impl_approx_eq_patterns! {
-    Blend,
-    Checker,
-    Gradient,
-    Perturbed,
-    RadialGradient,
-    Ring,
-    Stripe,
-    Solid,
-    #[cfg(test)]
-    Test
-}
 
 #[cfg(test)]
 mod tests {
@@ -170,7 +133,7 @@ mod tests {
         macro_rules! test_pattern {
             ($pattern:ident ($($arg:tt),*)) => {{
                 paste! {
-                    let p = Patterns::$pattern(
+                    let p = Kind::$pattern(
                         $pattern::new($($arg.clone()),*)
                     );
 
@@ -180,7 +143,7 @@ mod tests {
 
                     assert_approx_eq!(pn.transformation, t);
                     assert_approx_eq!(pn.inverse_transformation, ti);
-                    assert_approx_eq!(pn.pattern, &p);
+                    assert_approx_eq!(pn.kind, &p);
 
                     let pn = Pattern::[<default_ $pattern:snake>](
                         $($arg.clone()),*
@@ -190,12 +153,12 @@ mod tests {
                     assert_approx_eq!(
                         pn.inverse_transformation, Transformation::new()
                     );
-                    assert_approx_eq!(pn.pattern, &p);
+                    assert_approx_eq!(pn.kind, &p);
                 }
             }};
         }
 
-        let p = Patterns::Stripe(Stripe::new(
+        let p = Kind::Stripe(Stripe::new(
             Colour::white().into(),
             Colour::green().into(),
         ));
@@ -204,7 +167,7 @@ mod tests {
 
         assert_approx_eq!(pn.transformation, t);
         assert_approx_eq!(pn.inverse_transformation, ti);
-        assert_approx_eq!(pn.pattern, &p);
+        assert_approx_eq!(pn.kind, &p);
 
         let w = Pattern::default_solid(Colour::white());
         let b = Pattern::default_solid(Colour::black());
@@ -320,20 +283,6 @@ mod tests {
         let p1 = Pattern::default_test();
         let p2 = Pattern::default_test();
         let p3 = Pattern::new_test(Transformation::new().scale(1.0, 2.0, 2.0));
-
-        assert_approx_eq!(p1, &p2);
-
-        assert_approx_ne!(p1, &p3);
-
-        let p1 = Patterns::Stripe(Stripe::new(
-            Colour::black().into(),
-            Colour::blue().into(),
-        ));
-        let p2 = Patterns::Stripe(Stripe::new(
-            Colour::black().into(),
-            Colour::blue().into(),
-        ));
-        let p3 = Patterns::Test(Test);
 
         assert_approx_eq!(p1, &p2);
 
