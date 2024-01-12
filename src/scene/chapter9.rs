@@ -27,11 +27,10 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
 
     let mut world = World::new();
 
-    let floor_material = Material {
-        pattern: Colour::new(1.0, 0.9, 0.9).into(),
-        specular: 0.0,
-        ..Default::default()
-    };
+    let floor_material = Material::builder()
+        .pattern(Colour::new(1.0, 0.9, 0.9).into())
+        .specular(0.0)
+        .build();
 
     world.add_object(Object::new_plane(
         Transformation::new(),
@@ -48,23 +47,21 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
 
     world.add_object(Object::new_sphere(
         Transformation::new().translate(-0.5, 1.0, 0.5),
-        Material {
-            pattern: Colour::new(0.1, 1.0, 0.5).into(),
-            diffuse: 0.7,
-            specular: 0.3,
-            ..Default::default()
-        },
+        Material::builder()
+            .pattern(Colour::new(0.1, 1.0, 0.5).into())
+            .diffuse(0.7)
+            .specular(0.3)
+            .build(),
         true,
     ));
 
     world.add_object(Object::new_sphere(
         Transformation::new().scale(0.5, 0.5, 0.5).translate(1.5, 0.5, -0.5),
-        Material {
-            pattern: Colour::new(0.5, 1.0, 0.1).into(),
-            diffuse: 0.7,
-            specular: 0.3,
-            ..Default::default()
-        },
+        Material::builder()
+            .pattern(Colour::new(0.5, 1.0, 0.1).into())
+            .diffuse(0.7)
+            .specular(0.3)
+            .build(),
         true,
     ));
 
@@ -72,12 +69,11 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
         Transformation::new()
             .scale(0.33, 0.33, 0.33)
             .translate(-1.5, 0.33, -0.75),
-        Material {
-            pattern: Colour::new(1.0, 0.8, 0.1).into(),
-            diffuse: 0.7,
-            specular: 0.3,
-            ..Default::default()
-        },
+        Material::builder()
+            .pattern(Colour::new(1.0, 0.8, 0.1).into())
+            .diffuse(0.7)
+            .specular(0.3)
+            .build(),
         true,
     ));
 

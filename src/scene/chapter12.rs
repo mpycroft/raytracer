@@ -33,10 +33,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
             .rotate_y(-Angle::from_degrees(35.0))
             .rotate_x(-Angle::from_degrees(25.0))
             .translate(0.0, 0.0, 5.0),
-        Material {
-            pattern: Colour::new(0.5, 0.4, 0.0).into(),
-            ..Default::default()
-        },
+        Material::builder().pattern(Colour::new(0.5, 0.4, 0.0).into()).build(),
         true,
     ));
 

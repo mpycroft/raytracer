@@ -84,13 +84,12 @@ impl Object {
     ) -> Self {
         Self::new(
             transformation,
-            Material {
-                ambient: 0.01,
-                diffuse: 0.01,
-                transparency: 1.0,
-                refractive_index: 1.5,
-                ..Default::default()
-            },
+            Material::builder()
+                .ambient(0.01)
+                .diffuse(0.01)
+                .transparency(1.0)
+                .refractive_index(1.5)
+                .build(),
             casts_shadow,
             Shape::new_sphere(),
         )
@@ -167,8 +166,7 @@ mod tests {
     fn creating_an_object() {
         let t = Transformation::new().translate(2.0, 3.0, 0.0);
         let ti = t.invert();
-        let m =
-            Material { pattern: Colour::red().into(), ..Default::default() };
+        let m = Material::builder().pattern(Colour::red().into()).build();
 
         /// Test the creation of objects using new_ and default_ functions.
         macro_rules! test_object {
@@ -212,13 +210,12 @@ mod tests {
         test_object!(Sphere);
         test_object!(Test);
 
-        let m = Material {
-            ambient: 0.01,
-            diffuse: 0.01,
-            transparency: 1.0,
-            refractive_index: 1.5,
-            ..Default::default()
-        };
+        let m = Material::builder()
+            .ambient(0.01)
+            .diffuse(0.01)
+            .transparency(1.0)
+            .refractive_index(1.5)
+            .build();
         let t = Transformation::new().shear(1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
         let s = Shape::new_sphere();
 

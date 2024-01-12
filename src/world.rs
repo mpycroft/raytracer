@@ -182,12 +182,11 @@ mod tests {
 
         w.add_object(Object::new_sphere(
             Transformation::new(),
-            Material {
-                pattern: Colour::new(0.8, 1.0, 0.6).into(),
-                diffuse: 0.7,
-                specular: 0.2,
-                ..Default::default()
-            },
+            Material::builder()
+                .pattern(Colour::new(0.8, 1.0, 0.6).into())
+                .diffuse(0.7)
+                .specular(0.2)
+                .build(),
             true,
         ));
         w.add_object(Object::new_sphere(
@@ -286,12 +285,12 @@ mod tests {
 
         w.add_object(Object::new_plane(
             Transformation::new().translate(0.0, 1.0, 0.0),
-            Material { reflective: 1.0, ..Default::default() },
+            Material::builder().reflective(1.0).build(),
             true,
         ));
         w.add_object(Object::new_plane(
             Transformation::new().translate(0.0, -1.0, 0.0),
-            Material { reflective: 1.0, ..Default::default() },
+            Material::builder().reflective(1.0).build(),
             true,
         ));
 
@@ -374,7 +373,7 @@ mod tests {
 
         w.add_object(Object::new_plane(
             Transformation::new().translate(0.0, -1.0, 0.0),
-            Material { reflective: 0.5, ..Default::default() },
+            Material::builder().reflective(0.5).build(),
             true,
         ));
 
@@ -403,20 +402,15 @@ mod tests {
 
         w.add_object(Object::new_plane(
             Transformation::new().translate(0.0, -1.0, 0.0),
-            Material {
-                transparency: 0.5,
-                refractive_index: 1.5,
-                ..Default::default()
-            },
+            Material::builder().transparency(0.5).refractive_index(1.5).build(),
             true,
         ));
         w.add_object(Object::new_sphere(
             Transformation::new().translate(0.0, -3.5, -0.5),
-            Material {
-                pattern: Colour::red().into(),
-                ambient: 0.5,
-                ..Default::default()
-            },
+            Material::builder()
+                .pattern(Colour::red().into())
+                .ambient(0.5)
+                .build(),
             true,
         ));
 
@@ -447,21 +441,19 @@ mod tests {
 
         w.add_object(Object::new_plane(
             Transformation::new().translate(0.0, -1.0, 0.0),
-            Material {
-                reflective: 0.5,
-                transparency: 0.5,
-                refractive_index: 1.5,
-                ..Default::default()
-            },
+            Material::builder()
+                .reflective(0.5)
+                .transparency(0.5)
+                .refractive_index(1.5)
+                .build(),
             true,
         ));
         w.add_object(Object::new_sphere(
             Transformation::new().translate(0.0, -3.5, -0.5),
-            Material {
-                pattern: Colour::red().into(),
-                ambient: 0.5,
-                ..Default::default()
-            },
+            Material::builder()
+                .pattern(Colour::red().into())
+                .ambient(0.5)
+                .build(),
             true,
         ));
 
@@ -585,7 +577,7 @@ mod tests {
 
         w.add_object(Object::new_plane(
             Transformation::new().translate(0.0, -1.0, 0.0),
-            Material { reflective: 0.5, ..Default::default() },
+            Material::builder().reflective(0.5).build(),
             true,
         ));
 
@@ -613,7 +605,7 @@ mod tests {
 
         w.add_object(Object::new_plane(
             Transformation::new().translate(0.0, -1.0, 0.0),
-            Material { reflective: 0.5, ..Default::default() },
+            Material::builder().reflective(0.5).build(),
             true,
         ));
 
@@ -697,11 +689,10 @@ mod tests {
     #[test]
     fn the_refracted_colour_with_a_reflected_ray() {
         let mut w = test_world();
-        w.objects[0].material = Material {
-            pattern: Pattern::default_test(),
-            ambient: 1.0,
-            ..Default::default()
-        };
+        w.objects[0].material = Material::builder()
+            .pattern(Pattern::default_test())
+            .ambient(1.0)
+            .build();
         w.objects[1].material.transparency = 1.0;
         w.objects[1].material.refractive_index = 1.5;
 

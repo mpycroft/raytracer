@@ -27,10 +27,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
 
     world.add_object(Object::new_sphere(
         Transformation::new(),
-        Material {
-            pattern: Colour::new(1.0, 0.2, 1.0).into(),
-            ..Default::default()
-        },
+        Material::builder().pattern(Colour::new(1.0, 0.2, 1.0).into()).build(),
         true,
     ));
 

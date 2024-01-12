@@ -30,8 +30,8 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
 
     world.add_object(Object::new_plane(
         Transformation::new(),
-        Material {
-            pattern: Pattern::default_perturbed(
+        Material::builder()
+            .pattern(Pattern::default_perturbed(
                 0.15,
                 Pattern::default_blend(
                     Pattern::new_stripe(
@@ -47,55 +47,51 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
                         Colour::white().into(),
                     ),
                 ),
-            ),
-            ..Default::default()
-        },
+            ))
+            .build(),
         true,
     ));
     world.add_object(Object::new_plane(
         Transformation::new()
             .rotate_x(Angle(FRAC_PI_2))
             .translate(0.0, 0.0, 10.0),
-        Material {
-            pattern: Pattern::default_gradient(
+        Material::builder()
+            .pattern(Pattern::default_gradient(
                 Colour::purple().into(),
                 Colour::yellow().into(),
-            ),
-            ..Default::default()
-        },
+            ))
+            .build(),
         true,
     ));
 
     world.add_object(Object::new_sphere(
         Transformation::new().translate(-0.5, 1.0, 0.5),
-        Material {
-            pattern: Pattern::new_ring(
+        Material::builder()
+            .pattern(Pattern::new_ring(
                 Transformation::new()
                     .rotate_x(Angle::from_degrees(70.0))
                     .rotate_z(Angle::from_degrees(-40.0))
                     .scale(0.2, 0.2, 0.2),
                 Colour::blue().into(),
                 Colour::cyan().into(),
-            ),
-            diffuse: 0.7,
-            specular: 0.3,
-            ..Default::default()
-        },
+            ))
+            .diffuse(0.7)
+            .specular(0.3)
+            .build(),
         true,
     ));
 
     world.add_object(Object::new_sphere(
         Transformation::new().scale(0.5, 0.5, 0.5).translate(1.5, 0.5, -0.5),
-        Material {
-            pattern: Pattern::new_checker(
+        Material::builder()
+            .pattern(Pattern::new_checker(
                 Transformation::new().scale(0.3, 0.3, 0.3),
                 Colour::green().into(),
                 Colour::cyan().into(),
-            ),
-            diffuse: 0.7,
-            specular: 0.3,
-            ..Default::default()
-        },
+            ))
+            .diffuse(0.7)
+            .specular(0.3)
+            .build(),
         true,
     ));
 
@@ -103,16 +99,15 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
         Transformation::new()
             .scale(0.33, 0.33, 0.33)
             .translate(-1.5, 0.33, -0.75),
-        Material {
-            pattern: Pattern::new_radial_gradient(
+        Material::builder()
+            .pattern(Pattern::new_radial_gradient(
                 Transformation::new().scale(0.2, 0.2, 0.2),
                 Colour::white().into(),
                 Colour::black().into(),
-            ),
-            diffuse: 0.7,
-            specular: 0.3,
-            ..Default::default()
-        },
+            ))
+            .diffuse(0.7)
+            .specular(0.3)
+            .build(),
         true,
     ));
 
