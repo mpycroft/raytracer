@@ -140,7 +140,7 @@ mod tests {
     use std::f64::consts::{FRAC_PI_2, FRAC_PI_4, SQRT_2};
 
     use super::*;
-    use crate::math::{float::assert_approx_eq, Vector};
+    use crate::math::{float::*, Vector};
 
     #[test]
     #[allow(clippy::many_single_char_names)]

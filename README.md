@@ -60,5 +60,26 @@ information in the type we shouldn't hit any fundamental issues.
   vector of values for a minimum using iterators. May need to check later on if
   its more efficient to use a different data structure or store elements sorted,
   etc. when we have lots of hits.
-* We only store the transformation matrix with each object, we may consider
-  precomputing the inverted matrix as well.
+* ~~We only store the transformation matrix with each object, we may consider
+  precomputing the inverted matrix as well.~~
+
+## Performance
+
+### Matrices
+
+Storing the inverted matrix with each object produces a significant speed up. On
+an image with 3 spheres, 2 planes and 2 lights.
+
+On a debug build rendering at 1000x500 this change alone makes using the debug
+build viable for testing.
+
+* Don't store inverse: 188.65s
+* Store inverse: 14.85s
+
+On a release build rendering at 3000x1500.
+
+* Don't store inverse: 14.86s
+* Store inverse: 3.72s
+
+Storing the inverted transpose matrix didn't have any notable speedup so we will
+continue to calculate that as needed.

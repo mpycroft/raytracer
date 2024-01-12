@@ -4,13 +4,15 @@ version = "0.1.0"
 authors = ["Megan Pycroft <megan.pycroft@gmail.com>"]
 edition = "2021"
 description = "A ray tracer written in Rust"
+repository = "https://github.com/mpycroft/raytracer"
 license = "MIT"
 
 [dependencies]
-anyhow = "1.0.75"
+anyhow = "1.0.76"
 clap = { version = "4.4.11", features = ["derive"] }
 console = "0.15.7"
 derive_more = "0.99.17"
+enum_dispatch = "0.3.12"
 float-cmp = "0.9.0"
 indicatif = "0.17.7"
 
