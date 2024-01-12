@@ -14,9 +14,10 @@ use crate::{
 /// `Camera` holds all the data representing our view into the scene.
 #[derive(Clone, Copy, Debug)]
 pub struct Camera {
-    horizontal_size: usize,
-    vertical_size: usize,
-    transformation: Transformation,
+    pub horizontal_size: usize,
+    pub vertical_size: usize,
+    field_of_view: Angle,
+    inverse_transformation: Transformation,
     half_width: f64,
     half_height: f64,
     pixel_size: f64,
@@ -30,7 +31,7 @@ impl Camera {
         field_of_view: Angle,
         transformation: Transformation,
     ) -> Self {
-        let half_view = (field_of_view.0 / 2.0).tan();
+        let half_view = (field_of_view / 2.0).tan();
         #[allow(clippy::cast_precision_loss)]
         let horizontal_float = horizontal_size as f64;
         #[allow(clippy::cast_precision_loss)]
@@ -45,7 +46,8 @@ impl Camera {
         Self {
             horizontal_size,
             vertical_size,
-            transformation,
+            field_of_view,
+            inverse_transformation: transformation.invert(),
             half_width,
             half_height,
             pixel_size: half_width * 2.0 / horizontal_float,
@@ -60,12 +62,13 @@ impl Camera {
     /// valid but will if there is an error in the formatting for progress
     /// somewhere.
     #[must_use]
-    pub fn render(&self, world: &World, quiet: bool) -> Canvas {
+    pub fn render(&self, world: &World, depth: u32, quiet: bool) -> Canvas {
         if !quiet {
             println!(
-                "Size {} by {}",
+                "Size {} by {}, field of view {:.1} degrees",
                 HumanCount(self.horizontal_size.try_into().unwrap()),
-                HumanCount(self.vertical_size.try_into().unwrap())
+                HumanCount(self.vertical_size.try_into().unwrap()),
+                self.field_of_view.to_degrees()
             );
 
             println!("Rendering scene...");
@@ -96,7 +99,7 @@ Elapsed: {elapsed}, estimated: {eta}, rows/sec: {per_sec}",
             for y in 0..self.vertical_size {
                 let ray = self.ray_for_pixel(x, y);
 
-                let colour = world.colour_at(&ray);
+                let colour = world.colour_at(&ray, depth);
 
                 canvas.write_pixel(x, y, &colour);
             }
@@ -125,11 +128,10 @@ Elapsed: {elapsed}, estimated: {eta}, rows/sec: {per_sec}",
         let world_x = self.half_width - x_offset;
         let world_y = self.half_height - y_offset;
 
-        let transformation = self.transformation.invert();
+        let pixel = Point::new(world_x, world_y, -1.0)
+            .apply(&self.inverse_transformation);
 
-        let pixel = Point::new(world_x, world_y, -1.0).apply(&transformation);
-
-        let origin = Point::origin().apply(&transformation);
+        let origin = Point::origin().apply(&self.inverse_transformation);
 
         Ray::new(origin, (pixel - origin).normalise())
     }
@@ -154,7 +156,7 @@ mod tests {
 
         assert_eq!(c.horizontal_size, h);
         assert_eq!(c.vertical_size, v);
-        assert_approx_eq!(c.transformation, t);
+        assert_approx_eq!(c.inverse_transformation, t);
         assert_approx_eq!(c.half_width, 1.0);
         assert_approx_eq!(c.half_height, 0.75);
         assert_approx_eq!(c.pixel_size, 0.012_5);
@@ -194,10 +196,10 @@ mod tests {
         );
 
         let mut c = c;
-        c.transformation = c
-            .transformation
+        c.inverse_transformation = Transformation::new()
             .translate(0.0, -2.0, 5.0)
-            .rotate_y(Angle(FRAC_PI_4));
+            .rotate_y(Angle(FRAC_PI_4))
+            .invert();
 
         let sqrt_2_div_2 = SQRT_2 / 2.0;
         assert_approx_eq!(

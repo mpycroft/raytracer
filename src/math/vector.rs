@@ -1,16 +1,16 @@
 use std::ops::Mul;
 
 use derive_more::{
-    Add, AddAssign, Constructor, Div, DivAssign, Mul, MulAssign, Neg, Sub,
-    SubAssign,
+    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign,
 };
+use derive_new::new;
 
 use super::float::{approx_eq, impl_approx_eq};
 
 /// A Vector is a representation of a geometric vector, pointing in a given
 /// direction and with a magnitude.
 #[rustfmt::skip]
-#[derive(Clone, Copy, Debug, Constructor, Neg)]
+#[derive(Clone, Copy, Debug, new, Neg)]
 #[derive(Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div, DivAssign)]
 pub struct Vector {
     pub x: f64,

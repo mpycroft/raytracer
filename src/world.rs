@@ -1,6 +1,6 @@
 use crate::{
     intersection::{Computations, Intersectable, List},
-    math::{Point, Ray},
+    math::{float::approx_eq, Point, Ray},
     Colour, Object, PointLight,
 };
 
@@ -27,12 +27,13 @@ impl World {
     }
 
     #[must_use]
-    pub fn colour_at(&self, ray: &Ray) -> Colour {
+    pub fn colour_at(&self, ray: &Ray, depth: u32) -> Colour {
         if let Some(intersections) = self.intersect(ray) {
             if let Some(hit) = intersections.hit() {
-                let computations = hit.prepare_computations(ray);
+                let computations =
+                    hit.prepare_computations(ray, &intersections);
 
-                return self.shade_hit(&computations);
+                return self.shade_hit(&computations, depth);
             }
         }
 
@@ -40,11 +41,11 @@ impl World {
     }
 
     #[must_use]
-    pub fn shade_hit(&self, computations: &Computations) -> Colour {
-        let mut colour = Colour::black();
+    pub fn shade_hit(&self, computations: &Computations, depth: u32) -> Colour {
+        let mut surface = Colour::black();
 
         for light in &self.lights {
-            colour += computations.object.material.lighting(
+            surface += computations.object.material.lighting(
                 computations.object,
                 light,
                 &computations.over_point,
@@ -54,7 +55,21 @@ impl World {
             );
         }
 
-        colour
+        let reflected = self.reflected_colour(computations, depth);
+
+        let refracted = self.refracted_colour(computations, depth);
+
+        if computations.object.material.reflective > 0.0
+            && computations.object.material.transparency > 0.0
+        {
+            let reflectance = computations.schlick();
+
+            return surface
+                + reflected * reflectance
+                + refracted * (1.0 - reflectance);
+        }
+
+        surface + reflected + refracted
     }
 
     #[must_use]
@@ -87,13 +102,62 @@ impl World {
 
         if let Some(intersections) = self.intersect(&ray) {
             if let Some(hit) = intersections.hit() {
-                if hit.t < distance {
+                if hit.object.casts_shadow && hit.t < distance {
                     return true;
                 }
             }
         }
 
         false
+    }
+
+    #[must_use]
+    pub fn reflected_colour(
+        &self,
+        computations: &Computations,
+        depth: u32,
+    ) -> Colour {
+        if depth == 0 || computations.object.material.reflective <= 0.0 {
+            return Colour::black();
+        }
+
+        let reflect_ray =
+            Ray::new(computations.over_point, computations.reflect);
+
+        let colour = self.colour_at(&reflect_ray, depth - 1);
+
+        colour * computations.object.material.reflective
+    }
+
+    #[must_use]
+    pub fn refracted_colour(
+        &self,
+        computations: &Computations,
+        depth: u32,
+    ) -> Colour {
+        if depth == 0
+            || approx_eq!(computations.object.material.transparency, 0.0)
+        {
+            return Colour::black();
+        }
+
+        // Use Snell's Law to determine if we have total internal reflection.
+        let n_ratio = computations.n1 / computations.n2;
+        let cos_i = computations.eye.dot(&computations.normal);
+        let sin2_t = n_ratio.powi(2) * (1.0 - cos_i.powi(2));
+
+        if sin2_t > 1.0 {
+            return Colour::black();
+        }
+
+        let cos_t = (1.0 - sin2_t).sqrt();
+        let direction = computations.normal * (n_ratio * cos_i - cos_t)
+            - computations.eye * n_ratio;
+
+        let refracted_ray = Ray::new(computations.under_point, direction);
+
+        self.colour_at(&refracted_ray, depth - 1)
+            * computations.object.material.transparency
     }
 }
 
@@ -105,12 +169,12 @@ impl Default for World {
 
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::FRAC_PI_2;
+    use std::f64::consts::{FRAC_PI_2, SQRT_2};
 
     use super::*;
     use crate::{
         math::{float::*, Angle, Transformation, Vector},
-        Camera, Intersection, Material,
+        Camera, Intersection, Material, Pattern,
     };
 
     fn test_world() -> World {
@@ -124,10 +188,12 @@ mod tests {
                 specular: 0.2,
                 ..Default::default()
             },
+            true,
         ));
         w.add_object(Object::new_sphere(
             Transformation::new().scale(0.5, 0.5, 0.5),
             Material::default(),
+            true,
         ));
 
         w.add_light(PointLight::new(
@@ -157,6 +223,7 @@ mod tests {
         let o2 = Object::new_sphere(
             Transformation::new().translate(1.0, 2.0, 3.0),
             Material::default(),
+            true,
         );
 
         w.add_object(o1.clone());
@@ -183,7 +250,7 @@ mod tests {
 
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::y_axis());
 
-        assert_approx_eq!(w.colour_at(&r), Colour::black());
+        assert_approx_eq!(w.colour_at(&r, 5), Colour::black());
     }
 
     #[test]
@@ -193,7 +260,7 @@ mod tests {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
 
         assert_approx_eq!(
-            w.colour_at(&r),
+            w.colour_at(&r, 2),
             Colour::new(0.380_66, 0.475_83, 0.285_5),
             epsilon = 0.000_01
         );
@@ -208,7 +275,29 @@ mod tests {
 
         let r = Ray::new(Point::new(0.0, 0.0, 0.75), -Vector::z_axis());
 
-        assert_approx_eq!(w.colour_at(&r), Colour::white());
+        assert_approx_eq!(w.colour_at(&r, 1), Colour::white());
+    }
+
+    #[test]
+    fn colour_at_with_mutually_reflective_surfaces() {
+        let mut w = World::new();
+
+        w.add_light(PointLight::new(Point::origin(), Colour::white()));
+
+        w.add_object(Object::new_plane(
+            Transformation::new().translate(0.0, 1.0, 0.0),
+            Material { reflective: 1.0, ..Default::default() },
+            true,
+        ));
+        w.add_object(Object::new_plane(
+            Transformation::new().translate(0.0, -1.0, 0.0),
+            Material { reflective: 1.0, ..Default::default() },
+            true,
+        ));
+
+        let r = Ray::new(Point::origin(), Vector::y_axis());
+
+        let _ = w.colour_at(&r, 5);
     }
 
     #[test]
@@ -219,10 +308,10 @@ mod tests {
 
         let i = Intersection::new(&w.objects[0], 4.0);
 
-        let c = i.prepare_computations(&r);
+        let c = i.prepare_computations(&r, &List::from(i));
 
         assert_approx_eq!(
-            w.shade_hit(&c),
+            w.shade_hit(&c, 5),
             Colour::new(0.380_66, 0.475_83, 0.285_5),
             epsilon = 0.000_01
         );
@@ -242,10 +331,10 @@ mod tests {
 
         let i = Intersection::new(&w.objects[1], 0.5);
 
-        let c = i.prepare_computations(&r);
+        let c = i.prepare_computations(&r, &List::from(i));
 
         assert_approx_eq!(
-            w.shade_hit(&c),
+            w.shade_hit(&c, 5),
             Colour::new(0.904_98, 0.904_98, 0.904_98),
             epsilon = 0.000_01
         );
@@ -266,6 +355,7 @@ mod tests {
         let o = Object::new_sphere(
             Transformation::new().translate(0.0, 0.0, 10.0),
             Material::default(),
+            true,
         );
         w.add_object(o.clone());
 
@@ -273,9 +363,126 @@ mod tests {
 
         let i = Intersection::new(&o, 4.0);
 
-        let c = i.prepare_computations(&r);
+        let c = i.prepare_computations(&r, &List::from(i));
 
-        assert_approx_eq!(w.shade_hit(&c), Colour::new(0.1, 0.1, 0.1));
+        assert_approx_eq!(w.shade_hit(&c, 3), Colour::new(0.1, 0.1, 0.1));
+    }
+
+    #[test]
+    fn shade_hit_with_a_reflective_material() {
+        let mut w = test_world();
+
+        w.add_object(Object::new_plane(
+            Transformation::new().translate(0.0, -1.0, 0.0),
+            Material { reflective: 0.5, ..Default::default() },
+            true,
+        ));
+
+        let sqrt_2_div_2 = SQRT_2 / 2.0;
+
+        let r = Ray::new(
+            Point::new(0.0, 0.0, -3.0),
+            Vector::new(0.0, -sqrt_2_div_2, sqrt_2_div_2),
+        );
+
+        let i = Intersection::new(&w.objects[2], SQRT_2);
+
+        let c = i.prepare_computations(&r, &List::from(i));
+
+        assert_approx_eq!(
+            w.shade_hit(&c, 5),
+            Colour::new(0.876_76, 0.924_34, 0.829_17),
+            epsilon = 0.000_01
+        );
+    }
+
+    #[test]
+    #[allow(clippy::many_single_char_names)]
+    fn shade_hit_with_a_transparent_material() {
+        let mut w = test_world();
+
+        w.add_object(Object::new_plane(
+            Transformation::new().translate(0.0, -1.0, 0.0),
+            Material {
+                transparency: 0.5,
+                refractive_index: 1.5,
+                ..Default::default()
+            },
+            true,
+        ));
+        w.add_object(Object::new_sphere(
+            Transformation::new().translate(0.0, -3.5, -0.5),
+            Material {
+                pattern: Colour::red().into(),
+                ambient: 0.5,
+                ..Default::default()
+            },
+            true,
+        ));
+
+        let o = &w.objects[2];
+
+        let sqrt_2_div_2 = SQRT_2 / 2.0;
+
+        let r = Ray::new(
+            Point::new(0.0, 0.0, -3.0),
+            Vector::new(0.0, -sqrt_2_div_2, sqrt_2_div_2),
+        );
+
+        let l = List::from(Intersection::new(o, SQRT_2));
+
+        let c = l[0].prepare_computations(&r, &l);
+
+        assert_approx_eq!(
+            w.shade_hit(&c, 5),
+            Colour::new(0.936_43, 0.686_43, 0.686_43),
+            epsilon = 0.000_01
+        );
+    }
+
+    #[test]
+    #[allow(clippy::many_single_char_names)]
+    fn shade_hit_with_a_reflective_transparent_material() {
+        let mut w = test_world();
+
+        w.add_object(Object::new_plane(
+            Transformation::new().translate(0.0, -1.0, 0.0),
+            Material {
+                reflective: 0.5,
+                transparency: 0.5,
+                refractive_index: 1.5,
+                ..Default::default()
+            },
+            true,
+        ));
+        w.add_object(Object::new_sphere(
+            Transformation::new().translate(0.0, -3.5, -0.5),
+            Material {
+                pattern: Colour::red().into(),
+                ambient: 0.5,
+                ..Default::default()
+            },
+            true,
+        ));
+
+        let o = &w.objects[2];
+
+        let sqrt_2_div_2 = SQRT_2 / 2.0;
+
+        let r = Ray::new(
+            Point::new(0.0, 0.0, -3.0),
+            Vector::new(0.0, -sqrt_2_div_2, sqrt_2_div_2),
+        );
+
+        let l = List::from(Intersection::new(o, SQRT_2));
+
+        let c = l[0].prepare_computations(&r, &l);
+
+        assert_approx_eq!(
+            w.shade_hit(&c, 5),
+            Colour::new(0.933_92, 0.696_43, 0.692_43),
+            epsilon = 0.000_01
+        );
     }
 
     #[test]
@@ -310,7 +517,7 @@ mod tests {
             ),
         );
 
-        let i = c.render(&w, true);
+        let i = c.render(&w, 5, true);
 
         assert_approx_eq!(
             i.get_pixel(5, 5),
@@ -334,6 +541,14 @@ mod tests {
     }
 
     #[test]
+    fn no_shadow_when_an_object_does_not_cast_shadow() {
+        let mut w = test_world();
+        w.objects[0].casts_shadow = false;
+
+        assert!(!w.is_shadowed(&w.lights[0], &Point::new(10.0, -10.0, 10.0)));
+    }
+
+    #[test]
     fn no_shadow_when_an_object_is_behind_the_light() {
         let w = test_world();
 
@@ -345,5 +560,169 @@ mod tests {
         let w = test_world();
 
         assert!(!w.is_shadowed(&w.lights[0], &Point::new(-2.0, 2.0, -2.0)));
+    }
+
+    #[test]
+    #[allow(clippy::many_single_char_names)]
+    fn the_reflected_colour_for_a_non_reflective_material() {
+        let mut w = test_world();
+
+        let r = Ray::new(Point::origin(), Vector::z_axis());
+
+        w.objects[1].material.ambient = 1.0;
+        let o = &w.objects[1];
+
+        let i = Intersection::new(o, 1.0);
+
+        let c = i.prepare_computations(&r, &List::from(i));
+
+        assert_approx_eq!(w.reflected_colour(&c, 3), Colour::black());
+    }
+
+    #[test]
+    fn the_reflected_colour_for_a_reflective_material() {
+        let mut w = test_world();
+
+        w.add_object(Object::new_plane(
+            Transformation::new().translate(0.0, -1.0, 0.0),
+            Material { reflective: 0.5, ..Default::default() },
+            true,
+        ));
+
+        let sqrt_2_div_2 = SQRT_2 / 2.0;
+
+        let r = Ray::new(
+            Point::new(0.0, 0.0, -3.0),
+            Vector::new(0.0, -sqrt_2_div_2, sqrt_2_div_2),
+        );
+
+        let i = Intersection::new(&w.objects[2], SQRT_2);
+
+        let c = i.prepare_computations(&r, &List::from(i));
+
+        assert_approx_eq!(
+            w.reflected_colour(&c, 4),
+            Colour::new(0.190_33, 0.237_91, 0.142_74),
+            epsilon = 0.000_01
+        );
+    }
+
+    #[test]
+    fn the_reflected_colour_at_the_maximum_recursion_depth() {
+        let mut w = test_world();
+
+        w.add_object(Object::new_plane(
+            Transformation::new().translate(0.0, -1.0, 0.0),
+            Material { reflective: 0.5, ..Default::default() },
+            true,
+        ));
+
+        let sqrt_2_div_2 = SQRT_2 / 2.0;
+
+        let r = Ray::new(
+            Point::new(0.0, 0.0, -3.0),
+            Vector::new(0.0, -sqrt_2_div_2, sqrt_2_div_2),
+        );
+
+        let i = Intersection::new(&w.objects[2], SQRT_2);
+
+        let c = i.prepare_computations(&r, &List::from(i));
+
+        assert_approx_eq!(w.reflected_colour(&c, 0), Colour::black());
+    }
+
+    #[test]
+    #[allow(clippy::many_single_char_names)]
+    fn the_refracted_colour_with_an_opaque_surface() {
+        let w = test_world();
+
+        let o = &w.objects[0];
+
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
+
+        let l = List::from(vec![
+            Intersection::new(o, 4.0),
+            Intersection::new(o, 6.0),
+        ]);
+
+        let c = l[0].prepare_computations(&r, &l);
+
+        assert_approx_eq!(w.refracted_colour(&c, 5), Colour::black());
+    }
+
+    #[test]
+    #[allow(clippy::many_single_char_names)]
+    fn the_refracted_colour_at_the_maximum_recursion_depth() {
+        let mut w = test_world();
+        w.objects[0].material.transparency = 1.0;
+        w.objects[0].material.refractive_index = 1.5;
+
+        let o = &w.objects[0];
+
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
+
+        let l = List::from(vec![
+            Intersection::new(o, 4.0),
+            Intersection::new(o, 6.0),
+        ]);
+
+        let c = l[0].prepare_computations(&r, &l);
+
+        assert_approx_eq!(w.refracted_colour(&c, 0), Colour::black());
+    }
+
+    #[test]
+    #[allow(clippy::many_single_char_names)]
+    fn the_refracted_colour_under_total_internal_reflection() {
+        let mut w = test_world();
+        w.objects[0].material.transparency = 1.0;
+        w.objects[0].material.refractive_index = 1.5;
+
+        let o = &w.objects[0];
+
+        let sqrt_2_div_2 = SQRT_2 / 2.0;
+
+        let r = Ray::new(Point::new(0.0, 0.0, sqrt_2_div_2), Vector::y_axis());
+
+        let l = List::from(vec![
+            Intersection::new(o, -sqrt_2_div_2),
+            Intersection::new(o, sqrt_2_div_2),
+        ]);
+
+        let c = l[1].prepare_computations(&r, &l);
+
+        assert_approx_eq!(w.refracted_colour(&c, 5), Colour::black());
+    }
+
+    #[test]
+    fn the_refracted_colour_with_a_reflected_ray() {
+        let mut w = test_world();
+        w.objects[0].material = Material {
+            pattern: Pattern::default_test(),
+            ambient: 1.0,
+            ..Default::default()
+        };
+        w.objects[1].material.transparency = 1.0;
+        w.objects[1].material.refractive_index = 1.5;
+
+        let o1 = &w.objects[0];
+        let o2 = &w.objects[1];
+
+        let r = Ray::new(Point::new(0.0, 0.0, 0.1), Vector::y_axis());
+
+        let l = List::from(vec![
+            Intersection::new(o1, -0.989_9),
+            Intersection::new(o2, -0.489_9),
+            Intersection::new(o2, 0.489_9),
+            Intersection::new(o1, 0.989_9),
+        ]);
+
+        let c = l[2].prepare_computations(&r, &l);
+
+        assert_approx_eq!(
+            w.refracted_colour(&c, 5),
+            Colour::new(0.0, 0.998_88, 0.047_22),
+            epsilon = 0.000_01
+        );
     }
 }

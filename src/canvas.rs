@@ -30,7 +30,7 @@ impl Canvas {
         let mut data = format!("P3\n{} {}\n255\n", self.width, self.height);
 
         for pixel in &self.pixels {
-            let (red, green, blue) = pixel.to_u8();
+            let [red, green, blue] = pixel.to_u8();
 
             data.push_str(&format!("{red} {green} {blue}\n"));
         }
