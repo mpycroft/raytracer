@@ -8,7 +8,7 @@ use anyhow::{bail, Result};
 use derive_more::{Index, IndexMut, IntoIterator};
 use float_cmp::{ApproxEq, F64Margin};
 
-use super::{float::approx_eq, Point, Vector};
+use super::{float::approx_eq, Angle, Point, Vector};
 
 /// A Matrix is a square matrix of size N, stored in row major order.
 #[derive(Clone, Copy, Index, IndexMut, IntoIterator)]
@@ -150,8 +150,8 @@ impl Matrix<4> {
     }
 
     #[must_use]
-    pub fn rotate_x(radians: f64) -> Self {
-        let (sin, cos) = radians.sin_cos();
+    pub fn rotate_x(angle: Angle) -> Self {
+        let (sin, cos) = angle.sin_cos();
 
         Self([
             [1.0, 0.0, 0.0, 0.0],
@@ -162,8 +162,8 @@ impl Matrix<4> {
     }
 
     #[must_use]
-    pub fn rotate_y(radians: f64) -> Self {
-        let (sin, cos) = radians.sin_cos();
+    pub fn rotate_y(angle: Angle) -> Self {
+        let (sin, cos) = angle.sin_cos();
 
         Self([
             [cos, 0.0, sin, 0.0],
@@ -174,8 +174,8 @@ impl Matrix<4> {
     }
 
     #[must_use]
-    pub fn rotate_z(radians: f64) -> Self {
-        let (sin, cos) = radians.sin_cos();
+    pub fn rotate_z(angle: Angle) -> Self {
+        let (sin, cos) = angle.sin_cos();
 
         Self([
             [cos, -sin, 0.0, 0.0],
@@ -523,7 +523,7 @@ mod tests {
     fn multiplying_by_a_rotate_x_matrix() {
         let p = Point::new(0.0, 1.0, 0.0);
 
-        let half = Matrix::rotate_x(FRAC_PI_4);
+        let half = Matrix::rotate_x(Angle(FRAC_PI_4));
 
         let sqrt_2_div_2 = SQRT_2 / 2.0;
         assert_approx_eq!(
@@ -532,8 +532,8 @@ mod tests {
         );
 
         assert_approx_eq!(
-            Matrix::rotate_x(FRAC_PI_2) * Vector::y_axis(),
-            Vector::new(0.0, 0.0, 1.0)
+            Matrix::rotate_x(Angle(FRAC_PI_2)) * Vector::y_axis(),
+            Vector::z_axis()
         );
 
         assert_approx_eq!(
@@ -546,7 +546,7 @@ mod tests {
     fn multiplying_by_a_rotate_y_matrix() {
         let p = Point::new(0.0, 0.0, 1.0);
 
-        let half = Matrix::rotate_y(FRAC_PI_4);
+        let half = Matrix::rotate_y(Angle::from_degrees(45.0));
 
         let sqrt_2_div_2 = SQRT_2 / 2.0;
         assert_approx_eq!(
@@ -555,8 +555,8 @@ mod tests {
         );
 
         assert_approx_eq!(
-            Matrix::rotate_y(FRAC_PI_2) * Vector::z_axis(),
-            Vector::new(1.0, 0.0, 0.0)
+            Matrix::rotate_y(Angle(FRAC_PI_2)) * Vector::z_axis(),
+            Vector::x_axis()
         );
 
         assert_approx_eq!(
@@ -569,7 +569,7 @@ mod tests {
     fn multiplying_by_a_rotate_z_matrix() {
         let p = Point::new(0.0, 1.0, 0.0);
 
-        let half = Matrix::rotate_z(FRAC_PI_4);
+        let half = Matrix::rotate_z(Angle(FRAC_PI_4));
 
         let sqrt_2_div_2 = SQRT_2 / 2.0;
         assert_approx_eq!(
@@ -578,8 +578,8 @@ mod tests {
         );
 
         assert_approx_eq!(
-            Matrix::rotate_z(FRAC_PI_2) * Vector::y_axis(),
-            Vector::new(-1.0, 0.0, 0.0)
+            Matrix::rotate_z(Angle::from_degrees(90.0)) * Vector::y_axis(),
+            -Vector::x_axis()
         );
 
         assert_approx_eq!(
@@ -629,7 +629,7 @@ mod tests {
     fn chaining_multiple_transformations() {
         let o = Point::new(1.0, 0.0, 1.0);
 
-        let r = Matrix::rotate_x(FRAC_PI_2);
+        let r = Matrix::rotate_x(Angle(FRAC_PI_2));
         let s = Matrix::scale(5.0, 5.0, 5.0);
         let t = Matrix::translate(10.0, 5.0, 7.0);
 

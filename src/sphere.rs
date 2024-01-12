@@ -67,11 +67,11 @@ impl_approx_eq!(Sphere { transformation, material });
 
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::{FRAC_1_SQRT_2, PI, SQRT_2};
+    use std::f64::consts::{FRAC_1_SQRT_2, SQRT_2};
 
     use super::*;
     use crate::{
-        math::{float::*, Vector},
+        math::{float::*, Angle, Vector},
         Colour,
     };
 
@@ -249,7 +249,9 @@ mod tests {
     #[test]
     fn computing_the_normal_on_a_transformed_sphere() {
         let s = Sphere::new(
-            Transformation::new().rotate_z(PI / 5.0).scale(1.0, 0.5, 1.0),
+            Transformation::new()
+                .rotate_z(Angle::from_degrees(36.0))
+                .scale(1.0, 0.5, 1.0),
             Material::default(),
         );
 

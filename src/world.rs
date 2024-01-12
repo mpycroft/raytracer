@@ -1,6 +1,6 @@
 use crate::{
     intersect::{Computations, Intersectable, IntersectionList},
-    math::Ray,
+    math::{Point, Ray},
     Colour, PointLight, Sphere,
 };
 
@@ -46,15 +46,17 @@ impl World {
         for light in &self.lights {
             colour += computations.object.material.lighting(
                 light,
-                &computations.point,
+                &computations.over_point,
                 &computations.eye,
                 &computations.normal,
+                self.is_shadowed(light, &computations.over_point),
             );
         }
 
         colour
     }
 
+    #[must_use]
     fn intersect(&self, ray: &Ray) -> Option<IntersectionList> {
         let mut list = IntersectionList::new();
 
@@ -72,6 +74,26 @@ impl World {
 
         Some(list)
     }
+
+    #[must_use]
+    pub fn is_shadowed(&self, light: &PointLight, point: &Point) -> bool {
+        let vector = light.position - *point;
+
+        let distance = vector.magnitude();
+        let direction = vector.normalise();
+
+        let ray = Ray::new(*point, direction);
+
+        if let Some(intersections) = self.intersect(&ray) {
+            if let Some(hit) = intersections.hit() {
+                if hit.t < distance {
+                    return true;
+                }
+            }
+        }
+
+        false
+    }
 }
 
 impl Default for World {
@@ -87,8 +109,8 @@ mod tests {
     use super::*;
     use crate::{
         intersect::Intersection,
-        math::{float::assert_approx_eq, Point, Transformation, Vector},
-        Camera, Colour, Material,
+        math::{float::assert_approx_eq, Angle, Transformation, Vector},
+        Camera, Material,
     };
 
     fn test_world() -> World {
@@ -230,6 +252,33 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::many_single_char_names)]
+    fn colour_when_intersection_is_in_shadow() {
+        let mut w = World::new();
+
+        w.add_light(PointLight::new(
+            Point::new(0.0, 0.0, -10.0),
+            Colour::white(),
+        ));
+
+        w.add_object(Sphere::default());
+
+        let s = Sphere::new(
+            Transformation::new().translate(0.0, 0.0, 10.0),
+            Material::default(),
+        );
+        w.add_object(s);
+
+        let r = Ray::new(Point::new(0.0, 0.0, 5.0), Vector::z_axis());
+
+        let i = Intersection::new(&s, 4.0);
+
+        let c = i.prepare_computations(&r);
+
+        assert_approx_eq!(w.shade_hit(&c), Colour::new(0.1, 0.1, 0.1));
+    }
+
+    #[test]
     fn intersect_a_world_with_a_ray() {
         let w = test_world();
 
@@ -253,7 +302,7 @@ mod tests {
         let c = Camera::new(
             11,
             11,
-            FRAC_PI_2,
+            Angle(FRAC_PI_2),
             Transformation::view_transformation(
                 &Point::new(0.0, 0.0, -5.0),
                 &Point::origin(),
@@ -261,12 +310,40 @@ mod tests {
             ),
         );
 
-        let i = c.render(&w);
+        let i = c.render(&w, true);
 
         assert_approx_eq!(
             i.get_pixel(5, 5),
             Colour::new(0.380_66, 0.475_83, 0.285_5),
             epsilon = 0.000_01
         );
+    }
+
+    #[test]
+    fn no_shadow_when_nothing_is_collinear_with_point_and_light() {
+        let w = test_world();
+
+        assert!(!w.is_shadowed(&w.lights[0], &Point::new(0.0, 10.0, 0.0)));
+    }
+
+    #[test]
+    fn shadow_when_an_object_is_between_point_and_light() {
+        let w = test_world();
+
+        assert!(w.is_shadowed(&w.lights[0], &Point::new(10.0, -10.0, 10.0)));
+    }
+
+    #[test]
+    fn no_shadow_when_an_object_is_behind_the_light() {
+        let w = test_world();
+
+        assert!(!w.is_shadowed(&w.lights[0], &Point::new(-20.0, 20.0, -20.0)));
+    }
+
+    #[test]
+    fn no_shadow_when_an_object_is_behind_the_point() {
+        let w = test_world();
+
+        assert!(!w.is_shadowed(&w.lights[0], &Point::new(-2.0, 2.0, -2.0)));
     }
 }

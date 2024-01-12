@@ -1,3 +1,5 @@
+use std::f64::EPSILON;
+
 use derive_more::{Constructor, Deref, DerefMut, From};
 use float_cmp::{ApproxEq, F64Margin};
 
@@ -29,6 +31,7 @@ pub struct Computations<'a> {
     pub object: &'a Sphere,
     pub t: f64,
     pub point: Point,
+    pub over_point: Point,
     pub eye: Vector,
     pub normal: Vector,
     pub inside: bool,
@@ -49,7 +52,17 @@ impl<'a> Intersection<'a> {
             false
         };
 
-        Computations::new(self.object, self.t, point, eye, normal, inside)
+        let over_point = point + normal * 100_000.0 * EPSILON;
+
+        Computations::new(
+            self.object,
+            self.t,
+            point,
+            over_point,
+            eye,
+            normal,
+            inside,
+        )
     }
 }
 
@@ -66,7 +79,7 @@ impl<'a> ApproxEq for Intersection<'a> {
 
 /// A List is a simple wrapper around a vector of Intersections, it gives us
 /// type safety over using a plain Vec and makes it obvious what we are doing.
-#[derive(Clone, Debug, Deref, DerefMut, From)]
+#[derive(Clone, Debug, From, Deref, DerefMut)]
 pub struct IntersectionList<'a>(Vec<Intersection<'a>>);
 
 impl<'a> IntersectionList<'a> {
@@ -148,6 +161,23 @@ mod tests {
         assert_approx_eq!(c.eye, -Vector::z_axis());
         assert_approx_eq!(c.normal, -Vector::z_axis());
         assert!(c.inside);
+    }
+
+    #[test]
+    fn the_hit_should_offset_the_point() {
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
+
+        let s = Sphere::new(
+            Transformation::new().translate(0.0, 0.0, 1.0),
+            Material::default(),
+        );
+
+        let i = Intersection::new(&s, 5.0);
+
+        let c = i.prepare_computations(&r);
+
+        assert!(c.over_point.z < -EPSILON / 2.0);
+        assert!(c.point.z > c.over_point.z);
     }
 
     #[test]

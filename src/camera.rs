@@ -1,5 +1,13 @@
+use std::time::Instant;
+
+use console::Term;
+use indicatif::{
+    HumanCount, HumanDuration, ProgressBar, ProgressFinish, ProgressIterator,
+    ProgressStyle,
+};
+
 use crate::{
-    math::{Point, Ray, Transformable, Transformation},
+    math::{Angle, Point, Ray, Transformable, Transformation},
     Canvas, World,
 };
 
@@ -19,11 +27,10 @@ impl Camera {
     pub fn new(
         horizontal_size: usize,
         vertical_size: usize,
-        field_of_view: f64,
+        field_of_view: Angle,
         transformation: Transformation,
     ) -> Self {
-        let half_view = (field_of_view / 2.0).tan();
-
+        let half_view = (field_of_view.0 / 2.0).tan();
         #[allow(clippy::cast_precision_loss)]
         let horizontal_float = horizontal_size as f64;
         #[allow(clippy::cast_precision_loss)]
@@ -45,11 +52,47 @@ impl Camera {
         }
     }
 
+    /// Renders the given `World` using the given camera.
+    ///
+    /// # Panics
+    ///
+    /// This function should not panic as all the values unwrapped should be
+    /// valid but will if there is an error in the formatting for progress
+    /// somewhere.
     #[must_use]
-    pub fn render(&self, world: &World) -> Canvas {
+    pub fn render(&self, world: &World, quiet: bool) -> Canvas {
+        if !quiet {
+            println!(
+                "Size {} by {}",
+                HumanCount(self.horizontal_size.try_into().unwrap()),
+                HumanCount(self.vertical_size.try_into().unwrap())
+            );
+
+            println!("Rendering scene...");
+        }
+
+        let bar = if quiet {
+            ProgressBar::hidden()
+        } else {
+            ProgressBar::new(self.horizontal_size.try_into().unwrap())
+                .with_style(
+                    ProgressStyle::with_template(
+                        "\
+{prefix} {bar:40.cyan/blue} {human_pos:>7}/{human_len:7} ({percent}%)
+Elapsed: {elapsed}, estimated: {eta}, rows/sec: {per_sec}",
+                    )
+                    .unwrap()
+                    .progress_chars("#>-"),
+                )
+                .with_prefix("Rows")
+                .with_finish(ProgressFinish::AndClear)
+        };
+
+        let started = Instant::now();
+
         let mut canvas = Canvas::new(self.horizontal_size, self.vertical_size);
 
-        for x in 0..self.horizontal_size {
+        for x in (0..self.horizontal_size).progress_with(bar) {
             for y in 0..self.vertical_size {
                 let ray = self.ray_for_pixel(x, y);
 
@@ -57,6 +100,16 @@ impl Camera {
 
                 canvas.write_pixel(x, y, &colour);
             }
+        }
+
+        if !quiet {
+            Term::stdout().clear_last_lines(1).unwrap();
+
+            println!(
+                "Rendering scene...done\nRendered {} rows in {}",
+                HumanCount(self.horizontal_size.try_into().unwrap()),
+                HumanDuration(started.elapsed())
+            );
         }
 
         canvas
@@ -94,7 +147,7 @@ mod tests {
     fn creating_a_camera() {
         let h = 160;
         let v = 120;
-        let f = FRAC_PI_2;
+        let f = Angle(FRAC_PI_2);
         let t = Transformation::new();
 
         let c = Camera::new(h, v, f, t);
@@ -119,7 +172,12 @@ mod tests {
 
     #[test]
     fn constructing_a_ray_through_the_canvas() {
-        let c = Camera::new(201, 101, FRAC_PI_2, Transformation::new());
+        let c = Camera::new(
+            201,
+            101,
+            Angle::from_degrees(90.0),
+            Transformation::new(),
+        );
 
         assert_approx_eq!(
             c.ray_for_pixel(100, 50),
@@ -136,8 +194,10 @@ mod tests {
         );
 
         let mut c = c;
-        c.transformation =
-            c.transformation.translate(0.0, -2.0, 5.0).rotate_y(FRAC_PI_4);
+        c.transformation = c
+            .transformation
+            .translate(0.0, -2.0, 5.0)
+            .rotate_y(Angle(FRAC_PI_4));
 
         let sqrt_2_div_2 = SQRT_2 / 2.0;
         assert_approx_eq!(
