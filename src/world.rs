@@ -525,6 +525,26 @@ mod tests {
     }
 
     #[test]
+    #[should_panic(expected = "\
+Failed to compare floating point values 'NaN' and 'NaN' when sorting \
+intersection list.")]
+    fn intersect_with_nan() {
+        let mut w = World::new();
+
+        w.add_object(
+            Object::sphere_builder()
+                .transformation(Transformation::new().translate(
+                    0.0,
+                    0.0,
+                    f64::NAN,
+                ))
+                .build(),
+        );
+
+        let _ = w.intersect(&Ray::new(Point::origin(), Vector::z_axis()));
+    }
+
+    #[test]
     fn rendering_a_world_with_a_camera() {
         let w = test_world();
         let c = Camera::new(

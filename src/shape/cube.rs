@@ -135,6 +135,10 @@ mod tests {
             normal_at(&Point::new(0.4, 0.4, -1.0)),
             -Vector::z_axis()
         );
+        assert_approx_eq!(
+            normal_at(&Point::new(0.3, 0.4, 1.0)),
+            Vector::z_axis()
+        );
 
         assert_approx_eq!(
             normal_at(&Point::new(1.0, 1.0, 1.0)),

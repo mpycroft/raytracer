@@ -63,6 +63,13 @@ mod tests {
     }
 
     #[test]
+    fn a_perturbed_pattern() {
+        let p = Perturbed::new(0.4, Colour::red().into());
+
+        assert_approx_eq!(p.pattern_at(&Point::origin()), Colour::red());
+    }
+
+    #[test]
     fn comparing_perturbed_patterns() {
         let p1 = Perturbed::new(0.2, Colour::cyan().into());
         let p2 = Perturbed::new(0.2, Colour::cyan().into());

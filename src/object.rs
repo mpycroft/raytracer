@@ -280,6 +280,36 @@ mod tests {
     }
 
     #[test]
+    fn intersecting_a_scaled_cube_with_a_ray() {
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
+
+        let o = Object::cube_builder()
+            .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
+            .build();
+
+        let i = o.intersect(&r);
+        assert!(i.is_some());
+
+        let i = i.unwrap();
+        assert_eq!(i.len(), 2);
+
+        assert_approx_eq!(i[0].object, &o);
+        assert_approx_eq!(i[1].object, &o);
+
+        assert_approx_eq!(i[0].t, 3.0);
+        assert_approx_eq!(i[1].t, 7.0);
+    }
+
+    #[test]
+    fn computing_the_normal_on_a_translated_cube() {
+        let o = Object::cube_builder()
+            .transformation(Transformation::new().translate(1.0, 0.0, 0.0))
+            .build();
+
+        assert_approx_eq!(o.normal_at(&Point::origin()), -Vector::x_axis());
+    }
+
+    #[test]
     fn comparing_objects() {
         let o1 = Object::test_builder().build();
         let o2 = Object::test_builder().build();

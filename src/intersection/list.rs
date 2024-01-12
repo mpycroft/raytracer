@@ -16,22 +16,15 @@ impl<'a> List<'a> {
     /// Find the intersection with the smallest positive t value. Assumes the
     /// list of intersections is not sorted.
     ///
-    /// # Panics
-    ///
-    /// Will panic if any t values are NaN.
+    /// This function should never panic. Our filter of > 0.0 removes any NaN
+    /// values and +-Inf return orderings when compared.
     #[must_use]
     pub fn hit(&self) -> Option<Intersection<'a>> {
         self.0
             .iter()
             .filter(|val| val.t > 0.0)
             .min_by(|a, b| {
-                a.t.partial_cmp(&b.t).unwrap_or_else(|| {
-                    panic!(
-                        "\
-Failed to compare floating point values '{}' and '{}' when finding the hit.",
-                        a.t, b.t
-                    )
-                })
+                a.t.partial_cmp(&b.t).unwrap_or_else(|| unreachable!())
             })
             .copied()
     }
@@ -145,5 +138,25 @@ mod tests {
 
         assert_approx_eq!(h.object, &o);
         assert_approx_eq!(h.t, 2.0);
+    }
+
+    #[test]
+    fn the_hit_with_nan_and_inf() {
+        let o = Object::test_builder().build();
+
+        let h = TList::from(vec![
+            5.0,
+            f64::NAN,
+            f64::INFINITY,
+            2.5,
+            f64::NEG_INFINITY,
+            -f64::NAN,
+        ])
+        .to_list(&o)
+        .hit()
+        .unwrap();
+
+        assert_approx_eq!(h.object, &o);
+        assert_approx_eq!(h.t, 2.5);
     }
 }
