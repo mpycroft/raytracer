@@ -3,7 +3,7 @@
 use std::f64::{EPSILON, INFINITY};
 
 use crate::{
-    intersection::ListBuilder,
+    intersection::TList,
     math::{Point, Ray, Vector},
 };
 
@@ -26,7 +26,7 @@ fn check_axis(origin: f64, direction: f64) -> (f64, f64) {
 }
 
 #[must_use]
-pub fn intersect<'a>(ray: &Ray) -> Option<ListBuilder<'a>> {
+pub fn intersect(ray: &Ray) -> Option<TList> {
     let (x_min, x_max) = check_axis(ray.origin.x, ray.direction.x);
     let (y_min, y_max) = check_axis(ray.origin.y, ray.direction.y);
     let (z_min, z_max) = check_axis(ray.origin.z, ray.direction.z);
@@ -38,7 +38,7 @@ pub fn intersect<'a>(ray: &Ray) -> Option<ListBuilder<'a>> {
         return None;
     }
 
-    Some(ListBuilder::new().add_t(min).add_t(max))
+    Some(TList::from(vec![min, max]))
 }
 
 #[must_use]
@@ -63,20 +63,15 @@ pub fn normal_at(point: &Point) -> Vector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        math::{float::*, Vector},
-        Object,
-    };
+    use crate::math::{float::*, Vector};
 
     #[test]
     fn a_ray_intersects_a_cube() {
-        let o = Object::test_builder().build();
-
         let test = |r: &Ray, t1: f64, t2: f64| {
-            let l = intersect(r).unwrap().object(&o).build();
+            let l = intersect(r).unwrap();
 
-            assert_approx_eq!(l[0].t, t1);
-            assert_approx_eq!(l[1].t, t2);
+            assert_approx_eq!(l[0], t1);
+            assert_approx_eq!(l[1], t2);
         };
 
         test(&Ray::new(Point::new(5.0, 0.5, 0.0), -Vector::x_axis()), 4.0, 6.0);

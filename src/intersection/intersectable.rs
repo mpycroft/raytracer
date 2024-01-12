@@ -1,14 +1,14 @@
 use enum_dispatch::enum_dispatch;
 
-use super::ListBuilder;
+use super::List;
 use crate::math::{Point, Ray, Vector};
 
 /// A trait that `Object`s need to implement if they can be intersected in a
-/// scene, returns an optional `ListBuilder` for constructing a `List`.
+/// scene, returns an optional `List`.
 #[enum_dispatch(Shape)]
 pub trait Intersectable {
     #[must_use]
-    fn intersect<'a>(&'a self, ray: &Ray) -> Option<ListBuilder<'a>>;
+    fn intersect(&self, ray: &Ray) -> Option<List>;
 
     #[must_use]
     fn normal_at(&self, point: &Point) -> Vector;

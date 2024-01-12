@@ -1,17 +1,17 @@
 //! A `Plane` is an infinitely large plane situated along the x and z axes.
 
 use crate::{
-    intersection::ListBuilder,
+    intersection::TList,
     math::{float::approx_eq, Point, Ray, Vector},
 };
 
 #[must_use]
-pub fn intersect<'a>(ray: &Ray) -> Option<ListBuilder<'a>> {
+pub fn intersect(ray: &Ray) -> Option<TList> {
     if approx_eq!(ray.direction.y, 0.0) {
         return None;
     }
 
-    Some(ListBuilder::new().add_t(-ray.origin.y / ray.direction.y))
+    Some(TList::from(-ray.origin.y / ray.direction.y))
 }
 
 #[must_use]
@@ -22,7 +22,7 @@ pub fn normal_at(_point: &Point) -> Vector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, Object};
+    use crate::math::float::*;
 
     #[test]
     fn intersect_with_a_ray_parallel_to_the_plane() {
@@ -39,30 +39,22 @@ mod tests {
 
     #[test]
     fn a_ray_intersecting_a_plane_from_above() {
-        let b =
-            intersect(&Ray::new(Point::new(0.0, 1.0, 0.0), -Vector::y_axis()));
+        let l =
+            intersect(&Ray::new(Point::new(0.0, 1.0, 0.0), -Vector::y_axis()))
+                .unwrap();
 
-        assert!(b.is_some());
-
-        let o = Object::plane_builder().build();
-        let i = b.unwrap().object(&o).build();
-
-        assert_eq!(i.len(), 1);
-        assert_approx_eq!(i[0].t, 1.0);
+        assert_eq!(l.len(), 1);
+        assert_approx_eq!(l[0], 1.0);
     }
 
     #[test]
     fn a_ray_intersecting_a_plane_from_below() {
-        let b =
-            intersect(&Ray::new(Point::new(0.0, -1.0, 0.0), Vector::y_axis()));
+        let l =
+            intersect(&Ray::new(Point::new(0.0, -1.0, 0.0), Vector::y_axis()))
+                .unwrap();
 
-        assert!(b.is_some());
-
-        let o = Object::plane_builder().build();
-        let i = b.unwrap().object(&o).build();
-
-        assert_eq!(i.len(), 1);
-        assert_approx_eq!(i[0].t, 1.0);
+        assert_eq!(l.len(), 1);
+        assert_approx_eq!(l[0], 1.0);
     }
 
     #[test]

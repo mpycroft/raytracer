@@ -2,9 +2,8 @@ use derive_more::{Deref, DerefMut, From};
 
 use super::Intersection;
 
-/// An `IntersectionList` is a simple wrapper around a vector of Intersections,
-/// it gives us type safety over using a plain Vec and makes it obvious what we
-/// are doing.
+/// A `List` is a simple wrapper around a vector of `Intersection`s, it gives us
+/// type safety over using a plain Vec and makes it obvious what we are doing.
 #[derive(Clone, Debug, From, Deref, DerefMut)]
 pub struct List<'a>(Vec<Intersection<'a>>);
 
@@ -45,47 +44,55 @@ impl<'a> Default for List<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{intersection::ListBuilder, math::float::*, Object};
+    use crate::{intersection::TList, math::float::*, Object};
 
     #[test]
-    fn creating_an_intersection_list() {
-        let mut l = List::new();
-        assert_eq!(l.len(), 0);
+    fn creating_a_list() {
+        assert_eq!(List::new().len(), 0);
+
+        assert_eq!(List::default().len(), 0);
 
         let o = Object::test_builder().build();
-        l.push(Intersection::new(&o, 1.2));
 
-        assert_eq!(l.len(), 1);
-        assert_approx_eq!(l[0].object, &o);
-        assert_approx_eq!(l[0].t, 1.2);
+        assert_eq!(List::from(Intersection::new(&o, -1.1)).len(), 1);
 
-        let l = List::default();
-        assert_eq!(l.len(), 0);
-
-        let l = List::from(vec![
-            Intersection::new(&o, 1.0),
-            Intersection::new(&o, 2.0),
-        ]);
-
-        assert_eq!(l.len(), 2);
-        assert_approx_eq!(l[0].t, 1.0);
-        assert_approx_eq!(l[1].t, 2.0);
+        assert_eq!(
+            List::from(vec![
+                Intersection::new(&o, 1.0),
+                Intersection::new(&o, 2.5)
+            ])
+            .len(),
+            2
+        );
     }
 
     #[test]
-    fn dereferencing_an_intersection_list() {
+    fn adding_to_a_list() {
+        let mut l = List::new();
+
         let o = Object::test_builder().build();
-        let i1 = Intersection::new(&o, 1.5);
-        let i2 = Intersection::new(&o, 2.5);
+
+        l.push(Intersection::new(&o, 1.2));
+        l.push(Intersection::new(&o, 3.5));
+        l.push(Intersection::new(&o, 2.1));
+
+        assert_eq!(l.len(), 3);
+    }
+
+    #[test]
+    fn dereferencing_a_list() {
+        let o = Object::test_builder().build();
+        let i1 = Intersection::new(&o, 1.2);
+        let i2 = Intersection::new(&o, 2.4);
 
         let mut l = List::from(vec![i1, i2]);
 
         assert_approx_eq!(l[0], i1);
         assert_approx_eq!(l[1], i2);
 
-        l[0].t = 0.0;
+        l[0].t = 5.0;
 
-        assert_approx_eq!(l[0].t, 0.0);
+        assert_approx_eq!(l[0].t, 5.0);
     }
 
     #[test]
@@ -118,27 +125,15 @@ mod tests {
         let i1 = Intersection::new(&o, -2.0);
         let i2 = Intersection::new(&o, -1.0);
 
-        let h = List::from(vec![i1, i2]).hit();
-
-        assert!(h.is_none());
+        assert!(List::from(vec![i1, i2]).hit().is_none());
     }
 
     #[test]
     fn the_hit_is_always_the_lowest_nonnegative_intersection() {
         let o = Object::test_builder().build();
 
-        let h = ListBuilder::new()
-            .object(&o)
-            .add_t(5.0)
-            .add_t(7.0)
-            .add_t(-3.0)
-            .add_t(2.0)
-            .build()
-            .hit();
-
-        assert!(h.is_some());
-
-        let h = h.unwrap();
+        let h =
+            TList::from(vec![5.0, 7.0, -3.0, 2.0]).to_list(&o).hit().unwrap();
 
         assert_approx_eq!(h.object, &o);
         assert_approx_eq!(h.t, 2.0);

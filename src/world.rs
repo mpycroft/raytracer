@@ -77,8 +77,8 @@ impl World {
         let mut list = List::new();
 
         for obj in &self.objects {
-            if let Some(intersects) = obj.intersect(ray) {
-                list.append(&mut *intersects.build());
+            if let Some(mut intersects) = obj.intersect(ray) {
+                list.append(&mut *intersects);
             }
         }
 

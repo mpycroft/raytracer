@@ -2,7 +2,7 @@ use paste::paste;
 use typed_builder::{Optional, TypedBuilder};
 
 use crate::{
-    intersection::{Intersectable, ListBuilder},
+    intersection::{Intersectable, List},
     math::{
         float::impl_approx_eq, Point, Ray, Transformable, Transformation,
         Vector,
@@ -58,14 +58,14 @@ impl Object {
 }
 
 impl Intersectable for Object {
-    fn intersect<'a>(&'a self, ray: &Ray) -> Option<ListBuilder<'a>> {
+    fn intersect(&self, ray: &Ray) -> Option<List> {
         let ray = self.to_object_space(ray);
 
-        let Some(builder) = self.shape.intersect(&ray) else {
+        let Some(t_list) = self.shape.intersect(&ray) else {
             return None;
         };
 
-        Some(builder.object(self))
+        Some(t_list.to_list(self))
     }
 
     fn normal_at(&self, point: &Point) -> Vector {
@@ -170,8 +170,7 @@ mod tests {
             .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
             .build();
 
-        let i = o.intersect(&r);
-        let l = i.unwrap().object(&o).build();
+        let l = o.intersect(&r).unwrap();
 
         assert_approx_eq!(
             test::intersection_to_ray(&l),
@@ -182,8 +181,7 @@ mod tests {
             .transformation(Transformation::new().translate(5.0, 0.0, 0.0))
             .build();
 
-        let i = o.intersect(&r);
-        let l = i.unwrap().object(&o).build();
+        let l = o.intersect(&r).unwrap();
 
         assert_approx_eq!(
             test::intersection_to_ray(&l),
@@ -229,7 +227,7 @@ mod tests {
         let i = o.intersect(&r);
         assert!(i.is_some());
 
-        let i = i.unwrap().build();
+        let i = i.unwrap();
         assert_eq!(i.len(), 2);
 
         assert_approx_eq!(i[0].object, &o);

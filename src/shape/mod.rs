@@ -7,7 +7,7 @@ pub mod test;
 use float_cmp::{ApproxEq, F64Margin};
 
 use crate::{
-    intersection::{Intersectable, ListBuilder},
+    intersection::TList,
     math::{Point, Ray, Vector},
 };
 
@@ -21,9 +21,9 @@ pub enum Shape {
     Test,
 }
 
-impl Intersectable for Shape {
+impl Shape {
     #[must_use]
-    fn intersect<'a>(&'a self, ray: &Ray) -> Option<ListBuilder<'a>> {
+    pub fn intersect(&self, ray: &Ray) -> Option<TList> {
         match self {
             Self::Cube => cube::intersect(ray),
             Self::Plane => plane::intersect(ray),
@@ -34,7 +34,7 @@ impl Intersectable for Shape {
     }
 
     #[must_use]
-    fn normal_at(&self, point: &Point) -> Vector {
+    pub fn normal_at(&self, point: &Point) -> Vector {
         match self {
             Self::Cube => cube::normal_at(point),
             Self::Plane => plane::normal_at(point),

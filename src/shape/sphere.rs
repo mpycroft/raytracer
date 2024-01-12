@@ -1,12 +1,12 @@
 //! A `Sphere` is a unit sphere centred at the origin (0, 0, 0).
 
 use crate::{
-    intersection::ListBuilder,
+    intersection::TList,
     math::{Point, Ray, Vector},
 };
 
 #[must_use]
-pub fn intersect<'a>(ray: &Ray) -> Option<ListBuilder<'a>> {
+pub fn intersect(ray: &Ray) -> Option<TList> {
     let sphere_to_ray = ray.origin - Point::origin();
 
     let a = ray.direction.dot(&ray.direction);
@@ -25,7 +25,7 @@ pub fn intersect<'a>(ray: &Ray) -> Option<ListBuilder<'a>> {
     let t1 = (-b - discriminant) / a;
     let t2 = (-b + discriminant) / a;
 
-    Some(ListBuilder::new().add_t(t1).add_t(t2))
+    Some(TList::from(vec![t1, t2]))
 }
 
 #[must_use]
@@ -36,85 +36,62 @@ pub fn normal_at(point: &Point) -> Vector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        math::{float::*, Vector},
-        Object,
-    };
+    use crate::math::{float::*, Vector};
 
     #[test]
     fn a_ray_intersects_a_sphere_at_two_points() {
-        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
+        let l =
+            intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()))
+                .unwrap();
 
-        let b = intersect(&r);
+        assert_eq!(l.len(), 2);
 
-        assert!(b.is_some());
-
-        let o = Object::sphere_builder().build();
-        let i = b.unwrap().object(&o).build();
-
-        assert_eq!(i.len(), 2);
-
-        assert_approx_eq!(i[0].t, 4.0);
-        assert_approx_eq!(i[1].t, 6.0);
+        assert_approx_eq!(l[0], 4.0);
+        assert_approx_eq!(l[1], 6.0);
     }
 
     #[test]
     fn a_ray_intersects_a_sphere_at_a_tangent() {
-        let r = Ray::new(Point::new(0.0, 1.0, -5.0), Vector::z_axis());
+        let l =
+            intersect(&Ray::new(Point::new(0.0, 1.0, -5.0), Vector::z_axis()))
+                .unwrap();
 
-        let b = intersect(&r);
+        assert_eq!(l.len(), 2);
 
-        assert!(b.is_some());
-
-        let o = Object::sphere_builder().build();
-        let i = b.unwrap().object(&o).build();
-
-        assert_eq!(i.len(), 2);
-
-        assert_approx_eq!(i[0].t, 5.0);
-        assert_approx_eq!(i[1].t, 5.0);
+        assert_approx_eq!(l[0], 5.0);
+        assert_approx_eq!(l[1], 5.0);
     }
 
     #[test]
     fn a_ray_misses_a_sphere() {
-        let r = Ray::new(Point::new(0.0, 2.0, -5.0), Vector::z_axis());
-
-        let i = intersect(&r);
-        assert!(i.is_none());
+        assert!(intersect(&Ray::new(
+            Point::new(0.0, 2.0, -5.0),
+            Vector::z_axis()
+        ))
+        .is_none());
     }
 
     #[test]
     fn a_ray_originates_inside_a_sphere() {
-        let r = Ray::new(Point::origin(), Vector::z_axis());
+        let l =
+            intersect(&Ray::new(Point::origin(), Vector::z_axis())).unwrap();
 
-        let b = intersect(&r);
+        assert_eq!(l.len(), 2);
 
-        assert!(b.is_some());
-
-        let o = Object::sphere_builder().build();
-        let i = b.unwrap().object(&o).build();
-
-        assert_eq!(i.len(), 2);
-
-        assert_approx_eq!(i[0].t, -1.0);
-        assert_approx_eq!(i[1].t, 1.0);
+        assert_approx_eq!(l[0], -1.0);
+        assert_approx_eq!(l[1], 1.0);
     }
 
     #[test]
     fn a_sphere_is_behind_a_ray() {
-        let r = Ray::new(Point::new(0.0, 0.0, 5.0), Vector::z_axis());
+        let l =
+            intersect(&Ray::new(Point::new(0.0, 0.0, 5.0), Vector::z_axis()))
+                .unwrap();
 
-        let b = intersect(&r);
+        assert_eq!(l.len(), 2);
 
-        assert!(b.is_some());
-
-        let o = Object::sphere_builder().build();
-        let i = b.unwrap().object(&o).build();
-
-        assert_eq!(i.len(), 2);
-
-        assert_approx_eq!(i[0].t, -6.0);
-        assert_approx_eq!(i[1].t, -4.0);
+        assert_approx_eq!(l[0], -6.0);
+        assert_approx_eq!(l[1], -4.0);
     }
 
     #[test]

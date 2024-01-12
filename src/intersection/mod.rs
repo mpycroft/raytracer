@@ -1,7 +1,7 @@
 mod computations;
 mod intersectable;
 mod list;
-mod list_builder;
+mod t_list;
 
 use std::f64::EPSILON;
 
@@ -10,7 +10,7 @@ use float_cmp::{ApproxEq, F64Margin};
 
 pub use self::{
     computations::Computations, intersectable::Intersectable, list::List,
-    list_builder::ListBuilder,
+    t_list::TList,
 };
 use crate::{
     math::{float::approx_eq, Ray},

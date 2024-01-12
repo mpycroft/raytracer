@@ -1,7 +1,7 @@
 //! A `Test` is a shape intended purely for testing functions on `Object`.
 
 use crate::{
-    intersection::{List, ListBuilder},
+    intersection::{List, TList},
     math::{Point, Ray, Vector},
 };
 
@@ -17,16 +17,15 @@ pub fn intersection_to_ray(list: &List) -> Ray {
 
 #[must_use]
 #[allow(clippy::unnecessary_wraps)]
-pub fn intersect<'a>(ray: &Ray) -> Option<ListBuilder<'a>> {
-    Some(
-        ListBuilder::new()
-            .add_t(ray.origin.x)
-            .add_t(ray.origin.y)
-            .add_t(ray.origin.z)
-            .add_t(ray.direction.x)
-            .add_t(ray.direction.y)
-            .add_t(ray.direction.z),
-    )
+pub fn intersect(ray: &Ray) -> Option<TList> {
+    Some(TList::from(vec![
+        ray.origin.x,
+        ray.origin.y,
+        ray.origin.z,
+        ray.direction.x,
+        ray.direction.y,
+        ray.direction.z,
+    ]))
 }
 
 #[must_use]
@@ -44,12 +43,9 @@ mod tests {
     fn intersecting_a_test_shape() {
         let r = Ray::new(Point::new(1.0, 2.0, 1.0), Vector::x_axis());
 
-        let i = intersect(&r);
-
-        assert!(i.is_some());
-
         let o = Object::test_builder().build();
-        let l = i.unwrap().object(&o).build();
+
+        let l = intersect(&r).unwrap().to_list(&o);
 
         assert_approx_eq!(intersection_to_ray(&l), r);
     }
