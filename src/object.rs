@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// An 'Object' represents some entity in the scene that can be rendered.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 pub struct Object {
     transformation: Transformation,
     inverse_transformation: Transformation,
@@ -18,6 +18,7 @@ pub struct Object {
 
 impl Object {
     #[must_use]
+    #[allow(clippy::large_types_passed_by_value)]
     fn new(
         transformation: Transformation,
         material: Material,
@@ -70,11 +71,21 @@ impl Object {
     pub fn default_test() -> Self {
         Self::new_test(Transformation::new(), Material::default())
     }
+
+    #[must_use]
+    pub fn to_object_space<'a, T: Transformable<'a>>(&self, value: &'a T) -> T {
+        value.apply(&self.inverse_transformation)
+    }
+
+    #[must_use]
+    pub fn to_world_space<'a, T: Transformable<'a>>(&self, value: &'a T) -> T {
+        value.apply(&self.inverse_transformation.transpose())
+    }
 }
 
 impl Intersectable for Object {
     fn intersect<'a>(&'a self, ray: &Ray) -> Option<ListBuilder<'a>> {
-        let ray = ray.apply(&self.inverse_transformation);
+        let ray = self.to_object_space(ray);
 
         let Some(builder) = self.shape.intersect(&ray) else {
             return None;
@@ -84,21 +95,21 @@ impl Intersectable for Object {
     }
 
     fn normal_at(&self, point: &Point) -> Vector {
-        let object_point = point.apply(&self.inverse_transformation);
+        let object_point = self.to_object_space(point);
 
         let object_normal = self.shape.normal_at(&object_point);
 
-        object_normal
-            .apply(&self.inverse_transformation.transpose())
-            .normalise()
+        self.to_world_space(&object_normal).normalise()
     }
 }
 
-impl_approx_eq!(Object { shape, transformation, material });
+impl_approx_eq!(&Object { shape, transformation, ref material });
 
 #[cfg(test)]
 mod tests {
     use std::f64::consts::{FRAC_1_SQRT_2, PI, SQRT_2};
+
+    use paste::paste;
 
     use super::*;
     use crate::{
@@ -110,49 +121,47 @@ mod tests {
     #[test]
     fn creating_an_object() {
         let t = Transformation::new().translate(2.0, 3.0, 0.0);
-        let m = Material { colour: Colour::red(), ..Default::default() };
+        let ti = t.invert();
+        let m =
+            Material { pattern: Colour::red().into(), ..Default::default() };
+
+        /// Test the creation of objects using new_ and default_ functions.
+        macro_rules! test_object {
+            ($shape:ident) => {{
+                paste! {
+                    let s = Shape::[<new_ $shape:lower>]();
+
+                    let o = Object::[<new_ $shape:lower>](t, m.clone());
+
+                    assert_approx_eq!(o.transformation, t);
+                    assert_approx_eq!(o.inverse_transformation, ti);
+                    assert_approx_eq!(o.material, &m);
+                    assert_approx_eq!(o.shape, s);
+
+                    let o = Object::[<default_ $shape:lower>]();
+
+                    assert_approx_eq!(o.transformation, Transformation::new());
+                    assert_approx_eq!(
+                        o.inverse_transformation, Transformation::new()
+                    );
+                    assert_approx_eq!(o.material, &Material::default());
+                    assert_approx_eq!(o.shape, s);
+                }
+            }};
+        }
 
         let s = Shape::new_plane();
 
-        let o = Object::new_plane(t, m);
+        let o = Object::new(t, m.clone(), s);
 
         assert_approx_eq!(o.transformation, t);
-        assert_approx_eq!(o.material, m);
+        assert_approx_eq!(o.inverse_transformation, ti);
+        assert_approx_eq!(o.material, &m);
         assert_approx_eq!(o.shape, s);
 
-        let o = Object::default_plane();
-
-        assert_approx_eq!(o.transformation, Transformation::new());
-        assert_approx_eq!(o.material, Material::default());
-        assert_approx_eq!(o.shape, s);
-
-        let s = Shape::new_sphere();
-
-        let o = Object::new_sphere(t, m);
-
-        assert_approx_eq!(o.transformation, t);
-        assert_approx_eq!(o.material, m);
-        assert_approx_eq!(o.shape, s);
-
-        let o = Object::default_sphere();
-
-        assert_approx_eq!(o.transformation, Transformation::new());
-        assert_approx_eq!(o.material, Material::default());
-        assert_approx_eq!(o.shape, s);
-
-        let s = Shape::new_test();
-
-        let o = Object::new_test(t, m);
-
-        assert_approx_eq!(o.transformation, t);
-        assert_approx_eq!(o.material, m);
-        assert_approx_eq!(o.shape, s);
-
-        let o = Object::default_test();
-
-        assert_approx_eq!(o.transformation, Transformation::new());
-        assert_approx_eq!(o.material, Material::default());
-        assert_approx_eq!(o.shape, s);
+        test_object!(Plane);
+        test_object!(Sphere);
+        test_object!(Test);
     }
 
     #[test]
@@ -228,8 +237,8 @@ mod tests {
         let i = i.unwrap().build();
         assert_eq!(i.len(), 2);
 
-        assert_approx_eq!(i[0].object, o);
-        assert_approx_eq!(i[1].object, o);
+        assert_approx_eq!(i[0].object, &o);
+        assert_approx_eq!(i[1].object, &o);
 
         assert_approx_eq!(i[0].t, 3.0);
         assert_approx_eq!(i[1].t, 7.0);
@@ -287,8 +296,8 @@ mod tests {
             Material::default(),
         );
 
-        assert_approx_eq!(o1, o2);
+        assert_approx_eq!(o1, &o2);
 
-        assert_approx_ne!(o1, o3);
+        assert_approx_ne!(o1, &o3);
     }
 }

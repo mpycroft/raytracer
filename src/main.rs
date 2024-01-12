@@ -28,12 +28,13 @@ fn main() -> Result<(), Error> {
     let mut world = World::new();
 
     let material = Material {
-        colour: Colour::new(1.0, 0.9, 0.9),
+        pattern: Colour::new(1.0, 0.9, 0.9).into(),
         specular: 0.0,
         ..Default::default()
     };
 
-    world.add_object(Object::new_plane(Transformation::new(), material));
+    world
+        .add_object(Object::new_plane(Transformation::new(), material.clone()));
     world.add_object(Object::new_plane(
         Transformation::new()
             .rotate_x(Angle(FRAC_PI_2))
@@ -44,7 +45,7 @@ fn main() -> Result<(), Error> {
     world.add_object(Object::new_sphere(
         Transformation::new().translate(-0.5, 1.0, 0.5),
         Material {
-            colour: Colour::new(0.1, 1.0, 0.5),
+            pattern: Colour::new(0.1, 1.0, 0.5).into(),
             diffuse: 0.7,
             specular: 0.3,
             ..Default::default()
@@ -54,7 +55,7 @@ fn main() -> Result<(), Error> {
     world.add_object(Object::new_sphere(
         Transformation::new().scale(0.5, 0.5, 0.5).translate(1.5, 0.5, -0.5),
         Material {
-            colour: Colour::new(0.5, 1.0, 0.1),
+            pattern: Colour::new(0.5, 1.0, 0.1).into(),
             diffuse: 0.7,
             specular: 0.3,
             ..Default::default()
@@ -66,7 +67,7 @@ fn main() -> Result<(), Error> {
             .scale(0.33, 0.33, 0.33)
             .translate(-1.5, 0.33, -0.75),
         Material {
-            colour: Colour::new(1.0, 0.8, 0.1),
+            pattern: Colour::new(1.0, 0.8, 0.1).into(),
             diffuse: 0.7,
             specular: 0.3,
             ..Default::default()

@@ -1,7 +1,7 @@
 use std::ops::{Mul, MulAssign};
 
 use derive_more::{
-    Add, AddAssign, Constructor, Mul, MulAssign, Sub, SubAssign,
+    Add, AddAssign, Constructor, Div, DivAssign, Mul, MulAssign, Sub, SubAssign,
 };
 
 use crate::math::float::impl_approx_eq;
@@ -10,7 +10,7 @@ use crate::math::float::impl_approx_eq;
 /// 0.0..1.0 but can go outside this range before final processing.
 #[rustfmt::skip]
 #[derive(Clone, Copy, Debug, Constructor)]
-#[derive(Add, AddAssign, Sub, SubAssign, Mul, MulAssign)]
+#[derive(Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div, DivAssign)]
 pub struct Colour {
     pub red: f64,
     pub green: f64,
@@ -188,6 +188,19 @@ mod tests {
         c *= Colour::new(0.5, 1.0, -0.6);
 
         assert_approx_eq!(c, Colour::new(-0.5, 0.7, -0.72));
+    }
+
+    #[test]
+    fn dividing_a_colour_by_a_scaler() {
+        assert_approx_eq!(
+            Colour::new(1.2, 0.6, 0.3) / 2.0,
+            Colour::new(0.6, 0.3, 0.15)
+        );
+
+        let mut c = Colour::white();
+        c /= 0.5;
+
+        assert_approx_eq!(c, Colour::new(2.0, 2.0, 2.0));
     }
 
     #[test]

@@ -45,6 +45,7 @@ impl World {
 
         for light in &self.lights {
             colour += computations.object.material.lighting(
+                computations.object,
                 light,
                 &computations.over_point,
                 &computations.eye,
@@ -118,7 +119,7 @@ mod tests {
         w.add_object(Object::new_sphere(
             Transformation::new(),
             Material {
-                colour: Colour::new(0.8, 1.0, 0.6),
+                pattern: Colour::new(0.8, 1.0, 0.6).into(),
                 diffuse: 0.7,
                 specular: 0.2,
                 ..Default::default()
@@ -158,12 +159,12 @@ mod tests {
             Material::default(),
         );
 
-        w.add_object(o1);
-        w.add_object(o2);
+        w.add_object(o1.clone());
+        w.add_object(o2.clone());
 
         assert_eq!(w.objects.len(), 2);
-        assert_approx_eq!(w.objects[0], o1);
-        assert_approx_eq!(w.objects[1], o2);
+        assert_approx_eq!(w.objects[0], &o1);
+        assert_approx_eq!(w.objects[1], &o2);
 
         let l1 = PointLight::new(Point::origin(), Colour::blue());
         let l2 = PointLight::new(Point::new(1.0, 2.0, 3.0), Colour::green());
@@ -207,7 +208,7 @@ mod tests {
 
         let r = Ray::new(Point::new(0.0, 0.0, 0.75), -Vector::z_axis());
 
-        assert_approx_eq!(w.colour_at(&r), w.objects[1].material.colour);
+        assert_approx_eq!(w.colour_at(&r), Colour::white());
     }
 
     #[test]
@@ -266,7 +267,7 @@ mod tests {
             Transformation::new().translate(0.0, 0.0, 10.0),
             Material::default(),
         );
-        w.add_object(o);
+        w.add_object(o.clone());
 
         let r = Ray::new(Point::new(0.0, 0.0, 5.0), Vector::z_axis());
 

@@ -78,9 +78,72 @@ macro_rules! assert_approx_ne {
 #[cfg(test)]
 pub(crate) use assert_approx_ne;
 
+/// This macro helps build up the comparison expression needed for implementing
+/// the `ApproxEq` trait. It ends up overly complicated because we want to
+/// handle cases where some elements of a struct need to be handled as
+/// references i.e. only have `ApproxEq` implemented for &<struct>.
+///
+/// We use a TT muncher and accumulator pattern to do this since this gets
+/// tricky to do otherwise since every return from a macro needs to be a valid
+/// expression / statement / etc. We also need to pass in self, other and margin
+/// each time. In addition we must duplicate the first and general case to
+/// handle with and without ref.
+macro_rules! _impl_approx_eq_helper {
+    // The final case; we have a full expanded expression and no tail.
+    ($self:ident, $other:ident, $margin:ident; ($cmp:expr); ()) => {
+        $cmp
+    };
+    // The first case; we have an empty expression and at least one identifier.
+    (
+        $self:ident, $other:ident, $margin:ident;
+        (); ($id:ident $(,$($rest:tt)*)?)
+    ) => {
+        crate::math::float::_impl_approx_eq_helper!(
+            $self, $other, $margin;
+            ($self.$id.approx_eq($other.$id, $margin)); ($($($rest)*)?)
+        )
+    };
+    // The first case; we have an empty expression and at least one identifier
+    // which needs to be treated as a reference (&).
+    (
+        $self:ident, $other:ident, $margin:ident;
+        (); (ref $id:ident $(,$($rest:tt)*)?)
+    ) => {
+        crate::math::float::_impl_approx_eq_helper!(
+            $self, $other, $margin;
+            ($self.$id.approx_eq(&$other.$id, $margin)); ($($($rest)*)?)
+        )
+    };
+    // The general case; we have part of an expression and at least one
+    // identifier.
+    (
+        $self:ident, $other:ident, $margin:ident;
+        ($cmp:expr); ($id:ident $(,$($rest:tt)*)?)
+    ) => {
+        crate::math::float::_impl_approx_eq_helper!(
+            $self, $other, $margin;
+            ($cmp && $self.$id.approx_eq($other.$id, $margin));
+            ($($($rest)*)?)
+        )
+    };
+    // The general case; we have part of an expression and at least one
+    // identifier which needs to be treated as a reference (&).
+    (
+        $self:ident, $other:ident, $margin:ident;
+        ($cmp:expr); (ref $id:ident $(,$($rest:tt)*)?)
+    ) => {
+        crate::math::float::_impl_approx_eq_helper!(
+            $self, $other, $margin;
+            ($cmp && $self.$id.approx_eq(&$other.$id, $margin));
+            ($($($rest)*)?)
+        )
+    };
+}
+pub(crate) use _impl_approx_eq_helper;
+
 /// Implement the `ApproxEq` trait for a struct.
 macro_rules! impl_approx_eq {
-    ($ty:ty { $id:ident $(, $ids:ident)* }) => {
+    ($ty:ty { $($rest:tt)+ }) => {
         impl float_cmp::ApproxEq for $ty {
             type Margin = float_cmp::F64Margin;
 
@@ -89,10 +152,9 @@ macro_rules! impl_approx_eq {
             ) -> bool {
                 let margin = margin.into();
 
-                self.$id.approx_eq(other.$id, margin)
-                $(
-                    && self.$ids.approx_eq(other.$ids, margin)
-                )*
+                crate::math::float::_impl_approx_eq_helper!(
+                    self, other, margin; (); ($($rest)+)
+                )
             }
         }
     };

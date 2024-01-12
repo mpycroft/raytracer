@@ -6,10 +6,9 @@ mod test;
 use enum_dispatch::enum_dispatch;
 use float_cmp::{ApproxEq, F64Margin};
 
-use self::plane::Plane;
-use self::sphere::Sphere;
 #[cfg(test)]
 pub(super) use self::test::Test;
+use self::{plane::Plane, sphere::Sphere};
 use crate::{
     intersection::{Intersectable, ListBuilder},
     math::{Point, Ray, Vector},

@@ -4,6 +4,7 @@ use derive_more::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign,
 };
 use float_cmp::{ApproxEq, F64Margin};
+use paste::paste;
 
 /// An `Angle` represents a geometric angle, it is simply a wrapper around a
 /// value in radians but by using it rather than raw f64's we get type safety
@@ -13,16 +14,20 @@ use float_cmp::{ApproxEq, F64Margin};
 #[derive(Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div, DivAssign, Neg)]
 pub struct Angle(pub f64);
 
+/// This macro helps to add standard trigonometric functions (sin, cos, etc.) to
+/// `Angle`.
 macro_rules! add_trigonometric_fns {
-    ($fn:ident, $inv_fn:ident) => {
+    ($fn:ident) => {
         #[must_use]
         pub fn $fn(&self) -> f64 {
             self.0.$fn()
         }
 
-        #[must_use]
-        pub fn $inv_fn(ratio: f64) -> Self {
-            Self(ratio.$inv_fn())
+        paste! {
+            #[must_use]
+            pub fn [<a $fn>](ratio: f64) -> Self {
+                Self(ratio.[<a $fn>]())
+            }
         }
     };
 }
@@ -38,9 +43,9 @@ impl Angle {
         self.0.to_degrees()
     }
 
-    add_trigonometric_fns!(sin, asin);
-    add_trigonometric_fns!(cos, acos);
-    add_trigonometric_fns!(tan, atan);
+    add_trigonometric_fns!(sin);
+    add_trigonometric_fns!(cos);
+    add_trigonometric_fns!(tan);
 
     #[must_use]
     pub fn sin_cos(&self) -> (f64, f64) {
