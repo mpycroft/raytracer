@@ -25,11 +25,15 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
 
     let mut world = World::new();
 
-    world.add_object(Object::new_sphere(
-        Transformation::new(),
-        Material::builder().pattern(Colour::new(1.0, 0.2, 1.0).into()).build(),
-        true,
-    ));
+    world.add_object(
+        Object::sphere_builder()
+            .material(
+                Material::builder()
+                    .pattern(Colour::new(1.0, 0.2, 1.0).into())
+                    .build(),
+            )
+            .build(),
+    );
 
     world.add_light(PointLight::new(
         Point::new(-10.0, 10.0, -10.0),

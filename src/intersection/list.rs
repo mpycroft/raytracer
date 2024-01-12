@@ -52,7 +52,7 @@ mod tests {
         let mut l = List::new();
         assert_eq!(l.len(), 0);
 
-        let o = Object::default_test();
+        let o = Object::test_builder().build();
         l.push(Intersection::new(&o, 1.2));
 
         assert_eq!(l.len(), 1);
@@ -74,7 +74,7 @@ mod tests {
 
     #[test]
     fn dereferencing_an_intersection_list() {
-        let o = Object::default_test();
+        let o = Object::test_builder().build();
         let i1 = Intersection::new(&o, 1.5);
         let i2 = Intersection::new(&o, 2.5);
 
@@ -90,7 +90,7 @@ mod tests {
 
     #[test]
     fn the_hit_when_all_intersections_are_positive() {
-        let o = Object::default_test();
+        let o = Object::test_builder().build();
         let i1 = Intersection::new(&o, 1.0);
         let i2 = Intersection::new(&o, 2.0);
 
@@ -102,7 +102,7 @@ mod tests {
 
     #[test]
     fn the_hit_when_some_intersections_are_negative() {
-        let o = Object::default_test();
+        let o = Object::test_builder().build();
         let i1 = Intersection::new(&o, 1.0);
         let i2 = Intersection::new(&o, -1.0);
 
@@ -114,7 +114,7 @@ mod tests {
 
     #[test]
     fn the_hit_when_all_intersections_are_negative() {
-        let o = Object::default_test();
+        let o = Object::test_builder().build();
         let i1 = Intersection::new(&o, -2.0);
         let i2 = Intersection::new(&o, -1.0);
 
@@ -125,7 +125,7 @@ mod tests {
 
     #[test]
     fn the_hit_is_always_the_lowest_nonnegative_intersection() {
-        let o = Object::default_test();
+        let o = Object::test_builder().build();
 
         let h = ListBuilder::new()
             .object(&o)

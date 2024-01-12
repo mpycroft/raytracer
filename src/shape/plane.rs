@@ -44,7 +44,7 @@ mod tests {
 
         assert!(b.is_some());
 
-        let o = Object::default_plane();
+        let o = Object::plane_builder().build();
         let i = b.unwrap().object(&o).build();
 
         assert_eq!(i.len(), 1);
@@ -58,7 +58,7 @@ mod tests {
 
         assert!(b.is_some());
 
-        let o = Object::default_plane();
+        let o = Object::plane_builder().build();
         let i = b.unwrap().object(&o).build();
 
         assert_eq!(i.len(), 1);

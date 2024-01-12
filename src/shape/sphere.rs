@@ -49,7 +49,7 @@ mod tests {
 
         assert!(b.is_some());
 
-        let o = Object::default_sphere();
+        let o = Object::sphere_builder().build();
         let i = b.unwrap().object(&o).build();
 
         assert_eq!(i.len(), 2);
@@ -66,7 +66,7 @@ mod tests {
 
         assert!(b.is_some());
 
-        let o = Object::default_sphere();
+        let o = Object::sphere_builder().build();
         let i = b.unwrap().object(&o).build();
 
         assert_eq!(i.len(), 2);
@@ -91,7 +91,7 @@ mod tests {
 
         assert!(b.is_some());
 
-        let o = Object::default_sphere();
+        let o = Object::sphere_builder().build();
         let i = b.unwrap().object(&o).build();
 
         assert_eq!(i.len(), 2);
@@ -108,7 +108,7 @@ mod tests {
 
         assert!(b.is_some());
 
-        let o = Object::default_sphere();
+        let o = Object::sphere_builder().build();
         let i = b.unwrap().object(&o).build();
 
         assert_eq!(i.len(), 2);

@@ -48,7 +48,7 @@ mod tests {
 
         assert!(i.is_some());
 
-        let o = Object::default_test();
+        let o = Object::test_builder().build();
         let l = i.unwrap().object(&o).build();
 
         assert_approx_eq!(intersection_to_ray(&l), r);

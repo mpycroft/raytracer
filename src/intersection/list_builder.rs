@@ -69,7 +69,7 @@ mod tests {
 
     #[test]
     fn creating_an_intersection_list_with_builder() {
-        let o = Object::default_test();
+        let o = Object::test_builder().build();
 
         let b = ListBuilder::new().object(&o).add_t(1.0);
 
@@ -111,7 +111,7 @@ mod tests {
         expected = "No t values were added when creating intersection List."
     )]
     fn intersection_list_builder_without_adding_t_values() {
-        let o = Object::default_test();
+        let o = Object::test_builder().build();
 
         let _ = ListBuilder::new().object(&o).build();
     }

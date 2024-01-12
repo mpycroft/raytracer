@@ -4,7 +4,6 @@ mod sphere;
 #[cfg(test)]
 pub mod test;
 
-use derive_new::new;
 use float_cmp::{ApproxEq, F64Margin};
 
 use crate::{
@@ -13,7 +12,7 @@ use crate::{
 };
 
 /// `Shape` is the list of the various geometries that can be rendered.
-#[derive(Clone, Copy, Debug, new)]
+#[derive(Clone, Copy, Debug)]
 pub enum Shape {
     Cube,
     Plane,
@@ -68,9 +67,9 @@ mod tests {
 
     #[test]
     fn comparing_shapes() {
-        let s1 = Shape::new_test();
-        let s2 = Shape::new_test();
-        let s3 = Shape::new_sphere();
+        let s1 = Shape::Test;
+        let s2 = Shape::Test;
+        let s3 = Shape::Sphere;
 
         assert_approx_eq!(s1, s2);
 

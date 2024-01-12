@@ -70,7 +70,7 @@ mod tests {
 
     #[test]
     fn a_ray_intersects_a_cube() {
-        let o = Object::default_test();
+        let o = Object::test_builder().build();
 
         let test = |r: &Ray, t1: f64, t2: f64| {
             let l = intersect(r).unwrap().object(&o).build();

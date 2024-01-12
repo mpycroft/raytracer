@@ -159,7 +159,7 @@ impl_approx_eq_patterns! {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, Material};
+    use crate::math::float::*;
 
     #[test]
     fn creating_a_pattern() {
@@ -225,11 +225,9 @@ mod tests {
 
     #[test]
     fn a_pattern_with_an_object_transformation() {
-        let o = Object::new_test(
-            Transformation::new().translate(1.0, 0.5, 1.5),
-            Material::default(),
-            true,
-        );
+        let o = Object::test_builder()
+            .transformation(Transformation::new().translate(1.0, 0.5, 1.5))
+            .build();
 
         let p = Pattern::default_test();
 
@@ -241,7 +239,7 @@ mod tests {
 
     #[test]
     fn a_pattern_with_a_pattern_transformation() {
-        let o = Object::default_test();
+        let o = Object::test_builder().build();
 
         let p = Pattern::new_test(Transformation::new().scale(2.0, 2.0, 2.0));
 
@@ -253,11 +251,9 @@ mod tests {
 
     #[test]
     fn a_pattern_with_both_an_object_and_a_pattern_transformation() {
-        let o = Object::new_test(
-            Transformation::new().scale(2.0, 2.0, 2.0),
-            Material::default(),
-            true,
-        );
+        let o = Object::test_builder()
+            .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
+            .build();
 
         let p =
             Pattern::new_test(Transformation::new().translate(0.5, 1.0, 1.5));
@@ -270,11 +266,9 @@ mod tests {
 
     #[test]
     fn a_stripe_pattern_with_an_object_transformation() {
-        let o = Object::new_test(
-            Transformation::new().scale(2.0, 2.0, 2.0),
-            Material::default(),
-            true,
-        );
+        let o = Object::test_builder()
+            .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
+            .build();
 
         let p = Pattern::default_stripe(
             Colour::white().into(),
@@ -289,7 +283,7 @@ mod tests {
 
     #[test]
     fn a_stripe_pattern_with_a_pattern_transformation() {
-        let o = Object::default_test();
+        let o = Object::test_builder().build();
 
         let p = Pattern::new_stripe(
             Transformation::new().scale(2.0, 2.0, 2.0),
@@ -305,11 +299,9 @@ mod tests {
 
     #[test]
     fn a_stripe_pattern_with_both_an_object_and_pattern_transformation() {
-        let o = Object::new_test(
-            Transformation::new().scale(2.0, 2.0, 2.0),
-            Material::default(),
-            true,
-        );
+        let o = Object::test_builder()
+            .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
+            .build();
 
         let p = Pattern::new_stripe(
             Transformation::new().translate(0.5, 0.0, 0.0),

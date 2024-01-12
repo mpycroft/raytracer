@@ -34,61 +34,83 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
 
     let floor_transformation = Transformation::new().scale(10.0, 0.01, 10.0);
 
-    world.add_object(Object::new_sphere(
-        floor_transformation,
-        floor_material.clone(),
-        true,
-    ));
-
-    world.add_object(Object::new_sphere(
-        floor_transformation
-            .rotate_x(Angle(FRAC_PI_2))
-            .rotate_y(Angle(-FRAC_PI_4))
-            .translate(0.0, 0.0, 5.0),
-        floor_material.clone(),
-        true,
-    ));
-
-    world.add_object(Object::new_sphere(
-        floor_transformation
-            .rotate_x(Angle(FRAC_PI_2))
-            .rotate_y(Angle(FRAC_PI_4))
-            .translate(0.0, 0.0, 5.0),
-        floor_material,
-        true,
-    ));
-
-    world.add_object(Object::new_sphere(
-        Transformation::new().translate(-0.5, 1.0, 0.5),
-        Material::builder()
-            .pattern(Colour::new(0.1, 1.0, 0.5).into())
-            .diffuse(0.7)
-            .specular(0.3)
+    world.add_object(
+        Object::sphere_builder()
+            .transformation(floor_transformation)
+            .material(floor_material.clone())
             .build(),
-        true,
-    ));
+    );
 
-    world.add_object(Object::new_sphere(
-        Transformation::new().scale(0.5, 0.5, 0.5).translate(1.5, 0.5, -0.5),
-        Material::builder()
-            .pattern(Colour::new(0.5, 1.0, 0.1).into())
-            .diffuse(0.7)
-            .specular(0.3)
+    world.add_object(
+        Object::sphere_builder()
+            .transformation(
+                floor_transformation
+                    .rotate_x(Angle(FRAC_PI_2))
+                    .rotate_y(Angle(-FRAC_PI_4))
+                    .translate(0.0, 0.0, 5.0),
+            )
+            .material(floor_material.clone())
             .build(),
-        true,
-    ));
+    );
 
-    world.add_object(Object::new_sphere(
-        Transformation::new()
-            .scale(0.33, 0.33, 0.33)
-            .translate(-1.5, 0.33, -0.75),
-        Material::builder()
-            .pattern(Colour::new(1.0, 0.8, 0.1).into())
-            .diffuse(0.7)
-            .specular(0.3)
+    world.add_object(
+        Object::sphere_builder()
+            .transformation(
+                floor_transformation
+                    .rotate_x(Angle(FRAC_PI_2))
+                    .rotate_y(Angle(FRAC_PI_4))
+                    .translate(0.0, 0.0, 5.0),
+            )
+            .material(floor_material)
             .build(),
-        true,
-    ));
+    );
+
+    world.add_object(
+        Object::sphere_builder()
+            .transformation(Transformation::new().translate(-0.5, 1.0, 0.5))
+            .material(
+                Material::builder()
+                    .pattern(Colour::new(0.1, 1.0, 0.5).into())
+                    .diffuse(0.7)
+                    .specular(0.3)
+                    .build(),
+            )
+            .build(),
+    );
+
+    world.add_object(
+        Object::sphere_builder()
+            .transformation(
+                Transformation::new()
+                    .scale(0.5, 0.5, 0.5)
+                    .translate(1.5, 0.5, -0.5),
+            )
+            .material(
+                Material::builder()
+                    .pattern(Colour::new(0.5, 1.0, 0.1).into())
+                    .diffuse(0.7)
+                    .specular(0.3)
+                    .build(),
+            )
+            .build(),
+    );
+
+    world.add_object(
+        Object::sphere_builder()
+            .transformation(
+                Transformation::new()
+                    .scale(0.33, 0.33, 0.33)
+                    .translate(-1.5, 0.33, -0.75),
+            )
+            .material(
+                Material::builder()
+                    .pattern(Colour::new(1.0, 0.8, 0.1).into())
+                    .diffuse(0.7)
+                    .specular(0.3)
+                    .build(),
+            )
+            .build(),
+    );
 
     world.add_light(PointLight::new(
         Point::new(-10.0, 10.0, -10.0),

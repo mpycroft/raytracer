@@ -1,3 +1,5 @@
+use typed_builder::{Optional, TypedBuilder};
+
 use crate::{
     intersection::{Intersectable, ListBuilder},
     math::{
@@ -8,112 +10,49 @@ use crate::{
 };
 
 /// An 'Object' represents some entity in the scene that can be rendered.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, TypedBuilder)]
+#[builder(builder_method(vis = "", name = _builder))]
+#[builder(build_method(vis = "", name = _build))]
 pub struct Object {
+    #[builder(default = Transformation::new())]
     transformation: Transformation,
+    #[builder(default = Transformation::new(), setter(skip))]
     inverse_transformation: Transformation,
+    #[builder(default = Material::default())]
     pub material: Material,
+    #[builder(default = true)]
     pub casts_shadow: bool,
     shape: Shape,
 }
 
 impl Object {
-    #[must_use]
-    #[allow(clippy::large_types_passed_by_value)]
-    fn new(
-        transformation: Transformation,
-        material: Material,
-        casts_shadow: bool,
-        shape: Shape,
-    ) -> Self {
-        Self {
-            transformation,
-            inverse_transformation: transformation.invert(),
-            material,
-            casts_shadow,
-            shape,
-        }
+    pub fn cube_builder() -> ObjectBuilder<((), (), (), (Shape,))> {
+        Self::_builder().shape(Shape::Cube)
     }
 
-    #[must_use]
-    pub fn new_cube(
-        transformation: Transformation,
-        material: Material,
-        casts_shadow: bool,
-    ) -> Self {
-        Self::new(transformation, material, casts_shadow, Shape::new_cube())
+    pub fn plane_builder() -> ObjectBuilder<((), (), (), (Shape,))> {
+        Self::_builder().shape(Shape::Plane)
     }
 
-    #[must_use]
-    pub fn default_cube() -> Self {
-        Self::new_cube(Transformation::new(), Material::default(), true)
+    pub fn sphere_builder() -> ObjectBuilder<((), (), (), (Shape,))> {
+        Self::_builder().shape(Shape::Sphere)
     }
 
-    #[must_use]
-    pub fn new_plane(
-        transformation: Transformation,
-        material: Material,
-        casts_shadow: bool,
-    ) -> Self {
-        Self::new(transformation, material, casts_shadow, Shape::new_plane())
+    #[cfg(test)]
+    pub fn test_builder() -> ObjectBuilder<((), (), (), (Shape,))> {
+        Self::_builder().shape(Shape::Test)
     }
 
-    #[must_use]
-    pub fn default_plane() -> Self {
-        Self::new_plane(Transformation::new(), Material::default(), true)
-    }
-
-    #[must_use]
-    pub fn new_sphere(
-        transformation: Transformation,
-        material: Material,
-        casts_shadow: bool,
-    ) -> Self {
-        Self::new(transformation, material, casts_shadow, Shape::new_sphere())
-    }
-
-    #[must_use]
-    pub fn default_sphere() -> Self {
-        Self::new_sphere(Transformation::new(), Material::default(), true)
-    }
-
-    #[must_use]
-    pub fn new_glass_sphere(
-        transformation: Transformation,
-        casts_shadow: bool,
-    ) -> Self {
-        Self::new(
-            transformation,
+    pub fn glass_sphere_builder(
+    ) -> ObjectBuilder<((), (Material,), (), (Shape,))> {
+        Self::_builder().shape(Shape::Sphere).material(
             Material::builder()
                 .ambient(0.01)
                 .diffuse(0.01)
                 .transparency(1.0)
                 .refractive_index(1.5)
                 .build(),
-            casts_shadow,
-            Shape::new_sphere(),
         )
-    }
-
-    #[must_use]
-    pub fn default_glass_sphere() -> Self {
-        Self::new_glass_sphere(Transformation::new(), true)
-    }
-
-    #[cfg(test)]
-    #[must_use]
-    pub fn new_test(
-        transformation: Transformation,
-        material: Material,
-        casts_shadow: bool,
-    ) -> Self {
-        Self::new(transformation, material, casts_shadow, Shape::new_test())
-    }
-
-    #[cfg(test)]
-    #[must_use]
-    pub fn default_test() -> Self {
-        Self::new_test(Transformation::new(), Material::default(), true)
     }
 
     #[must_use]
@@ -149,6 +88,19 @@ impl Intersectable for Object {
 
 impl_approx_eq!(&Object { shape, transformation, ref material });
 
+impl<T: Optional<Transformation>, M: Optional<Material>, S: Optional<bool>>
+    ObjectBuilder<(T, M, S, (Shape,))>
+{
+    #[must_use]
+    pub fn build(self) -> Object {
+        let mut object = self._build();
+
+        object.inverse_transformation = object.transformation.invert();
+
+        object
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::f64::consts::{FRAC_1_SQRT_2, PI, SQRT_2};
@@ -172,9 +124,13 @@ mod tests {
         macro_rules! test_object {
             ($shape:ident) => {{
                 paste! {
-                    let s = Shape::[<new_ $shape:lower>]();
+                    let s = Shape::$shape;
 
-                    let o = Object::[<new_ $shape:lower>](t, m.clone(), false);
+                    let o = Object::[<$shape:lower _builder>]()
+                        .transformation(t)
+                        .material(m.clone())
+                        .casts_shadow(false)
+                        .build();
 
                     assert_approx_eq!(o.transformation, t);
                     assert_approx_eq!(o.inverse_transformation, ti);
@@ -182,7 +138,7 @@ mod tests {
                     assert!(!o.casts_shadow);
                     assert_approx_eq!(o.shape, s);
 
-                    let o = Object::[<default_ $shape:lower>]();
+                    let o = Object::[<$shape:lower _builder>]().build();
 
                     assert_approx_eq!(o.transformation, Transformation::new());
                     assert_approx_eq!(
@@ -195,9 +151,13 @@ mod tests {
             }};
         }
 
-        let s = Shape::new_plane();
+        let s = Shape::Plane;
 
-        let o = Object::new(t, m.clone(), true, s);
+        let o = Object::plane_builder()
+            .transformation(t)
+            .material(m.clone())
+            .casts_shadow(true)
+            .build();
 
         assert_approx_eq!(o.transformation, t);
         assert_approx_eq!(o.inverse_transformation, ti);
@@ -217,9 +177,12 @@ mod tests {
             .refractive_index(1.5)
             .build();
         let t = Transformation::new().shear(1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
-        let s = Shape::new_sphere();
+        let s = Shape::Sphere;
 
-        let o = Object::new_glass_sphere(t, false);
+        let o = Object::glass_sphere_builder()
+            .transformation(t)
+            .casts_shadow(false)
+            .build();
 
         assert_approx_eq!(o.transformation, t);
         assert_approx_eq!(o.inverse_transformation, t.invert());
@@ -227,7 +190,7 @@ mod tests {
         assert!(!o.casts_shadow);
         assert_approx_eq!(o.shape, s);
 
-        let o = Object::default_glass_sphere();
+        let o = Object::glass_sphere_builder().build();
 
         assert_approx_eq!(o.transformation, Transformation::new());
         assert_approx_eq!(o.inverse_transformation, Transformation::new());
@@ -239,11 +202,9 @@ mod tests {
     fn intersecting_a_transformed_object_with_a_ray() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
 
-        let o = Object::new_test(
-            Transformation::new().scale(2.0, 2.0, 2.0),
-            Material::default(),
-            true,
-        );
+        let o = Object::test_builder()
+            .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
+            .build();
 
         let i = o.intersect(&r);
         let l = i.unwrap().object(&o).build();
@@ -253,11 +214,9 @@ mod tests {
             Ray::new(Point::new(0.0, 0.0, -2.5), Vector::new(0.0, 0.0, 0.5))
         );
 
-        let o = Object::new_test(
-            Transformation::new().translate(5.0, 0.0, 0.0),
-            Material::default(),
-            true,
-        );
+        let o = Object::test_builder()
+            .transformation(Transformation::new().translate(5.0, 0.0, 0.0))
+            .build();
 
         let i = o.intersect(&r);
         let l = i.unwrap().object(&o).build();
@@ -270,24 +229,22 @@ mod tests {
 
     #[test]
     fn computing_the_normal_on_a_transformed_shape() {
-        let o = Object::new_test(
-            Transformation::new().translate(0.0, 1.0, 0.0),
-            Material::default(),
-            true,
-        );
+        let o = Object::test_builder()
+            .transformation(Transformation::new().translate(0.0, 1.0, 0.0))
+            .build();
 
         assert_approx_eq!(
             o.normal_at(&Point::new(0.0, 1.0 + FRAC_1_SQRT_2, -FRAC_1_SQRT_2)),
             Vector::new(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2)
         );
 
-        let o = Object::new_test(
-            Transformation::new()
-                .rotate_z(Angle(PI / 5.0))
-                .scale(1.0, 0.5, 1.0),
-            Material::default(),
-            true,
-        );
+        let o = Object::test_builder()
+            .transformation(
+                Transformation::new()
+                    .rotate_z(Angle(PI / 5.0))
+                    .scale(1.0, 0.5, 1.0),
+            )
+            .build();
 
         let sqrt_2_div_d = SQRT_2 / 2.0;
         assert_approx_eq!(
@@ -301,11 +258,9 @@ mod tests {
     fn intersecting_a_scaled_sphere_with_a_ray() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
 
-        let o = Object::new_sphere(
-            Transformation::new().scale(2.0, 2.0, 2.0),
-            Material::default(),
-            true,
-        );
+        let o = Object::sphere_builder()
+            .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
+            .build();
 
         let i = o.intersect(&r);
         assert!(i.is_some());
@@ -324,11 +279,9 @@ mod tests {
     fn intersecting_a_translated_sphere_with_a_ray() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
 
-        let o = Object::new_sphere(
-            Transformation::new().translate(5.0, 0.0, 0.0),
-            Material::default(),
-            true,
-        );
+        let o = Object::sphere_builder()
+            .transformation(Transformation::new().translate(5.0, 0.0, 0.0))
+            .build();
 
         let i = o.intersect(&r);
         assert!(i.is_none());
@@ -336,11 +289,9 @@ mod tests {
 
     #[test]
     fn computing_the_normal_on_a_translated_sphere() {
-        let o = Object::new_sphere(
-            Transformation::new().translate(0.0, 1.0, 0.0),
-            Material::default(),
-            true,
-        );
+        let o = Object::sphere_builder()
+            .transformation(Transformation::new().translate(0.0, 1.0, 0.0))
+            .build();
 
         assert_approx_eq!(
             o.normal_at(&Point::new(0.0, 1.0 + FRAC_1_SQRT_2, -FRAC_1_SQRT_2)),
@@ -350,13 +301,13 @@ mod tests {
 
     #[test]
     fn computing_the_normal_on_a_transformed_sphere() {
-        let o = Object::new_sphere(
-            Transformation::new()
-                .rotate_z(Angle::from_degrees(36.0))
-                .scale(1.0, 0.5, 1.0),
-            Material::default(),
-            true,
-        );
+        let o = Object::sphere_builder()
+            .transformation(
+                Transformation::new()
+                    .rotate_z(Angle::from_degrees(36.0))
+                    .scale(1.0, 0.5, 1.0),
+            )
+            .build();
 
         let sqrt_2_div_2 = SQRT_2 / 2.0;
         assert_approx_eq!(
@@ -368,13 +319,11 @@ mod tests {
 
     #[test]
     fn comparing_objects() {
-        let o1 = Object::default_test();
-        let o2 = Object::default_test();
-        let o3 = Object::new_test(
-            Transformation::new().scale(1.0, 2.0, 1.0),
-            Material::default(),
-            true,
-        );
+        let o1 = Object::test_builder().build();
+        let o2 = Object::test_builder().build();
+        let o3 = Object::test_builder()
+            .transformation(Transformation::new().scale(1.0, 2.0, 1.0))
+            .build();
 
         assert_approx_eq!(o1, &o2);
 

@@ -28,14 +28,21 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
 
     let mut world = World::new();
 
-    world.add_object(Object::new_cube(
-        Transformation::new()
-            .rotate_y(-Angle::from_degrees(35.0))
-            .rotate_x(-Angle::from_degrees(25.0))
-            .translate(0.0, 0.0, 5.0),
-        Material::builder().pattern(Colour::new(0.5, 0.4, 0.0).into()).build(),
-        true,
-    ));
+    world.add_object(
+        Object::cube_builder()
+            .transformation(
+                Transformation::new()
+                    .rotate_y(-Angle::from_degrees(35.0))
+                    .rotate_x(-Angle::from_degrees(25.0))
+                    .translate(0.0, 0.0, 5.0),
+            )
+            .material(
+                Material::builder()
+                    .pattern(Colour::new(0.5, 0.4, 0.0).into())
+                    .build(),
+            )
+            .build(),
+    );
 
     world.add_light(PointLight::new(
         Point::new(-10.0, 10.0, -10.0),
