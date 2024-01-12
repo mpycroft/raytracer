@@ -8,7 +8,7 @@ use raytracer::math::Angle;
 
 use crate::scene::Scene;
 
-fn styles() -> Styles {
+const fn styles() -> Styles {
     Styles::styled()
         .header(AnsiColor::Yellow.on_default())
         .usage(AnsiColor::Yellow.on_default())

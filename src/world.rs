@@ -712,7 +712,7 @@ mod tests {
     fn the_refracted_colour_with_a_reflected_ray() {
         let mut w = test_world();
         w.objects[0].material = Material::builder()
-            .pattern(Pattern::default_test())
+            .pattern(Pattern::test_builder().build())
             .ambient(1.0)
             .build();
         w.objects[1].material.transparency = 1.0;

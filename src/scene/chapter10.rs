@@ -32,23 +32,33 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
         Object::plane_builder()
             .material(
                 Material::builder()
-                    .pattern(Pattern::default_perturbed(
-                        0.15,
-                        Pattern::default_blend(
-                            Pattern::new_stripe(
-                                Transformation::new().scale(0.5, 0.5, 0.5),
-                                Colour::green().into(),
-                                Colour::white().into(),
-                            ),
-                            Pattern::new_stripe(
-                                Transformation::new()
-                                    .rotate_y(Angle(FRAC_PI_2))
-                                    .scale(0.5, 0.5, 0.5),
-                                Colour::green().into(),
-                                Colour::white().into(),
-                            ),
-                        ),
-                    ))
+                    .pattern(
+                        Pattern::perturbed_builder(
+                            0.15,
+                            Pattern::blend_builder(
+                                Pattern::stripe_builder(
+                                    Colour::green().into(),
+                                    Colour::white().into(),
+                                )
+                                .transformation(
+                                    Transformation::new().scale(0.5, 0.5, 0.5),
+                                )
+                                .build(),
+                                Pattern::stripe_builder(
+                                    Colour::green().into(),
+                                    Colour::white().into(),
+                                )
+                                .transformation(
+                                    Transformation::new()
+                                        .rotate_y(Angle(FRAC_PI_2))
+                                        .scale(0.5, 0.5, 0.5),
+                                )
+                                .build(),
+                            )
+                            .build(),
+                        )
+                        .build(),
+                    )
                     .build(),
             )
             .build(),
@@ -62,10 +72,13 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
             )
             .material(
                 Material::builder()
-                    .pattern(Pattern::default_gradient(
-                        Colour::purple().into(),
-                        Colour::yellow().into(),
-                    ))
+                    .pattern(
+                        Pattern::gradient_builder(
+                            Colour::purple().into(),
+                            Colour::yellow().into(),
+                        )
+                        .build(),
+                    )
                     .build(),
             )
             .build(),
@@ -76,14 +89,19 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
             .transformation(Transformation::new().translate(-0.5, 1.0, 0.5))
             .material(
                 Material::builder()
-                    .pattern(Pattern::new_ring(
-                        Transformation::new()
-                            .rotate_x(Angle::from_degrees(70.0))
-                            .rotate_z(Angle::from_degrees(-40.0))
-                            .scale(0.2, 0.2, 0.2),
-                        Colour::blue().into(),
-                        Colour::cyan().into(),
-                    ))
+                    .pattern(
+                        Pattern::ring_builder(
+                            Colour::blue().into(),
+                            Colour::cyan().into(),
+                        )
+                        .transformation(
+                            Transformation::new()
+                                .rotate_x(Angle::from_degrees(70.0))
+                                .rotate_z(Angle::from_degrees(-40.0))
+                                .scale(0.2, 0.2, 0.2),
+                        )
+                        .build(),
+                    )
                     .diffuse(0.7)
                     .specular(0.3)
                     .build(),
@@ -100,11 +118,16 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
             )
             .material(
                 Material::builder()
-                    .pattern(Pattern::new_checker(
-                        Transformation::new().scale(0.3, 0.3, 0.3),
-                        Colour::green().into(),
-                        Colour::cyan().into(),
-                    ))
+                    .pattern(
+                        Pattern::checker_builder(
+                            Colour::green().into(),
+                            Colour::cyan().into(),
+                        )
+                        .transformation(
+                            Transformation::new().scale(0.3, 0.3, 0.3),
+                        )
+                        .build(),
+                    )
                     .diffuse(0.7)
                     .specular(0.3)
                     .build(),
@@ -121,11 +144,16 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
             )
             .material(
                 Material::builder()
-                    .pattern(Pattern::new_radial_gradient(
-                        Transformation::new().scale(0.2, 0.2, 0.2),
-                        Colour::white().into(),
-                        Colour::black().into(),
-                    ))
+                    .pattern(
+                        Pattern::radial_gradient_builder(
+                            Colour::white().into(),
+                            Colour::black().into(),
+                        )
+                        .transformation(
+                            Transformation::new().scale(0.2, 0.2, 0.2),
+                        )
+                        .build(),
+                    )
                     .diffuse(0.7)
                     .specular(0.3)
                     .build(),

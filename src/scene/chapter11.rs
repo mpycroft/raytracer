@@ -32,10 +32,13 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
         Object::plane_builder()
             .material(
                 Material::builder()
-                    .pattern(Pattern::default_checker(
-                        Colour::white().into(),
-                        Colour::black().into(),
-                    ))
+                    .pattern(
+                        Pattern::checker_builder(
+                            Colour::white().into(),
+                            Colour::black().into(),
+                        )
+                        .build(),
+                    )
                     .specular(0.0)
                     .reflective(0.4)
                     .build(),
@@ -159,6 +162,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
 }
 
 #[must_use]
+#[allow(clippy::too_many_lines)]
 pub fn generate_water_scene(arguments: &Arguments) -> SceneData {
     let horizontal_size = arguments.width.unwrap_or(1000);
     let vertical_size = arguments.height.unwrap_or(500);
@@ -182,10 +186,13 @@ pub fn generate_water_scene(arguments: &Arguments) -> SceneData {
             .transformation(Transformation::new().translate(0.0, -5.0, 0.0))
             .material(
                 Material::builder()
-                    .pattern(Pattern::default_checker(
-                        Colour::green().into(),
-                        Colour::white().into(),
-                    ))
+                    .pattern(
+                        Pattern::checker_builder(
+                            Colour::green().into(),
+                            Colour::white().into(),
+                        )
+                        .build(),
+                    )
                     .specular(0.0)
                     .build(),
             )
@@ -201,10 +208,13 @@ pub fn generate_water_scene(arguments: &Arguments) -> SceneData {
             )
             .material(
                 Material::builder()
-                    .pattern(Pattern::default_checker(
-                        Colour::white().into(),
-                        Colour::black().into(),
-                    ))
+                    .pattern(
+                        Pattern::checker_builder(
+                            Colour::white().into(),
+                            Colour::black().into(),
+                        )
+                        .build(),
+                    )
                     .build(),
             )
             .build(),

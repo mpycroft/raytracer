@@ -20,7 +20,7 @@ impl PatternAt for Stripe {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, pattern::util::add_pattern_tests};
+    use crate::{math::float::*, pattern::util::add_kind_tests};
 
     #[test]
     fn a_stripe_pattern_is_constant_in_y() {
@@ -88,5 +88,5 @@ mod tests {
         );
     }
 
-    add_pattern_tests!(Stripe);
+    add_kind_tests!(Stripe);
 }

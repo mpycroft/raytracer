@@ -9,7 +9,7 @@ pub struct List<'a>(Vec<Intersection<'a>>);
 
 impl<'a> List<'a> {
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self(Vec::new())
     }
 

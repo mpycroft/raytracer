@@ -113,7 +113,10 @@ mod tests {
             .refractive_index(1.5)
             .build();
 
-        assert_approx_eq!(m.pattern, &Pattern::default_solid(Colour::red()));
+        assert_approx_eq!(
+            m.pattern,
+            &Pattern::solid_builder(Colour::red()).build()
+        );
         assert_approx_eq!(m.ambient, 1.0);
         assert_approx_eq!(m.diffuse, 1.0);
         assert_approx_eq!(m.specular, 1.5);
@@ -267,10 +270,13 @@ mod tests {
     #[allow(clippy::many_single_char_names)]
     fn lighting_with_a_pattern_applied() {
         let m = Material::builder()
-            .pattern(Pattern::default_stripe(
-                Colour::white().into(),
-                Colour::black().into(),
-            ))
+            .pattern(
+                Pattern::stripe_builder(
+                    Colour::white().into(),
+                    Colour::black().into(),
+                )
+                .build(),
+            )
             .ambient(1.0)
             .diffuse(0.0)
             .specular(0.0)

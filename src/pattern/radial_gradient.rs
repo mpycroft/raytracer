@@ -23,7 +23,7 @@ impl PatternAt for RadialGradient {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, pattern::util::add_pattern_tests};
+    use crate::{math::float::*, pattern::util::add_kind_tests};
 
     #[test]
     fn a_radial_gradient_should_extend_in_both_x_and_z() {
@@ -76,5 +76,5 @@ mod tests {
         );
     }
 
-    add_pattern_tests!(RadialGradient);
+    add_kind_tests!(RadialGradient);
 }

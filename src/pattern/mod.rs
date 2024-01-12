@@ -13,6 +13,7 @@ mod test;
 mod util;
 
 use paste::paste;
+use typed_builder::{Optional, TypedBuilder};
 
 #[cfg(test)]
 use self::test::Test;
@@ -28,68 +29,44 @@ use crate::{
 
 /// A `Pattern` describes a specific pattern that can be applied to a `Material`
 /// to change how it is rendered.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, TypedBuilder)]
+#[builder(builder_method(vis = "", name = _builder))]
+#[builder(build_method(vis = "", name = _build))]
 pub struct Pattern {
+    #[builder(default = Transformation::new())]
     transformation: Transformation,
+    #[builder(default = Transformation::new(), setter(skip))]
     inverse_transformation: Transformation,
     kind: Kind,
 }
 
-/// The `add_pattern_fns` macro adds new_ and default_ functions for a given
-/// pattern.
-macro_rules! add_pattern_fns {
-    ($pattern:ident) => {
-        add_pattern_fns!($pattern(a: Self, b: Self));
+/// The `add_kind_fn` macro adds a _builder function for the given `Kind`.
+macro_rules! add_kind_fn {
+    ($kind:ident) => {
+        add_kind_fn!($kind(a: Self, b: Self));
     };
-    ($pattern:ident ($($arg:ident: $ty:ty),+)) => {
+    ($kind:ident ($($arg:ident: $ty:ty),*)) => {
         paste! {
-            #[must_use]
-            pub fn [<new_ $pattern:snake>](
-                transformation: Transformation, $($arg: $ty),+
-            ) -> Self {
-                Self::new(
-                    transformation, Kind::$pattern($pattern::new($($arg),+))
-                )
-            }
-
-            #[must_use]
-            pub fn [<default_ $pattern:snake>]($($arg: $ty),+) -> Self {
-                Self::[<new_ $pattern:snake>](Transformation::new(), $($arg),+)
+            pub fn [<$kind:snake _builder>](
+                $($arg: $ty),*
+            ) -> PatternBuilder<((), (Kind,))> {
+                Self::_builder().kind(Kind::$kind($kind::new($($arg),*)))
             }
         }
     };
 }
 
 impl Pattern {
-    #[must_use]
-    fn new(transformation: Transformation, pattern: Kind) -> Self {
-        Self {
-            transformation,
-            inverse_transformation: transformation.invert(),
-            kind: pattern,
-        }
-    }
-
-    add_pattern_fns!(Blend);
-    add_pattern_fns!(Checker);
-    add_pattern_fns!(Gradient);
-    add_pattern_fns!(Perturbed(scale: f64, pattern: Self));
-    add_pattern_fns!(RadialGradient);
-    add_pattern_fns!(Ring);
-    add_pattern_fns!(Stripe);
-    add_pattern_fns!(Solid(colour: Colour));
-
+    add_kind_fn!(Blend);
+    add_kind_fn!(Checker);
+    add_kind_fn!(Gradient);
+    add_kind_fn!(Perturbed(scale: f64, pattern: Self));
+    add_kind_fn!(RadialGradient);
+    add_kind_fn!(Ring);
+    add_kind_fn!(Stripe);
+    add_kind_fn!(Solid(colour: Colour));
     #[cfg(test)]
-    #[must_use]
-    pub fn new_test(transformation: Transformation) -> Self {
-        Self::new(transformation, Kind::Test(Test))
-    }
-
-    #[cfg(test)]
-    #[must_use]
-    pub fn default_test() -> Self {
-        Self::new_test(Transformation::new())
-    }
+    add_kind_fn!(Test());
 
     #[must_use]
     pub fn pattern_at(&self, object: &Object, point: &Point) -> Colour {
@@ -111,13 +88,24 @@ impl Pattern {
 /// `Colour`.
 impl From<Colour> for Pattern {
     fn from(value: Colour) -> Self {
-        Self::default_solid(value)
+        Self::solid_builder(value).build()
     }
 }
 
 impl_approx_eq!(
     &Pattern { ref kind, transformation, inverse_transformation }
 );
+
+impl<T: Optional<Transformation>> PatternBuilder<(T, (Kind,))> {
+    #[must_use]
+    pub fn build(self) -> Pattern {
+        let mut pattern = self._build();
+
+        pattern.inverse_transformation = pattern.transformation.invert();
+
+        pattern
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -131,46 +119,28 @@ mod tests {
 
         /// Test creation of `Pattern`s using new_ and default_ functions.
         macro_rules! test_pattern {
-            ($pattern:ident ($($arg:tt),*)) => {{
+            ($kind:ident ($($arg:tt),*)) => {{
                 paste! {
-                    let p = Kind::$pattern(
-                        $pattern::new($($arg.clone()),*)
+                    let p = Kind::$kind(
+                        $kind::new($($arg.clone()),*)
                     );
 
-                    let pn = Pattern::[<new_ $pattern:snake>](
-                        t, $($arg.clone()),*
-                    );
+                    let pn = Pattern::[<$kind:snake _builder>](
+                        $($arg.clone()),*
+                    )
+                        .transformation(t)
+                        .build();
 
                     assert_approx_eq!(pn.transformation, t);
                     assert_approx_eq!(pn.inverse_transformation, ti);
                     assert_approx_eq!(pn.kind, &p);
 
-                    let pn = Pattern::[<default_ $pattern:snake>](
-                        $($arg.clone()),*
-                    );
-
-                    assert_approx_eq!(pn.transformation, Transformation::new());
-                    assert_approx_eq!(
-                        pn.inverse_transformation, Transformation::new()
-                    );
-                    assert_approx_eq!(pn.kind, &p);
                 }
             }};
         }
 
-        let p = Kind::Stripe(Stripe::new(
-            Colour::white().into(),
-            Colour::green().into(),
-        ));
-
-        let pn = Pattern::new(t, p.clone());
-
-        assert_approx_eq!(pn.transformation, t);
-        assert_approx_eq!(pn.inverse_transformation, ti);
-        assert_approx_eq!(pn.kind, &p);
-
-        let w = Pattern::default_solid(Colour::white());
-        let b = Pattern::default_solid(Colour::black());
+        let w = Pattern::solid_builder(Colour::white()).build();
+        let b = Pattern::solid_builder(Colour::black()).build();
 
         test_pattern!(Blend(w, b));
         test_pattern!(Checker(w, b));
@@ -192,7 +162,7 @@ mod tests {
             .transformation(Transformation::new().translate(1.0, 0.5, 1.5))
             .build();
 
-        let p = Pattern::default_test();
+        let p = Pattern::test_builder().build();
 
         assert_approx_eq!(
             p.pattern_at(&o, &Point::new(2.0, 3.0, 4.0)),
@@ -204,7 +174,9 @@ mod tests {
     fn a_pattern_with_a_pattern_transformation() {
         let o = Object::test_builder().build();
 
-        let p = Pattern::new_test(Transformation::new().scale(2.0, 2.0, 2.0));
+        let p = Pattern::test_builder()
+            .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
+            .build();
 
         assert_approx_eq!(
             p.pattern_at(&o, &Point::new(2.0, 3.0, 4.0)),
@@ -218,8 +190,9 @@ mod tests {
             .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
             .build();
 
-        let p =
-            Pattern::new_test(Transformation::new().translate(0.5, 1.0, 1.5));
+        let p = Pattern::test_builder()
+            .transformation(Transformation::new().translate(0.5, 1.0, 1.5))
+            .build();
 
         assert_approx_eq!(
             p.pattern_at(&o, &Point::new(2.5, 3.0, 3.5)),
@@ -233,10 +206,11 @@ mod tests {
             .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
             .build();
 
-        let p = Pattern::default_stripe(
+        let p = Pattern::stripe_builder(
             Colour::white().into(),
             Colour::black().into(),
-        );
+        )
+        .build();
 
         assert_approx_eq!(
             p.pattern_at(&o, &Point::new(1.5, 0.0, 0.0)),
@@ -248,11 +222,12 @@ mod tests {
     fn a_stripe_pattern_with_a_pattern_transformation() {
         let o = Object::test_builder().build();
 
-        let p = Pattern::new_stripe(
-            Transformation::new().scale(2.0, 2.0, 2.0),
+        let p = Pattern::stripe_builder(
             Colour::white().into(),
             Colour::black().into(),
-        );
+        )
+        .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
+        .build();
 
         assert_approx_eq!(
             p.pattern_at(&o, &Point::new(1.5, 0.0, 0.0)),
@@ -266,11 +241,12 @@ mod tests {
             .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
             .build();
 
-        let p = Pattern::new_stripe(
-            Transformation::new().translate(0.5, 0.0, 0.0),
+        let p = Pattern::stripe_builder(
             Colour::white().into(),
             Colour::black().into(),
-        );
+        )
+        .transformation(Transformation::new().translate(0.5, 0.0, 0.0))
+        .build();
 
         assert_approx_eq!(
             p.pattern_at(&o, &Point::new(2.5, 0.0, 0.0)),
@@ -280,9 +256,11 @@ mod tests {
 
     #[test]
     fn comparing_patterns() {
-        let p1 = Pattern::default_test();
-        let p2 = Pattern::default_test();
-        let p3 = Pattern::new_test(Transformation::new().scale(1.0, 2.0, 2.0));
+        let p1 = Pattern::test_builder().build();
+        let p2 = Pattern::test_builder().build();
+        let p3 = Pattern::test_builder()
+            .transformation(Transformation::new().scale(1.0, 2.0, 2.0))
+            .build();
 
         assert_approx_eq!(p1, &p2);
 

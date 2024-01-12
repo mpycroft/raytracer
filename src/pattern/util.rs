@@ -26,45 +26,47 @@ macro_rules! impl_pattern {
 }
 pub(super) use impl_pattern;
 
-/// This macro adds in pattern creation tests and comparison tests.
+/// This macro adds in `Kind` creation tests and comparison tests.
 #[cfg(test)]
-macro_rules! add_pattern_tests {
-    ($pattern:ident) => {
+macro_rules! add_kind_tests {
+    ($kind:ident) => {
         paste::paste! {
             #[test]
-            fn [<creating_a_ $pattern:snake _pattern>]() {
-                let p = $pattern::new(
+            fn [<creating_a_ $kind:snake>]() {
+                let p = $kind::new(
                     Colour::white().into(), Colour::black().into()
                 );
 
                 assert_approx_eq!(
-                    p.a, &crate::Pattern::default_solid(Colour::white())
+                    p.a,
+                    &crate::Pattern::solid_builder(Colour::white()).build()
                 );
                 assert_approx_eq!(
-                    p.b, &crate::Pattern::default_solid(Colour::black())
+                    p.b,
+                    &crate::Pattern::solid_builder(Colour::black()).build()
                 );
             }
 
             #[test]
-            fn [<comparing_ $pattern:snake _patterns>]() {
-                let p1 = $pattern::new(
+            fn [<comparing_ $kind:snake s>]() {
+                let k1 = $kind::new(
                     Colour::white().into(), Colour::purple().into()
                 );
-                let p2 = $pattern::new(
+                let k2 = $kind::new(
                     Colour::white().into(), Colour::purple().into()
                 );
-                let p3 = $pattern::new(
+                let k3 = $kind::new(
                     Colour::white().into(), Colour::blue().into());
 
-                assert_approx_eq!(p1, &p2);
+                assert_approx_eq!(k1, &k2);
 
-                assert_approx_ne!(p1, &p3);
+                assert_approx_ne!(k1, &k3);
             }
         }
     };
 }
 #[cfg(test)]
-pub(super) use add_pattern_tests;
+pub(super) use add_kind_tests;
 
 /// This macro implements the `ApproxEq` trait for the `Kind` enum as it is
 /// quite tedious.
