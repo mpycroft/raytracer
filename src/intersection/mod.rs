@@ -115,7 +115,10 @@ mod tests {
     use std::f64::consts::SQRT_2;
 
     use super::*;
-    use crate::math::{float::*, Point, Transformation, Vector};
+    use crate::{
+        math::{float::*, Point, Transformation, Vector},
+        Material,
+    };
 
     #[test]
     fn creating_an_intersection() {
@@ -202,17 +205,20 @@ mod tests {
     #[test]
     #[allow(clippy::many_single_char_names)]
     fn finding_n1_and_n2_at_various_intersections() {
-        let a = Object::glass_sphere_builder()
+        let a = Object::sphere_builder()
             .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
+            .material(Material::glass())
             .build();
 
-        let mut b = Object::glass_sphere_builder()
+        let mut b = Object::sphere_builder()
             .transformation(Transformation::new().translate(0.0, 0.0, -0.25))
+            .material(Material::glass())
             .build();
         b.material.refractive_index = 2.0;
 
-        let mut c = Object::glass_sphere_builder()
+        let mut c = Object::sphere_builder()
             .transformation(Transformation::new().translate(0.0, 0.0, 0.25))
+            .material(Material::glass())
             .build();
         c.material.refractive_index = 2.5;
 
@@ -246,8 +252,9 @@ mod tests {
     fn the_under_point_is_offset_below_the_surface() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
 
-        let o = Object::glass_sphere_builder()
+        let o = Object::sphere_builder()
             .transformation(Transformation::new().translate(0.0, 0.0, 1.0))
+            .material(Material::glass())
             .build();
 
         let i = Intersection::new(&o, 5.0);

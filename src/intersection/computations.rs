@@ -53,12 +53,12 @@ mod tests {
     use crate::{
         intersection::List,
         math::{float::*, Ray},
-        Intersection,
+        Intersection, Material,
     };
 
     #[test]
     fn the_schlick_approximation_under_total_internal_reflection() {
-        let o = Object::glass_sphere_builder().build();
+        let o = Object::sphere_builder().material(Material::glass()).build();
 
         let sqrt_2_div_2 = SQRT_2 / 2.0;
 
@@ -76,7 +76,7 @@ mod tests {
 
     #[test]
     fn the_schlick_approximation_with_a_perpendicular_viewing_angle() {
-        let o = Object::glass_sphere_builder().build();
+        let o = Object::sphere_builder().material(Material::glass()).build();
 
         let r = Ray::new(Point::origin(), Vector::y_axis());
 
@@ -92,7 +92,7 @@ mod tests {
 
     #[test]
     fn the_schlick_approximation_with_small_angle_and_n2_greater_n1() {
-        let o = Object::glass_sphere_builder().build();
+        let o = Object::sphere_builder().material(Material::glass()).build();
 
         let r = Ray::new(Point::new(0.0, 0.99, -2.0), Vector::z_axis());
 

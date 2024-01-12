@@ -61,8 +61,9 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Object::glass_sphere_builder()
+        Object::sphere_builder()
             .transformation(Transformation::new().translate(-0.5, 1.0, 0.5))
+            .material(Material::glass())
             .build(),
     );
 
@@ -121,12 +122,13 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Object::glass_sphere_builder()
+        Object::sphere_builder()
             .transformation(
                 Transformation::new()
                     .scale(0.5, 0.5, 0.5)
                     .translate(1.5, 0.5, -0.5),
             )
+            .material(Material::glass())
             .build(),
     );
 

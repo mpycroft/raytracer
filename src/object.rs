@@ -1,3 +1,4 @@
+use paste::paste;
 use typed_builder::{Optional, TypedBuilder};
 
 use crate::{
@@ -25,35 +26,25 @@ pub struct Object {
     shape: Shape,
 }
 
+macro_rules! add_builder_fn {
+    ($shape:ident) => {
+        paste! {
+            pub fn [<$shape:lower _builder>]() ->
+                ObjectBuilder<((), (), (), (Shape,))>
+            {
+                Self::_builder().shape(Shape::$shape)
+            }
+
+        }
+    };
+}
+
 impl Object {
-    pub fn cube_builder() -> ObjectBuilder<((), (), (), (Shape,))> {
-        Self::_builder().shape(Shape::Cube)
-    }
-
-    pub fn plane_builder() -> ObjectBuilder<((), (), (), (Shape,))> {
-        Self::_builder().shape(Shape::Plane)
-    }
-
-    pub fn sphere_builder() -> ObjectBuilder<((), (), (), (Shape,))> {
-        Self::_builder().shape(Shape::Sphere)
-    }
-
+    add_builder_fn!(Cube);
+    add_builder_fn!(Plane);
+    add_builder_fn!(Sphere);
     #[cfg(test)]
-    pub fn test_builder() -> ObjectBuilder<((), (), (), (Shape,))> {
-        Self::_builder().shape(Shape::Test)
-    }
-
-    pub fn glass_sphere_builder(
-    ) -> ObjectBuilder<((), (Material,), (), (Shape,))> {
-        Self::_builder().shape(Shape::Sphere).material(
-            Material::builder()
-                .ambient(0.01)
-                .diffuse(0.01)
-                .transparency(1.0)
-                .refractive_index(1.5)
-                .build(),
-        )
-    }
+    add_builder_fn!(Test);
 
     #[must_use]
     pub fn to_object_space<'a, T: Transformable<'a>>(&self, value: &'a T) -> T {
@@ -169,33 +160,6 @@ mod tests {
         test_object!(Plane);
         test_object!(Sphere);
         test_object!(Test);
-
-        let m = Material::builder()
-            .ambient(0.01)
-            .diffuse(0.01)
-            .transparency(1.0)
-            .refractive_index(1.5)
-            .build();
-        let t = Transformation::new().shear(1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
-        let s = Shape::Sphere;
-
-        let o = Object::glass_sphere_builder()
-            .transformation(t)
-            .casts_shadow(false)
-            .build();
-
-        assert_approx_eq!(o.transformation, t);
-        assert_approx_eq!(o.inverse_transformation, t.invert());
-        assert_approx_eq!(o.material, &m);
-        assert!(!o.casts_shadow);
-        assert_approx_eq!(o.shape, s);
-
-        let o = Object::glass_sphere_builder().build();
-
-        assert_approx_eq!(o.transformation, Transformation::new());
-        assert_approx_eq!(o.inverse_transformation, Transformation::new());
-        assert_approx_eq!(o.material, &m);
-        assert_approx_eq!(o.shape, s);
     }
 
     #[test]

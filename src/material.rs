@@ -30,6 +30,16 @@ pub struct Material {
 
 impl Material {
     #[must_use]
+    pub fn glass() -> Self {
+        Self::builder()
+            .ambient(0.01)
+            .diffuse(0.01)
+            .transparency(1.0)
+            .refractive_index(1.5)
+            .build()
+    }
+
+    #[must_use]
     pub fn lighting(
         &self,
         object: &Object,
@@ -75,7 +85,7 @@ impl Material {
 
 impl Default for Material {
     fn default() -> Self {
-        Material::builder().build()
+        Self::builder().build()
     }
 }
 
@@ -123,6 +133,20 @@ mod tests {
                 reflective: 0.0,
                 transparency: 0.0,
                 refractive_index: 1.0
+            }
+        );
+
+        assert_approx_eq!(
+            Material::glass(),
+            &Material {
+                pattern: Colour::white().into(),
+                ambient: 0.01,
+                diffuse: 0.01,
+                specular: 0.9,
+                shininess: 200.0,
+                reflective: 0.0,
+                transparency: 1.0,
+                refractive_index: 1.5
             }
         );
     }
