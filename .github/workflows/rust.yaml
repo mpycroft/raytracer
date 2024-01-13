@@ -53,6 +53,9 @@ jobs:
         run: cargo fmt --check
 
   coverage:
+    # We don't use the cache here since cargo-tarpaulin will always rebuild
+    # everything each time it is run and the cache does not play nicely with
+    # binstall.
     name: Generate test coverage
     runs-on: macos-latest
     steps:
@@ -62,11 +65,11 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Use cache
-        uses: swatinem/rust-cache@v2
+      - name: Install cargo-binstall
+        uses: cargo-bins/cargo-binstall@main
 
-      - name: Install cargo-tarpaulin
-        run: cargo install cargo-tarpaulin
+      - name: Install cargo-tarpaulin via binstall
+        run: cargo binstall cargo-tarpaulin --no-confirm --force
 
       - name: Run cargo tarpaulin
         run: cargo tarpaulin --lib -o lcov
@@ -76,3 +79,4 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./lcov.info
+          fail_ci_if_error: true
