@@ -27,8 +27,15 @@ Three spheres with various patterns.
 ## Chapter 11
 
 Several spheres (including glass spheres) with a mirror wall behind them.
+
 ![Spheres with mirror](chapter11.png)
 
 Several spheres under "water" (a transparent plane that doesn't cast a shadow).
 
 ![Spheres with water](chapter11-water.png)
+
+## Chapter 12
+
+A scene using cubes.
+
+![Some cubes](chapter12.png)
