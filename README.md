@@ -1,5 +1,8 @@
 # raytracer
 
+[![Build](https://github.com/mpycroft/raytracer/actions/workflows/rust.yaml/badge.svg)](https://github.com/mpycroft/raytracer/actions)
+[![Coverage](https://codecov.io/gh/mpycroft/raytracer/graph/badge.svg)](<https://codecov.io/gh/mpycroft/raytracer>)
+
 A ray tracer written in Rust.
 
 ## Why a ray tracer?
