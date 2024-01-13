@@ -1,4 +1,4 @@
-name: test suite
+name: Rust tests
 on:
   push:
     branches: ["main"]
@@ -8,43 +8,71 @@ jobs:
     strategy:
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
-    name: cargo test
+        rust: [stable, beta, nightly]
+
+    name: Test on ${{ matrix.os }} with rust ${{ matrix.rust }}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo test
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  clippy:
-    name: cargo clippy
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
         with:
+          toolchain: ${{ matrix.rust }}
           components: clippy
-      - run: cargo check
-      - run: cargo clippy
+
+      - name: Use cache
+        uses: swatinem/rust-cache@v2
+
+      - name: Run cargo check
+        run: cargo check
+
+      - name: Run cargo clippy
+        run: cargo clippy
+
+      - name: Run cargo test
+        run: cargo test
 
   format:
-    name: cargo fmt
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@nightly
-        with:
-          components: rustfmt
-      - run: cargo fmt --check
-
-  coverage:
-    name: cargo tarpaulin
+    name: Check formatting
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo install cargo-tarpaulin
-      - run: cargo tarpaulin --lib -o lcov
-      - uses: codecov/codecov-action@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install nightly Rust
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rustfmt
+
+      - name: Use cache
+        uses: swatinem/rust-cache@v2
+
+      - name: Run cargo fmt
+        run: cargo fmt --check
+
+  coverage:
+    name: Generate test coverage
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Use cache
+        uses: swatinem/rust-cache@v2
+
+      - name: Install cargo-tarpaulin
+        run: cargo install cargo-tarpaulin
+
+      - name: Run cargo tarpaulin
+        run: cargo tarpaulin --lib -o lcov
+
+      - name: Upload code coverage
+        uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./lcov.info
