@@ -178,7 +178,10 @@ impl Default for World {
 
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::{FRAC_PI_2, SQRT_2};
+    use std::{
+        f64::consts::{FRAC_PI_2, SQRT_2},
+        io::sink,
+    };
 
     use super::*;
     use crate::{
@@ -558,7 +561,7 @@ intersection list.")]
             ),
         );
 
-        let i = c.render(&w, 5, true).unwrap();
+        let i = c.render(&w, 5, true, &mut sink()).unwrap();
 
         assert_approx_eq!(
             i.get_pixel(5, 5),

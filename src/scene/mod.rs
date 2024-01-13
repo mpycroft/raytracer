@@ -5,6 +5,8 @@ mod chapter6;
 mod chapter8;
 mod chapter9;
 
+use std::io::Write;
+
 use anyhow::Result;
 use clap::ValueEnum;
 use derive_more::Display;
@@ -51,7 +53,12 @@ pub struct SceneData {
 }
 
 impl SceneData {
-    pub fn render(&self, depth: u32, quiet: bool) -> Result<Canvas> {
-        self.camera.render(&self.world, depth, quiet)
+    pub fn render(
+        &self,
+        depth: u32,
+        quiet: bool,
+        buffer: &mut dyn Write,
+    ) -> Result<Canvas> {
+        self.camera.render(&self.world, depth, quiet, buffer)
     }
 }
