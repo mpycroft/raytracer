@@ -35,7 +35,7 @@ pub fn intersect(ray: &Ray) -> Option<TList> {
 
 #[must_use]
 pub fn normal_at(point: &Point) -> Vector {
-    todo!()
+    Vector::new(point.x, 0.0, point.z)
 }
 
 #[cfg(test)]
@@ -78,6 +78,26 @@ mod tests {
             ),
             6.807_98,
             7.088_72,
+        );
+    }
+
+    #[test]
+    fn normal_vector_on_a_cylinder() {
+        assert_approx_eq!(
+            normal_at(&Point::new(1.0, 0.0, 0.0)),
+            Vector::x_axis()
+        );
+        assert_approx_eq!(
+            normal_at(&Point::new(0.0, 5.0, -1.0)),
+            -Vector::z_axis()
+        );
+        assert_approx_eq!(
+            normal_at(&Point::new(0.0, -2.0, 1.0)),
+            Vector::z_axis()
+        );
+        assert_approx_eq!(
+            normal_at(&Point::new(-1.0, 1.0, 0.0)),
+            -Vector::x_axis()
         );
     }
 }
