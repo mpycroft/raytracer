@@ -63,7 +63,7 @@ pub fn normal_at(point: &Point) -> Vector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::{float::*, Vector};
+    use crate::math::float::*;
 
     #[test]
     fn a_ray_intersects_a_cube() {
