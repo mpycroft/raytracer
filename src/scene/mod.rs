@@ -1,9 +1,13 @@
 mod chapter10;
 mod chapter11;
+mod chapter12;
 mod chapter6;
 mod chapter8;
 mod chapter9;
 
+use std::io::Write;
+
+use anyhow::Result;
 use clap::ValueEnum;
 use derive_more::Display;
 use derive_new::new;
@@ -20,6 +24,7 @@ pub enum Scene {
     Chapter10,
     Chapter11,
     Chapter11Water,
+    Chapter12,
 }
 
 impl Scene {
@@ -32,6 +37,7 @@ impl Scene {
             Self::Chapter10 => chapter10::generate_scene(arguments),
             Self::Chapter11 => chapter11::generate_scene(arguments),
             Self::Chapter11Water => chapter11::generate_water_scene(arguments),
+            Self::Chapter12 => chapter12::generate_scene(arguments),
         }
     }
 }
@@ -47,8 +53,12 @@ pub struct SceneData {
 }
 
 impl SceneData {
-    #[must_use]
-    pub fn render(&self, depth: u32, quiet: bool) -> Canvas {
-        self.camera.render(&self.world, depth, quiet)
+    pub fn render(
+        &self,
+        depth: u32,
+        quiet: bool,
+        buffer: &mut dyn Write,
+    ) -> Result<Canvas> {
+        self.camera.render(&self.world, depth, quiet, buffer)
     }
 }

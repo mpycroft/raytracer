@@ -23,7 +23,7 @@ mod tests {
     use std::f64::consts::SQRT_2;
 
     use super::*;
-    use crate::{math::float::*, pattern::util::add_pattern_tests};
+    use crate::{math::float::*, pattern::util::add_kind_tests};
 
     #[test]
     fn a_ring_should_extend_in_both_x_and_z() {
@@ -69,5 +69,5 @@ mod tests {
         );
     }
 
-    add_pattern_tests!(Ring);
+    add_kind_tests!(Ring);
 }

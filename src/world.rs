@@ -77,8 +77,8 @@ impl World {
         let mut list = List::new();
 
         for obj in &self.objects {
-            if let Some(intersects) = obj.intersect(ray) {
-                list.append(&mut *intersects.build());
+            if let Some(mut intersects) = obj.intersect(ray) {
+                list.append(&mut *intersects);
             }
         }
 
@@ -86,7 +86,16 @@ impl World {
             return None;
         }
 
-        list.sort_by(|a, b| a.t.partial_cmp(&b.t).unwrap());
+        list.sort_by(|a, b| {
+            a.t.partial_cmp(&b.t).unwrap_or_else(|| {
+                panic!(
+                    "\
+Failed to compare floating point values '{}' and '{}' when sorting \
+intersection list.",
+                    a.t, b.t
+                )
+            })
+        });
 
         Some(list)
     }
@@ -169,7 +178,10 @@ impl Default for World {
 
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::{FRAC_PI_2, SQRT_2};
+    use std::{
+        f64::consts::{FRAC_PI_2, SQRT_2},
+        io::sink,
+    };
 
     use super::*;
     use crate::{
@@ -180,21 +192,22 @@ mod tests {
     fn test_world() -> World {
         let mut w = World::new();
 
-        w.add_object(Object::new_sphere(
-            Transformation::new(),
-            Material {
-                pattern: Colour::new(0.8, 1.0, 0.6).into(),
-                diffuse: 0.7,
-                specular: 0.2,
-                ..Default::default()
-            },
-            true,
-        ));
-        w.add_object(Object::new_sphere(
-            Transformation::new().scale(0.5, 0.5, 0.5),
-            Material::default(),
-            true,
-        ));
+        w.add_object(
+            Object::sphere_builder()
+                .material(
+                    Material::builder()
+                        .pattern(Colour::new(0.8, 1.0, 0.6).into())
+                        .diffuse(0.7)
+                        .specular(0.2)
+                        .build(),
+                )
+                .build(),
+        );
+        w.add_object(
+            Object::sphere_builder()
+                .transformation(Transformation::new().scale(0.5, 0.5, 0.5))
+                .build(),
+        );
 
         w.add_light(PointLight::new(
             Point::new(-10.0, 10.0, -10.0),
@@ -219,12 +232,10 @@ mod tests {
     fn adding_elements_to_a_world() {
         let mut w = World::new();
 
-        let o1 = Object::default_test();
-        let o2 = Object::new_sphere(
-            Transformation::new().translate(1.0, 2.0, 3.0),
-            Material::default(),
-            true,
-        );
+        let o1 = Object::test_builder().build();
+        let o2 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(1.0, 2.0, 3.0))
+            .build();
 
         w.add_object(o1.clone());
         w.add_object(o2.clone());
@@ -284,16 +295,18 @@ mod tests {
 
         w.add_light(PointLight::new(Point::origin(), Colour::white()));
 
-        w.add_object(Object::new_plane(
-            Transformation::new().translate(0.0, 1.0, 0.0),
-            Material { reflective: 1.0, ..Default::default() },
-            true,
-        ));
-        w.add_object(Object::new_plane(
-            Transformation::new().translate(0.0, -1.0, 0.0),
-            Material { reflective: 1.0, ..Default::default() },
-            true,
-        ));
+        w.add_object(
+            Object::plane_builder()
+                .transformation(Transformation::new().translate(0.0, 1.0, 0.0))
+                .material(Material::builder().reflective(1.0).build())
+                .build(),
+        );
+        w.add_object(
+            Object::plane_builder()
+                .transformation(Transformation::new().translate(0.0, -1.0, 0.0))
+                .material(Material::builder().reflective(1.0).build())
+                .build(),
+        );
 
         let r = Ray::new(Point::origin(), Vector::y_axis());
 
@@ -350,13 +363,11 @@ mod tests {
             Colour::white(),
         ));
 
-        w.add_object(Object::default_sphere());
+        w.add_object(Object::sphere_builder().build());
 
-        let o = Object::new_sphere(
-            Transformation::new().translate(0.0, 0.0, 10.0),
-            Material::default(),
-            true,
-        );
+        let o = Object::sphere_builder()
+            .transformation(Transformation::new().translate(0.0, 0.0, 10.0))
+            .build();
         w.add_object(o.clone());
 
         let r = Ray::new(Point::new(0.0, 0.0, 5.0), Vector::z_axis());
@@ -372,11 +383,12 @@ mod tests {
     fn shade_hit_with_a_reflective_material() {
         let mut w = test_world();
 
-        w.add_object(Object::new_plane(
-            Transformation::new().translate(0.0, -1.0, 0.0),
-            Material { reflective: 0.5, ..Default::default() },
-            true,
-        ));
+        w.add_object(
+            Object::plane_builder()
+                .transformation(Transformation::new().translate(0.0, -1.0, 0.0))
+                .material(Material::builder().reflective(0.5).build())
+                .build(),
+        );
 
         let sqrt_2_div_2 = SQRT_2 / 2.0;
 
@@ -401,24 +413,30 @@ mod tests {
     fn shade_hit_with_a_transparent_material() {
         let mut w = test_world();
 
-        w.add_object(Object::new_plane(
-            Transformation::new().translate(0.0, -1.0, 0.0),
-            Material {
-                transparency: 0.5,
-                refractive_index: 1.5,
-                ..Default::default()
-            },
-            true,
-        ));
-        w.add_object(Object::new_sphere(
-            Transformation::new().translate(0.0, -3.5, -0.5),
-            Material {
-                pattern: Colour::red().into(),
-                ambient: 0.5,
-                ..Default::default()
-            },
-            true,
-        ));
+        w.add_object(
+            Object::plane_builder()
+                .transformation(Transformation::new().translate(0.0, -1.0, 0.0))
+                .material(
+                    Material::builder()
+                        .transparency(0.5)
+                        .refractive_index(1.5)
+                        .build(),
+                )
+                .build(),
+        );
+        w.add_object(
+            Object::sphere_builder()
+                .transformation(
+                    Transformation::new().translate(0.0, -3.5, -0.5),
+                )
+                .material(
+                    Material::builder()
+                        .pattern(Colour::red().into())
+                        .ambient(0.5)
+                        .build(),
+                )
+                .build(),
+        );
 
         let o = &w.objects[2];
 
@@ -445,25 +463,31 @@ mod tests {
     fn shade_hit_with_a_reflective_transparent_material() {
         let mut w = test_world();
 
-        w.add_object(Object::new_plane(
-            Transformation::new().translate(0.0, -1.0, 0.0),
-            Material {
-                reflective: 0.5,
-                transparency: 0.5,
-                refractive_index: 1.5,
-                ..Default::default()
-            },
-            true,
-        ));
-        w.add_object(Object::new_sphere(
-            Transformation::new().translate(0.0, -3.5, -0.5),
-            Material {
-                pattern: Colour::red().into(),
-                ambient: 0.5,
-                ..Default::default()
-            },
-            true,
-        ));
+        w.add_object(
+            Object::plane_builder()
+                .transformation(Transformation::new().translate(0.0, -1.0, 0.0))
+                .material(
+                    Material::builder()
+                        .reflective(0.5)
+                        .transparency(0.5)
+                        .refractive_index(1.5)
+                        .build(),
+                )
+                .build(),
+        );
+        w.add_object(
+            Object::sphere_builder()
+                .transformation(
+                    Transformation::new().translate(0.0, -3.5, -0.5),
+                )
+                .material(
+                    Material::builder()
+                        .pattern(Colour::red().into())
+                        .ambient(0.5)
+                        .build(),
+                )
+                .build(),
+        );
 
         let o = &w.objects[2];
 
@@ -504,6 +528,26 @@ mod tests {
     }
 
     #[test]
+    #[should_panic(expected = "\
+Failed to compare floating point values 'NaN' and 'NaN' when sorting \
+intersection list.")]
+    fn intersect_with_nan() {
+        let mut w = World::new();
+
+        w.add_object(
+            Object::sphere_builder()
+                .transformation(Transformation::new().translate(
+                    0.0,
+                    0.0,
+                    f64::NAN,
+                ))
+                .build(),
+        );
+
+        let _ = w.intersect(&Ray::new(Point::origin(), Vector::z_axis()));
+    }
+
+    #[test]
     fn rendering_a_world_with_a_camera() {
         let w = test_world();
         let c = Camera::new(
@@ -517,7 +561,7 @@ mod tests {
             ),
         );
 
-        let i = c.render(&w, 5, true);
+        let i = c.render(&w, 5, true, &mut sink()).unwrap();
 
         assert_approx_eq!(
             i.get_pixel(5, 5),
@@ -583,11 +627,12 @@ mod tests {
     fn the_reflected_colour_for_a_reflective_material() {
         let mut w = test_world();
 
-        w.add_object(Object::new_plane(
-            Transformation::new().translate(0.0, -1.0, 0.0),
-            Material { reflective: 0.5, ..Default::default() },
-            true,
-        ));
+        w.add_object(
+            Object::plane_builder()
+                .transformation(Transformation::new().translate(0.0, -1.0, 0.0))
+                .material(Material::builder().reflective(0.5).build())
+                .build(),
+        );
 
         let sqrt_2_div_2 = SQRT_2 / 2.0;
 
@@ -611,11 +656,12 @@ mod tests {
     fn the_reflected_colour_at_the_maximum_recursion_depth() {
         let mut w = test_world();
 
-        w.add_object(Object::new_plane(
-            Transformation::new().translate(0.0, -1.0, 0.0),
-            Material { reflective: 0.5, ..Default::default() },
-            true,
-        ));
+        w.add_object(
+            Object::plane_builder()
+                .transformation(Transformation::new().translate(0.0, -1.0, 0.0))
+                .material(Material::builder().reflective(0.5).build())
+                .build(),
+        );
 
         let sqrt_2_div_2 = SQRT_2 / 2.0;
 
@@ -697,11 +743,10 @@ mod tests {
     #[test]
     fn the_refracted_colour_with_a_reflected_ray() {
         let mut w = test_world();
-        w.objects[0].material = Material {
-            pattern: Pattern::default_test(),
-            ambient: 1.0,
-            ..Default::default()
-        };
+        w.objects[0].material = Material::builder()
+            .pattern(Pattern::test_builder().build())
+            .ambient(1.0)
+            .build();
         w.objects[1].material.transparency = 1.0;
         w.objects[1].material.refractive_index = 1.5;
 

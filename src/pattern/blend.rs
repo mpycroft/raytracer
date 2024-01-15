@@ -16,7 +16,7 @@ impl PatternAt for Blend {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, pattern::util::add_pattern_tests};
+    use crate::{math::float::*, pattern::util::add_kind_tests};
 
     #[test]
     fn a_blend_pattern_averages_the_colour_at_all_points() {
@@ -37,5 +37,5 @@ mod tests {
         );
     }
 
-    add_pattern_tests!(Blend);
+    add_kind_tests!(Blend);
 }

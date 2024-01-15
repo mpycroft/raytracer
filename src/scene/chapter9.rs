@@ -27,59 +27,71 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
 
     let mut world = World::new();
 
-    let floor_material = Material {
-        pattern: Colour::new(1.0, 0.9, 0.9).into(),
-        specular: 0.0,
-        ..Default::default()
-    };
+    let floor_material = Material::builder()
+        .pattern(Colour::new(1.0, 0.9, 0.9).into())
+        .specular(0.0)
+        .build();
 
-    world.add_object(Object::new_plane(
-        Transformation::new(),
-        floor_material.clone(),
-        true,
-    ));
-    world.add_object(Object::new_plane(
-        Transformation::new()
-            .rotate_x(Angle(FRAC_PI_2))
-            .translate(0.0, 0.0, 10.0),
-        floor_material,
-        true,
-    ));
+    world.add_object(
+        Object::plane_builder().material(floor_material.clone()).build(),
+    );
+    world.add_object(
+        Object::plane_builder()
+            .transformation(
+                Transformation::new()
+                    .rotate_x(Angle(FRAC_PI_2))
+                    .translate(0.0, 0.0, 10.0),
+            )
+            .material(floor_material)
+            .build(),
+    );
 
-    world.add_object(Object::new_sphere(
-        Transformation::new().translate(-0.5, 1.0, 0.5),
-        Material {
-            pattern: Colour::new(0.1, 1.0, 0.5).into(),
-            diffuse: 0.7,
-            specular: 0.3,
-            ..Default::default()
-        },
-        true,
-    ));
+    world.add_object(
+        Object::sphere_builder()
+            .transformation(Transformation::new().translate(-0.5, 1.0, 0.5))
+            .material(
+                Material::builder()
+                    .pattern(Colour::new(0.1, 1.0, 0.5).into())
+                    .diffuse(0.7)
+                    .specular(0.3)
+                    .build(),
+            )
+            .build(),
+    );
 
-    world.add_object(Object::new_sphere(
-        Transformation::new().scale(0.5, 0.5, 0.5).translate(1.5, 0.5, -0.5),
-        Material {
-            pattern: Colour::new(0.5, 1.0, 0.1).into(),
-            diffuse: 0.7,
-            specular: 0.3,
-            ..Default::default()
-        },
-        true,
-    ));
+    world.add_object(
+        Object::sphere_builder()
+            .transformation(
+                Transformation::new()
+                    .scale(0.5, 0.5, 0.5)
+                    .translate(1.5, 0.5, -0.5),
+            )
+            .material(
+                Material::builder()
+                    .pattern(Colour::new(0.5, 1.0, 0.1).into())
+                    .diffuse(0.7)
+                    .specular(0.3)
+                    .build(),
+            )
+            .build(),
+    );
 
-    world.add_object(Object::new_sphere(
-        Transformation::new()
-            .scale(0.33, 0.33, 0.33)
-            .translate(-1.5, 0.33, -0.75),
-        Material {
-            pattern: Colour::new(1.0, 0.8, 0.1).into(),
-            diffuse: 0.7,
-            specular: 0.3,
-            ..Default::default()
-        },
-        true,
-    ));
+    world.add_object(
+        Object::sphere_builder()
+            .transformation(
+                Transformation::new()
+                    .scale(0.33, 0.33, 0.33)
+                    .translate(-1.5, 0.33, -0.75),
+            )
+            .material(
+                Material::builder()
+                    .pattern(Colour::new(1.0, 0.8, 0.1).into())
+                    .diffuse(0.7)
+                    .specular(0.3)
+                    .build(),
+            )
+            .build(),
+    );
 
     world.add_light(PointLight::new(
         Point::new(-10.0, 10.0, -10.0),

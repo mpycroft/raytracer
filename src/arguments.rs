@@ -8,7 +8,7 @@ use raytracer::math::Angle;
 
 use crate::scene::Scene;
 
-fn styles() -> Styles {
+const fn styles() -> Styles {
     Styles::styled()
         .header(AnsiColor::Yellow.on_default())
         .usage(AnsiColor::Yellow.on_default())
@@ -24,7 +24,7 @@ pub struct Arguments {
     pub out: String,
 
     /// Which scene to generate.
-    #[arg(short, long, default_value = "chapter11-water")]
+    #[arg(short, long, default_value = "chapter12")]
     pub scene: Scene,
 
     /// Camera width (in pixels)

@@ -22,7 +22,7 @@ impl PatternAt for Gradient {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, pattern::util::add_pattern_tests};
+    use crate::{math::float::*, pattern::util::add_kind_tests};
 
     #[test]
     fn a_gradient_linearly_interpolates_between_colours() {
@@ -89,5 +89,5 @@ mod tests {
         );
     }
 
-    add_pattern_tests!(Gradient);
+    add_kind_tests!(Gradient);
 }

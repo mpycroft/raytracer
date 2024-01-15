@@ -56,7 +56,17 @@ mod tests {
         let p = Perturbed::new(0.4, Colour::red().into());
 
         assert_approx_eq!(p.scale, 0.4);
-        assert_approx_eq!(p.pattern, &Pattern::default_solid(Colour::red()));
+        assert_approx_eq!(
+            p.pattern,
+            &Pattern::solid_builder(Colour::red()).build()
+        );
+    }
+
+    #[test]
+    fn a_perturbed_pattern() {
+        let p = Perturbed::new(0.4, Colour::red().into());
+
+        assert_approx_eq!(p.pattern_at(&Point::origin()), Colour::red());
     }
 
     #[test]

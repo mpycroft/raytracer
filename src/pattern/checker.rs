@@ -21,7 +21,7 @@ impl PatternAt for Checker {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, pattern::util::add_pattern_tests};
+    use crate::{math::float::*, pattern::util::add_kind_tests};
 
     #[test]
     fn a_checker_pattern_should_repeat_in_x() {
@@ -98,5 +98,5 @@ mod tests {
         );
     }
 
-    add_pattern_tests!(Checker);
+    add_kind_tests!(Checker);
 }

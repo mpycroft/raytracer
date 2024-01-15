@@ -1,9 +1,10 @@
-use std::time::Instant;
+use std::{io::Write, time::Instant};
 
+use anyhow::Result;
 use console::Term;
 use indicatif::{
-    HumanCount, HumanDuration, ProgressBar, ProgressFinish, ProgressIterator,
-    ProgressStyle,
+    HumanCount, HumanDuration, ProgressBar, ProgressDrawTarget, ProgressFinish,
+    ProgressIterator, ProgressStyle,
 };
 
 use crate::{
@@ -56,40 +57,44 @@ impl Camera {
 
     /// Renders the given `World` using the given camera.
     ///
-    /// # Panics
+    /// # Errors
     ///
-    /// This function should not panic as all the values unwrapped should be
-    /// valid but will if there is an error in the formatting for progress
-    /// somewhere.
-    #[must_use]
-    pub fn render(&self, world: &World, depth: u32, quiet: bool) -> Canvas {
-        if !quiet {
-            println!(
-                "Size {} by {}, field of view {:.1} degrees",
-                HumanCount(self.horizontal_size.try_into().unwrap()),
-                HumanCount(self.vertical_size.try_into().unwrap()),
-                self.field_of_view.to_degrees()
-            );
+    /// This function will return an error if it can't convert values or there
+    /// is an error writing output.
+    pub fn render(
+        &self,
+        world: &World,
+        depth: u32,
+        quiet: bool,
+        buffer: &mut dyn Write,
+    ) -> Result<Canvas> {
+        writeln!(
+            buffer,
+            "Size {} by {}, field of view {:.1} degrees",
+            HumanCount(self.horizontal_size.try_into()?),
+            HumanCount(self.vertical_size.try_into()?),
+            self.field_of_view.to_degrees()
+        )?;
 
-            println!("Rendering scene...");
-        }
+        writeln!(buffer, "Rendering scene...")?;
 
-        let bar = if quiet {
-            ProgressBar::hidden()
-        } else {
-            ProgressBar::new(self.horizontal_size.try_into().unwrap())
-                .with_style(
-                    ProgressStyle::with_template(
-                        "\
+        let bar = ProgressBar::new(self.horizontal_size.try_into()?)
+            .with_style(
+                ProgressStyle::with_template(
+                    "\
 {prefix} {bar:40.cyan/blue} {human_pos:>7}/{human_len:7} ({percent}%)
 Elapsed: {elapsed}, estimated: {eta}, rows/sec: {per_sec}",
-                    )
-                    .unwrap()
-                    .progress_chars("#>-"),
-                )
-                .with_prefix("Rows")
-                .with_finish(ProgressFinish::AndClear)
-        };
+                )?
+                .progress_chars("#>-"),
+            )
+            .with_prefix("Rows")
+            .with_finish(ProgressFinish::AndClear);
+
+        bar.set_draw_target(if quiet {
+            ProgressDrawTarget::hidden()
+        } else {
+            ProgressDrawTarget::stdout()
+        });
 
         let started = Instant::now();
 
@@ -106,16 +111,17 @@ Elapsed: {elapsed}, estimated: {eta}, rows/sec: {per_sec}",
         }
 
         if !quiet {
-            Term::stdout().clear_last_lines(1).unwrap();
-
-            println!(
-                "Rendering scene...done\nRendered {} rows in {}",
-                HumanCount(self.horizontal_size.try_into().unwrap()),
-                HumanDuration(started.elapsed())
-            );
+            Term::stdout().clear_last_lines(1)?;
         }
 
-        canvas
+        writeln!(
+            buffer,
+            "Rendering scene...done\nRendered {} rows in {}",
+            HumanCount(self.horizontal_size.try_into()?),
+            HumanDuration(started.elapsed())
+        )?;
+
+        Ok(canvas)
     }
 
     #[must_use]

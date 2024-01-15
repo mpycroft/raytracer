@@ -1,4 +1,4 @@
-use derive_new::new;
+use typed_builder::TypedBuilder;
 
 use crate::{
     math::{float::impl_approx_eq, Point, Vector},
@@ -7,20 +7,38 @@ use crate::{
 
 /// A `Material` represents what a given object is made up of including what
 /// colour it is and how it reacts to light.
-#[derive(Clone, Debug, new)]
+#[derive(Clone, Debug, TypedBuilder)]
 #[allow(clippy::too_many_arguments)]
 pub struct Material {
+    #[builder(default = Colour::white().into())]
     pub pattern: Pattern,
+    #[builder(default = 0.1)]
     pub ambient: f64,
+    #[builder(default = 0.9)]
     pub diffuse: f64,
+    #[builder(default = 0.9)]
     pub specular: f64,
+    #[builder(default = 200.0)]
     pub shininess: f64,
+    #[builder(default = 0.0)]
     pub reflective: f64,
+    #[builder(default = 0.0)]
     pub transparency: f64,
+    #[builder(default = 1.0)]
     pub refractive_index: f64,
 }
 
 impl Material {
+    #[must_use]
+    pub fn glass() -> Self {
+        Self::builder()
+            .ambient(0.01)
+            .diffuse(0.01)
+            .transparency(1.0)
+            .refractive_index(1.5)
+            .build()
+    }
+
     #[must_use]
     pub fn lighting(
         &self,
@@ -67,7 +85,7 @@ impl Material {
 
 impl Default for Material {
     fn default() -> Self {
-        Self::new(Colour::white().into(), 0.1, 0.9, 0.9, 200.0, 0.0, 0.0, 1.0)
+        Self::builder().build()
     }
 }
 
@@ -84,18 +102,21 @@ mod tests {
 
     #[test]
     fn creating_a_material() {
-        let m = Material::new(
-            Colour::red().into(),
-            1.0,
-            1.0,
-            1.5,
-            25.6,
-            0.6,
-            0.5,
-            1.5,
-        );
+        let m = Material::builder()
+            .pattern(Colour::red().into())
+            .ambient(1.0)
+            .diffuse(1.0)
+            .specular(1.5)
+            .shininess(25.6)
+            .reflective(0.6)
+            .transparency(0.5)
+            .refractive_index(1.5)
+            .build();
 
-        assert_approx_eq!(m.pattern, &Pattern::default_solid(Colour::red()));
+        assert_approx_eq!(
+            m.pattern,
+            &Pattern::solid_builder(Colour::red()).build()
+        );
         assert_approx_eq!(m.ambient, 1.0);
         assert_approx_eq!(m.diffuse, 1.0);
         assert_approx_eq!(m.specular, 1.5);
@@ -106,16 +127,30 @@ mod tests {
 
         assert_approx_eq!(
             Material::default(),
-            &Material::new(
-                Colour::white().into(),
-                0.1,
-                0.9,
-                0.9,
-                200.0,
-                0.0,
-                0.0,
-                1.0
-            )
+            &Material {
+                pattern: Colour::white().into(),
+                ambient: 0.1,
+                diffuse: 0.9,
+                specular: 0.9,
+                shininess: 200.0,
+                reflective: 0.0,
+                transparency: 0.0,
+                refractive_index: 1.0
+            }
+        );
+
+        assert_approx_eq!(
+            Material::glass(),
+            &Material {
+                pattern: Colour::white().into(),
+                ambient: 0.01,
+                diffuse: 0.01,
+                specular: 0.9,
+                shininess: 200.0,
+                reflective: 0.0,
+                transparency: 1.0,
+                refractive_index: 1.5
+            }
         );
     }
 
@@ -129,7 +164,7 @@ mod tests {
         let n = -Vector::z_axis();
 
         let l = PointLight::new(Point::new(0.0, 0.0, -10.0), Colour::white());
-        let o = Object::default_test();
+        let o = Object::test_builder().build();
 
         assert_approx_eq!(
             m.lighting(&o, &l, &p, &e, &n, true),
@@ -147,7 +182,7 @@ mod tests {
         let n = -Vector::z_axis();
 
         let l = PointLight::new(Point::new(0.0, 0.0, -10.0), Colour::white());
-        let o = Object::default_test();
+        let o = Object::test_builder().build();
 
         assert_approx_eq!(
             m.lighting(&o, &l, &p, &e, &n, false),
@@ -166,7 +201,7 @@ mod tests {
         let n = -Vector::z_axis();
 
         let l = PointLight::new(Point::new(0.0, 0.0, -10.0), Colour::white());
-        let o = Object::default_test();
+        let o = Object::test_builder().build();
 
         assert_approx_eq!(
             m.lighting(&o, &l, &p, &e, &n, false),
@@ -184,7 +219,7 @@ mod tests {
         let n = -Vector::z_axis();
 
         let l = PointLight::new(Point::new(0.0, 10.0, -10.0), Colour::white());
-        let o = Object::default_test();
+        let o = Object::test_builder().build();
 
         assert_approx_eq!(
             m.lighting(&o, &l, &p, &e, &n, false),
@@ -204,7 +239,7 @@ mod tests {
         let n = -Vector::z_axis();
 
         let l = PointLight::new(Point::new(0.0, 10.0, -10.0), Colour::white());
-        let o = Object::default_test();
+        let o = Object::test_builder().build();
 
         assert_approx_eq!(
             m.lighting(&o, &l, &p, &e, &n, false),
@@ -223,7 +258,7 @@ mod tests {
         let n = -Vector::z_axis();
 
         let l = PointLight::new(Point::new(0.0, 0.0, 10.0), Colour::white());
-        let o = Object::default_test();
+        let o = Object::test_builder().build();
 
         assert_approx_eq!(
             m.lighting(&o, &l, &p, &e, &n, false),
@@ -234,22 +269,24 @@ mod tests {
     #[test]
     #[allow(clippy::many_single_char_names)]
     fn lighting_with_a_pattern_applied() {
-        let m = Material {
-            pattern: Pattern::default_stripe(
-                Colour::white().into(),
-                Colour::black().into(),
-            ),
-            ambient: 1.0,
-            diffuse: 0.0,
-            specular: 0.0,
-            ..Default::default()
-        };
+        let m = Material::builder()
+            .pattern(
+                Pattern::stripe_builder(
+                    Colour::white().into(),
+                    Colour::black().into(),
+                )
+                .build(),
+            )
+            .ambient(1.0)
+            .diffuse(0.0)
+            .specular(0.0)
+            .build();
 
         let e = -Vector::z_axis();
         let n = -Vector::z_axis();
 
         let l = PointLight::new(Point::new(0.0, 0.0, -10.0), Colour::white());
-        let o = Object::default_test();
+        let o = Object::test_builder().build();
 
         assert_approx_eq!(
             m.lighting(&o, &l, &Point::new(0.9, 0.0, 0.0), &e, &n, false),
@@ -264,36 +301,36 @@ mod tests {
 
     #[test]
     fn comparing_materials() {
-        let m1 = Material::new(
-            Colour::cyan().into(),
-            0.6,
-            0.3,
-            1.2,
-            142.7,
-            0.3,
-            0.1,
-            1.1,
-        );
-        let m2 = Material::new(
-            Colour::cyan().into(),
-            0.6,
-            0.3,
-            1.2,
-            142.7,
-            0.3,
-            0.1,
-            1.1,
-        );
-        let m3 = Material::new(
-            Colour::cyan().into(),
-            0.600_1,
-            0.3,
-            1.2,
-            142.7,
-            0.3,
-            0.1,
-            1.1,
-        );
+        let m1 = Material::builder()
+            .pattern(Colour::cyan().into())
+            .ambient(0.6)
+            .diffuse(0.3)
+            .specular(1.2)
+            .shininess(142.7)
+            .reflective(0.3)
+            .transparency(0.1)
+            .refractive_index(1.1)
+            .build();
+        let m2 = Material::builder()
+            .pattern(Colour::cyan().into())
+            .ambient(0.6)
+            .diffuse(0.3)
+            .specular(1.2)
+            .shininess(142.7)
+            .reflective(0.3)
+            .transparency(0.1)
+            .refractive_index(1.1)
+            .build();
+        let m3 = Material::builder()
+            .pattern(Colour::cyan().into())
+            .ambient(0.600_1)
+            .diffuse(0.3)
+            .specular(1.2)
+            .shininess(142.7)
+            .reflective(0.3)
+            .transparency(0.1)
+            .refractive_index(1.1)
+            .build();
 
         assert_approx_eq!(m1, &m2);
 

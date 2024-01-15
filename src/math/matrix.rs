@@ -16,7 +16,7 @@ pub struct Matrix<const N: usize>(pub(super) [[f64; N]; N]);
 
 impl<const N: usize> Matrix<N> {
     #[must_use]
-    fn zero() -> Self {
+    const fn zero() -> Self {
         Self([[0.0; N]; N])
     }
 
@@ -130,7 +130,7 @@ impl_matrix!(3);
 
 impl Matrix<4> {
     #[must_use]
-    pub fn translate(x: f64, y: f64, z: f64) -> Self {
+    pub const fn translate(x: f64, y: f64, z: f64) -> Self {
         Self([
             [1.0, 0.0, 0.0, x],
             [0.0, 1.0, 0.0, y],
@@ -140,7 +140,7 @@ impl Matrix<4> {
     }
 
     #[must_use]
-    pub fn scale(x: f64, y: f64, z: f64) -> Self {
+    pub const fn scale(x: f64, y: f64, z: f64) -> Self {
         Self([
             [x, 0.0, 0.0, 0.0],
             [0.0, y, 0.0, 0.0],
@@ -186,7 +186,14 @@ impl Matrix<4> {
     }
 
     #[must_use]
-    pub fn shear(xy: f64, xz: f64, yx: f64, yz: f64, zx: f64, zy: f64) -> Self {
+    pub const fn shear(
+        xy: f64,
+        xz: f64,
+        yx: f64,
+        yz: f64,
+        zx: f64,
+        zy: f64,
+    ) -> Self {
         Self([
             [1.0, xy, xz, 0.0],
             [yx, 1.0, yz, 0.0],
