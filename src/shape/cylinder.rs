@@ -24,7 +24,13 @@ pub fn intersect(ray: &Ray) -> Option<TList> {
         return None;
     };
 
-    todo!()
+    let discriminant = discriminant.sqrt();
+    let a = 2.0 * a;
+
+    let t0 = (-b - discriminant) / a;
+    let t1 = (-b + discriminant) / a;
+
+    Some(TList::from(vec![t0, t1]))
 }
 
 #[must_use]
@@ -52,5 +58,26 @@ mod tests {
             Vector::new(1.0, 1.0, 1.0).normalise()
         ))
         .is_none());
+    }
+
+    #[test]
+    fn a_ray_strikes_a_cylinder() {
+        let test = |r, t0, t1| {
+            let i = intersect(&r).unwrap();
+
+            assert_approx_eq!(i[0], t0, epsilon = 0.000_01);
+            assert_approx_eq!(i[1], t1, epsilon = 0.000_01);
+        };
+
+        test(Ray::new(Point::new(1.0, 0.0, -5.0), Vector::z_axis()), 5.0, 5.0);
+        test(Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()), 4.0, 6.0);
+        test(
+            Ray::new(
+                Point::new(0.5, 0.0, -5.0),
+                Vector::new(0.1, 1.0, 1.0).normalise(),
+            ),
+            6.807_98,
+            7.088_72,
+        );
     }
 }

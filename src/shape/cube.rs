@@ -67,46 +67,46 @@ mod tests {
 
     #[test]
     fn a_ray_intersects_a_cube() {
-        let test = |r: &Ray, t1: f64, t2: f64| {
-            let l = intersect(r).unwrap();
+        let test = |r, t1, t2| {
+            let l = intersect(&r).unwrap();
 
             assert_approx_eq!(l[0], t1);
             assert_approx_eq!(l[1], t2);
         };
 
-        test(&Ray::new(Point::new(5.0, 0.5, 0.0), -Vector::x_axis()), 4.0, 6.0);
-        test(&Ray::new(Point::new(-5.0, 0.5, 0.0), Vector::x_axis()), 4.0, 6.0);
-        test(&Ray::new(Point::new(0.5, 5.0, 0.0), -Vector::y_axis()), 4.0, 6.0);
-        test(&Ray::new(Point::new(0.5, -5.0, 0.0), Vector::y_axis()), 4.0, 6.0);
-        test(&Ray::new(Point::new(0.5, 0.0, 5.0), -Vector::z_axis()), 4.0, 6.0);
-        test(&Ray::new(Point::new(0.5, 0.0, -5.0), Vector::z_axis()), 4.0, 6.0);
+        test(Ray::new(Point::new(5.0, 0.5, 0.0), -Vector::x_axis()), 4.0, 6.0);
+        test(Ray::new(Point::new(-5.0, 0.5, 0.0), Vector::x_axis()), 4.0, 6.0);
+        test(Ray::new(Point::new(0.5, 5.0, 0.0), -Vector::y_axis()), 4.0, 6.0);
+        test(Ray::new(Point::new(0.5, -5.0, 0.0), Vector::y_axis()), 4.0, 6.0);
+        test(Ray::new(Point::new(0.5, 0.0, 5.0), -Vector::z_axis()), 4.0, 6.0);
+        test(Ray::new(Point::new(0.5, 0.0, -5.0), Vector::z_axis()), 4.0, 6.0);
 
-        test(&Ray::new(Point::new(0.0, 0.5, 0.0), Vector::z_axis()), -1.0, 1.0);
+        test(Ray::new(Point::new(0.0, 0.5, 0.0), Vector::z_axis()), -1.0, 1.0);
     }
 
     #[test]
     fn a_ray_misses_a_cube() {
-        let test = |r: &Ray| {
-            let l = intersect(r);
+        let test = |r| {
+            let l = intersect(&r);
 
             assert!(l.is_none());
         };
 
-        test(&Ray::new(
+        test(Ray::new(
             Point::new(-2.0, 0.0, 0.0),
             Vector::new(0.267_3, 0.534_5, 0.801_8),
         ));
-        test(&Ray::new(
+        test(Ray::new(
             Point::new(0.0, -2.0, 0.0),
             Vector::new(0.801_8, 0.267_3, 0.534_5),
         ));
-        test(&Ray::new(
+        test(Ray::new(
             Point::new(0.0, 0.0, -2.0),
             Vector::new(0.534_5, 0.801_8, 0.267_3),
         ));
-        test(&Ray::new(Point::new(2.0, 0.0, 2.0), -Vector::z_axis()));
-        test(&Ray::new(Point::new(0.0, 2.0, 2.0), -Vector::y_axis()));
-        test(&Ray::new(Point::new(2.0, 2.0, 0.0), -Vector::x_axis()));
+        test(Ray::new(Point::new(2.0, 0.0, 2.0), -Vector::z_axis()));
+        test(Ray::new(Point::new(0.0, 2.0, 2.0), -Vector::y_axis()));
+        test(Ray::new(Point::new(2.0, 2.0, 0.0), -Vector::x_axis()));
     }
 
     #[test]
