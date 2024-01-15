@@ -41,6 +41,7 @@ macro_rules! add_builder_fn {
 
 impl Object {
     add_builder_fn!(Cube);
+    add_builder_fn!(Cylinder);
     add_builder_fn!(Plane);
     add_builder_fn!(Sphere);
     #[cfg(test)]

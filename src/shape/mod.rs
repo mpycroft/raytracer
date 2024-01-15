@@ -16,6 +16,7 @@ use crate::{
 #[derive(Clone, Copy, Debug)]
 pub enum Shape {
     Cube,
+    Cylinder,
     Plane,
     Sphere,
     #[cfg(test)]
@@ -27,6 +28,7 @@ impl Shape {
     pub fn intersect(&self, ray: &Ray) -> Option<TList> {
         match self {
             Self::Cube => cube::intersect(ray),
+            Self::Cylinder => cylinder::intersect(ray),
             Self::Plane => plane::intersect(ray),
             Self::Sphere => sphere::intersect(ray),
             #[cfg(test)]
@@ -38,6 +40,7 @@ impl Shape {
     pub fn normal_at(&self, point: &Point) -> Vector {
         match self {
             Self::Cube => cube::normal_at(point),
+            Self::Cylinder => cylinder::normal_at(point),
             Self::Plane => plane::normal_at(point),
             Self::Sphere => sphere::normal_at(point),
             #[cfg(test)]
@@ -52,6 +55,7 @@ impl ApproxEq for Shape {
     fn approx_eq<M: Into<Self::Margin>>(self, other: Self, _margin: M) -> bool {
         match (self, other) {
             (Self::Cube, Self::Cube)
+            | (Self::Cylinder, Self::Cylinder)
             | (Self::Sphere, Self::Sphere)
             | (Self::Plane, Self::Plane) => true,
             #[cfg(test)]
