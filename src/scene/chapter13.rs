@@ -54,6 +54,31 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
             .material(Material::builder().pattern(Colour::red().into()).build())
             .build(),
     );
+
+    world.add_object(
+        Object::cylinder_builder(0.0, 1.0, false)
+            .transformation(
+                Transformation::new()
+                    .scale(3.5, 1.0, 3.5)
+                    .translate(0.0, 0.0, 10.0),
+            )
+            .material(
+                Material::builder()
+                    .pattern(Colour::new(0.4, 0.5, 0.2).into())
+                    .build(),
+            )
+            .build(),
+    );
+
+    world.add_object(
+        Object::cylinder_builder(0.0, 2.0, true)
+            .transformation(Transformation::new().translate(0.0, 0.0, 10.0))
+            .material(
+                Material::builder().pattern(Colour::blue().into()).build(),
+            )
+            .build(),
+    );
+
     world.add_object(
         Object::cylinder_builder(-INFINITY, INFINITY, false)
             .transformation(Transformation::new().translate(5.0, 0.0, 20.0))

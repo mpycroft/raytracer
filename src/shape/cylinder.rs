@@ -1,3 +1,5 @@
+use std::f64::EPSILON;
+
 use derive_new::new;
 
 use crate::{
@@ -59,6 +61,14 @@ impl Cylinder {
 
     #[must_use]
     pub fn normal_at(&self, point: &Point) -> Vector {
+        let distance = point.x.powi(2) + point.z.powi(2);
+
+        if distance < 1.0 && point.y >= self.maximum - EPSILON {
+            return Vector::y_axis();
+        } else if distance < 1.0 && point.y <= self.minimum + EPSILON {
+            return -Vector::y_axis();
+        }
+
         Vector::new(point.x, 0.0, point.z)
     }
 
@@ -239,6 +249,36 @@ mod tests {
         assert_approx_eq!(
             c.normal_at(&Point::new(-1.0, 1.0, 0.0)),
             -Vector::x_axis()
+        );
+    }
+
+    #[test]
+    fn the_normal_vector_on_a_cylinders_end_caps() {
+        let c = Cylinder::new(1.0, 2.0, true);
+
+        assert_approx_eq!(
+            c.normal_at(&Point::new(0.0, 1.0, 0.0)),
+            -Vector::y_axis()
+        );
+        assert_approx_eq!(
+            c.normal_at(&Point::new(0.5, 1.0, 0.0)),
+            -Vector::y_axis()
+        );
+        assert_approx_eq!(
+            c.normal_at(&Point::new(0.0, 1.0, 0.5)),
+            -Vector::y_axis()
+        );
+        assert_approx_eq!(
+            c.normal_at(&Point::new(0.0, 2.0, 0.0)),
+            Vector::y_axis()
+        );
+        assert_approx_eq!(
+            c.normal_at(&Point::new(0.5, 2.0, 0.0)),
+            Vector::y_axis()
+        );
+        assert_approx_eq!(
+            c.normal_at(&Point::new(0.0, 2.0, 0.5)),
+            Vector::y_axis()
         );
     }
 }
