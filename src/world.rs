@@ -561,7 +561,30 @@ intersection list.")]
             ),
         );
 
-        let i = c.render(&w, 5, true, &mut sink()).unwrap();
+        let i = c.render(&w, 5, true, true, &mut sink()).unwrap();
+
+        assert_approx_eq!(
+            i.get_pixel(5, 5),
+            Colour::new(0.380_66, 0.475_83, 0.285_5),
+            epsilon = 0.000_01
+        );
+    }
+
+    #[test]
+    fn rendering_a_world_multi_threaded() {
+        let w = test_world();
+        let c = Camera::new(
+            11,
+            11,
+            Angle(FRAC_PI_2),
+            Transformation::view_transformation(
+                &Point::new(0.0, 0.0, -5.0),
+                &Point::origin(),
+                &Vector::y_axis(),
+            ),
+        );
+
+        let i = c.render(&w, 5, false, true, &mut sink()).unwrap();
 
         assert_approx_eq!(
             i.get_pixel(5, 5),

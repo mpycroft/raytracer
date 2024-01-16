@@ -43,6 +43,10 @@ pub struct Arguments {
     #[arg(long, default_value = "5")]
     pub depth: u32,
 
+    /// Run the rendering process with a single thread.
+    #[arg(long)]
+    pub single_threaded: bool,
+
     /// Suppress program output
     #[arg(short, long)]
     pub quiet: bool,

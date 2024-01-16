@@ -4,7 +4,7 @@ use anyhow::Result;
 use console::Term;
 use indicatif::{
     HumanCount, HumanDuration, ParallelProgressIterator, ProgressBar,
-    ProgressDrawTarget, ProgressFinish, ProgressStyle,
+    ProgressDrawTarget, ProgressFinish, ProgressIterator, ProgressStyle,
 };
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
@@ -66,6 +66,7 @@ impl Camera {
         &self,
         world: &World,
         depth: u32,
+        single_threaded: bool,
         quiet: bool,
         buffer: &mut dyn Write,
     ) -> Result<Canvas> {
@@ -99,22 +100,34 @@ Elapsed: {elapsed}, estimated: {eta}, rows/sec: {per_sec}",
 
         let started = Instant::now();
 
-        let pixels: Vec<Colour> = (0..self.vertical_size)
-            .into_par_iter()
-            .progress_with(bar)
-            .flat_map(|y| {
-                let mut colours = Vec::with_capacity(self.vertical_size);
+        let iterator_fn = |y| {
+            let mut colours = Vec::with_capacity(self.vertical_size);
 
-                for x in 0..self.horizontal_size {
-                    let ray = self.ray_for_pixel(x, y);
+            for x in 0..self.horizontal_size {
+                let ray = self.ray_for_pixel(x, y);
 
-                    let colour = world.colour_at(&ray, depth);
+                let colour = world.colour_at(&ray, depth);
 
-                    colours.push(colour);
-                }
-                colours
-            })
-            .collect();
+                colours.push(colour);
+            }
+            colours
+        };
+
+        // Either does not appear to play nicely with rayon / std iterators so
+        // there appears no nice way to simplify this check despite it looking
+        // like it should be trivial to do so.
+        let pixels: Vec<Colour> = if single_threaded {
+            (0..self.vertical_size)
+                .progress_with(bar)
+                .flat_map(iterator_fn)
+                .collect()
+        } else {
+            (0..self.vertical_size)
+                .into_par_iter()
+                .progress_with(bar)
+                .flat_map(iterator_fn)
+                .collect()
+        };
 
         if !quiet {
             Term::stdout().clear_last_lines(1)?;

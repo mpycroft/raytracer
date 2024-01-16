@@ -59,9 +59,10 @@ impl SceneData {
     pub fn render(
         &self,
         depth: u32,
+        single_threaded: bool,
         quiet: bool,
         buffer: &mut dyn Write,
     ) -> Result<Canvas> {
-        self.camera.render(&self.world, depth, quiet, buffer)
+        self.camera.render(&self.world, depth, single_threaded, quiet, buffer)
     }
 }
