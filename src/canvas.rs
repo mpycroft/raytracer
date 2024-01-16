@@ -16,6 +16,23 @@ impl Canvas {
         Self { width, height, pixels: vec![Colour::black(); width * height] }
     }
 
+    /// Create a `Canvas` from an existing Vec<Colour>.
+    ///
+    /// # Panics
+    ///
+    /// Function will panic if passed a vector that contains less values than
+    /// is required by the width and height.
+    #[must_use]
+    pub fn with_vec(width: usize, height: usize, pixels: Vec<Colour>) -> Self {
+        assert_eq!(
+            pixels.len(),
+            width * height,
+            "Pixels must contain width * height values."
+        );
+
+        Self { width, height, pixels }
+    }
+
     pub fn write_pixel(&mut self, x: usize, y: usize, colour: &Colour) {
         self.pixels[y * self.width + x] = *colour;
     }
@@ -54,6 +71,37 @@ mod tests {
         for pixel in c.pixels {
             assert_approx_eq!(pixel, Colour::black());
         }
+
+        let c = Canvas::with_vec(
+            3,
+            3,
+            vec![
+                Colour::red(),
+                Colour::green(),
+                Colour::blue(),
+                Colour::red(),
+                Colour::green(),
+                Colour::blue(),
+                Colour::red(),
+                Colour::green(),
+                Colour::blue(),
+            ],
+        );
+
+        assert_eq!(c.width, 3);
+        assert_eq!(c.height, 3);
+        assert_approx_eq!(c.pixels[0], Colour::red());
+        assert_approx_eq!(c.pixels[4], Colour::green());
+        assert_approx_eq!(c.pixels[8], Colour::blue());
+    }
+
+    #[test]
+    #[should_panic(expected = "\
+assertion `left == right` failed: Pixels must contain width * height values.
+  left: 1
+ right: 100")]
+    fn creating_a_canvas_with_invalid_vec() {
+        let _ = Canvas::with_vec(10, 10, vec![Colour::black()]);
     }
 
     #[test]
