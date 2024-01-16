@@ -3,9 +3,10 @@ use std::{io::Write, time::Instant};
 use anyhow::Result;
 use console::Term;
 use indicatif::{
-    HumanCount, HumanDuration, ProgressBar, ProgressDrawTarget, ProgressFinish,
-    ProgressIterator, ProgressStyle,
+    HumanCount, HumanDuration, ParallelProgressIterator, ProgressBar,
+    ProgressDrawTarget, ProgressFinish, ProgressStyle,
 };
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 use crate::{
     math::{Angle, Point, Ray, Transformable, Transformation},
@@ -99,6 +100,7 @@ Elapsed: {elapsed}, estimated: {eta}, rows/sec: {per_sec}",
         let started = Instant::now();
 
         let pixels: Vec<Colour> = (0..self.vertical_size)
+            .into_par_iter()
             .progress_with(bar)
             .flat_map(|y| {
                 let mut colours = Vec::with_capacity(self.vertical_size);
