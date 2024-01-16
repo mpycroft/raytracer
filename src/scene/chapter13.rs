@@ -1,4 +1,4 @@
-use std::f64::consts::FRAC_PI_3;
+use std::f64::{consts::FRAC_PI_3, INFINITY};
 
 use raytracer::{
     math::{Angle, Point, Transformation, Vector},
@@ -29,13 +29,13 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     let mut world = World::new();
 
     world.add_object(
-        Object::cylinder_builder()
+        Object::cylinder_builder(-INFINITY, INFINITY)
             .transformation(Transformation::new().translate(0.0, 0.0, 15.0))
             .material(Material::builder().pattern(Colour::red().into()).build())
             .build(),
     );
     world.add_object(
-        Object::cylinder_builder()
+        Object::cylinder_builder(-INFINITY, INFINITY)
             .transformation(Transformation::new().translate(5.0, 0.0, 20.0))
             .material(
                 Material::builder().pattern(Colour::green().into()).build(),

@@ -7,6 +7,7 @@ pub mod test;
 
 use float_cmp::{ApproxEq, F64Margin};
 
+pub use self::cylinder::Cylinder;
 use crate::{
     intersection::TList,
     math::{Point, Ray, Vector},
@@ -16,7 +17,7 @@ use crate::{
 #[derive(Clone, Copy, Debug)]
 pub enum Shape {
     Cube,
-    Cylinder,
+    Cylinder(Cylinder),
     Plane,
     Sphere,
     #[cfg(test)]
@@ -28,7 +29,7 @@ impl Shape {
     pub fn intersect(&self, ray: &Ray) -> Option<TList> {
         match self {
             Self::Cube => cube::intersect(ray),
-            Self::Cylinder => cylinder::intersect(ray),
+            Self::Cylinder(cylinder) => cylinder.intersect(ray),
             Self::Plane => plane::intersect(ray),
             Self::Sphere => sphere::intersect(ray),
             #[cfg(test)]
@@ -40,7 +41,7 @@ impl Shape {
     pub fn normal_at(&self, point: &Point) -> Vector {
         match self {
             Self::Cube => cube::normal_at(point),
-            Self::Cylinder => cylinder::normal_at(point),
+            Self::Cylinder(cylinder) => cylinder.normal_at(point),
             Self::Plane => plane::normal_at(point),
             Self::Sphere => sphere::normal_at(point),
             #[cfg(test)]
@@ -52,12 +53,16 @@ impl Shape {
 impl ApproxEq for Shape {
     type Margin = F64Margin;
 
-    fn approx_eq<M: Into<Self::Margin>>(self, other: Self, _margin: M) -> bool {
+    fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
+        let margin = margin.into();
+
         match (self, other) {
             (Self::Cube, Self::Cube)
-            | (Self::Cylinder, Self::Cylinder)
             | (Self::Sphere, Self::Sphere)
             | (Self::Plane, Self::Plane) => true,
+            (Self::Cylinder(lhs), Self::Cylinder(rhs)) => {
+                lhs.approx_eq(rhs, margin)
+            }
             #[cfg(test)]
             (Self::Test, Self::Test) => true,
             (_, _) => false,

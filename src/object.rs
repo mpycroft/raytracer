@@ -7,7 +7,7 @@ use crate::{
         float::impl_approx_eq, Point, Ray, Transformable, Transformation,
         Vector,
     },
-    Material, Shape,
+    shape, Material, Shape,
 };
 
 /// An 'Object' represents some entity in the scene that can be rendered.
@@ -37,11 +37,23 @@ macro_rules! add_builder_fn {
 
         }
     };
+    ($shape:ident($($args:ident : $ty:ty $(,)?)*)) => {
+        paste! {
+            pub fn [<$shape:lower _builder>]($($args:$ty,)*) ->
+                ObjectBuilder<((), (), (), (Shape,))>
+            {
+                Self::_builder().shape(
+                    Shape::$shape(shape::$shape::new($($args,)*))
+                )
+            }
+
+        }
+    };
 }
 
 impl Object {
     add_builder_fn!(Cube);
-    add_builder_fn!(Cylinder);
+    add_builder_fn!(Cylinder(minimum:f64, maximum:f64));
     add_builder_fn!(Plane);
     add_builder_fn!(Sphere);
     #[cfg(test)]
