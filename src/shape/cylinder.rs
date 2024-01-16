@@ -41,7 +41,23 @@ impl Cylinder {
         let t0 = (-b - discriminant) / a;
         let t1 = (-b + discriminant) / a;
 
-        Some(TList::from(vec![t0, t1]))
+        let mut list = TList::new();
+
+        let y0 = ray.origin.y + t0 * ray.direction.y;
+        if self.minimum < y0 && y0 < self.maximum {
+            list.push(t0);
+        }
+
+        let y1 = ray.origin.y + t1 * ray.direction.y;
+        if self.minimum < y1 && y1 < self.maximum {
+            list.push(t1);
+        }
+
+        if list.is_empty() {
+            return None;
+        };
+
+        Some(list)
     }
 
     #[must_use]
@@ -98,6 +114,37 @@ mod tests {
             6.807_98,
             7.088_72,
         );
+    }
+
+    #[test]
+    fn intersecting_a_constrained_cylinder() {
+        let c = Cylinder::new(1.0, 2.0);
+
+        assert!(c
+            .intersect(&Ray::new(
+                Point::new(0.0, 1.5, 0.0),
+                Vector::new(0.1, 1.0, 0.0).normalise()
+            ))
+            .is_none());
+        assert!(c
+            .intersect(&Ray::new(Point::new(0.0, 3.0, -5.0), Vector::z_axis()))
+            .is_none());
+        assert!(c
+            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()))
+            .is_none());
+        assert!(c
+            .intersect(&Ray::new(Point::new(0.0, 2.0, -5.0), Vector::z_axis()))
+            .is_none());
+        assert!(c
+            .intersect(&Ray::new(Point::new(0.0, 1.0, -5.0), Vector::z_axis()))
+            .is_none());
+
+        let i = c
+            .intersect(&Ray::new(Point::new(0.0, 1.5, -2.0), Vector::z_axis()))
+            .unwrap();
+
+        assert_approx_eq!(i[0], 1.0);
+        assert_approx_eq!(i[1], 3.0);
     }
 
     #[test]

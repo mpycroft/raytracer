@@ -2,7 +2,7 @@ use std::f64::{consts::FRAC_PI_3, INFINITY};
 
 use raytracer::{
     math::{Angle, Point, Transformation, Vector},
-    Camera, Colour, Material, Object, PointLight, World,
+    Camera, Colour, Material, Object, Pattern, PointLight, World,
 };
 
 use super::SceneData;
@@ -20,8 +20,8 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
         vertical_size,
         field_of_view,
         Transformation::view_transformation(
-            &Point::new(0.0, 0.0, -1.0),
-            &Point::origin(),
+            &Point::new(0.0, 5.0, -1.0),
+            &Point::new(0.0, 4.5, 0.0),
             &Vector::y_axis(),
         ),
     );
@@ -29,8 +29,28 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     let mut world = World::new();
 
     world.add_object(
-        Object::cylinder_builder(-INFINITY, INFINITY)
-            .transformation(Transformation::new().translate(0.0, 0.0, 15.0))
+        Object::plane_builder()
+            .material(
+                Material::builder()
+                    .pattern(
+                        Pattern::checker_builder(
+                            Colour::white().into(),
+                            Colour::black().into(),
+                        )
+                        .build(),
+                    )
+                    .build(),
+            )
+            .build(),
+    );
+
+    world.add_object(
+        Object::cylinder_builder(0.0, 1.0)
+            .transformation(
+                Transformation::new()
+                    .scale(5.0, 1.0, 5.0)
+                    .translate(0.0, 0.0, 10.0),
+            )
             .material(Material::builder().pattern(Colour::red().into()).build())
             .build(),
     );
