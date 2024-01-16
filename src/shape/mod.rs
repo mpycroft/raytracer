@@ -57,9 +57,9 @@ impl ApproxEq for Shape {
         let margin = margin.into();
 
         match (self, other) {
-            (Self::Cube, Self::Cube)
-            | (Self::Sphere, Self::Sphere)
-            | (Self::Plane, Self::Plane) => true,
+            (Self::Cube, Self::Cube) => true,
+            (Self::Sphere, Self::Sphere) => true,
+            (Self::Plane, Self::Plane) => true,
             (Self::Cylinder(lhs), Self::Cylinder(rhs)) => {
                 lhs.approx_eq(rhs, margin)
             }
@@ -80,9 +80,13 @@ mod tests {
         let s1 = Shape::Test;
         let s2 = Shape::Test;
         let s3 = Shape::Sphere;
+        let s4 = Shape::Cylinder(Cylinder::new(1.0, 2.0, false));
+        let s5 = Shape::Cylinder(Cylinder::new(1.0, 2.0, true));
 
         assert_approx_eq!(s1, s2);
 
         assert_approx_ne!(s1, s3);
+
+        assert_approx_eq!(s4, s5);
     }
 }

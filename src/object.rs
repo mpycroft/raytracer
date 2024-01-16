@@ -109,12 +109,10 @@ impl<T: Optional<Transformation>, M: Optional<Material>, S: Optional<bool>>
 mod tests {
     use std::f64::consts::{FRAC_1_SQRT_2, PI, SQRT_2};
 
-    use paste::paste;
-
     use super::*;
     use crate::{
         math::{float::*, Angle},
-        shape::test,
+        shape::{test, Cylinder},
         Colour,
     };
 
@@ -155,9 +153,9 @@ mod tests {
             }};
         }
 
-        let s = Shape::Plane;
+        let s = Shape::Cylinder(Cylinder::new(1.0, 2.0, true));
 
-        let o = Object::plane_builder()
+        let o = Object::cylinder_builder(1.0, 2.0, true)
             .transformation(t)
             .material(m.clone())
             .casts_shadow(true)
@@ -320,6 +318,36 @@ mod tests {
             .build();
 
         assert_approx_eq!(o.normal_at(&Point::origin()), -Vector::x_axis());
+    }
+
+    #[test]
+    fn intersecting_a_transformed_cylinder_with_a_ray() {
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
+
+        let o = Object::cylinder_builder(-5.0, 5.0, true)
+            .transformation(Transformation::new().translate(0.0, 0.0, -1.0))
+            .build();
+
+        let i = o.intersect(&r);
+        assert!(i.is_some());
+
+        let i = i.unwrap();
+        assert_eq!(i.len(), 2);
+
+        assert_approx_eq!(i[0].object, &o);
+        assert_approx_eq!(i[1].object, &o);
+
+        assert_approx_eq!(i[0].t, 3.0);
+        assert_approx_eq!(i[1].t, 5.0);
+    }
+
+    #[test]
+    fn computing_the_normal_on_a_transformed_cylinder() {
+        let o = Object::cylinder_builder(0.0, 4.0, true)
+            .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
+            .build();
+
+        assert_approx_eq!(o.normal_at(&Point::origin()), -Vector::y_axis());
     }
 
     #[test]

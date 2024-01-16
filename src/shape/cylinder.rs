@@ -281,4 +281,15 @@ mod tests {
             Vector::y_axis()
         );
     }
+
+    #[test]
+    fn comparing_cylinders() {
+        let c1 = Cylinder::new(0.0, 1.0, true);
+        let c2 = Cylinder::new(0.0, 1.0, true);
+        let c3 = Cylinder::new(0.001, 1.0, true);
+
+        assert_approx_eq!(c1, c2);
+
+        assert_approx_ne!(c1, c3);
+    }
 }
