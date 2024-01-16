@@ -9,7 +9,7 @@ use indicatif::{
 
 use crate::{
     math::{Angle, Point, Ray, Transformable, Transformation},
-    Canvas, World,
+    Canvas, Colour, World,
 };
 
 /// `Camera` holds all the data representing our view into the scene.
@@ -78,7 +78,7 @@ impl Camera {
 
         writeln!(buffer, "Rendering scene...")?;
 
-        let bar = ProgressBar::new(self.horizontal_size.try_into()?)
+        let bar = ProgressBar::new(self.vertical_size.try_into()?)
             .with_style(
                 ProgressStyle::with_template(
                     "\
@@ -98,17 +98,21 @@ Elapsed: {elapsed}, estimated: {eta}, rows/sec: {per_sec}",
 
         let started = Instant::now();
 
-        let mut canvas = Canvas::new(self.horizontal_size, self.vertical_size);
+        let pixels: Vec<Colour> = (0..self.vertical_size)
+            .progress_with(bar)
+            .flat_map(|y| {
+                let mut colours = Vec::with_capacity(self.vertical_size);
 
-        for x in (0..self.horizontal_size).progress_with(bar) {
-            for y in 0..self.vertical_size {
-                let ray = self.ray_for_pixel(x, y);
+                for x in 0..self.horizontal_size {
+                    let ray = self.ray_for_pixel(x, y);
 
-                let colour = world.colour_at(&ray, depth);
+                    let colour = world.colour_at(&ray, depth);
 
-                canvas.write_pixel(x, y, &colour);
-            }
-        }
+                    colours.push(colour);
+                }
+                colours
+            })
+            .collect();
 
         if !quiet {
             Term::stdout().clear_last_lines(1)?;
@@ -121,7 +125,7 @@ Elapsed: {elapsed}, estimated: {eta}, rows/sec: {per_sec}",
             HumanDuration(started.elapsed())
         )?;
 
-        Ok(canvas)
+        Ok(Canvas::with_vec(self.horizontal_size, self.vertical_size, pixels))
     }
 
     #[must_use]
