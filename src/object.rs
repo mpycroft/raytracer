@@ -53,7 +53,7 @@ macro_rules! add_builder_fn {
 
 impl Object {
     add_builder_fn!(Cube);
-    add_builder_fn!(Cylinder(minimum:f64, maximum:f64));
+    add_builder_fn!(Cylinder(minimum: f64, maximum: f64, closed: bool));
     add_builder_fn!(Plane);
     add_builder_fn!(Sphere);
     #[cfg(test)]

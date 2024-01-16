@@ -45,7 +45,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Object::cylinder_builder(0.0, 1.0)
+        Object::cylinder_builder(0.0, 1.0, false)
             .transformation(
                 Transformation::new()
                     .scale(5.0, 1.0, 5.0)
@@ -55,7 +55,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
             .build(),
     );
     world.add_object(
-        Object::cylinder_builder(-INFINITY, INFINITY)
+        Object::cylinder_builder(-INFINITY, INFINITY, false)
             .transformation(Transformation::new().translate(5.0, 0.0, 20.0))
             .material(
                 Material::builder().pattern(Colour::green().into()).build(),
