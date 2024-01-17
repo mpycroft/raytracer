@@ -34,7 +34,7 @@ pub fn intersect(ray: &Ray) -> Option<TList> {
     let min = x_min.max(y_min).max(z_min);
     let max = x_max.min(y_max).min(z_max);
 
-    if min > max {
+    if min > max || max < 0.0 {
         return None;
     }
 
@@ -107,6 +107,8 @@ mod tests {
         test(Ray::new(Point::new(2.0, 0.0, 2.0), -Vector::z_axis()));
         test(Ray::new(Point::new(0.0, 2.0, 2.0), -Vector::y_axis()));
         test(Ray::new(Point::new(2.0, 2.0, 0.0), -Vector::x_axis()));
+
+        test(Ray::new(Point::new(0.0, 0.0, 2.0), Vector::z_axis()));
     }
 
     #[test]

@@ -1,16 +1,19 @@
 use std::f64::EPSILON;
 
 use derive_new::new;
+use float_cmp::{ApproxEq, F64Margin};
 
 use crate::{
     intersection::TList,
     math::{
-        float::{approx_eq, approx_ne, impl_approx_eq},
+        float::{approx_eq, approx_ne},
         Point, Ray, Vector,
     },
 };
 
-// A `Cylinder` is an infinite cylinder of radius 1 centred on the y axis.
+// A `Cylinder` is an cylinder of radius 1 centred on the y axis which extends
+// from minimum to maximum. Closed indicates if the cylinder is capped on both
+// ends.
 #[derive(Clone, Copy, Debug, new)]
 pub struct Cylinder {
     pub minimum: f64,
@@ -103,7 +106,22 @@ impl Cylinder {
     }
 }
 
-impl_approx_eq!(Cylinder { minimum, maximum });
+impl ApproxEq for Cylinder {
+    type Margin = F64Margin;
+
+    fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
+        let margin = margin.into();
+
+        if self.closed == other.closed
+            && self.minimum.approx_eq(other.minimum, margin)
+            && self.maximum.approx_eq(other.maximum, margin)
+        {
+            return true;
+        }
+
+        false
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -137,6 +155,7 @@ mod tests {
         let test = |r, t0, t1| {
             let i = c.intersect(&r).unwrap();
 
+            assert_eq!(i.len(), 2);
             assert_approx_eq!(i[0], t0, epsilon = 0.000_01);
             assert_approx_eq!(i[1], t1, epsilon = 0.000_01);
         };
@@ -180,6 +199,7 @@ mod tests {
             .intersect(&Ray::new(Point::new(0.0, 1.5, -2.0), Vector::z_axis()))
             .unwrap();
 
+        assert_eq!(i.len(), 2);
         assert_approx_eq!(i[0], 1.0);
         assert_approx_eq!(i[1], 3.0);
     }
@@ -191,6 +211,7 @@ mod tests {
         let test = |r, t0, t1| {
             let i = c.intersect(&r).unwrap();
 
+            assert_eq!(i.len(), 2);
             assert_approx_eq!(i[0], t0, epsilon = 0.000_01);
             assert_approx_eq!(i[1], t1, epsilon = 0.000_01);
         };

@@ -1,3 +1,4 @@
+mod cone;
 mod cube;
 mod cylinder;
 mod plane;
@@ -87,6 +88,6 @@ mod tests {
 
         assert_approx_ne!(s1, s3);
 
-        assert_approx_eq!(s4, s5);
+        assert_approx_ne!(s4, s5);
     }
 }
