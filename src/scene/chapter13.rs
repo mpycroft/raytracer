@@ -88,6 +88,32 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
             .build(),
     );
 
+    world.add_object(
+        Object::cone_builder(-1.0, 1.0, true)
+            .transformation(
+                Transformation::new()
+                    .translate(-3.0, 1.0, 10.0)
+                    .scale(2.0, 2.0, 2.0),
+            )
+            .material(
+                Material::builder()
+                    .pattern(Colour::new(1.0, 0.5, 0.2).into())
+                    .build(),
+            )
+            .build(),
+    );
+
+    world.add_object(
+        Object::cone_builder(-INFINITY, INFINITY, false)
+            .transformation(Transformation::new().translate(0.0, 0.0, 30.0))
+            .material(
+                Material::builder()
+                    .pattern(Colour::new(0.5, 1.0, 0.2).into())
+                    .build(),
+            )
+            .build(),
+    );
+
     world.add_light(PointLight::new(
         Point::new(-10.0, 10.0, -10.0),
         Colour::white(),

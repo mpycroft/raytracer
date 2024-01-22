@@ -147,6 +147,10 @@ mod tests {
     fn intersecting_a_cone_with_a_ray() {
         let c = Cone::new(-INFINITY, INFINITY, false);
 
+        assert!(c
+            .intersect(&Ray::new(Point::new(5.0, 0.0, 5.0), Vector::z_axis()))
+            .is_none());
+
         let test = |r, t0, t1| {
             let i = c.intersect(&r).unwrap();
 
