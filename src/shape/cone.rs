@@ -1,3 +1,5 @@
+use std::f64::EPSILON;
+
 use derive_new::new;
 use float_cmp::{ApproxEq, F64Margin};
 
@@ -67,7 +69,20 @@ impl Cone {
 
     #[must_use]
     pub fn normal_at(&self, point: &Point) -> Vector {
-        todo!()
+        let distance = point.x.powi(2) + point.z.powi(2);
+
+        if distance < 1.0 && point.y >= self.maximum - EPSILON {
+            return Vector::y_axis();
+        } else if distance < 1.0 && point.y <= self.minimum + EPSILON {
+            return -Vector::y_axis();
+        }
+
+        let mut y = distance.sqrt();
+        if point.y > 0.0 {
+            y = -y;
+        };
+
+        Vector::new(point.x, y, point.z)
     }
 
     #[must_use]
@@ -120,7 +135,10 @@ impl ApproxEq for Cone {
 
 #[cfg(test)]
 mod tests {
-    use std::f64::{consts::FRAC_1_SQRT_2, INFINITY};
+    use std::f64::{
+        consts::{FRAC_1_SQRT_2, SQRT_2},
+        INFINITY,
+    };
 
     use super::*;
     use crate::math::float::*;
@@ -200,6 +218,32 @@ mod tests {
         assert_approx_eq!(i[1], -0.25);
         assert_approx_eq!(i[2], -0.5);
         assert_approx_eq!(i[3], 0.5);
+    }
+
+    #[test]
+    fn computing_the_normal_vector_on_a_cone() {
+        let c = Cone::new(-1.5, 1.5, true);
+
+        assert_approx_eq!(
+            c.normal_at(&Point::origin()),
+            Vector::new(0.0, 0.0, 0.0)
+        );
+        assert_approx_eq!(
+            c.normal_at(&Point::new(1.0, 1.0, 1.0)),
+            Vector::new(1.0, -SQRT_2, 1.0)
+        );
+        assert_approx_eq!(
+            c.normal_at(&Point::new(-1.0, -1.0, 0.0)),
+            Vector::new(-1.0, 1.0, 0.0)
+        );
+        assert_approx_eq!(
+            c.normal_at(&Point::new(0.25, 1.5, 0.5)),
+            Vector::y_axis()
+        );
+        assert_approx_eq!(
+            c.normal_at(&Point::new(0.25, -1.5, 0.5)),
+            -Vector::y_axis()
+        );
     }
 
     #[test]
