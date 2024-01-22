@@ -1,7 +1,7 @@
 use derive_new::new;
 
 use crate::{
-    intersection::{List, TList},
+    intersection::{Intersectable, List, TList},
     math::{Point, Ray, Vector},
 };
 /// A `Test` is a shape intended purely for testing functions on `Object`.
@@ -18,10 +18,11 @@ impl Test {
             Vector::new(list[3].t, list[4].t, list[5].t),
         )
     }
+}
 
+impl Intersectable for Test {
     #[must_use]
-    #[allow(clippy::unnecessary_wraps)]
-    pub fn intersect(&self, ray: &Ray) -> Option<TList> {
+    fn intersect(&self, ray: &Ray) -> Option<TList> {
         Some(TList::from(vec![
             ray.origin.x,
             ray.origin.y,
@@ -33,7 +34,7 @@ impl Test {
     }
 
     #[must_use]
-    pub fn normal_at(&self, point: &Point) -> Vector {
+    fn normal_at(&self, point: &Point) -> Vector {
         *point - Point::origin()
     }
 }

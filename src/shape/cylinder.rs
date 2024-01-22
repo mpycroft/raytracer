@@ -4,7 +4,7 @@ use derive_new::new;
 use float_cmp::{ApproxEq, F64Margin};
 
 use crate::{
-    intersection::TList,
+    intersection::{Intersectable, TList},
     math::{
         float::{approx_eq, approx_ne},
         Point, Ray, Vector,
@@ -23,7 +23,39 @@ pub struct Cylinder {
 
 impl Cylinder {
     #[must_use]
-    pub fn intersect(&self, ray: &Ray) -> Option<TList> {
+    fn intersect_caps(&self, ray: &Ray, list: &mut TList) -> Option<TList> {
+        let check_cap = |t: f64| {
+            let x = ray.origin.x + t * ray.direction.x;
+            let z = ray.origin.z + t * ray.direction.z;
+
+            x.powi(2) + z.powi(2) <= 1.0
+        };
+
+        if self.closed && approx_ne!(ray.direction.y, 0.0) {
+            let t = (self.minimum - ray.origin.y) / ray.direction.y;
+
+            if check_cap(t) {
+                list.push(t);
+            }
+
+            let t = (self.maximum - ray.origin.y) / ray.direction.y;
+
+            if check_cap(t) {
+                list.push(t);
+            }
+        }
+
+        if list.is_empty() {
+            return None;
+        };
+
+        Some(list.to_owned())
+    }
+}
+
+impl Intersectable for Cylinder {
+    #[must_use]
+    fn intersect(&self, ray: &Ray) -> Option<TList> {
         let a = ray.direction.x.powi(2) + ray.direction.z.powi(2);
 
         let mut list = TList::new();
@@ -63,7 +95,7 @@ impl Cylinder {
     }
 
     #[must_use]
-    pub fn normal_at(&self, point: &Point) -> Vector {
+    fn normal_at(&self, point: &Point) -> Vector {
         let distance = point.x.powi(2) + point.z.powi(2);
 
         if distance < 1.0 && point.y >= self.maximum - EPSILON {
@@ -73,36 +105,6 @@ impl Cylinder {
         }
 
         Vector::new(point.x, 0.0, point.z)
-    }
-
-    #[must_use]
-    fn intersect_caps(&self, ray: &Ray, list: &mut TList) -> Option<TList> {
-        let check_cap = |t: f64| {
-            let x = ray.origin.x + t * ray.direction.x;
-            let z = ray.origin.z + t * ray.direction.z;
-
-            x.powi(2) + z.powi(2) <= 1.0
-        };
-
-        if self.closed && approx_ne!(ray.direction.y, 0.0) {
-            let t = (self.minimum - ray.origin.y) / ray.direction.y;
-
-            if check_cap(t) {
-                list.push(t);
-            }
-
-            let t = (self.maximum - ray.origin.y) / ray.direction.y;
-
-            if check_cap(t) {
-                list.push(t);
-            }
-        }
-
-        if list.is_empty() {
-            return None;
-        };
-
-        Some(list.to_owned())
     }
 }
 

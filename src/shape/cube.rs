@@ -3,7 +3,7 @@ use std::f64::{EPSILON, INFINITY};
 use derive_new::new;
 
 use crate::{
-    intersection::TList,
+    intersection::{Intersectable, TList},
     math::{Point, Ray, Vector},
 };
 
@@ -29,9 +29,11 @@ impl Cube {
 
         (min, max)
     }
+}
 
+impl Intersectable for Cube {
     #[must_use]
-    pub fn intersect(&self, ray: &Ray) -> Option<TList> {
+    fn intersect(&self, ray: &Ray) -> Option<TList> {
         let (x_min, x_max) = Self::check_axis(ray.origin.x, ray.direction.x);
         let (y_min, y_max) = Self::check_axis(ray.origin.y, ray.direction.y);
         let (z_min, z_max) = Self::check_axis(ray.origin.z, ray.direction.z);
@@ -47,7 +49,7 @@ impl Cube {
     }
 
     #[must_use]
-    pub fn normal_at(&self, point: &Point) -> Vector {
+    fn normal_at(&self, point: &Point) -> Vector {
         let abs_x = point.x.abs();
         let abs_y = point.y.abs();
         let abs_z = point.z.abs();

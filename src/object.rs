@@ -59,10 +59,9 @@ impl Object {
     pub fn to_world_space<'a, T: Transformable<'a>>(&self, value: &'a T) -> T {
         value.apply(&self.inverse_transformation.transpose())
     }
-}
 
-impl Intersectable for Object {
-    fn intersect(&self, ray: &Ray) -> Option<List> {
+    #[must_use]
+    pub fn intersect(&self, ray: &Ray) -> Option<List> {
         let ray = self.to_object_space(ray);
 
         let Some(t_list) = self.shape.intersect(&ray) else {
@@ -72,7 +71,8 @@ impl Intersectable for Object {
         Some(t_list.to_list(self))
     }
 
-    fn normal_at(&self, point: &Point) -> Vector {
+    #[must_use]
+    pub fn normal_at(&self, point: &Point) -> Vector {
         let object_point = self.to_object_space(point);
 
         let object_normal = self.shape.normal_at(&object_point);

@@ -1,7 +1,7 @@
 use derive_new::new;
 
 use crate::{
-    intersection::TList,
+    intersection::{Intersectable, TList},
     math::{Point, Ray, Vector},
 };
 
@@ -9,9 +9,9 @@ use crate::{
 #[derive(Clone, Copy, Debug, new)]
 pub struct Sphere;
 
-impl Sphere {
+impl Intersectable for Sphere {
     #[must_use]
-    pub fn intersect(&self, ray: &Ray) -> Option<TList> {
+    fn intersect(&self, ray: &Ray) -> Option<TList> {
         let sphere_to_ray = ray.origin - Point::origin();
 
         let a = ray.direction.dot(&ray.direction);
@@ -34,7 +34,7 @@ impl Sphere {
     }
 
     #[must_use]
-    pub fn normal_at(&self, point: &Point) -> Vector {
+    fn normal_at(&self, point: &Point) -> Vector {
         *point - Point::origin()
     }
 }

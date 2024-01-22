@@ -1,7 +1,7 @@
 use derive_new::new;
 
 use crate::{
-    intersection::TList,
+    intersection::{Intersectable, TList},
     math::{float::approx_eq, Point, Ray, Vector},
 };
 
@@ -9,9 +9,9 @@ use crate::{
 #[derive(Clone, Copy, Debug, new)]
 pub struct Plane;
 
-impl Plane {
+impl Intersectable for Plane {
     #[must_use]
-    pub fn intersect(&self, ray: &Ray) -> Option<TList> {
+    fn intersect(&self, ray: &Ray) -> Option<TList> {
         if approx_eq!(ray.direction.y, 0.0) {
             return None;
         }
@@ -20,7 +20,7 @@ impl Plane {
     }
 
     #[must_use]
-    pub fn normal_at(&self, _point: &Point) -> Vector {
+    fn normal_at(&self, _point: &Point) -> Vector {
         Vector::y_axis()
     }
 }

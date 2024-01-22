@@ -1,5 +1,5 @@
 use crate::{
-    intersection::{Computations, Intersectable, List},
+    intersection::{Computations, List},
     math::{float::approx_eq, Point, Ray},
     Colour, Object, PointLight,
 };

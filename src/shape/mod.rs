@@ -6,6 +6,7 @@ mod sphere;
 #[cfg(test)]
 pub mod test;
 
+use enum_dispatch::enum_dispatch;
 use float_cmp::{ApproxEq, F64Margin};
 use paste::paste;
 
@@ -15,12 +16,13 @@ pub use self::{
     cone::Cone, cube::Cube, cylinder::Cylinder, plane::Plane, sphere::Sphere,
 };
 use crate::{
-    intersection::TList,
+    intersection::{Intersectable, TList},
     math::{Point, Ray, Vector},
 };
 
 /// `Shape` is the list of the various geometries that can be rendered.
 #[derive(Clone, Copy, Debug)]
+#[enum_dispatch]
 pub enum Shape {
     Cone(Cone),
     Cube(Cube),
@@ -32,15 +34,9 @@ pub enum Shape {
 }
 
 macro_rules! add_new_fn {
-    ($shape:ident) => {
-        paste! {
-            pub fn [<new_ $shape:lower>]() -> Shape {
-                Self::$shape($shape::new())
-            }
-        }
-    };
     ($shape:ident($($args:ident : $ty:ty $(,)?)*)) => {
         paste! {
+            #[must_use]
             pub fn [<new_ $shape:lower>]($($args:$ty,)*) -> Shape {
                 Self::$shape($shape::new($($args,)*))
             }
@@ -50,38 +46,12 @@ macro_rules! add_new_fn {
 
 impl Shape {
     add_new_fn!(Cone(minimum: f64, maximum: f64, closed: bool));
-    add_new_fn!(Cube);
+    add_new_fn!(Cube());
     add_new_fn!(Cylinder(minimum: f64, maximum: f64, closed: bool));
-    add_new_fn!(Plane);
-    add_new_fn!(Sphere);
+    add_new_fn!(Plane());
+    add_new_fn!(Sphere());
     #[cfg(test)]
-    add_new_fn!(Test);
-
-    #[must_use]
-    pub fn intersect(&self, ray: &Ray) -> Option<TList> {
-        match self {
-            Self::Cone(cone) => cone.intersect(ray),
-            Self::Cube(cube) => cube.intersect(ray),
-            Self::Cylinder(cylinder) => cylinder.intersect(ray),
-            Self::Plane(plane) => plane.intersect(ray),
-            Self::Sphere(sphere) => sphere.intersect(ray),
-            #[cfg(test)]
-            Self::Test(test) => test.intersect(ray),
-        }
-    }
-
-    #[must_use]
-    pub fn normal_at(&self, point: &Point) -> Vector {
-        match self {
-            Self::Cone(cone) => cone.normal_at(point),
-            Self::Cube(cube) => cube.normal_at(point),
-            Self::Cylinder(cylinder) => cylinder.normal_at(point),
-            Self::Plane(plane) => plane.normal_at(point),
-            Self::Sphere(sphere) => sphere.normal_at(point),
-            #[cfg(test)]
-            Self::Test(test) => test.normal_at(point),
-        }
-    }
+    add_new_fn!(Test());
 }
 
 impl ApproxEq for Shape {
