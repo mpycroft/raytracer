@@ -7,8 +7,13 @@ mod sphere;
 pub mod test;
 
 use float_cmp::{ApproxEq, F64Margin};
+use paste::paste;
 
-pub use self::{cone::Cone, cylinder::Cylinder};
+#[cfg(test)]
+pub use self::test::Test;
+pub use self::{
+    cone::Cone, cube::Cube, cylinder::Cylinder, plane::Plane, sphere::Sphere,
+};
 use crate::{
     intersection::TList,
     math::{Point, Ray, Vector},
@@ -18,25 +23,50 @@ use crate::{
 #[derive(Clone, Copy, Debug)]
 pub enum Shape {
     Cone(Cone),
-    Cube,
+    Cube(Cube),
     Cylinder(Cylinder),
-    Plane,
-    Sphere,
+    Plane(Plane),
+    Sphere(Sphere),
     #[cfg(test)]
-    Test,
+    Test(Test),
+}
+
+macro_rules! add_new_fn {
+    ($shape:ident) => {
+        paste! {
+            pub fn [<new_ $shape:lower>]() -> Shape {
+                Self::$shape($shape::new())
+            }
+        }
+    };
+    ($shape:ident($($args:ident : $ty:ty $(,)?)*)) => {
+        paste! {
+            pub fn [<new_ $shape:lower>]($($args:$ty,)*) -> Shape {
+                Self::$shape($shape::new($($args,)*))
+            }
+        }
+    };
 }
 
 impl Shape {
+    add_new_fn!(Cone(minimum: f64, maximum: f64, closed: bool));
+    add_new_fn!(Cube);
+    add_new_fn!(Cylinder(minimum: f64, maximum: f64, closed: bool));
+    add_new_fn!(Plane);
+    add_new_fn!(Sphere);
+    #[cfg(test)]
+    add_new_fn!(Test);
+
     #[must_use]
     pub fn intersect(&self, ray: &Ray) -> Option<TList> {
         match self {
             Self::Cone(cone) => cone.intersect(ray),
-            Self::Cube => cube::intersect(ray),
+            Self::Cube(cube) => cube.intersect(ray),
             Self::Cylinder(cylinder) => cylinder.intersect(ray),
-            Self::Plane => plane::intersect(ray),
-            Self::Sphere => sphere::intersect(ray),
+            Self::Plane(plane) => plane.intersect(ray),
+            Self::Sphere(sphere) => sphere.intersect(ray),
             #[cfg(test)]
-            Self::Test => test::intersect(ray),
+            Self::Test(test) => test.intersect(ray),
         }
     }
 
@@ -44,12 +74,12 @@ impl Shape {
     pub fn normal_at(&self, point: &Point) -> Vector {
         match self {
             Self::Cone(cone) => cone.normal_at(point),
-            Self::Cube => cube::normal_at(point),
+            Self::Cube(cube) => cube.normal_at(point),
             Self::Cylinder(cylinder) => cylinder.normal_at(point),
-            Self::Plane => plane::normal_at(point),
-            Self::Sphere => sphere::normal_at(point),
+            Self::Plane(plane) => plane.normal_at(point),
+            Self::Sphere(sphere) => sphere.normal_at(point),
             #[cfg(test)]
-            Self::Test => test::normal_at(point),
+            Self::Test(test) => test.normal_at(point),
         }
     }
 }
@@ -62,14 +92,14 @@ impl ApproxEq for Shape {
 
         match (self, other) {
             (Self::Cone(lhs), Self::Cone(rhs)) => lhs.approx_eq(rhs, margin),
-            (Self::Cube, Self::Cube) => true,
-            (Self::Sphere, Self::Sphere) => true,
-            (Self::Plane, Self::Plane) => true,
+            (Self::Cube(_), Self::Cube(_)) => true,
+            (Self::Sphere(_), Self::Sphere(_)) => true,
+            (Self::Plane(_), Self::Plane(_)) => true,
             (Self::Cylinder(lhs), Self::Cylinder(rhs)) => {
                 lhs.approx_eq(rhs, margin)
             }
             #[cfg(test)]
-            (Self::Test, Self::Test) => true,
+            (Self::Test(_), Self::Test(_)) => true,
             (_, _) => false,
         }
     }
@@ -82,13 +112,13 @@ mod tests {
 
     #[test]
     fn comparing_shapes() {
-        let s1 = Shape::Test;
-        let s2 = Shape::Test;
-        let s3 = Shape::Sphere;
-        let s4 = Shape::Cylinder(Cylinder::new(1.0, 2.0, false));
-        let s5 = Shape::Cylinder(Cylinder::new(1.0, 2.0, true));
-        let s6 = Shape::Cone(Cone::new(-1.5, 1.5, true));
-        let s7 = Shape::Cone(Cone::new(-1.5, 1.500_1, true));
+        let s1 = Shape::new_test();
+        let s2 = Shape::new_test();
+        let s3 = Shape::new_sphere();
+        let s4 = Shape::new_cylinder(1.0, 2.0, false);
+        let s5 = Shape::new_cylinder(1.0, 2.0, true);
+        let s6 = Shape::new_cone(-1.5, 1.5, true);
+        let s7 = Shape::new_cone(-1.5, 1.500_1, true);
 
         assert_approx_eq!(s1, s2);
 

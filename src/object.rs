@@ -27,16 +27,6 @@ pub struct Object {
 }
 
 macro_rules! add_builder_fn {
-    ($shape:ident) => {
-        paste! {
-            pub fn [<$shape:lower _builder>]() ->
-                ObjectBuilder<((), (), (), (Shape,))>
-            {
-                Self::_builder().shape(Shape::$shape)
-            }
-
-        }
-    };
     ($shape:ident($($args:ident : $ty:ty $(,)?)*)) => {
         paste! {
             pub fn [<$shape:lower _builder>]($($args:$ty,)*) ->
@@ -53,12 +43,12 @@ macro_rules! add_builder_fn {
 
 impl Object {
     add_builder_fn!(Cone(minimum: f64, maximum:f64, closed: bool));
-    add_builder_fn!(Cube);
+    add_builder_fn!(Cube());
     add_builder_fn!(Cylinder(minimum: f64, maximum: f64, closed: bool));
-    add_builder_fn!(Plane);
-    add_builder_fn!(Sphere);
+    add_builder_fn!(Plane());
+    add_builder_fn!(Sphere());
     #[cfg(test)]
-    add_builder_fn!(Test);
+    add_builder_fn!(Test());
 
     #[must_use]
     pub fn to_object_space<'a, T: Transformable<'a>>(&self, value: &'a T) -> T {
@@ -113,7 +103,7 @@ mod tests {
     use super::*;
     use crate::{
         math::{float::*, Angle},
-        shape::{test, Cone, Cylinder},
+        shape::test::Test,
         Colour,
     };
 
@@ -125,11 +115,11 @@ mod tests {
 
         /// Test the creation of objects using new_ and default_ functions.
         macro_rules! test_object {
-            ($shape:ident) => {{
+            ($shape:ident($($args:expr $(,)?)*)) => {{
                 paste! {
-                    let s = Shape::$shape;
+                    let s = Shape::[<new_ $shape:lower>]($($args,)*);
 
-                    let o = Object::[<$shape:lower _builder>]()
+                    let o = Object::[<$shape:lower _builder>]($($args,)*)
                         .transformation(t)
                         .material(m.clone())
                         .casts_shadow(false)
@@ -141,7 +131,8 @@ mod tests {
                     assert!(!o.casts_shadow);
                     assert_approx_eq!(o.shape, s);
 
-                    let o = Object::[<$shape:lower _builder>]().build();
+                    let o = Object::[<$shape:lower _builder>]($($args,)*)
+                        .build();
 
                     assert_approx_eq!(o.transformation, Transformation::new());
                     assert_approx_eq!(
@@ -154,38 +145,12 @@ mod tests {
             }};
         }
 
-        let s = Shape::Cylinder(Cylinder::new(1.0, 2.0, true));
-
-        let o = Object::cylinder_builder(1.0, 2.0, true)
-            .transformation(t)
-            .material(m.clone())
-            .casts_shadow(true)
-            .build();
-
-        assert_approx_eq!(o.transformation, t);
-        assert_approx_eq!(o.inverse_transformation, ti);
-        assert_approx_eq!(o.material, &m);
-        assert!(o.casts_shadow);
-        assert_approx_eq!(o.shape, s);
-
-        let s = Shape::Cone(Cone::new(0.0, 2.0, true));
-
-        let o = Object::cone_builder(0.0, 2.0, true)
-            .transformation(t)
-            .material(m.clone())
-            .casts_shadow(true)
-            .build();
-
-        assert_approx_eq!(o.transformation, t);
-        assert_approx_eq!(o.inverse_transformation, ti);
-        assert_approx_eq!(o.material, &m);
-        assert!(o.casts_shadow);
-        assert_approx_eq!(o.shape, s);
-
-        test_object!(Cube);
-        test_object!(Plane);
-        test_object!(Sphere);
-        test_object!(Test);
+        test_object!(Cone(0.0, 2.0, true));
+        test_object!(Cube());
+        test_object!(Cylinder(1.0, 2.0, false));
+        test_object!(Plane());
+        test_object!(Sphere());
+        test_object!(Test());
     }
 
     #[test]
@@ -199,7 +164,7 @@ mod tests {
         let l = o.intersect(&r).unwrap();
 
         assert_approx_eq!(
-            test::intersection_to_ray(&l),
+            Test::intersection_to_ray(&l),
             Ray::new(Point::new(0.0, 0.0, -2.5), Vector::new(0.0, 0.0, 0.5))
         );
 
@@ -210,7 +175,7 @@ mod tests {
         let l = o.intersect(&r).unwrap();
 
         assert_approx_eq!(
-            test::intersection_to_ray(&l),
+            Test::intersection_to_ray(&l),
             Ray::new(Point::new(-5.0, 0.0, -5.0), Vector::z_axis())
         );
     }
