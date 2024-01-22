@@ -1,6 +1,7 @@
 mod chapter10;
 mod chapter11;
 mod chapter12;
+mod chapter13;
 mod chapter6;
 mod chapter8;
 mod chapter9;
@@ -25,6 +26,7 @@ pub enum Scene {
     Chapter11,
     Chapter11Water,
     Chapter12,
+    Chapter13,
 }
 
 impl Scene {
@@ -38,6 +40,7 @@ impl Scene {
             Self::Chapter11 => chapter11::generate_scene(arguments),
             Self::Chapter11Water => chapter11::generate_water_scene(arguments),
             Self::Chapter12 => chapter12::generate_scene(arguments),
+            Self::Chapter13 => chapter13::generate_scene(arguments),
         }
     }
 }
@@ -56,9 +59,10 @@ impl SceneData {
     pub fn render(
         &self,
         depth: u32,
+        single_threaded: bool,
         quiet: bool,
         buffer: &mut dyn Write,
     ) -> Result<Canvas> {
-        self.camera.render(&self.world, depth, quiet, buffer)
+        self.camera.render(&self.world, depth, single_threaded, quiet, buffer)
     }
 }

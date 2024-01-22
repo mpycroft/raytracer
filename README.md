@@ -94,3 +94,13 @@ continue to calculate that as needed.
 While doing the above I missed an inversion in Camera. Fixing this to also store
 the inverted transformation cuts debug builds down to 2.71s and release builds
 to 2.37s (at 3x the pixels of the debug build as above).
+
+### Rayon
+
+Using [rayon](https://crates.io/crates/rayon) provides a significant speedup
+when rendering large and complex images. Rendering the Chapter11 image, which
+contains many transparent and reflective surfaces at a size of 10,000 x 5,000
+with a recursion depth of 30:
+
+* Single threaded: 264.26s
+* Rayon: 71.55s

@@ -268,6 +268,24 @@ mod tests {
 
     #[test]
     #[allow(clippy::many_single_char_names)]
+    fn lighting_with_reflect_dot_eye_less_than_zero() {
+        let m = Material::default();
+        let p = Point::origin();
+
+        let e = Vector::new(0.0, 0.0, 0.3);
+        let n = -Vector::z_axis();
+
+        let l = PointLight::new(Point::new(0.0, 0.0, -10.0), Colour::white());
+        let o = Object::test_builder().build();
+
+        assert_approx_eq!(
+            m.lighting(&o, &l, &p, &e, &n, false),
+            Colour::white()
+        );
+    }
+
+    #[test]
+    #[allow(clippy::many_single_char_names)]
     fn lighting_with_a_pattern_applied() {
         let m = Material::builder()
             .pattern(

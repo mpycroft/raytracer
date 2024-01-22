@@ -28,7 +28,12 @@ fn main() -> Result<()> {
 
     writeln!(buffer, "done")?;
 
-    let canvas = scene.render(arguments.depth, arguments.quiet, buffer)?;
+    let canvas = scene.render(
+        arguments.depth,
+        arguments.single_threaded,
+        arguments.quiet,
+        buffer,
+    )?;
 
     writeln!(buffer, "Writing to file {}", arguments.out)?;
 

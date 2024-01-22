@@ -1,48 +1,56 @@
-//! A `Sphere` is a unit sphere centred at the origin (0, 0, 0).
+use derive_new::new;
 
 use crate::{
-    intersection::TList,
+    intersection::{Intersectable, TList},
     math::{Point, Ray, Vector},
 };
 
-#[must_use]
-pub fn intersect(ray: &Ray) -> Option<TList> {
-    let sphere_to_ray = ray.origin - Point::origin();
+/// A `Sphere` is a unit sphere centred at the origin (0, 0, 0).
+#[derive(Clone, Copy, Debug, new)]
+pub struct Sphere;
 
-    let a = ray.direction.dot(&ray.direction);
-    let b = 2.0 * ray.direction.dot(&sphere_to_ray);
-    let c = sphere_to_ray.dot(&sphere_to_ray) - 1.0;
+impl Intersectable for Sphere {
+    #[must_use]
+    fn intersect(&self, ray: &Ray) -> Option<TList> {
+        let sphere_to_ray = ray.origin - Point::origin();
 
-    let discriminant = b.powi(2) - 4.0 * a * c;
+        let a = ray.direction.dot(&ray.direction);
+        let b = 2.0 * ray.direction.dot(&sphere_to_ray);
+        let c = sphere_to_ray.dot(&sphere_to_ray) - 1.0;
 
-    if discriminant < 0.0 {
-        return None;
+        let discriminant = b.powi(2) - 4.0 * a * c;
+
+        if discriminant < 0.0 {
+            return None;
+        }
+
+        let discriminant = discriminant.sqrt();
+        let a = 2.0 * a;
+
+        let t1 = (-b - discriminant) / a;
+        let t2 = (-b + discriminant) / a;
+
+        Some(TList::from(vec![t1, t2]))
     }
 
-    let discriminant = discriminant.sqrt();
-    let a = 2.0 * a;
-
-    let t1 = (-b - discriminant) / a;
-    let t2 = (-b + discriminant) / a;
-
-    Some(TList::from(vec![t1, t2]))
-}
-
-#[must_use]
-pub fn normal_at(point: &Point) -> Vector {
-    *point - Point::origin()
+    #[must_use]
+    fn normal_at(&self, point: &Point) -> Vector {
+        *point - Point::origin()
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::{float::*, Vector};
+    use crate::math::float::*;
 
     #[test]
     fn a_ray_intersects_a_sphere_at_two_points() {
-        let l =
-            intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()))
-                .unwrap();
+        let s = Sphere::new();
+
+        let l = s
+            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()))
+            .unwrap();
 
         assert_eq!(l.len(), 2);
 
@@ -52,9 +60,11 @@ mod tests {
 
     #[test]
     fn a_ray_intersects_a_sphere_at_a_tangent() {
-        let l =
-            intersect(&Ray::new(Point::new(0.0, 1.0, -5.0), Vector::z_axis()))
-                .unwrap();
+        let s = Sphere::new();
+
+        let l = s
+            .intersect(&Ray::new(Point::new(0.0, 1.0, -5.0), Vector::z_axis()))
+            .unwrap();
 
         assert_eq!(l.len(), 2);
 
@@ -64,17 +74,19 @@ mod tests {
 
     #[test]
     fn a_ray_misses_a_sphere() {
-        assert!(intersect(&Ray::new(
-            Point::new(0.0, 2.0, -5.0),
-            Vector::z_axis()
-        ))
-        .is_none());
+        let s = Sphere::new();
+
+        assert!(s
+            .intersect(&Ray::new(Point::new(0.0, 2.0, -5.0), Vector::z_axis()))
+            .is_none());
     }
 
     #[test]
     fn a_ray_originates_inside_a_sphere() {
+        let s = Sphere::new();
+
         let l =
-            intersect(&Ray::new(Point::origin(), Vector::z_axis())).unwrap();
+            s.intersect(&Ray::new(Point::origin(), Vector::z_axis())).unwrap();
 
         assert_eq!(l.len(), 2);
 
@@ -84,9 +96,11 @@ mod tests {
 
     #[test]
     fn a_sphere_is_behind_a_ray() {
-        let l =
-            intersect(&Ray::new(Point::new(0.0, 0.0, 5.0), Vector::z_axis()))
-                .unwrap();
+        let s = Sphere::new();
+
+        let l = s
+            .intersect(&Ray::new(Point::new(0.0, 0.0, 5.0), Vector::z_axis()))
+            .unwrap();
 
         assert_eq!(l.len(), 2);
 
@@ -96,27 +110,31 @@ mod tests {
 
     #[test]
     fn the_normal_on_a_sphere_at_a_point_on_an_axis() {
+        let s = Sphere::new();
+
         assert_approx_eq!(
-            normal_at(&Point::new(1.0, 0.0, 0.0)),
+            s.normal_at(&Point::new(1.0, 0.0, 0.0)),
             Vector::x_axis()
         );
 
         assert_approx_eq!(
-            normal_at(&Point::new(0.0, 1.0, 0.0)),
+            s.normal_at(&Point::new(0.0, 1.0, 0.0)),
             Vector::y_axis()
         );
 
         assert_approx_eq!(
-            normal_at(&Point::new(0.0, 0.0, 1.0)),
+            s.normal_at(&Point::new(0.0, 0.0, 1.0)),
             Vector::z_axis()
         );
     }
 
     #[test]
     fn the_normal_on_a_sphere_at_a_non_axial_point() {
+        let s = Sphere::new();
+
         let sqrt_3_div_3 = f64::sqrt(3.0) / 3.0;
         let n =
-            normal_at(&Point::new(sqrt_3_div_3, sqrt_3_div_3, sqrt_3_div_3));
+            s.normal_at(&Point::new(sqrt_3_div_3, sqrt_3_div_3, sqrt_3_div_3));
 
         assert_approx_eq!(
             n,

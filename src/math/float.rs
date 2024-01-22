@@ -25,13 +25,11 @@ macro_rules! approx_eq {
 pub(crate) use approx_eq;
 
 /// Compare if two values are not almost equal. See float-cmp documentation.
-#[cfg(test)]
 macro_rules! approx_ne {
     ($($tt:tt)+) => {
         !crate::math::float::approx_eq!($($tt)+)
     };
 }
-#[cfg(test)]
 pub(crate) use approx_ne;
 
 /// Helper macro so we don't have to duplicate code between eq and ne asserts.

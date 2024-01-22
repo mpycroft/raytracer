@@ -24,7 +24,7 @@ pub struct Arguments {
     pub out: String,
 
     /// Which scene to generate.
-    #[arg(short, long, default_value = "chapter12")]
+    #[arg(short, long, default_value = "chapter13")]
     pub scene: Scene,
 
     /// Camera width (in pixels)
@@ -42,6 +42,10 @@ pub struct Arguments {
     /// The number of reflection rays to produce.
     #[arg(long, default_value = "5")]
     pub depth: u32,
+
+    /// Run the rendering process with a single thread.
+    #[arg(long)]
+    pub single_threaded: bool,
 
     /// Suppress program output
     #[arg(short, long)]

@@ -7,7 +7,7 @@ use crate::{
         float::impl_approx_eq, Point, Ray, Transformable, Transformation,
         Vector,
     },
-    Material, Shape,
+    shape, Material, Shape,
 };
 
 /// An 'Object' represents some entity in the scene that can be rendered.
@@ -27,12 +27,14 @@ pub struct Object {
 }
 
 macro_rules! add_builder_fn {
-    ($shape:ident) => {
+    ($shape:ident($($args:ident : $ty:ty $(,)?)*)) => {
         paste! {
-            pub fn [<$shape:lower _builder>]() ->
+            pub fn [<$shape:lower _builder>]($($args:$ty,)*) ->
                 ObjectBuilder<((), (), (), (Shape,))>
             {
-                Self::_builder().shape(Shape::$shape)
+                Self::_builder().shape(
+                    Shape::$shape(shape::$shape::new($($args,)*))
+                )
             }
 
         }
@@ -40,11 +42,13 @@ macro_rules! add_builder_fn {
 }
 
 impl Object {
-    add_builder_fn!(Cube);
-    add_builder_fn!(Plane);
-    add_builder_fn!(Sphere);
+    add_builder_fn!(Cone(minimum: f64, maximum:f64, closed: bool));
+    add_builder_fn!(Cube());
+    add_builder_fn!(Cylinder(minimum: f64, maximum: f64, closed: bool));
+    add_builder_fn!(Plane());
+    add_builder_fn!(Sphere());
     #[cfg(test)]
-    add_builder_fn!(Test);
+    add_builder_fn!(Test());
 
     #[must_use]
     pub fn to_object_space<'a, T: Transformable<'a>>(&self, value: &'a T) -> T {
@@ -55,10 +59,9 @@ impl Object {
     pub fn to_world_space<'a, T: Transformable<'a>>(&self, value: &'a T) -> T {
         value.apply(&self.inverse_transformation.transpose())
     }
-}
 
-impl Intersectable for Object {
-    fn intersect(&self, ray: &Ray) -> Option<List> {
+    #[must_use]
+    pub fn intersect(&self, ray: &Ray) -> Option<List> {
         let ray = self.to_object_space(ray);
 
         let Some(t_list) = self.shape.intersect(&ray) else {
@@ -68,7 +71,8 @@ impl Intersectable for Object {
         Some(t_list.to_list(self))
     }
 
-    fn normal_at(&self, point: &Point) -> Vector {
+    #[must_use]
+    pub fn normal_at(&self, point: &Point) -> Vector {
         let object_point = self.to_object_space(point);
 
         let object_normal = self.shape.normal_at(&object_point);
@@ -96,12 +100,10 @@ impl<T: Optional<Transformation>, M: Optional<Material>, S: Optional<bool>>
 mod tests {
     use std::f64::consts::{FRAC_1_SQRT_2, PI, SQRT_2};
 
-    use paste::paste;
-
     use super::*;
     use crate::{
         math::{float::*, Angle},
-        shape::test,
+        shape::test::Test,
         Colour,
     };
 
@@ -113,11 +115,11 @@ mod tests {
 
         /// Test the creation of objects using new_ and default_ functions.
         macro_rules! test_object {
-            ($shape:ident) => {{
+            ($shape:ident($($args:expr $(,)?)*)) => {{
                 paste! {
-                    let s = Shape::$shape;
+                    let s = Shape::[<new_ $shape:lower>]($($args,)*);
 
-                    let o = Object::[<$shape:lower _builder>]()
+                    let o = Object::[<$shape:lower _builder>]($($args,)*)
                         .transformation(t)
                         .material(m.clone())
                         .casts_shadow(false)
@@ -129,7 +131,8 @@ mod tests {
                     assert!(!o.casts_shadow);
                     assert_approx_eq!(o.shape, s);
 
-                    let o = Object::[<$shape:lower _builder>]().build();
+                    let o = Object::[<$shape:lower _builder>]($($args,)*)
+                        .build();
 
                     assert_approx_eq!(o.transformation, Transformation::new());
                     assert_approx_eq!(
@@ -142,24 +145,12 @@ mod tests {
             }};
         }
 
-        let s = Shape::Plane;
-
-        let o = Object::plane_builder()
-            .transformation(t)
-            .material(m.clone())
-            .casts_shadow(true)
-            .build();
-
-        assert_approx_eq!(o.transformation, t);
-        assert_approx_eq!(o.inverse_transformation, ti);
-        assert_approx_eq!(o.material, &m);
-        assert!(o.casts_shadow);
-        assert_approx_eq!(o.shape, s);
-
-        test_object!(Cube);
-        test_object!(Plane);
-        test_object!(Sphere);
-        test_object!(Test);
+        test_object!(Cone(0.0, 2.0, true));
+        test_object!(Cube());
+        test_object!(Cylinder(1.0, 2.0, false));
+        test_object!(Plane());
+        test_object!(Sphere());
+        test_object!(Test());
     }
 
     #[test]
@@ -173,7 +164,7 @@ mod tests {
         let l = o.intersect(&r).unwrap();
 
         assert_approx_eq!(
-            test::intersection_to_ray(&l),
+            Test::intersection_to_ray(&l),
             Ray::new(Point::new(0.0, 0.0, -2.5), Vector::new(0.0, 0.0, 0.5))
         );
 
@@ -184,7 +175,7 @@ mod tests {
         let l = o.intersect(&r).unwrap();
 
         assert_approx_eq!(
-            test::intersection_to_ray(&l),
+            Test::intersection_to_ray(&l),
             Ray::new(Point::new(-5.0, 0.0, -5.0), Vector::z_axis())
         );
     }
@@ -307,6 +298,66 @@ mod tests {
             .build();
 
         assert_approx_eq!(o.normal_at(&Point::origin()), -Vector::x_axis());
+    }
+
+    #[test]
+    fn intersecting_a_transformed_cylinder_with_a_ray() {
+        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
+
+        let o = Object::cylinder_builder(-5.0, 5.0, true)
+            .transformation(Transformation::new().translate(0.0, 0.0, -1.0))
+            .build();
+
+        let i = o.intersect(&r);
+        assert!(i.is_some());
+
+        let i = i.unwrap();
+        assert_eq!(i.len(), 2);
+
+        assert_approx_eq!(i[0].object, &o);
+        assert_approx_eq!(i[1].object, &o);
+
+        assert_approx_eq!(i[0].t, 3.0);
+        assert_approx_eq!(i[1].t, 5.0);
+    }
+
+    #[test]
+    fn computing_the_normal_on_a_transformed_cylinder() {
+        let o = Object::cylinder_builder(0.0, 4.0, true)
+            .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
+            .build();
+
+        assert_approx_eq!(o.normal_at(&Point::origin()), -Vector::y_axis());
+    }
+
+    #[test]
+    fn intersecting_a_transformed_cone_with_a_ray() {
+        let r = Ray::new(Point::new(0.0, 0.5, -5.0), Vector::z_axis());
+
+        let o = Object::cone_builder(-1.0, 1.0, true)
+            .transformation(Transformation::new().translate(0.0, 0.0, 1.0))
+            .build();
+
+        let i = o.intersect(&r);
+        assert!(i.is_some());
+
+        let i = i.unwrap();
+        assert_eq!(i.len(), 2);
+
+        assert_approx_eq!(i[0].object, &o);
+        assert_approx_eq!(i[1].object, &o);
+
+        assert_approx_eq!(i[0].t, 5.5);
+        assert_approx_eq!(i[1].t, 6.5);
+    }
+
+    #[test]
+    fn computing_the_normal_on_a_transformed_cone() {
+        let o = Object::cone_builder(1.0, 2.0, true)
+            .transformation(Transformation::new().scale(0.5, 0.5, 0.5))
+            .build();
+
+        assert_approx_eq!(o.normal_at(&Point::origin()), -Vector::y_axis());
     }
 
     #[test]
