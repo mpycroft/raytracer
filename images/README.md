@@ -39,3 +39,9 @@ Several spheres under "water" (a transparent plane that doesn't cast a shadow).
 A scene using cubes.
 
 ![Some cubes](chapter12.png)
+
+## Chapter 13
+
+A scene using various cylinders and cones.
+
+![Cylinders and cones](chapter13.png)
