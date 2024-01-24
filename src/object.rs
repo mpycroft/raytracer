@@ -63,13 +63,11 @@ impl Object {
 
     #[must_use]
     pub fn intersect(&self, ray: &Ray) -> Option<List> {
-        let ray = self.to_object_space(ray);
-
         if let Shape::Group(group) = &self.shape {
             let mut list = List::new();
 
             for object in &group.0 {
-                if let Some(object_list) = object.intersect(&ray) {
+                if let Some(object_list) = object.intersect(ray) {
                     list.extend(object_list.iter());
                 };
             }
@@ -80,6 +78,8 @@ impl Object {
 
             Some(list)
         } else {
+            let ray = self.to_object_space(ray);
+
             let Some(t_list) = self.shape.intersect(&ray) else {
                 return None;
             };
@@ -108,6 +108,18 @@ impl<T: Optional<Transformation>, M: Optional<Material>, S: Optional<bool>>
         let mut object = self._build();
 
         object.inverse_transformation = object.transformation.invert();
+
+        if let Shape::Group(group) = &mut object.shape {
+            for child_object in &mut group.0 {
+                child_object.transformation =
+                    child_object.transformation.extend(&object.transformation);
+                child_object.inverse_transformation =
+                    child_object.transformation.invert();
+            }
+
+            object.transformation = Transformation::new();
+            object.inverse_transformation = Transformation::new();
+        };
 
         object
     }
@@ -401,8 +413,8 @@ mod tests {
         let l = o
             .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()))
             .unwrap();
-
         assert_eq!(l.len(), 4);
+
         assert_approx_eq!(l[0].object, &s1);
         assert_approx_eq!(l[0].t, 4.0);
         assert_approx_eq!(l[1].object, &s1);
@@ -411,6 +423,26 @@ mod tests {
         assert_approx_eq!(l[2].t, 1.0);
         assert_approx_eq!(l[3].object, &s2);
         assert_approx_eq!(l[3].t, 3.0);
+    }
+
+    #[test]
+    fn intersecting_a_transformed_group() {
+        let o = Object::group_builder(vec![Object::sphere_builder()
+            .transformation(Transformation::new().translate(5.0, 0.0, 0.0))
+            .build()])
+        .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
+        .build();
+
+        let l = o
+            .intersect(&Ray::new(
+                Point::new(10.0, 0.0, -10.0),
+                Vector::z_axis(),
+            ))
+            .unwrap();
+        assert_eq!(l.len(), 2);
+
+        assert_approx_eq!(l[0].t, 8.0);
+        assert_approx_eq!(l[1].t, 12.0);
     }
 
     #[test]
