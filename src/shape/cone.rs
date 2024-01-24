@@ -118,7 +118,7 @@ impl Intersectable for Cone {
     }
 }
 
-impl ApproxEq for Cone {
+impl ApproxEq for &Cone {
     type Margin = F64Margin;
 
     fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
@@ -258,8 +258,8 @@ mod tests {
         let c2 = Cone::new(0.0, 1.0, true);
         let c3 = Cone::new(0.0, 1.0, false);
 
-        assert_approx_eq!(c1, c2);
+        assert_approx_eq!(c1, &c2);
 
-        assert_approx_ne!(c1, c3);
+        assert_approx_ne!(c1, &c3);
     }
 }

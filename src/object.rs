@@ -7,7 +7,7 @@ use crate::{
         float::impl_approx_eq, Point, Ray, Transformable, Transformation,
         Vector,
     },
-    shape, Material, Shape,
+    Material, Shape,
 };
 
 /// An 'Object' represents some entity in the scene that can be rendered.
@@ -33,7 +33,7 @@ macro_rules! add_builder_fn {
                 ObjectBuilder<((), (), (), (Shape,))>
             {
                 Self::_builder().shape(
-                    Shape::$shape(shape::$shape::new($($args,)*))
+                    Shape::[<new_ $shape:lower>]($($args,)*)
                 )
             }
 
@@ -81,7 +81,7 @@ impl Object {
     }
 }
 
-impl_approx_eq!(&Object { shape, transformation, ref material });
+impl_approx_eq!(&Object { ref shape, transformation, ref material });
 
 impl<T: Optional<Transformation>, M: Optional<Material>, S: Optional<bool>>
     ObjectBuilder<(T, M, S, (Shape,))>
@@ -129,7 +129,7 @@ mod tests {
                     assert_approx_eq!(o.inverse_transformation, ti);
                     assert_approx_eq!(o.material, &m);
                     assert!(!o.casts_shadow);
-                    assert_approx_eq!(o.shape, s);
+                    assert_approx_eq!(o.shape, &s);
 
                     let o = Object::[<$shape:lower _builder>]($($args,)*)
                         .build();
@@ -140,7 +140,7 @@ mod tests {
                     );
                     assert_approx_eq!(o.material, &Material::default());
                     assert!(o.casts_shadow);
-                    assert_approx_eq!(o.shape, s);
+                    assert_approx_eq!(o.shape, &s);
                 }
             }};
         }

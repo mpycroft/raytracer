@@ -108,7 +108,7 @@ impl Intersectable for Cylinder {
     }
 }
 
-impl ApproxEq for Cylinder {
+impl ApproxEq for &Cylinder {
     type Margin = F64Margin;
 
     fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
@@ -311,8 +311,8 @@ mod tests {
         let c2 = Cylinder::new(0.0, 1.0, true);
         let c3 = Cylinder::new(0.001, 1.0, true);
 
-        assert_approx_eq!(c1, c2);
+        assert_approx_eq!(c1, &c2);
 
-        assert_approx_ne!(c1, c3);
+        assert_approx_ne!(c1, &c3);
     }
 }
