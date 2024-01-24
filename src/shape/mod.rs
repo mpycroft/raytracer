@@ -97,6 +97,8 @@ mod tests {
         let s5 = Shape::new_cylinder(1.0, 2.0, true);
         let s6 = Shape::new_cone(-1.5, 1.5, true);
         let s7 = Shape::new_cone(-1.5, 1.500_1, true);
+        let s8 = Shape::new_group(vec![Object::sphere_builder().build()]);
+        let s9 = Shape::new_group(vec![Object::plane_builder().build()]);
 
         assert_approx_eq!(s1, &s2);
 
@@ -104,5 +106,6 @@ mod tests {
 
         assert_approx_ne!(s4, &s5);
         assert_approx_ne!(s6, &s7);
+        assert_approx_ne!(s8, &s9);
     }
 }
