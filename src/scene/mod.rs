@@ -13,6 +13,7 @@ use anyhow::Result;
 use clap::ValueEnum;
 use derive_more::Display;
 use derive_new::new;
+use rand::Rng;
 use raytracer::{Camera, Canvas, World};
 
 use crate::arguments::Arguments;
@@ -33,7 +34,11 @@ pub enum Scene {
 
 impl Scene {
     #[must_use]
-    pub fn generate(self, arguments: &Arguments) -> SceneData {
+    pub fn generate<R: Rng>(
+        self,
+        arguments: &Arguments,
+        rng: &mut R,
+    ) -> SceneData {
         match self {
             Self::Chapter6 => chapter6::generate_scene(arguments),
             Self::Chapter8 => chapter8::generate_scene(arguments),
@@ -44,7 +49,7 @@ impl Scene {
             Self::Chapter12 => chapter12::generate_scene(arguments),
             Self::Chapter13 => chapter13::generate_scene(arguments),
             Self::Chapter14Spheres => {
-                chapter14::generate_sphere_scene(arguments)
+                chapter14::generate_sphere_scene(arguments, rng)
             }
         }
     }

@@ -1,6 +1,6 @@
 use std::f64::consts::FRAC_PI_3;
 
-use rand::{thread_rng, Rng};
+use rand::Rng;
 use raytracer::{
     math::{Angle, Point, Transformation, Vector},
     Camera, Colour, Material, Object, Pattern, PointLight, World,
@@ -11,7 +11,10 @@ use crate::arguments::Arguments;
 
 #[must_use]
 #[allow(clippy::too_many_lines)]
-pub fn generate_sphere_scene(arguments: &Arguments) -> SceneData {
+pub fn generate_sphere_scene<R: Rng>(
+    arguments: &Arguments,
+    rng: &mut R,
+) -> SceneData {
     let horizontal_size = arguments.width.unwrap_or(1000);
     let vertical_size = arguments.height.unwrap_or(800);
     let field_of_view = arguments.fov.unwrap_or(Angle(FRAC_PI_3));
@@ -45,8 +48,6 @@ pub fn generate_sphere_scene(arguments: &Arguments) -> SceneData {
             .build(),
     );
 
-    let mut rand = thread_rng();
-
     let mut generate_spheres = |num_spheres, min, max| {
         let mut spheres = Vec::with_capacity(num_spheres);
         let mut locations: Vec<Point> = Vec::with_capacity(num_spheres);
@@ -66,43 +67,43 @@ pub fn generate_sphere_scene(arguments: &Arguments) -> SceneData {
             };
 
             let mut location = Point::new(
-                rand.gen_range(min..=max),
+                rng.gen_range(min..=max),
                 0.5,
-                rand.gen_range(min..=max),
+                rng.gen_range(min..=max),
             );
 
             while !check_location(&location) {
                 location = Point::new(
-                    rand.gen_range(min..=max),
+                    rng.gen_range(min..=max),
                     0.5,
-                    rand.gen_range(min..=max),
+                    rng.gen_range(min..=max),
                 );
             }
 
             locations.push(location);
 
-            let material = if rand.gen_range(0.0..=1.0) < 0.1 {
+            let material = if rng.gen_range(0.0..=1.0) < 0.1 {
                 Material::glass()
             } else {
-                let reflective = if rand.gen_range(0.0..=1.0) < 0.4 {
+                let reflective = if rng.gen_range(0.0..=1.0) < 0.4 {
                     0.0
                 } else {
-                    rand.gen_range(0.0..=1.0)
+                    rng.gen_range(0.0..=1.0)
                 };
 
                 Material::builder()
                     .pattern(
                         Colour::new(
-                            rand.gen_range(0.0..=1.0),
-                            rand.gen_range(0.0..=1.0),
-                            rand.gen_range(0.0..=1.0),
+                            rng.gen_range(0.0..=1.0),
+                            rng.gen_range(0.0..=1.0),
+                            rng.gen_range(0.0..=1.0),
                         )
                         .into(),
                     )
-                    .ambient(rand.gen_range(0.0..=1.0))
-                    .diffuse(rand.gen_range(0.0..=1.0))
-                    .specular(rand.gen_range(0.0..=1.0))
-                    .shininess(rand.gen_range(0.0..=250.0))
+                    .ambient(rng.gen_range(0.0..=1.0))
+                    .diffuse(rng.gen_range(0.0..=1.0))
+                    .specular(rng.gen_range(0.0..=1.0))
+                    .shininess(rng.gen_range(0.0..=250.0))
                     .reflective(reflective)
                     .build()
             };

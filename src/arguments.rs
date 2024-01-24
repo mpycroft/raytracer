@@ -43,6 +43,10 @@ pub struct Arguments {
     #[arg(long, default_value = "5")]
     pub depth: u32,
 
+    /// The seed to use when using random numbers.
+    #[arg[long]]
+    pub seed: Option<u64>,
+
     /// Run the rendering process with a single thread.
     #[arg(long)]
     pub single_threaded: bool,

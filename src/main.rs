@@ -11,6 +11,8 @@ use anyhow::Result;
 use clap::Parser;
 use either::Either::{Left, Right};
 use image::{ImageBuffer, Rgb};
+use rand::{random, SeedableRng};
+use rand_xoshiro::Xoroshiro128PlusPlus;
 
 use crate::arguments::Arguments;
 
@@ -22,9 +24,15 @@ fn main() -> Result<()> {
 
     let buffer: &mut dyn Write = &mut buffer;
 
+    let seed = arguments.seed.unwrap_or(random());
+
+    writeln!(buffer, "Using RNG seed {seed}")?;
+
+    let mut rng = Xoroshiro128PlusPlus::seed_from_u64(seed);
+
     write!(buffer, "Generating scene '{}'...", arguments.scene)?;
 
-    let scene = arguments.scene.generate(&arguments);
+    let scene = arguments.scene.generate(&arguments, &mut rng);
 
     writeln!(buffer, "done")?;
 
