@@ -45,6 +45,7 @@ impl Object {
     add_builder_fn!(Cone(minimum: f64, maximum:f64, closed: bool));
     add_builder_fn!(Cube());
     add_builder_fn!(Cylinder(minimum: f64, maximum: f64, closed: bool));
+    add_builder_fn!(Group(objects: Vec<Object>));
     add_builder_fn!(Plane());
     add_builder_fn!(Sphere());
     #[cfg(test)]
@@ -64,11 +65,27 @@ impl Object {
     pub fn intersect(&self, ray: &Ray) -> Option<List> {
         let ray = self.to_object_space(ray);
 
-        let Some(t_list) = self.shape.intersect(&ray) else {
-            return None;
-        };
+        if let Shape::Group(group) = &self.shape {
+            let mut list = List::new();
 
-        Some(t_list.to_list(self))
+            for object in &group.0 {
+                if let Some(object_list) = object.intersect(&ray) {
+                    list.extend(object_list.iter());
+                };
+            }
+
+            if list.is_empty() {
+                return None;
+            }
+
+            Some(list)
+        } else {
+            let Some(t_list) = self.shape.intersect(&ray) else {
+                return None;
+            };
+
+            Some(t_list.to_list(self))
+        }
     }
 
     #[must_use]
@@ -358,6 +375,42 @@ mod tests {
             .build();
 
         assert_approx_eq!(o.normal_at(&Point::origin()), -Vector::y_axis());
+    }
+
+    #[test]
+    fn intersecting_an_empty_group() {
+        let o = Object::group_builder(Vec::new()).build();
+
+        assert!(o
+            .intersect(&Ray::new(Point::origin(), Vector::z_axis()))
+            .is_none());
+    }
+
+    #[test]
+    fn intersecting_a_ray_with_a_non_empty_group() {
+        let s1 = Object::sphere_builder().build();
+        let s2 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(0.0, 0.0, -3.0))
+            .build();
+        let s3 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(5.0, 0.0, 0.0))
+            .build();
+
+        let o = Object::group_builder(vec![s1.clone(), s2.clone(), s3]).build();
+
+        let l = o
+            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()))
+            .unwrap();
+
+        assert_eq!(l.len(), 4);
+        assert_approx_eq!(l[0].object, &s1);
+        assert_approx_eq!(l[0].t, 4.0);
+        assert_approx_eq!(l[1].object, &s1);
+        assert_approx_eq!(l[1].t, 6.0);
+        assert_approx_eq!(l[2].object, &s2);
+        assert_approx_eq!(l[2].t, 1.0);
+        assert_approx_eq!(l[3].object, &s2);
+        assert_approx_eq!(l[3].t, 3.0);
     }
 
     #[test]
