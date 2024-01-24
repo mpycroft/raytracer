@@ -4,13 +4,38 @@ use float_cmp::{ApproxEq, F64Margin};
 use crate::{
     intersection::{Intersectable, TList},
     math::{Point, Ray, Vector},
-    Object,
+    Object, Shape,
 };
 
 /// A `Group` is a collection of `Object`s that can be treated as a single
 /// entity.
 #[derive(Clone, Debug, new)]
 pub struct Group(pub Vec<Object>);
+
+impl Group {
+    #[must_use]
+    pub fn iter_no_groups(&mut self) -> Vec<&mut Object> {
+        let mut objects: Vec<&mut Object> = Vec::new();
+
+        for object in &mut self.0 {
+            // There must be a nicer way to handle this in a single match block
+            // or if let else statement. However no matter the construction I
+            // can't seem to get it right, we aren't able to reborrow object to
+            // add to objects because we are matching on &mut object.shape.
+            if matches!(object.shape, Shape::Group(_)) {
+                let Shape::Group(group) = &mut object.shape else {
+                    unreachable!()
+                };
+
+                objects.extend(group.iter_no_groups());
+            } else {
+                objects.push(object);
+            }
+        }
+
+        objects
+    }
+}
 
 impl Intersectable for Group {
     #[must_use]
@@ -47,7 +72,38 @@ impl ApproxEq for &Group {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::float::*;
+    use crate::math::{float::*, Transformation};
+
+    #[test]
+    fn iter_no_groups() {
+        let s1 = Object::sphere_builder().build();
+        let s2 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(1.0, 0.0, 0.0))
+            .build();
+        let s3 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(0.0, 1.0, 0.0))
+            .build();
+
+        let mut o = Object::group_builder(vec![Object::group_builder(vec![
+            Object::group_builder(vec![
+                s2.clone(),
+                Object::group_builder(vec![s3.clone()]).build(),
+            ])
+            .build(),
+            s1.clone(),
+        ])
+        .build()])
+        .build();
+
+        let Shape::Group(g) = &mut o.shape else { unreachable!() };
+
+        let v = g.iter_no_groups();
+
+        assert_eq!(v.len(), 3);
+        assert_approx_eq!(v[0], &s2);
+        assert_approx_eq!(v[1], &s3);
+        assert_approx_eq!(v[2], &s1);
+    }
 
     #[test]
     fn comparing_groups() {

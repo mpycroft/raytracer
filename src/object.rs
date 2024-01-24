@@ -23,7 +23,7 @@ pub struct Object {
     pub material: Material,
     #[builder(default = true)]
     pub casts_shadow: bool,
-    shape: Shape,
+    pub shape: Shape,
 }
 
 macro_rules! add_builder_fn {
@@ -110,7 +110,7 @@ impl<T: Optional<Transformation>, M: Optional<Material>, S: Optional<bool>>
         object.inverse_transformation = object.transformation.invert();
 
         if let Shape::Group(group) = &mut object.shape {
-            for child_object in &mut group.0 {
+            for child_object in group.iter_no_groups() {
                 child_object.transformation =
                     child_object.transformation.extend(&object.transformation);
                 child_object.inverse_transformation =
@@ -127,7 +127,7 @@ impl<T: Optional<Transformation>, M: Optional<Material>, S: Optional<bool>>
 
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::{FRAC_1_SQRT_2, PI, SQRT_2};
+    use std::f64::consts::{FRAC_1_SQRT_2, FRAC_PI_2, PI, SQRT_2};
 
     use super::*;
     use crate::{
@@ -443,6 +443,57 @@ mod tests {
 
         assert_approx_eq!(l[0].t, 8.0);
         assert_approx_eq!(l[1].t, 12.0);
+    }
+
+    #[test]
+    fn converting_a_point_from_world_to_object_space_with_groups() {
+        let o = Object::group_builder(vec![Object::group_builder(vec![
+            Object::sphere_builder()
+                .transformation(Transformation::new().translate(5.0, 0.0, 0.0))
+                .build(),
+        ])
+        .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
+        .build()])
+        .transformation(Transformation::new().rotate_y(Angle(FRAC_PI_2)))
+        .build();
+
+        let Shape::Group(g) = o.shape else { unreachable!() };
+        let Shape::Group(g) = &g.0[0].shape else { unreachable!() };
+        let s = &g.0[0];
+
+        assert_approx_eq!(
+            s.to_object_space(&Point::new(-2.0, 0.0, -10.0)),
+            Point::new(0.0, 0.0, -1.0)
+        );
+    }
+
+    #[test]
+    fn converting_a_normal_from_object_to_world_space_with_groups() {
+        let o = Object::group_builder(vec![Object::group_builder(vec![
+            Object::sphere_builder()
+                .transformation(Transformation::new().translate(5.0, 0.0, 0.0))
+                .build(),
+        ])
+        .transformation(Transformation::new().scale(1.0, 2.0, 3.0))
+        .build()])
+        .transformation(Transformation::new().rotate_y(Angle(FRAC_PI_2)))
+        .build();
+
+        let Shape::Group(g) = o.shape else { unreachable!() };
+        let Shape::Group(g) = &g.0[0].shape else { unreachable!() };
+        let s = &g.0[0];
+
+        let sqrt_3_div_3 = f64::sqrt(3.0) / 3.0;
+        assert_approx_eq!(
+            s.to_world_space(&Vector::new(
+                sqrt_3_div_3,
+                sqrt_3_div_3,
+                sqrt_3_div_3
+            ))
+            .normalise(),
+            Vector::new(0.285_71, 0.428_57, -0.857_14),
+            epsilon = 0.000_01
+        );
     }
 
     #[test]
