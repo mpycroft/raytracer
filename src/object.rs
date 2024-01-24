@@ -45,7 +45,7 @@ impl Object {
     add_builder_fn!(Cone(minimum: f64, maximum:f64, closed: bool));
     add_builder_fn!(Cube());
     add_builder_fn!(Cylinder(minimum: f64, maximum: f64, closed: bool));
-    add_builder_fn!(Group(objects: Vec<Object>));
+    add_builder_fn!(Group(objects: Vec<Self>));
     add_builder_fn!(Plane());
     add_builder_fn!(Sphere());
     #[cfg(test)]
@@ -492,6 +492,29 @@ mod tests {
             ))
             .normalise(),
             Vector::new(0.285_71, 0.428_57, -0.857_14),
+            epsilon = 0.000_01
+        );
+    }
+
+    #[test]
+    fn finding_the_normal_on_a_child_object() {
+        let o = Object::group_builder(vec![Object::group_builder(vec![
+            Object::sphere_builder()
+                .transformation(Transformation::new().translate(5.0, 0.0, 0.0))
+                .build(),
+        ])
+        .transformation(Transformation::new().scale(1.0, 2.0, 3.0))
+        .build()])
+        .transformation(Transformation::new().rotate_y(Angle(FRAC_PI_2)))
+        .build();
+
+        let Shape::Group(g) = o.shape else { unreachable!() };
+        let Shape::Group(g) = &g.0[0].shape else { unreachable!() };
+        let s = &g.0[0];
+
+        assert_approx_eq!(
+            s.normal_at(&Point::new(1.732_1, 1.154_7, -5.577_4)),
+            Vector::new(0.285_7, 0.428_54, -0.857_16),
             epsilon = 0.000_01
         );
     }
