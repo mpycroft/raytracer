@@ -43,7 +43,7 @@ impl Scene {
             Self::Chapter6 => chapter6::generate_scene(arguments),
             Self::Chapter8 => chapter8::generate_scene(arguments),
             Self::Chapter9 => chapter9::generate_scene(arguments),
-            Self::Chapter10 => chapter10::generate_scene(arguments),
+            Self::Chapter10 => chapter10::generate_scene(arguments, rng),
             Self::Chapter11 => chapter11::generate_scene(arguments),
             Self::Chapter11Water => chapter11::generate_water_scene(arguments),
             Self::Chapter12 => chapter12::generate_scene(arguments),

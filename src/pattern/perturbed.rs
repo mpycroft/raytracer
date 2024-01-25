@@ -1,5 +1,5 @@
 use libnoise::{Generator, Simplex, Source};
-use rand::random;
+use rand::Rng;
 
 use super::{Pattern, PatternAt};
 use crate::{
@@ -18,8 +18,8 @@ pub struct Perturbed {
 
 impl Perturbed {
     #[must_use]
-    pub fn new(scale: f64, pattern: Pattern) -> Self {
-        let noise = Source::simplex(random());
+    pub fn new<R: Rng>(scale: f64, pattern: Pattern, rng: &mut R) -> Self {
+        let noise = Source::simplex(rng.gen());
 
         Self { noise: Box::new(noise), scale, pattern: Box::new(pattern) }
     }
@@ -44,6 +44,9 @@ impl_approx_eq!(&Perturbed { scale, ref pattern });
 
 #[cfg(test)]
 mod tests {
+    use rand::SeedableRng;
+    use rand_xoshiro::Xoroshiro128PlusPlus;
+
     use super::*;
     use crate::math::float::*;
 
@@ -53,7 +56,9 @@ mod tests {
 
     #[test]
     fn creating_a_perturbed_pattern() {
-        let p = Perturbed::new(0.4, Colour::red().into());
+        let mut r = Xoroshiro128PlusPlus::seed_from_u64(1);
+
+        let p = Perturbed::new(0.4, Colour::red().into(), &mut r);
 
         assert_approx_eq!(p.scale, 0.4);
         assert_approx_eq!(
@@ -64,16 +69,20 @@ mod tests {
 
     #[test]
     fn a_perturbed_pattern() {
-        let p = Perturbed::new(0.4, Colour::red().into());
+        let mut r = Xoroshiro128PlusPlus::seed_from_u64(2);
+
+        let p = Perturbed::new(0.4, Colour::red().into(), &mut r);
 
         assert_approx_eq!(p.pattern_at(&Point::origin()), Colour::red());
     }
 
     #[test]
     fn comparing_perturbed_patterns() {
-        let p1 = Perturbed::new(0.2, Colour::cyan().into());
-        let p2 = Perturbed::new(0.2, Colour::cyan().into());
-        let p3 = Perturbed::new(0.3, Colour::cyan().into());
+        let mut r = Xoroshiro128PlusPlus::seed_from_u64(3);
+
+        let p1 = Perturbed::new(0.2, Colour::cyan().into(), &mut r);
+        let p2 = Perturbed::new(0.2, Colour::cyan().into(), &mut r);
+        let p3 = Perturbed::new(0.3, Colour::cyan().into(), &mut r);
 
         assert_approx_eq!(p1, &p2);
 

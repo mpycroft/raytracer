@@ -1,5 +1,6 @@
 use std::f64::consts::{FRAC_PI_2, FRAC_PI_3};
 
+use rand::Rng;
 use raytracer::{
     math::{Angle, Point, Transformation, Vector},
     Camera, Colour, Material, Object, Pattern, PointLight, World,
@@ -10,7 +11,7 @@ use crate::arguments::Arguments;
 
 #[must_use]
 #[allow(clippy::too_many_lines)]
-pub fn generate_scene(arguments: &Arguments) -> SceneData {
+pub fn generate_scene<R: Rng>(arguments: &Arguments, rng: &mut R) -> SceneData {
     let horizontal_size = arguments.width.unwrap_or(1000);
     let vertical_size = arguments.height.unwrap_or(500);
     let field_of_view = arguments.fov.unwrap_or(Angle(FRAC_PI_3));
@@ -56,6 +57,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
                                 .build(),
                             )
                             .build(),
+                            rng,
                         )
                         .build(),
                     )
