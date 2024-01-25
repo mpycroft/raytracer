@@ -13,6 +13,7 @@ mod test;
 mod util;
 
 use paste::paste;
+use rand::Rng;
 use typed_builder::{Optional, TypedBuilder};
 
 #[cfg(test)]
@@ -60,13 +61,21 @@ impl Pattern {
     add_kind_fn!(Blend);
     add_kind_fn!(Checker);
     add_kind_fn!(Gradient);
-    add_kind_fn!(Perturbed(scale: f64, pattern: Self));
     add_kind_fn!(RadialGradient);
     add_kind_fn!(Ring);
     add_kind_fn!(Stripe);
     add_kind_fn!(Solid(colour: Colour));
     #[cfg(test)]
     add_kind_fn!(Test());
+
+    pub fn perturbed_builder<R: Rng>(
+        scale: f64,
+        pattern: Self,
+        rng: &mut R,
+    ) -> PatternBuilder<((), (Kind,))> {
+        Self::_builder()
+            .kind(Kind::Perturbed(Perturbed::new(scale, pattern, rng)))
+    }
 
     #[must_use]
     pub fn pattern_at(&self, object: &Object, point: &Point) -> Colour {
@@ -109,10 +118,14 @@ impl<T: Optional<Transformation>> PatternBuilder<(T, (Kind,))> {
 
 #[cfg(test)]
 mod tests {
+    use rand::SeedableRng;
+    use rand_xoshiro::Xoroshiro128PlusPlus;
+
     use super::*;
     use crate::math::float::*;
 
     #[test]
+    #[allow(clippy::many_single_char_names)]
     fn creating_a_pattern() {
         let t = Transformation::new().translate(1.0, 2.0, 3.0);
         let ti = t.invert();
@@ -145,7 +158,6 @@ mod tests {
         test_pattern!(Blend(w, b));
         test_pattern!(Checker(w, b));
         test_pattern!(Gradient(w, b));
-        test_pattern!(Perturbed(0.3, w));
         test_pattern!(RadialGradient(w, b));
         test_pattern!(Ring(w, b));
         test_pattern!(Stripe(w, b));
@@ -154,6 +166,18 @@ mod tests {
 
         test_pattern!(Solid(w));
         test_pattern!(Test());
+
+        let mut r = Xoroshiro128PlusPlus::seed_from_u64(251);
+
+        let p = Kind::Perturbed(Perturbed::new(0.3, w.into(), &mut r));
+
+        let pn = Pattern::perturbed_builder(0.3, w.into(), &mut r)
+            .transformation(t)
+            .build();
+
+        assert_approx_eq!(pn.transformation, t);
+        assert_approx_eq!(pn.inverse_transformation, ti);
+        assert_approx_eq!(pn.kind, &p);
     }
 
     #[test]

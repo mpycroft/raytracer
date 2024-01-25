@@ -45,3 +45,13 @@ A scene using cubes.
 A scene using various cylinders and cones.
 
 ![Cylinders and cones](chapter13.png)
+
+## Chapter 14
+
+A shape using cylinders and spheres in groups.
+
+![Groups](chapter14.png)
+
+Randomly generated spheres spread into several groups.
+
+![Sphere groups](chapter14-spheres.png)

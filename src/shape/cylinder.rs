@@ -3,8 +3,10 @@ use std::f64::EPSILON;
 use derive_new::new;
 use float_cmp::{ApproxEq, F64Margin};
 
+use super::Intersectable;
 use crate::{
-    intersection::{Intersectable, TList},
+    bounding_box::{Bounded, BoundingBox},
+    intersection::TList,
     math::{
         float::{approx_eq, approx_ne},
         Point, Ray, Vector,
@@ -16,9 +18,9 @@ use crate::{
 // ends.
 #[derive(Clone, Copy, Debug, new)]
 pub struct Cylinder {
-    pub minimum: f64,
-    pub maximum: f64,
-    pub closed: bool,
+    minimum: f64,
+    maximum: f64,
+    closed: bool,
 }
 
 impl Cylinder {
@@ -108,7 +110,16 @@ impl Intersectable for Cylinder {
     }
 }
 
-impl ApproxEq for Cylinder {
+impl Bounded for Cylinder {
+    fn bounding_box(&self) -> BoundingBox {
+        BoundingBox::new(
+            Point::new(-1.0, self.minimum, -1.0),
+            Point::new(1.0, self.maximum, 1.0),
+        )
+    }
+}
+
+impl ApproxEq for &Cylinder {
     type Margin = F64Margin;
 
     fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
@@ -306,13 +317,26 @@ mod tests {
     }
 
     #[test]
+    fn the_bounding_box_of_a_cylinder() {
+        let c = Cylinder::new(0.0, 2.3, true);
+
+        assert_approx_eq!(
+            c.bounding_box(),
+            BoundingBox::new(
+                Point::new(-1.0, 0.0, -1.0),
+                Point::new(1.0, 2.3, 1.0)
+            )
+        );
+    }
+
+    #[test]
     fn comparing_cylinders() {
         let c1 = Cylinder::new(0.0, 1.0, true);
         let c2 = Cylinder::new(0.0, 1.0, true);
         let c3 = Cylinder::new(0.001, 1.0, true);
 
-        assert_approx_eq!(c1, c2);
+        assert_approx_eq!(c1, &c2);
 
-        assert_approx_ne!(c1, c3);
+        assert_approx_ne!(c1, &c3);
     }
 }

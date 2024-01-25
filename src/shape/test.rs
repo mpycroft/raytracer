@@ -1,7 +1,9 @@
 use derive_new::new;
 
+use super::Intersectable;
 use crate::{
-    intersection::{Intersectable, List, TList},
+    bounding_box::{Bounded, BoundingBox},
+    intersection::{List, TList},
     math::{Point, Ray, Vector},
 };
 /// A `Test` is a shape intended purely for testing functions on `Object`.
@@ -39,6 +41,12 @@ impl Intersectable for Test {
     }
 }
 
+impl Bounded for Test {
+    fn bounding_box(&self) -> BoundingBox {
+        BoundingBox::new(Point::origin(), Point::origin())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -53,7 +61,7 @@ mod tests {
 
         let o = Object::test_builder().build();
 
-        let l = t.intersect(&r).unwrap().to_list(&o);
+        let l = t.intersect(&r).unwrap().into_list(&o);
 
         assert_approx_eq!(Test::intersection_to_ray(&l), r);
     }
@@ -65,6 +73,16 @@ mod tests {
         assert_approx_eq!(
             t.normal_at(&Point::new(1.0, 2.0, 3.0)),
             Vector::new(1.0, 2.0, 3.0)
+        );
+    }
+
+    #[test]
+    fn the_bounding_box_of_a_test() {
+        let t = Test::new();
+
+        assert_approx_eq!(
+            t.bounding_box(),
+            BoundingBox::new(Point::origin(), Point::origin())
         );
     }
 }

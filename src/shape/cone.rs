@@ -3,8 +3,10 @@ use std::f64::EPSILON;
 use derive_new::new;
 use float_cmp::{ApproxEq, F64Margin};
 
+use super::Intersectable;
 use crate::{
-    intersection::{Intersectable, TList},
+    bounding_box::{Bounded, BoundingBox},
+    intersection::TList,
     math::{
         float::{approx_eq, approx_ne},
         Point, Ray, Vector,
@@ -16,9 +18,9 @@ use crate::{
 // the ends are capped.
 #[derive(Clone, Copy, Debug, new)]
 pub struct Cone {
-    pub minimum: f64,
-    pub maximum: f64,
-    pub closed: bool,
+    minimum: f64,
+    maximum: f64,
+    closed: bool,
 }
 
 impl Cone {
@@ -118,7 +120,16 @@ impl Intersectable for Cone {
     }
 }
 
-impl ApproxEq for Cone {
+impl Bounded for Cone {
+    fn bounding_box(&self) -> BoundingBox {
+        BoundingBox::new(
+            Point::new(self.minimum, self.minimum, self.minimum),
+            Point::new(self.maximum, self.maximum, self.maximum),
+        )
+    }
+}
+
+impl ApproxEq for &Cone {
     type Margin = F64Margin;
 
     fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
@@ -253,13 +264,26 @@ mod tests {
     }
 
     #[test]
+    fn the_bounding_box_of_a_cone() {
+        let c = Cone::new(-2.0, 1.5, true);
+
+        assert_approx_eq!(
+            c.bounding_box(),
+            BoundingBox::new(
+                Point::new(-2.0, -2.0, -2.0),
+                Point::new(1.5, 1.5, 1.5)
+            )
+        );
+    }
+
+    #[test]
     fn comparing_cones() {
         let c1 = Cone::new(0.0, 1.0, true);
         let c2 = Cone::new(0.0, 1.0, true);
         let c3 = Cone::new(0.0, 1.0, false);
 
-        assert_approx_eq!(c1, c2);
+        assert_approx_eq!(c1, &c2);
 
-        assert_approx_ne!(c1, c3);
+        assert_approx_ne!(c1, &c3);
     }
 }

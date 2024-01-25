@@ -1,9 +1,10 @@
 //! Split code into a library and binary for organisational purposes.
 
+mod bounding_box;
 mod camera;
 mod canvas;
 mod colour;
-pub mod intersection;
+mod intersection;
 mod material;
 pub mod math;
 mod object;
@@ -15,10 +16,8 @@ mod world;
 pub use camera::Camera;
 pub use canvas::Canvas;
 pub use colour::Colour;
-pub use intersection::Intersection;
 pub use material::Material;
 pub use object::Object;
 pub use pattern::Pattern;
 pub use point_light::PointLight;
-pub use shape::Shape;
 pub use world::World;

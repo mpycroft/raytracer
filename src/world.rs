@@ -185,8 +185,9 @@ mod tests {
 
     use super::*;
     use crate::{
+        intersection::Intersection,
         math::{float::*, Angle, Transformation, Vector},
-        Camera, Intersection, Material, Pattern,
+        Camera, Material, Pattern,
     };
 
     fn test_world() -> World {

@@ -51,9 +51,9 @@ mod tests {
 
     use super::*;
     use crate::{
-        intersection::List,
+        intersection::{Intersection, List},
         math::{float::*, Ray},
-        Intersection, Material,
+        Material,
     };
 
     #[test]

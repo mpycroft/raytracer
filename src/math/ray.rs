@@ -19,8 +19,8 @@ impl Ray {
     }
 }
 
-impl<'a> Transformable<'a> for Ray {
-    fn apply(&'a self, transformation: &Transformation) -> Self {
+impl Transformable for Ray {
+    fn apply(&self, transformation: &Transformation) -> Self {
         Self::new(
             self.origin.apply(transformation),
             self.direction.apply(transformation),

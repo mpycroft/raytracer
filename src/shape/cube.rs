@@ -1,9 +1,9 @@
-use std::f64::{EPSILON, INFINITY};
-
 use derive_new::new;
 
+use super::Intersectable;
 use crate::{
-    intersection::{Intersectable, TList},
+    bounding_box::{Bounded, BoundingBox},
+    intersection::TList,
     math::{Point, Ray, Vector},
 };
 
@@ -11,32 +11,15 @@ use crate::{
 #[derive(Clone, Copy, Debug, new)]
 pub struct Cube;
 
-impl Cube {
-    #[must_use]
-    fn check_axis(origin: f64, direction: f64) -> (f64, f64) {
-        let min_numerator = -1.0 - origin;
-        let max_numerator = 1.0 - origin;
-
-        let (min, max) = if direction.abs() >= EPSILON {
-            (min_numerator / direction, max_numerator / direction)
-        } else {
-            (min_numerator * INFINITY, max_numerator * INFINITY)
-        };
-
-        if min > max {
-            return (max, min);
-        }
-
-        (min, max)
-    }
-}
-
 impl Intersectable for Cube {
     #[must_use]
     fn intersect(&self, ray: &Ray) -> Option<TList> {
-        let (x_min, x_max) = Self::check_axis(ray.origin.x, ray.direction.x);
-        let (y_min, y_max) = Self::check_axis(ray.origin.y, ray.direction.y);
-        let (z_min, z_max) = Self::check_axis(ray.origin.z, ray.direction.z);
+        let (x_min, x_max) =
+            BoundingBox::check_axis(ray.origin.x, ray.direction.x, -1.0, 1.0);
+        let (y_min, y_max) =
+            BoundingBox::check_axis(ray.origin.y, ray.direction.y, -1.0, 1.0);
+        let (z_min, z_max) =
+            BoundingBox::check_axis(ray.origin.z, ray.direction.z, -1.0, 1.0);
 
         let min = x_min.max(y_min).max(z_min);
         let max = x_max.min(y_max).min(z_max);
@@ -65,6 +48,15 @@ impl Intersectable for Cube {
         }
 
         Vector::new(0.0, 0.0, point.z)
+    }
+}
+
+impl Bounded for Cube {
+    fn bounding_box(&self) -> BoundingBox {
+        BoundingBox::new(
+            Point::new(-1.0, -1.0, -1.0),
+            Point::new(1.0, 1.0, 1.0),
+        )
     }
 }
 
@@ -162,6 +154,19 @@ mod tests {
         assert_approx_eq!(
             c.normal_at(&Point::new(-1.0, -1.0, -1.0)),
             -Vector::x_axis()
+        );
+    }
+
+    #[test]
+    fn the_bounding_box_of_a_cube() {
+        let c = Cube::new();
+
+        assert_approx_eq!(
+            c.bounding_box(),
+            BoundingBox::new(
+                Point::new(-1.0, -1.0, -1.0),
+                Point::new(1.0, 1.0, 1.0)
+            )
         );
     }
 }

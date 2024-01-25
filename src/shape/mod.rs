@@ -1,6 +1,8 @@
 mod cone;
 mod cube;
 mod cylinder;
+mod group;
+mod intersectable;
 mod plane;
 mod sphere;
 #[cfg(test)]
@@ -10,23 +12,28 @@ use enum_dispatch::enum_dispatch;
 use float_cmp::{ApproxEq, F64Margin};
 use paste::paste;
 
+pub use self::intersectable::Intersectable;
 #[cfg(test)]
-pub use self::test::Test;
-pub use self::{
-    cone::Cone, cube::Cube, cylinder::Cylinder, plane::Plane, sphere::Sphere,
+use self::test::Test;
+use self::{
+    cone::Cone, cube::Cube, cylinder::Cylinder, group::Group, plane::Plane,
+    sphere::Sphere,
 };
 use crate::{
-    intersection::{Intersectable, TList},
+    bounding_box::{Bounded, BoundingBox},
+    intersection::TList,
     math::{Point, Ray, Vector},
+    Object,
 };
 
 /// `Shape` is the list of the various geometries that can be rendered.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 #[enum_dispatch]
 pub enum Shape {
     Cone(Cone),
     Cube(Cube),
     Cylinder(Cylinder),
+    Group(Group),
     Plane(Plane),
     Sphere(Sphere),
     #[cfg(test)]
@@ -48,28 +55,32 @@ impl Shape {
     add_new_fn!(Cone(minimum: f64, maximum: f64, closed: bool));
     add_new_fn!(Cube());
     add_new_fn!(Cylinder(minimum: f64, maximum: f64, closed: bool));
+    add_new_fn!(Group(objects: Vec<Object>));
     add_new_fn!(Plane());
     add_new_fn!(Sphere());
     #[cfg(test)]
     add_new_fn!(Test());
 }
 
-impl ApproxEq for Shape {
+impl ApproxEq for &Shape {
     type Margin = F64Margin;
 
     fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
         let margin = margin.into();
 
         match (self, other) {
-            (Self::Cone(lhs), Self::Cone(rhs)) => lhs.approx_eq(rhs, margin),
-            (Self::Cube(_), Self::Cube(_)) => true,
-            (Self::Sphere(_), Self::Sphere(_)) => true,
-            (Self::Plane(_), Self::Plane(_)) => true,
-            (Self::Cylinder(lhs), Self::Cylinder(rhs)) => {
+            (Shape::Cone(lhs), Shape::Cone(rhs)) => lhs.approx_eq(rhs, margin),
+            (Shape::Cube(_), Shape::Cube(_)) => true,
+            (Shape::Cylinder(lhs), Shape::Cylinder(rhs)) => {
                 lhs.approx_eq(rhs, margin)
             }
+            (Shape::Group(lhs), Shape::Group(rhs)) => {
+                lhs.approx_eq(rhs, margin)
+            }
+            (Shape::Sphere(_), Shape::Sphere(_)) => true,
+            (Shape::Plane(_), Shape::Plane(_)) => true,
             #[cfg(test)]
-            (Self::Test(_), Self::Test(_)) => true,
+            (Shape::Test(_), Shape::Test(_)) => true,
             (_, _) => false,
         }
     }
@@ -89,12 +100,15 @@ mod tests {
         let s5 = Shape::new_cylinder(1.0, 2.0, true);
         let s6 = Shape::new_cone(-1.5, 1.5, true);
         let s7 = Shape::new_cone(-1.5, 1.500_1, true);
+        let s8 = Shape::new_group(vec![Object::sphere_builder().build()]);
+        let s9 = Shape::new_group(vec![Object::plane_builder().build()]);
 
-        assert_approx_eq!(s1, s2);
+        assert_approx_eq!(s1, &s2);
 
-        assert_approx_ne!(s1, s3);
+        assert_approx_ne!(s1, &s3);
 
-        assert_approx_ne!(s4, s5);
-        assert_approx_ne!(s6, s7);
+        assert_approx_ne!(s4, &s5);
+        assert_approx_ne!(s6, &s7);
+        assert_approx_ne!(s8, &s9);
     }
 }

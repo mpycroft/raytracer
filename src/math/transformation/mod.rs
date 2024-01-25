@@ -1,29 +1,11 @@
-use std::ops::Mul;
+mod matrix;
+mod transformable;
 
 use float_cmp::{ApproxEq, F64Margin};
 
-use super::{Angle, Matrix, Point, Vector};
-
-/// The `Transformable` trait describes how to apply a `Transformation` to any given
-/// object, implementing this allows us to .apply() a `Transformation` to an object
-/// via this trait. This is really just some syntactic sugar so we always apply
-/// Transform's to objects rather than transform objects with a given Transform.
-pub trait Transformable<'a> {
-    #[must_use]
-    fn apply(&'a self, transformation: &Transformation) -> Self;
-}
-
-/// Blanket implementation of Transformable for objects that can be multiplied
-/// by a matrix e.g. Points and Vectors.
-impl<'a, T> Transformable<'a> for T
-where
-    Matrix<4>: Mul<T, Output = T>,
-    T: 'a + Copy,
-{
-    fn apply(&'a self, transformation: &Transformation) -> Self {
-        transformation.0 * *self
-    }
-}
+use self::matrix::Matrix;
+pub use self::transformable::Transformable;
+use super::{Angle, Point, Vector};
 
 /// A `Transformation` is a wrapper around a 4 dimensional matrix allowing a
 /// more ergonomic use of transformations. Transformations can be chained in an
@@ -61,7 +43,7 @@ impl Transformation {
     }
 
     #[must_use]
-    pub fn apply<'a, T: Transformable<'a>>(&self, object: &'a T) -> T {
+    pub fn apply<T: Transformable>(&self, object: &T) -> T {
         object.apply(self)
     }
 

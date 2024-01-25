@@ -1,7 +1,11 @@
+use std::f64::{INFINITY, NEG_INFINITY};
+
 use derive_new::new;
 
+use super::Intersectable;
 use crate::{
-    intersection::{Intersectable, TList},
+    bounding_box::{Bounded, BoundingBox},
+    intersection::TList,
     math::{float::approx_eq, Point, Ray, Vector},
 };
 
@@ -22,6 +26,15 @@ impl Intersectable for Plane {
     #[must_use]
     fn normal_at(&self, _point: &Point) -> Vector {
         Vector::y_axis()
+    }
+}
+
+impl Bounded for Plane {
+    fn bounding_box(&self) -> BoundingBox {
+        BoundingBox::new(
+            Point::new(NEG_INFINITY, 0.0, NEG_INFINITY),
+            Point::new(INFINITY, 0.0, INFINITY),
+        )
     }
 }
 
@@ -76,5 +89,18 @@ mod tests {
         assert_approx_eq!(p.normal_at(&Point::origin()), n);
         assert_approx_eq!(p.normal_at(&Point::new(10.0, 0.0, -10.0)), n);
         assert_approx_eq!(p.normal_at(&Point::new(-5.0, 0.0, 150.0)), n);
+    }
+
+    #[test]
+    fn the_bounding_box_of_a_plane() {
+        let p = Plane::new();
+
+        assert_approx_eq!(
+            p.bounding_box(),
+            BoundingBox::new(
+                Point::new(NEG_INFINITY, 0.0, NEG_INFINITY),
+                Point::new(INFINITY, 0.0, INFINITY)
+            )
+        );
     }
 }
