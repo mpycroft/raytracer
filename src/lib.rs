@@ -1,5 +1,6 @@
 //! Split code into a library and binary for organisational purposes.
 
+mod bounding_box;
 mod camera;
 mod canvas;
 mod colour;
