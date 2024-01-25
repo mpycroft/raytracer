@@ -1,82 +1,83 @@
 name: Rust tests
 on:
-  push:
-    branches: ["main"]
+    push:
+        branches: ["main"]
 
 jobs:
-  test:
-    strategy:
-      matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
-        rust: [stable, beta, nightly]
+    test:
+        strategy:
+            matrix:
+                os: [macos-latest, ubuntu-latest, windows-latest]
+                rust: [stable, beta, nightly]
 
-    name: Test on ${{ matrix.os }} with rust ${{ matrix.rust }}
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+        name: Test on ${{ matrix.os }} with rust ${{ matrix.rust }}
+        runs-on: ${{ matrix.os }}
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: ${{ matrix.rust }}
-          components: clippy
+            - name: Install Rust
+              uses: dtolnay/rust-toolchain@master
+              with:
+                  toolchain: ${{ matrix.rust }}
+                  components: clippy
 
-      - name: Use cache
-        uses: swatinem/rust-cache@v2
+            - name: Use cache
+              uses: swatinem/rust-cache@v2
 
-      - name: Run cargo check
-        run: cargo check
+            - name: Run cargo check
+              run: cargo check
 
-      - name: Run cargo clippy
-        run: cargo clippy
+            - name: Run cargo clippy
+              run: cargo clippy
 
-      - name: Run cargo test
-        run: cargo test
+            - name: Run cargo test
+              run: cargo test
 
-  format:
-    name: Check formatting
-    runs-on: macos-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    format:
+        name: Check formatting
+        runs-on: macos-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
 
-      - name: Install nightly Rust
-        uses: dtolnay/rust-toolchain@nightly
-        with:
-          components: rustfmt
+            - name: Install nightly Rust
+              uses: dtolnay/rust-toolchain@nightly
+              with:
+                  components: rustfmt
 
-      - name: Use cache
-        uses: swatinem/rust-cache@v2
+            - name: Use cache
+              uses: swatinem/rust-cache@v2
 
-      - name: Run cargo fmt
-        run: cargo fmt --check
+            - name: Run cargo fmt
+              run: cargo fmt --check
 
-  coverage:
-    # We don't use the cache here since cargo-tarpaulin will always rebuild
-    # everything each time it is run and the cache does not play nicely with
-    # binstall.
-    name: Generate test coverage
-    runs-on: macos-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    coverage:
+        # We don't use the cache here since cargo-tarpaulin will always rebuild
+        # everything each time it is run and the cache does not play nicely with
+        # binstall.
+        name: Generate test coverage
+        runs-on: macos-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+            - name: Install Rust
+              uses: dtolnay/rust-toolchain@stable
 
-      - name: Install cargo-binstall
-        uses: cargo-bins/cargo-binstall@main
+            - name: Install cargo-binstall
+              uses: cargo-bins/cargo-binstall@main
 
-      - name: Install cargo-tarpaulin via binstall
-        run: cargo binstall cargo-tarpaulin --no-confirm --force
+            - name: Install cargo-tarpaulin via binstall
+              run: cargo binstall cargo-tarpaulin --no-confirm --force
 
-      - name: Run cargo tarpaulin
-        run: cargo tarpaulin --lib -o lcov
+            - name: Run cargo tarpaulin
+              run: cargo tarpaulin --lib -o lcov --exclude-files src/scene/*
+                  --exclude-files src/main.rs --exclude-files src/arguments.rs
 
-      - name: Upload code coverage
-        uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./lcov.info
-          fail_ci_if_error: true
+            - name: Upload code coverage
+              uses: codecov/codecov-action@v3
+              with:
+                  token: ${{ secrets.CODECOV_TOKEN }}
+                  files: ./lcov.info
+                  fail_ci_if_error: true
