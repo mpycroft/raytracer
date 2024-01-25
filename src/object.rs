@@ -52,12 +52,12 @@ impl Object {
     add_builder_fn!(Test());
 
     #[must_use]
-    pub fn to_object_space<'a, T: Transformable<'a>>(&self, value: &'a T) -> T {
+    pub fn to_object_space<T: Transformable>(&self, value: &T) -> T {
         value.apply(&self.inverse_transformation)
     }
 
     #[must_use]
-    pub fn to_world_space<'a, T: Transformable<'a>>(&self, value: &'a T) -> T {
+    pub fn to_world_space<T: Transformable>(&self, value: &T) -> T {
         value.apply(&self.inverse_transformation.transpose())
     }
 

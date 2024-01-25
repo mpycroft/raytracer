@@ -8,19 +8,19 @@ use super::{Angle, Matrix, Point, Vector};
 /// object, implementing this allows us to .apply() a `Transformation` to an object
 /// via this trait. This is really just some syntactic sugar so we always apply
 /// Transform's to objects rather than transform objects with a given Transform.
-pub trait Transformable<'a> {
+pub trait Transformable {
     #[must_use]
-    fn apply(&'a self, transformation: &Transformation) -> Self;
+    fn apply(&self, transformation: &Transformation) -> Self;
 }
 
 /// Blanket implementation of Transformable for objects that can be multiplied
 /// by a matrix e.g. Points and Vectors.
-impl<'a, T> Transformable<'a> for T
+impl<T> Transformable for T
 where
     Matrix<4>: Mul<T, Output = T>,
-    T: 'a + Copy,
+    T: Copy,
 {
-    fn apply(&'a self, transformation: &Transformation) -> Self {
+    fn apply(&self, transformation: &Transformation) -> Self {
         transformation.0 * *self
     }
 }
@@ -61,7 +61,7 @@ impl Transformation {
     }
 
     #[must_use]
-    pub fn apply<'a, T: Transformable<'a>>(&self, object: &'a T) -> T {
+    pub fn apply<T: Transformable>(&self, object: &T) -> T {
         object.apply(self)
     }
 
