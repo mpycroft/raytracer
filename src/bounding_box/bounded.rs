@@ -1,6 +1,6 @@
 use enum_dispatch::enum_dispatch;
 
-use crate::bounding_box::BoundingBox;
+use super::BoundingBox;
 
 /// The `Bounded` trait needs to be implemented for each `Shape` that can be
 /// contained within a bounding box.

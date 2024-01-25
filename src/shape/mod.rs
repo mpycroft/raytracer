@@ -1,4 +1,3 @@
-mod bounded;
 mod cone;
 mod cube;
 mod cylinder;
@@ -13,15 +12,15 @@ use enum_dispatch::enum_dispatch;
 use float_cmp::{ApproxEq, F64Margin};
 use paste::paste;
 
+pub(super) use self::intersectable::Intersectable;
 #[cfg(test)]
 use self::test::Test;
-pub(super) use self::{bounded::Bounded, intersectable::Intersectable};
 use self::{
     cone::Cone, cube::Cube, cylinder::Cylinder, group::Group, plane::Plane,
     sphere::Sphere,
 };
 use crate::{
-    bounding_box::BoundingBox,
+    bounding_box::{Bounded, BoundingBox},
     intersection::TList,
     math::{Point, Ray, Vector},
     Object,

@@ -2,13 +2,13 @@ use paste::paste;
 use typed_builder::{Optional, TypedBuilder};
 
 use crate::{
-    bounding_box::BoundingBox,
+    bounding_box::{Bounded, BoundingBox},
     intersection::List,
     math::{
         float::impl_approx_eq, Point, Ray, Transformable, Transformation,
         Vector,
     },
-    shape::{Bounded, Intersectable, Shape},
+    shape::{Intersectable, Shape},
     Material,
 };
 
@@ -98,9 +98,11 @@ impl Object {
 
         self.to_world_space(&object_normal).normalise()
     }
+}
 
+impl Bounded for Object {
     #[must_use]
-    pub fn bounding_box(&self) -> BoundingBox {
+    fn bounding_box(&self) -> BoundingBox {
         let bounding_box = self.shape.bounding_box();
 
         bounding_box.apply(&self.transformation)

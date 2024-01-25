@@ -1,3 +1,5 @@
+mod bounded;
+
 use std::{
     f64::{EPSILON, INFINITY},
     ops::{Add, AddAssign},
@@ -5,6 +7,7 @@ use std::{
 
 use derive_new::new;
 
+pub(super) use self::bounded::Bounded;
 use crate::math::{
     float::impl_approx_eq, Point, Ray, Transformable, Transformation,
 };

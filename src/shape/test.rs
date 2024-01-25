@@ -1,8 +1,8 @@
 use derive_new::new;
 
-use super::{Bounded, Intersectable};
+use super::Intersectable;
 use crate::{
-    bounding_box::BoundingBox,
+    bounding_box::{Bounded, BoundingBox},
     intersection::{List, TList},
     math::{Point, Ray, Vector},
 };

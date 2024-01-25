@@ -3,9 +3,9 @@ use std::f64::EPSILON;
 use derive_new::new;
 use float_cmp::{ApproxEq, F64Margin};
 
-use super::{Bounded, Intersectable};
+use super::Intersectable;
 use crate::{
-    bounding_box::BoundingBox,
+    bounding_box::{Bounded, BoundingBox},
     intersection::TList,
     math::{
         float::{approx_eq, approx_ne},
