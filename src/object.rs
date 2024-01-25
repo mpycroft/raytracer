@@ -2,12 +2,13 @@ use paste::paste;
 use typed_builder::{Optional, TypedBuilder};
 
 use crate::{
+    bounding_box::BoundingBox,
     intersection::List,
     math::{
         float::impl_approx_eq, Point, Ray, Transformable, Transformation,
         Vector,
     },
-    shape::{Intersectable, Shape},
+    shape::{Bounded, Intersectable, Shape},
     Material,
 };
 
@@ -96,6 +97,13 @@ impl Object {
         let object_normal = self.shape.normal_at(&object_point);
 
         self.to_world_space(&object_normal).normalise()
+    }
+
+    #[must_use]
+    pub fn bounding_box(&self) -> BoundingBox {
+        let bounding_box = self.shape.bounding_box();
+
+        bounding_box.apply(&self.transformation)
     }
 }
 
@@ -517,6 +525,65 @@ mod tests {
             s.normal_at(&Point::new(1.732_1, 1.154_7, -5.577_4)),
             Vector::new(0.285_7, 0.428_54, -0.857_16),
             epsilon = 0.000_01
+        );
+    }
+
+    #[test]
+    fn the_bounding_box_of_an_object() {
+        let o = Object::sphere_builder()
+            .transformation(
+                Transformation::new()
+                    .translate(1.0, 0.0, -1.0)
+                    .scale(2.0, 2.0, 2.0),
+            )
+            .build();
+
+        assert_approx_eq!(
+            o.bounding_box(),
+            BoundingBox::new(
+                Point::new(0.0, -2.0, -4.0),
+                Point::new(4.0, 2.0, 0.0)
+            )
+        );
+    }
+
+    #[test]
+    fn the_bounding_box_of_a_group() {
+        let o =
+            Object::group_builder(vec![Object::cone_builder(1.0, 3.0, true)
+                .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
+                .build()])
+            .transformation(Transformation::new().translate(1.0, 1.0, 0.0))
+            .build();
+
+        assert_approx_eq!(
+            o.bounding_box(),
+            BoundingBox::new(
+                Point::new(3.0, 3.0, 2.0),
+                Point::new(7.0, 7.0, 6.0)
+            )
+        );
+    }
+
+    #[test]
+    fn the_bounding_box_of_multiple_objects() {
+        let o = Object::group_builder(vec![
+            Object::sphere_builder()
+                .transformation(Transformation::new().translate(3.0, 1.0, 3.0))
+                .build(),
+            Object::cube_builder()
+                .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
+                .build(),
+        ])
+        .transformation(Transformation::new().translate(-1.0, 0.0, 0.0))
+        .build();
+
+        assert_approx_eq!(
+            o.bounding_box(),
+            BoundingBox::new(
+                Point::new(-3.0, -2.0, -2.0),
+                Point::new(3.0, 2.0, 4.0)
+            )
         );
     }
 

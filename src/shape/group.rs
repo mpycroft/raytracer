@@ -1,3 +1,5 @@
+use std::f64::{INFINITY, NEG_INFINITY};
+
 use derive_new::new;
 use float_cmp::{ApproxEq, F64Margin};
 
@@ -59,7 +61,16 @@ impl Intersectable for Group {
 
 impl Bounded for Group {
     fn bounding_box(&self) -> BoundingBox {
-        todo!()
+        let mut bounding_box = BoundingBox::new(
+            Point::new(INFINITY, INFINITY, INFINITY),
+            Point::new(NEG_INFINITY, NEG_INFINITY, NEG_INFINITY),
+        );
+
+        for object in self.objects() {
+            bounding_box += object.bounding_box();
+        }
+
+        bounding_box
     }
 }
 

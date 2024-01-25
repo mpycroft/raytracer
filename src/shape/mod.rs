@@ -13,12 +13,12 @@ use enum_dispatch::enum_dispatch;
 use float_cmp::{ApproxEq, F64Margin};
 use paste::paste;
 
-pub(super) use self::intersectable::Intersectable;
 #[cfg(test)]
 use self::test::Test;
+pub(super) use self::{bounded::Bounded, intersectable::Intersectable};
 use self::{
-    bounded::Bounded, cone::Cone, cube::Cube, cylinder::Cylinder, group::Group,
-    plane::Plane, sphere::Sphere,
+    cone::Cone, cube::Cube, cylinder::Cylinder, group::Group, plane::Plane,
+    sphere::Sphere,
 };
 use crate::{
     bounding_box::BoundingBox,
