@@ -1,8 +1,9 @@
 use derive_new::new;
 use float_cmp::{ApproxEq, F64Margin};
 
-use super::Intersectable;
+use super::{Bounded, Intersectable};
 use crate::{
+    bounding_box::BoundingBox,
     intersection::TList,
     math::{Point, Ray, Vector},
     shape::Shape,
@@ -53,6 +54,12 @@ impl Intersectable for Group {
     #[must_use]
     fn normal_at(&self, _point: &Point) -> Vector {
         unreachable!()
+    }
+}
+
+impl Bounded for Group {
+    fn bounding_box(&self) -> BoundingBox {
+        todo!()
     }
 }
 

@@ -1,7 +1,8 @@
 use derive_new::new;
 
-use super::Intersectable;
+use super::{Bounded, Intersectable};
 use crate::{
+    bounding_box::BoundingBox,
     intersection::TList,
     math::{Point, Ray, Vector},
 };
@@ -37,6 +38,15 @@ impl Intersectable for Sphere {
     #[must_use]
     fn normal_at(&self, point: &Point) -> Vector {
         *point - Point::origin()
+    }
+}
+
+impl Bounded for Sphere {
+    fn bounding_box(&self) -> BoundingBox {
+        BoundingBox::new(
+            Point::new(-1.0, -1.0, -1.0),
+            Point::new(1.0, 1.0, 1.0),
+        )
     }
 }
 
@@ -143,5 +153,18 @@ mod tests {
         );
 
         assert_approx_eq!(n, n.normalise());
+    }
+
+    #[test]
+    fn the_bounding_box_of_a_sphere() {
+        let s = Sphere::new();
+
+        assert_approx_eq!(
+            s.bounding_box(),
+            BoundingBox::new(
+                Point::new(-1.0, -1.0, -1.0),
+                Point::new(1.0, 1.0, 1.0)
+            )
+        );
     }
 }

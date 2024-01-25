@@ -3,8 +3,9 @@ use std::f64::EPSILON;
 use derive_new::new;
 use float_cmp::{ApproxEq, F64Margin};
 
-use super::Intersectable;
+use super::{Bounded, Intersectable};
 use crate::{
+    bounding_box::BoundingBox,
     intersection::TList,
     math::{
         float::{approx_eq, approx_ne},
@@ -116,6 +117,15 @@ impl Intersectable for Cone {
         };
 
         Vector::new(point.x, y, point.z)
+    }
+}
+
+impl Bounded for Cone {
+    fn bounding_box(&self) -> BoundingBox {
+        BoundingBox::new(
+            Point::new(self.minimum, self.minimum, self.minimum),
+            Point::new(self.maximum, self.maximum, self.maximum),
+        )
     }
 }
 
@@ -250,6 +260,19 @@ mod tests {
         assert_approx_eq!(
             c.normal_at(&Point::new(0.25, -1.5, 0.5)),
             -Vector::y_axis()
+        );
+    }
+
+    #[test]
+    fn the_bounding_box_of_a_cone() {
+        let c = Cone::new(-2.0, 1.5, true);
+
+        assert_approx_eq!(
+            c.bounding_box(),
+            BoundingBox::new(
+                Point::new(-2.0, -2.0, -2.0),
+                Point::new(1.5, 1.5, 1.5)
+            )
         );
     }
 

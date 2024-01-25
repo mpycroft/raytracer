@@ -1,7 +1,8 @@
 use derive_new::new;
 
-use super::Intersectable;
+use super::{Bounded, Intersectable};
 use crate::{
+    bounding_box::BoundingBox,
     intersection::{List, TList},
     math::{Point, Ray, Vector},
 };
@@ -40,6 +41,12 @@ impl Intersectable for Test {
     }
 }
 
+impl Bounded for Test {
+    fn bounding_box(&self) -> BoundingBox {
+        BoundingBox::new(Point::origin(), Point::origin())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -66,6 +73,16 @@ mod tests {
         assert_approx_eq!(
             t.normal_at(&Point::new(1.0, 2.0, 3.0)),
             Vector::new(1.0, 2.0, 3.0)
+        );
+    }
+
+    #[test]
+    fn the_bounding_box_of_a_test() {
+        let t = Test::new();
+
+        assert_approx_eq!(
+            t.bounding_box(),
+            BoundingBox::new(Point::origin(), Point::origin())
         );
     }
 }

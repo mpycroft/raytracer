@@ -1,3 +1,4 @@
+mod bounded;
 mod cone;
 mod cube;
 mod cylinder;
@@ -16,10 +17,11 @@ pub(super) use self::intersectable::Intersectable;
 #[cfg(test)]
 use self::test::Test;
 use self::{
-    cone::Cone, cube::Cube, cylinder::Cylinder, group::Group, plane::Plane,
-    sphere::Sphere,
+    bounded::Bounded, cone::Cone, cube::Cube, cylinder::Cylinder, group::Group,
+    plane::Plane, sphere::Sphere,
 };
 use crate::{
+    bounding_box::BoundingBox,
     intersection::TList,
     math::{Point, Ray, Vector},
     Object,

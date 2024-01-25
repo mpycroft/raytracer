@@ -3,8 +3,9 @@ use std::f64::EPSILON;
 use derive_new::new;
 use float_cmp::{ApproxEq, F64Margin};
 
-use super::Intersectable;
+use super::{Bounded, Intersectable};
 use crate::{
+    bounding_box::BoundingBox,
     intersection::TList,
     math::{
         float::{approx_eq, approx_ne},
@@ -106,6 +107,15 @@ impl Intersectable for Cylinder {
         }
 
         Vector::new(point.x, 0.0, point.z)
+    }
+}
+
+impl Bounded for Cylinder {
+    fn bounding_box(&self) -> BoundingBox {
+        BoundingBox::new(
+            Point::new(-1.0, self.minimum, -1.0),
+            Point::new(1.0, self.maximum, 1.0),
+        )
     }
 }
 
@@ -303,6 +313,19 @@ mod tests {
         assert_approx_eq!(
             c.normal_at(&Point::new(0.0, 2.0, 0.5)),
             Vector::y_axis()
+        );
+    }
+
+    #[test]
+    fn the_bounding_box_of_a_cylinder() {
+        let c = Cylinder::new(0.0, 2.3, true);
+
+        assert_approx_eq!(
+            c.bounding_box(),
+            BoundingBox::new(
+                Point::new(-1.0, 0.0, -1.0),
+                Point::new(1.0, 2.3, 1.0)
+            )
         );
     }
 

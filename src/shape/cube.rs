@@ -1,6 +1,6 @@
 use derive_new::new;
 
-use super::Intersectable;
+use super::{Bounded, Intersectable};
 use crate::{
     bounding_box::BoundingBox,
     intersection::TList,
@@ -48,6 +48,15 @@ impl Intersectable for Cube {
         }
 
         Vector::new(0.0, 0.0, point.z)
+    }
+}
+
+impl Bounded for Cube {
+    fn bounding_box(&self) -> BoundingBox {
+        BoundingBox::new(
+            Point::new(-1.0, -1.0, -1.0),
+            Point::new(1.0, 1.0, 1.0),
+        )
     }
 }
 
@@ -145,6 +154,19 @@ mod tests {
         assert_approx_eq!(
             c.normal_at(&Point::new(-1.0, -1.0, -1.0)),
             -Vector::x_axis()
+        );
+    }
+
+    #[test]
+    fn the_bounding_box_of_a_cube() {
+        let c = Cube::new();
+
+        assert_approx_eq!(
+            c.bounding_box(),
+            BoundingBox::new(
+                Point::new(-1.0, -1.0, -1.0),
+                Point::new(1.0, 1.0, 1.0)
+            )
         );
     }
 }
