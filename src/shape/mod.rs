@@ -2,6 +2,7 @@ mod cone;
 mod cube;
 mod cylinder;
 mod group;
+mod intersectable;
 mod plane;
 mod sphere;
 #[cfg(test)]
@@ -14,11 +15,11 @@ use paste::paste;
 #[cfg(test)]
 pub use self::test::Test;
 pub use self::{
-    cone::Cone, cube::Cube, cylinder::Cylinder, group::Group, plane::Plane,
-    sphere::Sphere,
+    cone::Cone, cube::Cube, cylinder::Cylinder, group::Group,
+    intersectable::Intersectable, plane::Plane, sphere::Sphere,
 };
 use crate::{
-    intersection::{Intersectable, TList},
+    intersection::TList,
     math::{Point, Ray, Vector},
     Object,
 };

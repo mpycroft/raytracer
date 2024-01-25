@@ -3,8 +3,9 @@ use std::f64::EPSILON;
 use derive_new::new;
 use float_cmp::{ApproxEq, F64Margin};
 
+use super::Intersectable;
 use crate::{
-    intersection::{Intersectable, TList},
+    intersection::TList,
     math::{
         float::{approx_eq, approx_ne},
         Point, Ray, Vector,

@@ -1,7 +1,8 @@
 use derive_new::new;
 
+use super::Intersectable;
 use crate::{
-    intersection::{Intersectable, List, TList},
+    intersection::{List, TList},
     math::{Point, Ray, Vector},
 };
 /// A `Test` is a shape intended purely for testing functions on `Object`.

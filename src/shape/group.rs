@@ -1,8 +1,9 @@
 use derive_new::new;
 use float_cmp::{ApproxEq, F64Margin};
 
+use super::Intersectable;
 use crate::{
-    intersection::{Intersectable, TList},
+    intersection::TList,
     math::{Point, Ray, Vector},
     Object, Shape,
 };

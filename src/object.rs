@@ -2,11 +2,12 @@ use paste::paste;
 use typed_builder::{Optional, TypedBuilder};
 
 use crate::{
-    intersection::{Intersectable, List},
+    intersection::List,
     math::{
         float::impl_approx_eq, Point, Ray, Transformable, Transformation,
         Vector,
     },
+    shape::Intersectable,
     Material, Shape,
 };
 

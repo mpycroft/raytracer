@@ -1,7 +1,8 @@
 use derive_new::new;
 
+use super::Intersectable;
 use crate::{
-    intersection::{Intersectable, TList},
+    intersection::TList,
     math::{Point, Ray, Vector},
 };
 
