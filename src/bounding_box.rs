@@ -1,3 +1,5 @@
+use std::ops::{Add, AddAssign};
+
 use derive_new::new;
 
 use crate::math::{
@@ -10,6 +12,40 @@ use crate::math::{
 pub struct BoundingBox {
     minimum: Point,
     maximum: Point,
+}
+
+impl Add for BoundingBox {
+    type Output = BoundingBox;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        BoundingBox::new(
+            Point::new(
+                self.minimum.x.min(rhs.minimum.x),
+                self.minimum.y.min(rhs.minimum.y),
+                self.minimum.z.min(rhs.minimum.z),
+            ),
+            Point::new(
+                self.maximum.x.max(rhs.maximum.x),
+                self.maximum.y.max(rhs.maximum.y),
+                self.maximum.z.max(rhs.maximum.z),
+            ),
+        )
+    }
+}
+
+impl AddAssign for BoundingBox {
+    fn add_assign(&mut self, rhs: Self) {
+        self.minimum = Point::new(
+            self.minimum.x.min(rhs.minimum.x),
+            self.minimum.y.min(rhs.minimum.y),
+            self.minimum.z.min(rhs.minimum.z),
+        );
+        self.maximum = Point::new(
+            self.maximum.x.max(rhs.maximum.x),
+            self.maximum.y.max(rhs.maximum.y),
+            self.maximum.z.max(rhs.maximum.z),
+        );
+    }
 }
 
 impl Transformable for BoundingBox {
@@ -86,6 +122,38 @@ mod tests {
 
         assert_approx_eq!(b.minimum, Point::new(-10.0, NEG_INFINITY, 5.0));
         assert_approx_eq!(b.maximum, Point::new(5.1, INFINITY, 10.6));
+    }
+
+    #[test]
+    fn adding_two_bounding_boxes() {
+        let mut b = BoundingBox::new(
+            Point::new(-2.0, -2.0, -2.0),
+            Point::new(2.0, 2.0, 2.0),
+        );
+
+        assert_approx_eq!(
+            b + BoundingBox::new(
+                Point::new(-1.0, -3.0, 0.0),
+                Point::new(0.0, -1.0, 5.0)
+            ),
+            BoundingBox::new(
+                Point::new(-2.0, -3.0, -2.0),
+                Point::new(2.0, 2.0, 5.0)
+            )
+        );
+
+        b += BoundingBox::new(
+            Point::new(3.0, 0.0, -5.0),
+            Point::new(4.0, 1.0, 1.0),
+        );
+
+        assert_approx_eq!(
+            b,
+            BoundingBox::new(
+                Point::new(-2.0, -2.0, -5.0),
+                Point::new(4.0, 2.0, 2.0)
+            )
+        );
     }
 
     #[test]
