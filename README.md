@@ -51,6 +51,24 @@ the only real usage of homogenous coordinates (w elements) on points and vectors
 is to make the matrix multiplication fall out and we already have that
 information in the type we shouldn't hit any fundamental issues.
 
+### Groups
+
+Rather than following the books graph structure for groups where children hold a
+reference to their parents, we use a different approach where when each group is
+constructed it "pushes down" its transformation to all its children. Primarily
+this was done because having a parent pointer in each child Object would lead to
+very verbose and complex lifetime annotation. It should be possible to do
+however as there are no cycles in the graph.
+
+Our approach makes things simpler and technically should provide a speed boost
+as the matrix is precomputed in the final shape rather than having to perform
+multiple matrix multiplications every time we intersect. It does however prove a
+bit annoying when making sure everything is updated when creating each object.
+Note that this design decision means we cannot add children to a group after its
+creation; we need to create all child objects beforehand. This is however not a
+great issue as this conforms with how we have been treating all object creation
+so far.
+
 ## For the future
 
 * Consider making things generic over other float types (f32, arbitrary precision

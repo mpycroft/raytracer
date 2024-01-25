@@ -132,6 +132,7 @@ impl<T: Optional<Transformation>, M: Optional<Material>, S: Optional<bool>>
                     child_object.transformation.extend(&object.transformation);
                 child_object.inverse_transformation =
                     child_object.transformation.invert();
+                child_object.bounding_box = child_object.bounding_box();
             }
 
             object.transformation = Transformation::new();

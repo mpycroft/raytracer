@@ -1,4 +1,4 @@
-use std::f64::consts::FRAC_PI_3;
+use std::f64::consts::{FRAC_PI_2, FRAC_PI_3, FRAC_PI_6};
 
 use rand::Rng;
 use raytracer::{
@@ -8,6 +8,72 @@ use raytracer::{
 
 use super::SceneData;
 use crate::arguments::Arguments;
+
+#[must_use]
+pub fn generate_scene(arguments: &Arguments) -> SceneData {
+    let horizontal_size = arguments.width.unwrap_or(1000);
+    let vertical_size = arguments.height.unwrap_or(1000);
+    let field_of_view = arguments.fov.unwrap_or(Angle(FRAC_PI_3));
+
+    let camera = Camera::new(
+        horizontal_size,
+        vertical_size,
+        field_of_view,
+        Transformation::view_transformation(
+            &Point::new(0.0, 5.0, -10.0),
+            &Point::new(0.0, 1.0, 0.0),
+            &Vector::y_axis(),
+        ),
+    );
+
+    let mut world = World::new();
+
+    let mut sides = Vec::new();
+    for n in 0..=5 {
+        sides.push(
+            Object::group_builder(vec![
+                Object::sphere_builder()
+                    .transformation(
+                        Transformation::new()
+                            .scale(0.25, 0.25, 0.25)
+                            .translate(0.0, 0.0, -1.0),
+                    )
+                    .build(),
+                Object::cylinder_builder(0.0, 1.0, false)
+                    .transformation(
+                        Transformation::new()
+                            .scale(0.25, 1.0, 0.25)
+                            .rotate_z(-Angle(FRAC_PI_2))
+                            .rotate_y(-Angle(FRAC_PI_6))
+                            .translate(0.0, 0.0, -1.0),
+                    )
+                    .build(),
+            ])
+            .transformation(
+                #[allow(clippy::cast_lossless)]
+                Transformation::new().rotate_y(Angle(n as f64 * FRAC_PI_3)),
+            )
+            .build(),
+        );
+    }
+
+    world.add_object(
+        Object::group_builder(sides)
+            .transformation(
+                Transformation::new()
+                    .scale(4.0, 4.0, 4.0)
+                    .translate(0.0, 0.0, 2.0),
+            )
+            .build(),
+    );
+
+    world.add_light(PointLight::new(
+        Point::new(-100.0, 100.0, -100.0),
+        Colour::white(),
+    ));
+
+    SceneData::new(camera, world)
+}
 
 #[must_use]
 #[allow(clippy::too_many_lines)]
