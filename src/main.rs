@@ -24,7 +24,7 @@ fn main() -> Result<()> {
 
     let buffer: &mut dyn Write = &mut buffer;
 
-    let seed = arguments.seed.unwrap_or(random());
+    let seed = arguments.seed.unwrap_or_else(random);
 
     writeln!(buffer, "Using RNG seed {seed}")?;
 

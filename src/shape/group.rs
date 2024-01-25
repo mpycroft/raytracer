@@ -1,5 +1,3 @@
-use std::f64::{INFINITY, NEG_INFINITY};
-
 use derive_new::new;
 use float_cmp::{ApproxEq, F64Margin};
 
@@ -19,7 +17,7 @@ pub struct Group(Vec<Object>);
 
 impl Group {
     #[must_use]
-    pub fn objects(&self) -> &Vec<Object> {
+    pub const fn objects(&self) -> &Vec<Object> {
         &self.0
     }
 
@@ -45,6 +43,16 @@ impl Group {
 
         objects
     }
+
+    pub fn update_bounding_box(&mut self) {
+        for object in &mut self.0 {
+            if let Shape::Group(group) = &mut object.shape {
+                group.update_bounding_box();
+
+                object.bounding_box = object.bounding_box();
+            };
+        }
+    }
 }
 
 impl Intersectable for Group {
@@ -61,10 +69,7 @@ impl Intersectable for Group {
 
 impl Bounded for Group {
     fn bounding_box(&self) -> BoundingBox {
-        let mut bounding_box = BoundingBox::new(
-            Point::new(INFINITY, INFINITY, INFINITY),
-            Point::new(NEG_INFINITY, NEG_INFINITY, NEG_INFINITY),
-        );
+        let mut bounding_box = BoundingBox::default();
 
         for object in self.objects() {
             bounding_box += object.bounding_box();

@@ -69,6 +69,8 @@ information in the type we shouldn't hit any fundamental issues.
   etc. when we have lots of hits.
 * ~~We only store the transformation matrix with each object, we may consider
   precomputing the inverted matrix as well.~~
+* Look at algorithms for splitting the objects in a scene into groups
+  automatically to allow bounding box optimisations.
 
 ## Performance
 
@@ -77,13 +79,13 @@ information in the type we shouldn't hit any fundamental issues.
 Storing the inverted matrix with each object produces a significant speed up. On
 an image with 3 spheres, 2 planes and 2 lights.
 
-On a debug build rendering at 1000x500 this change alone makes using the debug
+On a debug build rendering at 1,000x500 this change alone makes using the debug
 build viable for testing.
 
 * Don't store inverse: 188.65s
 * Store inverse: 14.85s
 
-On a release build rendering at 3000x1500.
+On a release build rendering at 3,000x1,500.
 
 * Don't store inverse: 14.86s
 * Store inverse: 3.72s
@@ -104,3 +106,13 @@ with a recursion depth of 30:
 
 * Single threaded: 264.26s
 * Rayon: 71.55s
+
+### Bounding Boxes
+
+There is a significant speedup when using the bounding box checks on groups of
+objects. When rendering the Chapter14Spheres image at 3,000 x 2,400, depth of
+20, single threaded with a random seed of 0, which contains multiple groups each
+contains a number of different spheres, we see the following:
+
+* Without bounds checking: 20.31s
+* With bounds checking: 6.33s

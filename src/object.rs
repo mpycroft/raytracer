@@ -26,6 +26,8 @@ pub struct Object {
     #[builder(default = true)]
     pub(super) casts_shadow: bool,
     pub(super) shape: Shape,
+    #[builder(default = BoundingBox::default(), setter(skip))]
+    pub(super) bounding_box: BoundingBox,
 }
 
 macro_rules! add_builder_fn {
@@ -66,6 +68,10 @@ impl Object {
     #[must_use]
     pub fn intersect(&self, ray: &Ray) -> Option<List> {
         if let Shape::Group(group) = &self.shape {
+            if !self.bounding_box.is_intersected_by(ray) {
+                return None;
+            }
+
             let mut list = List::new();
 
             for object in group.objects() {
@@ -130,7 +136,11 @@ impl<T: Optional<Transformation>, M: Optional<Material>, S: Optional<bool>>
 
             object.transformation = Transformation::new();
             object.inverse_transformation = Transformation::new();
+
+            group.update_bounding_box();
         };
+
+        object.bounding_box = object.bounding_box();
 
         object
     }

@@ -12,7 +12,7 @@ use enum_dispatch::enum_dispatch;
 use float_cmp::{ApproxEq, F64Margin};
 use paste::paste;
 
-pub(super) use self::intersectable::Intersectable;
+pub use self::intersectable::Intersectable;
 #[cfg(test)]
 use self::test::Test;
 use self::{

@@ -1,13 +1,13 @@
 mod bounded;
 
 use std::{
-    f64::{EPSILON, INFINITY},
+    f64::{EPSILON, INFINITY, NEG_INFINITY},
     ops::{Add, AddAssign},
 };
 
 use derive_new::new;
 
-pub(super) use self::bounded::Bounded;
+pub use self::bounded::Bounded;
 use crate::math::{
     float::impl_approx_eq, Point, Ray, Transformable, Transformation,
 };
@@ -77,10 +77,10 @@ impl BoundingBox {
 }
 
 impl Add for BoundingBox {
-    type Output = BoundingBox;
+    type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
-        BoundingBox::new(
+        Self::Output::new(
             Point::new(
                 self.minimum.x.min(rhs.minimum.x),
                 self.minimum.y.min(rhs.minimum.y),
@@ -159,7 +159,16 @@ impl Transformable for BoundingBox {
             find!(f64::max, z),
         );
 
-        BoundingBox::new(minimum, maximum)
+        Self::new(minimum, maximum)
+    }
+}
+
+impl Default for BoundingBox {
+    fn default() -> Self {
+        Self::new(
+            Point::new(INFINITY, INFINITY, INFINITY),
+            Point::new(NEG_INFINITY, NEG_INFINITY, NEG_INFINITY),
+        )
     }
 }
 
