@@ -134,7 +134,7 @@ mod tests {
         let o = Object::test_builder().build();
 
         let h =
-            TList::from(vec![5.0, 7.0, -3.0, 2.0]).to_list(&o).hit().unwrap();
+            TList::from(vec![5.0, 7.0, -3.0, 2.0]).into_list(&o).hit().unwrap();
 
         assert_approx_eq!(h.object, &o);
         assert_approx_eq!(h.t, 2.0);
@@ -152,7 +152,7 @@ mod tests {
             f64::NEG_INFINITY,
             -f64::NAN,
         ])
-        .to_list(&o)
+        .into_list(&o)
         .hit()
         .unwrap();
 

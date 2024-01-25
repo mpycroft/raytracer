@@ -15,7 +15,7 @@ impl TList {
     }
 
     #[must_use]
-    pub fn to_list(self, object: &Object) -> List {
+    pub fn into_list(self, object: &Object) -> List {
         self.0
             .iter()
             .map(|t| Intersection::new(object, *t))
@@ -80,7 +80,7 @@ mod tests {
 
         let o = Object::test_builder().build();
 
-        let l = l.to_list(&o);
+        let l = l.into_list(&o);
 
         assert_eq!(l.len(), 3);
 

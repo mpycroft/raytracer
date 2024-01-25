@@ -7,8 +7,8 @@ use crate::{
         float::impl_approx_eq, Point, Ray, Transformable, Transformation,
         Vector,
     },
-    shape::Intersectable,
-    Material, Shape,
+    shape::{Intersectable, Shape},
+    Material,
 };
 
 /// An 'Object' represents some entity in the scene that can be rendered.
@@ -21,10 +21,10 @@ pub struct Object {
     #[builder(default = Transformation::new(), setter(skip))]
     inverse_transformation: Transformation,
     #[builder(default = Material::default())]
-    pub material: Material,
+    pub(super) material: Material,
     #[builder(default = true)]
-    pub casts_shadow: bool,
-    pub shape: Shape,
+    pub(super) casts_shadow: bool,
+    pub(super) shape: Shape,
 }
 
 macro_rules! add_builder_fn {
@@ -67,7 +67,7 @@ impl Object {
         if let Shape::Group(group) = &self.shape {
             let mut list = List::new();
 
-            for object in &group.0 {
+            for object in group.objects() {
                 if let Some(object_list) = object.intersect(ray) {
                     list.extend(object_list.iter());
                 };
@@ -85,7 +85,7 @@ impl Object {
                 return None;
             };
 
-            Some(t_list.to_list(self))
+            Some(t_list.into_list(self))
         }
     }
 
@@ -459,8 +459,8 @@ mod tests {
         .build();
 
         let Shape::Group(g) = o.shape else { unreachable!() };
-        let Shape::Group(g) = &g.0[0].shape else { unreachable!() };
-        let s = &g.0[0];
+        let Shape::Group(g) = &g.objects()[0].shape else { unreachable!() };
+        let s = &g.objects()[0];
 
         assert_approx_eq!(
             s.to_object_space(&Point::new(-2.0, 0.0, -10.0)),
@@ -481,8 +481,8 @@ mod tests {
         .build();
 
         let Shape::Group(g) = o.shape else { unreachable!() };
-        let Shape::Group(g) = &g.0[0].shape else { unreachable!() };
-        let s = &g.0[0];
+        let Shape::Group(g) = &g.objects()[0].shape else { unreachable!() };
+        let s = &g.objects()[0];
 
         let sqrt_3_div_3 = f64::sqrt(3.0) / 3.0;
         assert_approx_eq!(
@@ -510,8 +510,8 @@ mod tests {
         .build();
 
         let Shape::Group(g) = o.shape else { unreachable!() };
-        let Shape::Group(g) = &g.0[0].shape else { unreachable!() };
-        let s = &g.0[0];
+        let Shape::Group(g) = &g.objects()[0].shape else { unreachable!() };
+        let s = &g.objects()[0];
 
         assert_approx_eq!(
             s.normal_at(&Point::new(1.732_1, 1.154_7, -5.577_4)),

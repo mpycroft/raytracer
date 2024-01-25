@@ -5,15 +5,21 @@ use super::Intersectable;
 use crate::{
     intersection::TList,
     math::{Point, Ray, Vector},
-    Object, Shape,
+    shape::Shape,
+    Object,
 };
 
 /// A `Group` is a collection of `Object`s that can be treated as a single
 /// entity.
 #[derive(Clone, Debug, new)]
-pub struct Group(pub Vec<Object>);
+pub struct Group(Vec<Object>);
 
 impl Group {
+    #[must_use]
+    pub fn objects(&self) -> &Vec<Object> {
+        &self.0
+    }
+
     #[must_use]
     pub fn iter_no_groups(&mut self) -> Vec<&mut Object> {
         let mut objects: Vec<&mut Object> = Vec::new();

@@ -2,7 +2,7 @@ use std::ops::Mul;
 
 use float_cmp::{ApproxEq, F64Margin};
 
-use super::{Angle, Matrix, Point, Vector};
+use super::{matrix::Matrix, Angle, Point, Vector};
 
 /// The `Transformable` trait describes how to apply a `Transformation` to any given
 /// object, implementing this allows us to .apply() a `Transformation` to an object

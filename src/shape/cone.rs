@@ -17,9 +17,9 @@ use crate::{
 // the ends are capped.
 #[derive(Clone, Copy, Debug, new)]
 pub struct Cone {
-    pub minimum: f64,
-    pub maximum: f64,
-    pub closed: bool,
+    minimum: f64,
+    maximum: f64,
+    closed: bool,
 }
 
 impl Cone {

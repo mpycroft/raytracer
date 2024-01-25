@@ -12,11 +12,12 @@ use enum_dispatch::enum_dispatch;
 use float_cmp::{ApproxEq, F64Margin};
 use paste::paste;
 
+pub(super) use self::intersectable::Intersectable;
 #[cfg(test)]
-pub use self::test::Test;
-pub use self::{
-    cone::Cone, cube::Cube, cylinder::Cylinder, group::Group,
-    intersectable::Intersectable, plane::Plane, sphere::Sphere,
+use self::test::Test;
+use self::{
+    cone::Cone, cube::Cube, cylinder::Cylinder, group::Group, plane::Plane,
+    sphere::Sphere,
 };
 use crate::{
     intersection::TList,

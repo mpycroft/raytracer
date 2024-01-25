@@ -17,9 +17,9 @@ use crate::{
 // ends.
 #[derive(Clone, Copy, Debug, new)]
 pub struct Cylinder {
-    pub minimum: f64,
-    pub maximum: f64,
-    pub closed: bool,
+    minimum: f64,
+    maximum: f64,
+    closed: bool,
 }
 
 impl Cylinder {

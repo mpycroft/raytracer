@@ -54,7 +54,7 @@ mod tests {
 
         let o = Object::test_builder().build();
 
-        let l = t.intersect(&r).unwrap().to_list(&o);
+        let l = t.intersect(&r).unwrap().into_list(&o);
 
         assert_approx_eq!(Test::intersection_to_ray(&l), r);
     }
