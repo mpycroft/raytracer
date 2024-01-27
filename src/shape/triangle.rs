@@ -34,8 +34,8 @@ impl Intersectable for Triangle {
     }
 
     #[must_use]
-    fn normal_at(&self, point: &Point) -> Vector {
-        todo!()
+    fn normal_at(&self, _point: &Point) -> Vector {
+        self.normal
     }
 }
 
@@ -66,5 +66,18 @@ mod tests {
         assert_approx_eq!(t.edge2, Vector::new(1.0, -1.0, 0.0));
 
         assert_approx_eq!(t.normal, -Vector::z_axis());
+    }
+
+    #[test]
+    fn finding_the_normal_on_a_triangle() {
+        let t = Triangle::new(
+            Point::new(0.0, 1.0, 0.0),
+            Point::new(-1.0, 0.0, 0.0),
+            Point::new(1.0, 0.0, 0.0),
+        );
+
+        assert_approx_eq!(t.normal_at(&Point::new(0.0, 0.5, 0.0)), t.normal);
+        assert_approx_eq!(t.normal_at(&Point::new(-0.5, 0.75, 0.0)), t.normal);
+        assert_approx_eq!(t.normal_at(&Point::new(0.5, 0.25, 0.0)), t.normal);
     }
 }
