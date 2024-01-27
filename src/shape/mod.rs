@@ -7,6 +7,7 @@ mod plane;
 mod sphere;
 #[cfg(test)]
 pub mod test;
+mod triangle;
 
 use enum_dispatch::enum_dispatch;
 use float_cmp::{ApproxEq, F64Margin};
