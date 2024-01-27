@@ -54,7 +54,9 @@ impl Intersectable for Triangle {
             return None;
         }
 
-        todo!()
+        let t = f * self.edge2.dot(&origin_cross_e1);
+
+        Some(TList::from(t))
     }
 
     #[must_use]
@@ -155,5 +157,25 @@ mod tests {
         assert!(t
             .intersect(&Ray::new(Point::new(0.0, -1.0, -2.0), Vector::z_axis()))
             .is_none());
+    }
+
+    #[test]
+    fn a_ray_strikes_a_triangle() {
+        let t = Triangle::new(
+            Point::new(0.0, 1.0, 0.0),
+            Point::new(-1.0, 0.0, 0.0),
+            Point::new(1.0, 0.0, 0.0),
+        );
+
+        let l = t
+            .intersect(&Ray::new(Point::new(0.0, 0.5, -2.0), Vector::z_axis()));
+
+        assert!(l.is_some());
+
+        let l = l.unwrap();
+
+        assert_eq!(l.len(), 1);
+
+        assert_approx_eq!(l[0], 2.0);
     }
 }
