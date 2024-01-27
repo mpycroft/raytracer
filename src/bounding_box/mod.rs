@@ -1,7 +1,7 @@
 mod bounded;
 
 use std::{
-    f64::{EPSILON, INFINITY, NEG_INFINITY},
+    f64::{INFINITY, NEG_INFINITY},
     ops::{Add, AddAssign},
 };
 
@@ -9,7 +9,8 @@ use derive_new::new;
 
 pub use self::bounded::Bounded;
 use crate::math::{
-    float::impl_approx_eq, Point, Ray, Transformable, Transformation,
+    float::{approx_eq, impl_approx_eq},
+    Point, Ray, Transformable, Transformation,
 };
 
 /// A `BoundingBox` is an axis aligned box that can be used to cut down the
@@ -62,10 +63,10 @@ impl BoundingBox {
         let min_numerator = min - origin;
         let max_numerator = max - origin;
 
-        let (min, max) = if direction.abs() >= EPSILON {
-            (min_numerator / direction, max_numerator / direction)
-        } else {
+        let (min, max) = if approx_eq!(direction, 0.0) {
             (min_numerator * INFINITY, max_numerator * INFINITY)
+        } else {
+            (min_numerator / direction, max_numerator / direction)
         };
 
         if min > max {

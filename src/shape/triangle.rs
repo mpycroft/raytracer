@@ -2,7 +2,7 @@ use super::Intersectable;
 use crate::{
     bounding_box::{Bounded, BoundingBox},
     intersection::TList,
-    math::{Point, Ray, Vector},
+    math::{float::approx_eq, Point, Ray, Vector},
 };
 
 /// A `Triangle` is a simple triangle defined by three vertices.
@@ -30,6 +30,30 @@ impl Triangle {
 impl Intersectable for Triangle {
     #[must_use]
     fn intersect(&self, ray: &Ray) -> Option<TList> {
+        let dir_cross_e2 = ray.direction.cross(&self.edge2);
+        let det = self.edge1.dot(&dir_cross_e2);
+
+        if approx_eq!(det, 0.0) {
+            return None;
+        }
+
+        let f = 1.0 / det;
+        let p1_to_origin = ray.origin - self.point1;
+
+        let u = f * p1_to_origin.dot(&dir_cross_e2);
+
+        if !(0.0..=1.0).contains(&u) {
+            return None;
+        }
+
+        let origin_cross_e1 = p1_to_origin.cross(&self.edge1);
+
+        let v = f * ray.direction.dot(&origin_cross_e1);
+
+        if v < 0.0 || (u + v) > 1.0 {
+            return None;
+        }
+
         todo!()
     }
 
@@ -79,5 +103,57 @@ mod tests {
         assert_approx_eq!(t.normal_at(&Point::new(0.0, 0.5, 0.0)), t.normal);
         assert_approx_eq!(t.normal_at(&Point::new(-0.5, 0.75, 0.0)), t.normal);
         assert_approx_eq!(t.normal_at(&Point::new(0.5, 0.25, 0.0)), t.normal);
+    }
+
+    #[test]
+    fn intersecting_a_ray_parallel_to_the_triangle() {
+        let t = Triangle::new(
+            Point::new(0.0, 1.0, 0.0),
+            Point::new(-1.0, 0.0, 0.0),
+            Point::new(1.0, 0.0, 0.0),
+        );
+
+        assert!(t
+            .intersect(&Ray::new(Point::new(0.0, -1.0, -2.0), Vector::y_axis()))
+            .is_none());
+    }
+
+    #[test]
+    fn a_ray_misses_the_p1_p3_edge() {
+        let t = Triangle::new(
+            Point::new(0.0, 1.0, 0.0),
+            Point::new(-1.0, 0.0, 0.0),
+            Point::new(1.0, 0.0, 0.0),
+        );
+
+        assert!(t
+            .intersect(&Ray::new(Point::new(1.0, 1.0, -2.0), Vector::z_axis()))
+            .is_none());
+    }
+
+    #[test]
+    fn a_ray_misses_the_p1_p2_edge() {
+        let t = Triangle::new(
+            Point::new(0.0, 1.0, 0.0),
+            Point::new(-1.0, 0.0, 0.0),
+            Point::new(1.0, 0.0, 0.0),
+        );
+
+        assert!(t
+            .intersect(&Ray::new(Point::new(-1.0, 1.0, -2.0), Vector::z_axis()))
+            .is_none());
+    }
+
+    #[test]
+    fn a_ray_misses_the_p2_p3_edge() {
+        let t = Triangle::new(
+            Point::new(0.0, 1.0, 0.0),
+            Point::new(-1.0, 0.0, 0.0),
+            Point::new(1.0, 0.0, 0.0),
+        );
+
+        assert!(t
+            .intersect(&Ray::new(Point::new(0.0, -1.0, -2.0), Vector::z_axis()))
+            .is_none());
     }
 }
