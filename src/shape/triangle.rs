@@ -2,7 +2,10 @@ use super::Intersectable;
 use crate::{
     bounding_box::{Bounded, BoundingBox},
     intersection::TList,
-    math::{float::approx_eq, Point, Ray, Vector},
+    math::{
+        float::{approx_eq, impl_approx_eq},
+        Point, Ray, Vector,
+    },
 };
 
 /// A `Triangle` is a simple triangle defined by three vertices.
@@ -70,6 +73,9 @@ impl Bounded for Triangle {
         BoundingBox::from(vec![self.point1, self.point2, self.point3])
     }
 }
+
+// Edges and normal are derived from the points, so no need to check them.
+impl_approx_eq!(&Triangle { point1, point2, point3 });
 
 #[cfg(test)]
 mod tests {
@@ -194,5 +200,28 @@ mod tests {
                 Point::new(0.0, 1.0, 1.0)
             )
         );
+    }
+
+    #[test]
+    fn comparing_triangles() {
+        let t1 = Triangle::new(
+            Point::new(-1.0, 1.0, 0.0),
+            Point::new(0.0, 0.0, 1.0),
+            Point::new(0.0, 1.0, -1.0),
+        );
+        let t2 = Triangle::new(
+            Point::new(-1.0, 1.0, 0.0),
+            Point::new(0.0, 0.0, 1.0),
+            Point::new(0.0, 1.0, -1.0),
+        );
+        let t3 = Triangle::new(
+            Point::new(-1.0, 1.0, 0.0),
+            Point::new(0.0, 0.0, 1.0),
+            Point::new(0.000_05, 1.0, -1.0),
+        );
+
+        assert_approx_eq!(t1, &t2);
+
+        assert_approx_ne!(t1, &t3);
     }
 }

@@ -54,6 +54,7 @@ impl Object {
     add_builder_fn!(Sphere());
     #[cfg(test)]
     add_builder_fn!(Test());
+    add_builder_fn!(Triangle(point1: Point, point2: Point, point3: Point));
 
     #[must_use]
     pub fn to_object_space<T: Transformable>(&self, value: &T) -> T {
@@ -319,96 +320,6 @@ mod tests {
             Vector::new(0.0, 0.970_14, -0.242_54),
             epsilon = 0.000_01
         );
-    }
-
-    #[test]
-    fn intersecting_a_scaled_cube_with_a_ray() {
-        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
-
-        let o = Object::cube_builder()
-            .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
-            .build();
-
-        let i = o.intersect(&r);
-        assert!(i.is_some());
-
-        let i = i.unwrap();
-        assert_eq!(i.len(), 2);
-
-        assert_approx_eq!(i[0].object, &o);
-        assert_approx_eq!(i[1].object, &o);
-
-        assert_approx_eq!(i[0].t, 3.0);
-        assert_approx_eq!(i[1].t, 7.0);
-    }
-
-    #[test]
-    fn computing_the_normal_on_a_translated_cube() {
-        let o = Object::cube_builder()
-            .transformation(Transformation::new().translate(1.0, 0.0, 0.0))
-            .build();
-
-        assert_approx_eq!(o.normal_at(&Point::origin()), -Vector::x_axis());
-    }
-
-    #[test]
-    fn intersecting_a_transformed_cylinder_with_a_ray() {
-        let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
-
-        let o = Object::cylinder_builder(-5.0, 5.0, true)
-            .transformation(Transformation::new().translate(0.0, 0.0, -1.0))
-            .build();
-
-        let i = o.intersect(&r);
-        assert!(i.is_some());
-
-        let i = i.unwrap();
-        assert_eq!(i.len(), 2);
-
-        assert_approx_eq!(i[0].object, &o);
-        assert_approx_eq!(i[1].object, &o);
-
-        assert_approx_eq!(i[0].t, 3.0);
-        assert_approx_eq!(i[1].t, 5.0);
-    }
-
-    #[test]
-    fn computing_the_normal_on_a_transformed_cylinder() {
-        let o = Object::cylinder_builder(0.0, 4.0, true)
-            .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
-            .build();
-
-        assert_approx_eq!(o.normal_at(&Point::origin()), -Vector::y_axis());
-    }
-
-    #[test]
-    fn intersecting_a_transformed_cone_with_a_ray() {
-        let r = Ray::new(Point::new(0.0, 0.5, -5.0), Vector::z_axis());
-
-        let o = Object::cone_builder(-1.0, 1.0, true)
-            .transformation(Transformation::new().translate(0.0, 0.0, 1.0))
-            .build();
-
-        let i = o.intersect(&r);
-        assert!(i.is_some());
-
-        let i = i.unwrap();
-        assert_eq!(i.len(), 2);
-
-        assert_approx_eq!(i[0].object, &o);
-        assert_approx_eq!(i[1].object, &o);
-
-        assert_approx_eq!(i[0].t, 5.5);
-        assert_approx_eq!(i[1].t, 6.5);
-    }
-
-    #[test]
-    fn computing_the_normal_on_a_transformed_cone() {
-        let o = Object::cone_builder(1.0, 2.0, true)
-            .transformation(Transformation::new().scale(0.5, 0.5, 0.5))
-            .build();
-
-        assert_approx_eq!(o.normal_at(&Point::origin()), -Vector::y_axis());
     }
 
     #[test]

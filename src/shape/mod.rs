@@ -18,7 +18,7 @@ pub use self::intersectable::Intersectable;
 use self::test::Test;
 use self::{
     cone::Cone, cube::Cube, cylinder::Cylinder, group::Group, plane::Plane,
-    sphere::Sphere,
+    sphere::Sphere, triangle::Triangle,
 };
 use crate::{
     bounding_box::{Bounded, BoundingBox},
@@ -39,6 +39,7 @@ pub enum Shape {
     Sphere(Sphere),
     #[cfg(test)]
     Test(Test),
+    Triangle(Triangle),
 }
 
 macro_rules! add_new_fn {
@@ -61,6 +62,7 @@ impl Shape {
     add_new_fn!(Sphere());
     #[cfg(test)]
     add_new_fn!(Test());
+    add_new_fn!(Triangle(point1: Point, point2: Point, point3: Point));
 }
 
 impl ApproxEq for &Shape {
@@ -82,6 +84,9 @@ impl ApproxEq for &Shape {
             (Shape::Plane(_), Shape::Plane(_)) => true,
             #[cfg(test)]
             (Shape::Test(_), Shape::Test(_)) => true,
+            (Shape::Triangle(lhs), Shape::Triangle(rhs)) => {
+                lhs.approx_eq(rhs, margin)
+            }
             (_, _) => false,
         }
     }
@@ -103,6 +108,16 @@ mod tests {
         let s7 = Shape::new_cone(-1.5, 1.500_1, true);
         let s8 = Shape::new_group(vec![Object::sphere_builder().build()]);
         let s9 = Shape::new_group(vec![Object::plane_builder().build()]);
+        let s10 = Shape::new_triangle(
+            Point::new(1.0, 0.0, 0.0),
+            Point::new(0.0, 1.0, 0.0),
+            Point::new(0.0, 0.0, 1.0),
+        );
+        let s11 = Shape::new_triangle(
+            Point::new(1.0, 0.0, 0.0),
+            Point::new(0.0, 1.0, 0.0),
+            Point::new(0.0, 0.0, -1.0),
+        );
 
         assert_approx_eq!(s1, &s2);
 
@@ -111,5 +126,6 @@ mod tests {
         assert_approx_ne!(s4, &s5);
         assert_approx_ne!(s6, &s7);
         assert_approx_ne!(s8, &s9);
+        assert_approx_ne!(s10, &s11);
     }
 }
