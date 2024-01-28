@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     fs::File,
     io::{BufRead, BufReader},
     path::Path,
@@ -6,21 +7,26 @@ use std::{
 
 use anyhow::{bail, Result};
 
-use crate::math::Point;
+use crate::{math::Point, Object};
 
 #[derive(Debug)]
 pub struct ObjParser {
     pub vertices: Vec<Point>,
+    pub groups: Vec<Object>,
     pub ignored: usize,
 }
 
 impl ObjParser {
     #[must_use]
     fn new() -> Self {
-        Self { vertices: Vec::new(), ignored: 0 }
+        Self { vertices: Vec::new(), groups: Vec::new(), ignored: 0 }
     }
 
-    #[must_use]
+    /// Parse a given OBJ file.
+    ///
+    /// # Errors
+    ///
+    /// Will return errors if unable to read or parse the file.
     pub fn parse<P: AsRef<Path>>(filename: P) -> Result<Self> {
         let file = File::open(filename)?;
 
@@ -28,15 +34,26 @@ impl ObjParser {
 
         let mut parser = Self::new();
 
+        let mut groups = HashMap::from([("default", Vec::new())]);
+
+        let current_group =
+            groups.get_mut("default").unwrap_or_else(|| unreachable!());
+
         for line in buffer {
             let line = line?;
             let line = line.trim();
 
             if line.starts_with('v') {
                 parser.parse_vertex(line)?;
+            } else if line.starts_with('f') {
+                parser.parse_face(line, current_group)?;
             } else {
                 parser.ignored += 1;
             }
+        }
+
+        for (_, triangles) in groups {
+            parser.groups.push(Object::group_builder(triangles).build());
         }
 
         Ok(parser)
@@ -62,12 +79,46 @@ Found {} items.",
 
         Ok(())
     }
+
+    fn parse_face(
+        &mut self,
+        line: &str,
+        group: &mut Vec<Object>,
+    ) -> Result<()> {
+        let items: Vec<&str> = line.split(' ').collect();
+
+        if items.len() < 4 {
+            bail!(
+                "\
+Expected 'f' followed by at least 3 space separated numbers for a face.
+Found {} items.",
+                items.len()
+            );
+        }
+
+        if items.len() == 4 {
+            let vertex1 = items[1].parse::<usize>()? - 1;
+            let vertex2 = items[2].parse::<usize>()? - 1;
+            let vertex3 = items[3].parse::<usize>()? - 1;
+
+            group.push(
+                Object::triangle_builder(
+                    self.vertices[vertex1],
+                    self.vertices[vertex2],
+                    self.vertices[vertex3],
+                )
+                .build(),
+            );
+        }
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::float::*;
+    use crate::{math::float::*, shape::Shape};
 
     #[test]
     fn ignoring_unrecognised_lines() {
@@ -92,8 +143,6 @@ mod tests {
     fn parsing_invalid_vertices() {
         let p = ObjParser::parse("obj/test/too_many_vertices.obj");
 
-        assert!(p.is_err());
-
         let e = p.unwrap_err();
 
         assert_eq!(
@@ -110,5 +159,53 @@ Found 5 items."
         let e = p.unwrap_err();
 
         assert_eq!(e.to_string(), "invalid float literal");
+    }
+
+    #[test]
+    fn parsing_faces() {
+        let p = ObjParser::parse("obj/test/faces.obj").unwrap();
+
+        let Shape::Group(g) = &p.groups[0].shape else { unreachable!() };
+        let c = g.objects();
+
+        assert_eq!(c.len(), 2);
+
+        assert_approx_eq!(
+            c[0],
+            &Object::triangle_builder(
+                Point::new(-1.0, 1.0, 0.0),
+                Point::new(-1.0, 0.0, 0.0),
+                Point::new(1.0, 0.0, 0.0)
+            )
+            .build()
+        );
+        assert_approx_eq!(
+            c[1],
+            &Object::triangle_builder(
+                Point::new(-1.0, 1.0, 0.0),
+                Point::new(1.0, 0.0, 0.0),
+                Point::new(1.0, 1.0, 0.0)
+            )
+            .build()
+        );
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "index out of bounds: the len is 2 but the index is 2"
+    )]
+    fn parsing_invalid_faces() {
+        let p = ObjParser::parse("obj/test/not_enough_faces.obj");
+
+        let e = p.unwrap_err();
+
+        assert_eq!(
+            e.to_string(),
+            "\
+Expected 'f' followed by at least 3 space separated numbers for a face.
+Found 3 items."
+        );
+
+        let _ = ObjParser::parse("obj/test/invalid_faces.obj");
     }
 }
