@@ -34,9 +34,9 @@ impl ObjParser {
 
         let mut parser = Self::new();
 
-        let mut groups = HashMap::from([("default", Vec::new())]);
+        let mut groups = HashMap::from([(String::from("default"), Vec::new())]);
 
-        let current_group =
+        let mut current_group =
             groups.get_mut("default").unwrap_or_else(|| unreachable!());
 
         for line in buffer {
@@ -47,13 +47,20 @@ impl ObjParser {
                 parser.parse_vertex(line)?;
             } else if line.starts_with('f') {
                 parser.parse_face(line, current_group)?;
+            } else if line.starts_with('g') {
+                current_group = Self::parse_group(line, &mut groups)?;
             } else {
                 parser.ignored += 1;
             }
         }
 
+        let mut groups = groups.into_iter().collect::<Vec<_>>();
+        groups.sort_by(|a, b| a.0.cmp(&b.0));
+
         for (_, triangles) in groups {
-            parser.groups.push(Object::group_builder(triangles).build());
+            if !triangles.is_empty() {
+                parser.groups.push(Object::group_builder(triangles).build());
+            }
         }
 
         Ok(parser)
@@ -113,6 +120,19 @@ Found {} items.",
         }
 
         Ok(())
+    }
+
+    fn parse_group<'a>(
+        line: &str,
+        groups: &'a mut HashMap<String, Vec<Object>>,
+    ) -> Result<&'a mut Vec<Object>> {
+        let group_name = line[1..].trim();
+
+        if groups.insert(String::from(group_name), Vec::new()).is_some() {
+            bail!("Group {group_name} is repeated.");
+        }
+
+        groups.get_mut(group_name).ok_or_else(|| unreachable!())
     }
 }
 
@@ -246,5 +266,49 @@ Found 3 items."
             )
             .build()
         );
+    }
+
+    #[test]
+    fn triangles_in_groups() {
+        let p = ObjParser::parse("obj/test/triangles.obj").unwrap();
+
+        let Shape::Group(g) = &p.groups[0].shape else { unreachable!() };
+        let c = g.objects();
+
+        assert_eq!(c.len(), 1);
+
+        assert_approx_eq!(
+            c[0],
+            &Object::triangle_builder(
+                Point::new(-1.0, 1.0, 0.0),
+                Point::new(-1.0, 0.0, 0.0),
+                Point::new(1.0, 0.0, 0.0)
+            )
+            .build()
+        );
+
+        let Shape::Group(g) = &p.groups[1].shape else { unreachable!() };
+        let c = g.objects();
+
+        assert_eq!(c.len(), 1);
+
+        assert_approx_eq!(
+            c[0],
+            &Object::triangle_builder(
+                Point::new(-1.0, 1.0, 0.0),
+                Point::new(1.0, 0.0, 0.0),
+                Point::new(1.0, 1.0, 0.0)
+            )
+            .build()
+        );
+    }
+
+    #[test]
+    fn invalid_groups() {
+        let p = ObjParser::parse("obj/test/invalid_groups.obj");
+
+        let e = p.unwrap_err();
+
+        assert_eq!(e.to_string(), "Group FirstGroup is repeated.");
     }
 }
