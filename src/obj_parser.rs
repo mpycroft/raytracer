@@ -7,7 +7,7 @@ use std::{
 
 use anyhow::{bail, Result};
 
-use crate::{math::Point, Object};
+use crate::{math::Point, object::ObjectBuilder, shape::Shape, Object};
 
 #[derive(Debug)]
 pub struct ObjParser {
@@ -43,11 +43,11 @@ impl ObjParser {
             let line = line?;
             let line = line.trim();
 
-            if line.starts_with('v') {
+            if line.starts_with("v ") {
                 parser.parse_vertex(line)?;
-            } else if line.starts_with('f') {
+            } else if line.starts_with("f ") {
                 parser.parse_face(line, current_group)?;
-            } else if line.starts_with('g') {
+            } else if line.starts_with("g ") {
                 current_group = Self::parse_group(line, &mut groups)?;
             } else {
                 parser.ignored += 1;
@@ -67,7 +67,8 @@ impl ObjParser {
     }
 
     fn parse_vertex(&mut self, line: &str) -> Result<()> {
-        let items: Vec<&str> = line.split(' ').collect();
+        let items: Vec<&str> =
+            line.split(' ').filter(|&s| !s.is_empty()).collect();
 
         if items.len() != 4 {
             bail!(
@@ -92,7 +93,8 @@ Found {} items.",
         line: &str,
         group: &mut Vec<Object>,
     ) -> Result<()> {
-        let items: Vec<&str> = line.split(' ').collect();
+        let items: Vec<&str> =
+            line.split(' ').filter(|&s| !s.is_empty()).collect();
 
         if items.len() < 4 {
             bail!(
@@ -135,9 +137,8 @@ Found {} items.",
         groups.get_mut(group_name).ok_or_else(|| unreachable!())
     }
 
-    #[must_use]
-    pub fn into_group(self) -> Object {
-        Object::group_builder(self.groups).build()
+    pub fn into_group(self) -> ObjectBuilder<((), (), (), (Shape,))> {
+        Object::group_builder(self.groups)
     }
 }
 
@@ -275,8 +276,10 @@ Found 3 items."
 
     #[test]
     fn triangles_in_groups() {
-        let o =
-            ObjParser::parse("obj/test/triangles.obj").unwrap().into_group();
+        let o = ObjParser::parse("obj/test/triangles.obj")
+            .unwrap()
+            .into_group()
+            .build();
 
         let Shape::Group(g) = &o.shape else { unreachable!() };
         let c = g.objects();

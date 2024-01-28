@@ -27,7 +27,7 @@ pub struct Object {
     pub(super) casts_shadow: bool,
     pub(super) shape: Shape,
     #[builder(default = BoundingBox::default(), setter(skip))]
-    pub(super) bounding_box: BoundingBox,
+    pub bounding_box: BoundingBox,
 }
 
 macro_rules! add_builder_fn {

@@ -2,7 +2,7 @@ use std::f64::consts::FRAC_PI_3;
 
 use raytracer::{
     math::{Angle, Point, Transformation, Vector},
-    Camera, Colour, Material, Object, Pattern, PointLight, World,
+    Camera, Colour, Material, ObjParser, Object, Pattern, PointLight, World,
 };
 
 use super::SceneData;
@@ -45,51 +45,11 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Object::group_builder(vec![
-            Object::triangle_builder(
-                Point::new(0.0, 1.5, 10.0),
-                Point::new(-1.0, 0.0, 11.0),
-                Point::new(1.0, 0.0, 11.0),
-            )
-            .material(
-                Material::builder().pattern(Colour::green().into()).build(),
-            )
+        ObjParser::parse("obj/teapot.obj")
+            .unwrap()
+            .into_group()
+            .transformation(Transformation::new().translate(0.0, 0.0, 10.0))
             .build(),
-            Object::triangle_builder(
-                Point::new(0.0, 1.5, 10.0),
-                Point::new(-1.0, 0.0, 11.0),
-                Point::new(-1.0, 0.0, 9.0),
-            )
-            .material(
-                Material::builder().pattern(Colour::green().into()).build(),
-            )
-            .build(),
-            Object::triangle_builder(
-                Point::new(0.0, 1.5, 10.0),
-                Point::new(1.0, 0.0, 11.0),
-                Point::new(1.0, 0.0, 9.0),
-            )
-            .material(
-                Material::builder().pattern(Colour::green().into()).build(),
-            )
-            .build(),
-            Object::triangle_builder(
-                Point::new(0.0, 1.50, 10.0),
-                Point::new(-1.0, 0.0, 9.0),
-                Point::new(1.0, 0.0, 9.0),
-            )
-            .material(
-                Material::builder().pattern(Colour::green().into()).build(),
-            )
-            .build(),
-        ])
-        .transformation(
-            Transformation::new()
-                .scale(2.0, 2.0, 2.0)
-                .rotate_y(Angle::from_degrees(50.0))
-                .translate(-15.0, 0.0, -3.0),
-        )
-        .build(),
     );
 
     world.add_light(PointLight::new(
