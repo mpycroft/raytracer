@@ -134,6 +134,11 @@ Found {} items.",
 
         groups.get_mut(group_name).ok_or_else(|| unreachable!())
     }
+
+    #[must_use]
+    pub fn into_group(self) -> Object {
+        Object::group_builder(self.groups).build()
+    }
 }
 
 #[cfg(test)]
@@ -270,15 +275,21 @@ Found 3 items."
 
     #[test]
     fn triangles_in_groups() {
-        let p = ObjParser::parse("obj/test/triangles.obj").unwrap();
+        let o =
+            ObjParser::parse("obj/test/triangles.obj").unwrap().into_group();
 
-        let Shape::Group(g) = &p.groups[0].shape else { unreachable!() };
+        let Shape::Group(g) = &o.shape else { unreachable!() };
         let c = g.objects();
 
-        assert_eq!(c.len(), 1);
+        assert_eq!(c.len(), 2);
+
+        let Shape::Group(g) = &c[0].shape else { unreachable!() };
+        let c1 = g.objects();
+
+        assert_eq!(c1.len(), 1);
 
         assert_approx_eq!(
-            c[0],
+            c1[0],
             &Object::triangle_builder(
                 Point::new(-1.0, 1.0, 0.0),
                 Point::new(-1.0, 0.0, 0.0),
@@ -287,13 +298,13 @@ Found 3 items."
             .build()
         );
 
-        let Shape::Group(g) = &p.groups[1].shape else { unreachable!() };
-        let c = g.objects();
+        let Shape::Group(g) = &c[1].shape else { unreachable!() };
+        let c2 = g.objects();
 
-        assert_eq!(c.len(), 1);
+        assert_eq!(c2.len(), 1);
 
         assert_approx_eq!(
-            c[0],
+            c2[0],
             &Object::triangle_builder(
                 Point::new(-1.0, 1.0, 0.0),
                 Point::new(1.0, 0.0, 0.0),
