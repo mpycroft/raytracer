@@ -7,6 +7,7 @@ mod colour;
 mod intersection;
 mod material;
 pub mod math;
+mod obj_parser;
 mod object;
 mod pattern;
 mod point_light;
