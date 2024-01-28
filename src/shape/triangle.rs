@@ -67,7 +67,7 @@ impl Intersectable for Triangle {
 
 impl Bounded for Triangle {
     fn bounding_box(&self) -> BoundingBox {
-        todo!()
+        BoundingBox::from(vec![self.point1, self.point2, self.point3])
     }
 }
 
@@ -177,5 +177,22 @@ mod tests {
         assert_eq!(l.len(), 1);
 
         assert_approx_eq!(l[0], 2.0);
+    }
+
+    #[test]
+    fn the_bounding_box_of_a_triangle() {
+        let p1 = Point::origin();
+        let p2 = Point::new(-1.0, -1.0, 0.0);
+        let p3 = Point::new(0.0, 1.0, 1.0);
+
+        let t = Triangle::new(p1, p2, p3);
+
+        assert_approx_eq!(
+            t.bounding_box(),
+            BoundingBox::new(
+                Point::new(-1.0, -1.0, 0.0),
+                Point::new(0.0, 1.0, 1.0)
+            )
+        );
     }
 }
