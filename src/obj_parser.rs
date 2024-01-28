@@ -96,10 +96,11 @@ Found {} items.",
             );
         }
 
-        if items.len() == 4 {
-            let vertex1 = items[1].parse::<usize>()? - 1;
-            let vertex2 = items[2].parse::<usize>()? - 1;
-            let vertex3 = items[3].parse::<usize>()? - 1;
+        let vertex1 = items[1].parse::<usize>()? - 1;
+
+        for index in 2..(items.len() - 1) {
+            let vertex2 = items[index].parse::<usize>()? - 1;
+            let vertex3 = items[index + 1].parse::<usize>()? - 1;
 
             group.push(
                 Object::triangle_builder(
@@ -207,5 +208,43 @@ Found 3 items."
         );
 
         let _ = ObjParser::parse("obj/test/invalid_faces.obj");
+    }
+
+    #[test]
+    fn triangulating_polygons() {
+        let p = ObjParser::parse("obj/test/triangulating.obj").unwrap();
+
+        let Shape::Group(g) = &p.groups[0].shape else { unreachable!() };
+        let c = g.objects();
+
+        assert_eq!(c.len(), 3);
+
+        assert_approx_eq!(
+            c[0],
+            &Object::triangle_builder(
+                Point::new(-1.0, 1.0, 0.0),
+                Point::new(-1.0, 0.0, 0.0),
+                Point::new(1.0, 0.0, 0.0)
+            )
+            .build()
+        );
+        assert_approx_eq!(
+            c[1],
+            &Object::triangle_builder(
+                Point::new(-1.0, 1.0, 0.0),
+                Point::new(1.0, 0.0, 0.0),
+                Point::new(1.0, 1.0, 0.0)
+            )
+            .build()
+        );
+        assert_approx_eq!(
+            c[2],
+            &Object::triangle_builder(
+                Point::new(-1.0, 1.0, 0.0),
+                Point::new(1.0, 1.0, 0.0),
+                Point::new(0.0, 2.0, 0.0)
+            )
+            .build()
+        );
     }
 }
