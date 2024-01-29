@@ -3,7 +3,6 @@ mod list;
 
 use std::f64::EPSILON;
 
-use derive_new::new;
 use float_cmp::{ApproxEq, F64Margin};
 
 pub use self::{computations::Computations, list::List};
@@ -12,17 +11,28 @@ use crate::{
     Object,
 };
 
-/// An Intersection stores both the t value of the intersection in addition to a
-/// reference to the object that was intersected.
-/// An `Intersection` stores both the t value of the intersection in addition to
-/// a reference to the `Object` that was intersected.
-#[derive(Clone, Copy, Debug, new)]
+/// An `Intersection` stores both the t value of the intersection in addition to a
+/// reference to the object that was intersected. Optionally it holds the u and
+/// v values that the intersection occurred at.
+#[derive(Clone, Copy, Debug)]
 pub struct Intersection<'a> {
     pub object: &'a Object,
     pub t: f64,
+    pub u: Option<f64>,
+    pub v: Option<f64>,
 }
 
 impl<'a> Intersection<'a> {
+    #[must_use]
+    pub fn new(object: &'a Object, t: f64) -> Self {
+        Self { object, t, u: None, v: None }
+    }
+
+    #[must_use]
+    pub fn new_with_u_v(object: &'a Object, t: f64, u: f64, v: f64) -> Self {
+        Self { object, t, u: Some(u), v: Some(v) }
+    }
+
     #[must_use]
     pub fn prepare_computations(
         &self,
@@ -122,6 +132,15 @@ mod tests {
 
         assert_approx_eq!(i.object, &o);
         assert_approx_eq!(i.t, 1.5);
+        assert_eq!(i.u, None);
+        assert_eq!(i.v, None);
+
+        let i = Intersection::new_with_u_v(&o, 0.6, 0.5, 0.4);
+
+        assert_approx_eq!(i.object, &o);
+        assert_approx_eq!(i.t, 0.6);
+        assert_eq!(i.u, Some(0.5));
+        assert_eq!(i.v, Some(0.4));
     }
 
     #[test]
