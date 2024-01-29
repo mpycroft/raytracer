@@ -1,3 +1,5 @@
+use float_cmp::{ApproxEq, F64Margin};
+
 use super::Intersectable;
 use crate::{
     bounding_box::{Bounded, BoundingBox},
@@ -16,17 +18,60 @@ pub struct Triangle {
     point3: Point,
     edge1: Vector,
     edge2: Vector,
-    normal: Vector,
+    normal: Normal,
+}
+
+#[derive(Clone, Copy, Debug)]
+enum Normal {
+    Flat(Vector),
+    Smooth(Vector, Vector, Vector),
 }
 
 impl Triangle {
     #[must_use]
+    fn calculate_edges(
+        point1: Point,
+        point2: Point,
+        point3: Point,
+    ) -> (Vector, Vector) {
+        (point2 - point1, point3 - point1)
+    }
+
+    #[must_use]
     pub fn new(point1: Point, point2: Point, point3: Point) -> Self {
-        let edge1 = point2 - point1;
-        let edge2 = point3 - point1;
+        let (edge1, edge2) = Self::calculate_edges(point1, point2, point3);
+
         let normal = edge2.cross(&edge1).normalise();
 
-        Self { point1, point2, point3, edge1, edge2, normal }
+        Self {
+            point1,
+            point2,
+            point3,
+            edge1,
+            edge2,
+            normal: Normal::Flat(normal),
+        }
+    }
+
+    #[must_use]
+    pub fn new_with_normals(
+        point1: Point,
+        point2: Point,
+        point3: Point,
+        normal1: Vector,
+        normal2: Vector,
+        normal3: Vector,
+    ) -> Self {
+        let (edge1, edge2) = Self::calculate_edges(point1, point2, point3);
+
+        Self {
+            point1,
+            point2,
+            point3,
+            edge1,
+            edge2,
+            normal: Normal::Smooth(normal1, normal2, normal3),
+        }
     }
 }
 
@@ -64,7 +109,10 @@ impl Intersectable for Triangle {
 
     #[must_use]
     fn normal_at(&self, _point: &Point) -> Vector {
-        self.normal
+        match self.normal {
+            Normal::Flat(normal) => normal,
+            Normal::Smooth(_, _, _) => todo!(),
+        }
     }
 }
 
@@ -74,8 +122,31 @@ impl Bounded for Triangle {
     }
 }
 
-// Edges and normal are derived from the points, so no need to check them.
-impl_approx_eq!(&Triangle { point1, point2, point3 });
+// Edges are derived from the points, so no need to check them.
+impl_approx_eq!(&Triangle { point1, point2, point3, normal });
+
+impl ApproxEq for Normal {
+    type Margin = F64Margin;
+
+    fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
+        let margin = margin.into();
+
+        match (self, other) {
+            (Normal::Flat(lhs), Normal::Flat(rhs)) => {
+                lhs.approx_eq(rhs, margin)
+            }
+            (
+                Normal::Smooth(lhs1, lhs2, lhs3),
+                Normal::Smooth(rhs1, rhs2, rhs3),
+            ) => {
+                lhs1.approx_eq(rhs1, margin)
+                    && lhs2.approx_eq(rhs2, margin)
+                    && lhs3.approx_eq(rhs3, margin)
+            }
+            (_, _) => false,
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -97,7 +168,7 @@ mod tests {
         assert_approx_eq!(t.edge1, Vector::new(-1.0, -1.0, 0.0));
         assert_approx_eq!(t.edge2, Vector::new(1.0, -1.0, 0.0));
 
-        assert_approx_eq!(t.normal, -Vector::z_axis());
+        assert_approx_eq!(t.normal, Normal::Flat(-Vector::z_axis()));
     }
 
     #[test]
@@ -108,9 +179,11 @@ mod tests {
             Point::new(1.0, 0.0, 0.0),
         );
 
-        assert_approx_eq!(t.normal_at(&Point::new(0.0, 0.5, 0.0)), t.normal);
-        assert_approx_eq!(t.normal_at(&Point::new(-0.5, 0.75, 0.0)), t.normal);
-        assert_approx_eq!(t.normal_at(&Point::new(0.5, 0.25, 0.0)), t.normal);
+        let Normal::Flat(normal) = t.normal else { unreachable!() };
+
+        assert_approx_eq!(t.normal_at(&Point::new(0.0, 0.5, 0.0)), normal);
+        assert_approx_eq!(t.normal_at(&Point::new(-0.5, 0.75, 0.0)), normal);
+        assert_approx_eq!(t.normal_at(&Point::new(0.5, 0.25, 0.0)), normal);
     }
 
     #[test]
@@ -219,9 +292,29 @@ mod tests {
             Point::new(0.0, 0.0, 1.0),
             Point::new(0.000_05, 1.0, -1.0),
         );
+        let t4 = Triangle::new_with_normals(
+            Point::new(-1.0, 1.0, 0.0),
+            Point::new(0.0, 0.0, 1.0),
+            Point::new(0.0, 1.0, -1.0),
+            Vector::y_axis(),
+            Vector::x_axis(),
+            Vector::z_axis(),
+        );
+        let t5 = Triangle::new_with_normals(
+            Point::new(-1.0, 1.0, 0.0),
+            Point::new(0.0, 0.0, 1.0),
+            Point::new(0.0, 1.0, -1.0),
+            Vector::y_axis(),
+            Vector::x_axis(),
+            Vector::z_axis(),
+        );
 
         assert_approx_eq!(t1, &t2);
 
         assert_approx_ne!(t1, &t3);
+
+        assert_approx_eq!(t4, &t5);
+
+        assert_approx_ne!(t4, &t3);
     }
 }
