@@ -3,11 +3,12 @@ use float_cmp::{ApproxEq, F64Margin};
 use super::Intersectable;
 use crate::{
     bounding_box::{Bounded, BoundingBox},
-    intersection::TList,
+    intersection::{Intersection, List},
     math::{
         float::{approx_eq, impl_approx_eq},
         Point, Ray, Vector,
     },
+    Object,
 };
 
 /// A `Triangle` is a simple triangle defined by three vertices.
@@ -77,7 +78,7 @@ impl Triangle {
 
 impl Intersectable for Triangle {
     #[must_use]
-    fn intersect(&self, ray: &Ray) -> Option<TList> {
+    fn intersect<'a>(&self, ray: &Ray, object: &'a Object) -> Option<List<'a>> {
         let dir_cross_e2 = ray.direction.cross(&self.edge2);
         let det = self.edge1.dot(&dir_cross_e2);
 
@@ -104,7 +105,7 @@ impl Intersectable for Triangle {
 
         let t = f * self.edge2.dot(&origin_cross_e1);
 
-        Some(TList::from(t))
+        Some(List::from(Intersection::new(object, t)))
     }
 
     #[must_use]
@@ -132,12 +133,10 @@ impl ApproxEq for Normal {
         let margin = margin.into();
 
         match (self, other) {
-            (Normal::Flat(lhs), Normal::Flat(rhs)) => {
-                lhs.approx_eq(rhs, margin)
-            }
+            (Self::Flat(lhs), Self::Flat(rhs)) => lhs.approx_eq(rhs, margin),
             (
-                Normal::Smooth(lhs1, lhs2, lhs3),
-                Normal::Smooth(rhs1, rhs2, rhs3),
+                Self::Smooth(lhs1, lhs2, lhs3),
+                Self::Smooth(rhs1, rhs2, rhs3),
             ) => {
                 lhs1.approx_eq(rhs1, margin)
                     && lhs2.approx_eq(rhs2, margin)
@@ -151,7 +150,7 @@ impl ApproxEq for Normal {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::float::*;
+    use crate::{math::float::*, shape::Shape};
 
     #[test]
     fn constructing_a_triangle() {
@@ -188,66 +187,95 @@ mod tests {
 
     #[test]
     fn intersecting_a_ray_parallel_to_the_triangle() {
-        let t = Triangle::new(
+        let o = Object::triangle_builder(
             Point::new(0.0, 1.0, 0.0),
             Point::new(-1.0, 0.0, 0.0),
             Point::new(1.0, 0.0, 0.0),
-        );
+        )
+        .build();
+
+        let Shape::Triangle(t) = &o.shape else { unreachable!() };
 
         assert!(t
-            .intersect(&Ray::new(Point::new(0.0, -1.0, -2.0), Vector::y_axis()))
+            .intersect(
+                &Ray::new(Point::new(0.0, -1.0, -2.0), Vector::y_axis()),
+                &o
+            )
             .is_none());
     }
 
     #[test]
     fn a_ray_misses_the_p1_p3_edge() {
-        let t = Triangle::new(
+        let o = Object::triangle_builder(
             Point::new(0.0, 1.0, 0.0),
             Point::new(-1.0, 0.0, 0.0),
             Point::new(1.0, 0.0, 0.0),
-        );
+        )
+        .build();
+
+        let Shape::Triangle(t) = &o.shape else { unreachable!() };
 
         assert!(t
-            .intersect(&Ray::new(Point::new(1.0, 1.0, -2.0), Vector::z_axis()))
+            .intersect(
+                &Ray::new(Point::new(1.0, 1.0, -2.0), Vector::z_axis()),
+                &o
+            )
             .is_none());
     }
 
     #[test]
     fn a_ray_misses_the_p1_p2_edge() {
-        let t = Triangle::new(
+        let o = Object::triangle_builder(
             Point::new(0.0, 1.0, 0.0),
             Point::new(-1.0, 0.0, 0.0),
             Point::new(1.0, 0.0, 0.0),
-        );
+        )
+        .build();
+
+        let Shape::Triangle(t) = &o.shape else { unreachable!() };
 
         assert!(t
-            .intersect(&Ray::new(Point::new(-1.0, 1.0, -2.0), Vector::z_axis()))
+            .intersect(
+                &Ray::new(Point::new(-1.0, 1.0, -2.0), Vector::z_axis()),
+                &o
+            )
             .is_none());
     }
 
     #[test]
     fn a_ray_misses_the_p2_p3_edge() {
-        let t = Triangle::new(
+        let o = Object::triangle_builder(
             Point::new(0.0, 1.0, 0.0),
             Point::new(-1.0, 0.0, 0.0),
             Point::new(1.0, 0.0, 0.0),
-        );
+        )
+        .build();
+
+        let Shape::Triangle(t) = &o.shape else { unreachable!() };
 
         assert!(t
-            .intersect(&Ray::new(Point::new(0.0, -1.0, -2.0), Vector::z_axis()))
+            .intersect(
+                &Ray::new(Point::new(0.0, -1.0, -2.0), Vector::z_axis()),
+                &o
+            )
             .is_none());
     }
 
     #[test]
     fn a_ray_strikes_a_triangle() {
-        let t = Triangle::new(
+        let o = Object::triangle_builder(
             Point::new(0.0, 1.0, 0.0),
             Point::new(-1.0, 0.0, 0.0),
             Point::new(1.0, 0.0, 0.0),
-        );
+        )
+        .build();
 
-        let l = t
-            .intersect(&Ray::new(Point::new(0.0, 0.5, -2.0), Vector::z_axis()));
+        let Shape::Triangle(t) = &o.shape else { unreachable!() };
+
+        let l = t.intersect(
+            &Ray::new(Point::new(0.0, 0.5, -2.0), Vector::z_axis()),
+            &o,
+        );
 
         assert!(l.is_some());
 
@@ -255,7 +283,7 @@ mod tests {
 
         assert_eq!(l.len(), 1);
 
-        assert_approx_eq!(l[0], 2.0);
+        assert_approx_eq!(l[0].t, 2.0);
     }
 
     #[test]

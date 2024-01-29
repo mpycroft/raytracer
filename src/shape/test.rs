@@ -3,8 +3,9 @@ use derive_new::new;
 use super::Intersectable;
 use crate::{
     bounding_box::{Bounded, BoundingBox},
-    intersection::{List, TList},
+    intersection::{Intersection, List},
     math::{Point, Ray, Vector},
+    Object,
 };
 /// A `Test` is a shape intended purely for testing functions on `Object`.
 #[derive(Clone, Copy, Debug, new)]
@@ -24,14 +25,14 @@ impl Test {
 
 impl Intersectable for Test {
     #[must_use]
-    fn intersect(&self, ray: &Ray) -> Option<TList> {
-        Some(TList::from(vec![
-            ray.origin.x,
-            ray.origin.y,
-            ray.origin.z,
-            ray.direction.x,
-            ray.direction.y,
-            ray.direction.z,
+    fn intersect<'a>(&self, ray: &Ray, object: &'a Object) -> Option<List<'a>> {
+        Some(List::from(vec![
+            Intersection::new(object, ray.origin.x),
+            Intersection::new(object, ray.origin.y),
+            Intersection::new(object, ray.origin.z),
+            Intersection::new(object, ray.direction.x),
+            Intersection::new(object, ray.direction.y),
+            Intersection::new(object, ray.direction.z),
         ]))
     }
 
@@ -50,18 +51,20 @@ impl Bounded for Test {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, Object};
+    use crate::{math::float::*, shape::Shape, Object};
 
     #[test]
     #[allow(clippy::many_single_char_names)]
     fn intersecting_a_test_shape() {
-        let t = Test::new();
+        let o = Object::test_builder().build();
+
+        let Shape::Test(t) = &o.shape else { unreachable!() };
 
         let r = Ray::new(Point::new(1.0, 2.0, 1.0), Vector::x_axis());
 
         let o = Object::test_builder().build();
 
-        let l = t.intersect(&r).unwrap().into_list(&o);
+        let l = t.intersect(&r, &o).unwrap();
 
         assert_approx_eq!(Test::intersection_to_ray(&l), r);
     }

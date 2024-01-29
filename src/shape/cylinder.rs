@@ -6,11 +6,12 @@ use float_cmp::{ApproxEq, F64Margin};
 use super::Intersectable;
 use crate::{
     bounding_box::{Bounded, BoundingBox},
-    intersection::TList,
+    intersection::{Intersection, List},
     math::{
         float::{approx_eq, approx_ne},
         Point, Ray, Vector,
     },
+    Object,
 };
 
 // A `Cylinder` is an cylinder of radius 1 centred on the y axis which extends
@@ -25,7 +26,12 @@ pub struct Cylinder {
 
 impl Cylinder {
     #[must_use]
-    fn intersect_caps(&self, ray: &Ray, list: &mut TList) -> Option<TList> {
+    fn intersect_caps<'a>(
+        &self,
+        ray: &Ray,
+        object: &'a Object,
+        mut list: List<'a>,
+    ) -> Option<List<'a>> {
         let check_cap = |t: f64| {
             let x = ray.origin.x + t * ray.direction.x;
             let z = ray.origin.z + t * ray.direction.z;
@@ -37,13 +43,13 @@ impl Cylinder {
             let t = (self.minimum - ray.origin.y) / ray.direction.y;
 
             if check_cap(t) {
-                list.push(t);
+                list.push(Intersection::new(object, t));
             }
 
             let t = (self.maximum - ray.origin.y) / ray.direction.y;
 
             if check_cap(t) {
-                list.push(t);
+                list.push(Intersection::new(object, t));
             }
         }
 
@@ -51,19 +57,19 @@ impl Cylinder {
             return None;
         };
 
-        Some(list.to_owned())
+        Some(list)
     }
 }
 
 impl Intersectable for Cylinder {
     #[must_use]
-    fn intersect(&self, ray: &Ray) -> Option<TList> {
+    fn intersect<'a>(&self, ray: &Ray, object: &'a Object) -> Option<List<'a>> {
         let a = ray.direction.x.powi(2) + ray.direction.z.powi(2);
 
-        let mut list = TList::new();
+        let mut list = List::new();
 
         if approx_eq!(a, 0.0) {
-            return self.intersect_caps(ray, &mut list);
+            return self.intersect_caps(ray, object, list);
         };
 
         let b = 2.0
@@ -85,15 +91,15 @@ impl Intersectable for Cylinder {
 
         let y0 = ray.origin.y + t0 * ray.direction.y;
         if self.minimum < y0 && y0 < self.maximum {
-            list.push(t0);
+            list.push(Intersection::new(object, t0));
         }
 
         let y1 = ray.origin.y + t1 * ray.direction.y;
         if self.minimum < y1 && y1 < self.maximum {
-            list.push(t1);
+            list.push(Intersection::new(object, t1));
         }
 
-        self.intersect_caps(ray, &mut list)
+        self.intersect_caps(ray, object, list)
     }
 
     #[must_use]
@@ -141,36 +147,46 @@ mod tests {
     use std::f64::INFINITY;
 
     use super::*;
-    use crate::math::float::*;
+    use crate::{math::float::*, shape::Shape};
 
     #[test]
     fn a_ray_misses_a_cylinder() {
-        let c = Cylinder::new(-INFINITY, INFINITY, false);
+        let o = Object::cylinder_builder(-INFINITY, INFINITY, false).build();
+
+        let Shape::Cylinder(c) = &o.shape else { unreachable!() };
 
         assert!(c
-            .intersect(&Ray::new(Point::new(1.0, 0.0, 0.0), Vector::y_axis()))
+            .intersect(
+                &Ray::new(Point::new(1.0, 0.0, 0.0), Vector::y_axis()),
+                &o
+            )
             .is_none());
         assert!(c
-            .intersect(&Ray::new(Point::origin(), Vector::y_axis()))
+            .intersect(&Ray::new(Point::origin(), Vector::y_axis()), &o)
             .is_none());
         assert!(c
-            .intersect(&Ray::new(
-                Point::new(0.0, 0.0, -5.0),
-                Vector::new(1.0, 1.0, 1.0).normalise()
-            ))
+            .intersect(
+                &Ray::new(
+                    Point::new(0.0, 0.0, -5.0),
+                    Vector::new(1.0, 1.0, 1.0).normalise()
+                ),
+                &o
+            )
             .is_none());
     }
 
     #[test]
     fn a_ray_strikes_a_cylinder() {
-        let c = Cylinder::new(-INFINITY, INFINITY, false);
+        let o = Object::cylinder_builder(-INFINITY, INFINITY, false).build();
+
+        let Shape::Cylinder(c) = &o.shape else { unreachable!() };
 
         let test = |r, t0, t1| {
-            let i = c.intersect(&r).unwrap();
+            let i = c.intersect(&r, &o).unwrap();
 
             assert_eq!(i.len(), 2);
-            assert_approx_eq!(i[0], t0, epsilon = 0.000_01);
-            assert_approx_eq!(i[1], t1, epsilon = 0.000_01);
+            assert_approx_eq!(i[0].t, t0, epsilon = 0.000_01);
+            assert_approx_eq!(i[1].t, t1, epsilon = 0.000_01);
         };
 
         test(Ray::new(Point::new(1.0, 0.0, -5.0), Vector::z_axis()), 5.0, 5.0);
@@ -187,46 +203,68 @@ mod tests {
 
     #[test]
     fn intersecting_a_constrained_cylinder() {
-        let c = Cylinder::new(1.0, 2.0, false);
+        let o = Object::cylinder_builder(1.0, 2.0, false).build();
+
+        let Shape::Cylinder(c) = &o.shape else { unreachable!() };
 
         assert!(c
-            .intersect(&Ray::new(
-                Point::new(0.0, 1.5, 0.0),
-                Vector::new(0.1, 1.0, 0.0).normalise()
-            ))
+            .intersect(
+                &Ray::new(
+                    Point::new(0.0, 1.5, 0.0),
+                    Vector::new(0.1, 1.0, 0.0).normalise()
+                ),
+                &o
+            )
             .is_none());
         assert!(c
-            .intersect(&Ray::new(Point::new(0.0, 3.0, -5.0), Vector::z_axis()))
+            .intersect(
+                &Ray::new(Point::new(0.0, 3.0, -5.0), Vector::z_axis()),
+                &o
+            )
             .is_none());
         assert!(c
-            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()))
+            .intersect(
+                &Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()),
+                &o
+            )
             .is_none());
         assert!(c
-            .intersect(&Ray::new(Point::new(0.0, 2.0, -5.0), Vector::z_axis()))
+            .intersect(
+                &Ray::new(Point::new(0.0, 2.0, -5.0), Vector::z_axis()),
+                &o
+            )
             .is_none());
         assert!(c
-            .intersect(&Ray::new(Point::new(0.0, 1.0, -5.0), Vector::z_axis()))
+            .intersect(
+                &Ray::new(Point::new(0.0, 1.0, -5.0), Vector::z_axis()),
+                &o
+            )
             .is_none());
 
         let i = c
-            .intersect(&Ray::new(Point::new(0.0, 1.5, -2.0), Vector::z_axis()))
+            .intersect(
+                &Ray::new(Point::new(0.0, 1.5, -2.0), Vector::z_axis()),
+                &o,
+            )
             .unwrap();
 
         assert_eq!(i.len(), 2);
-        assert_approx_eq!(i[0], 1.0);
-        assert_approx_eq!(i[1], 3.0);
+        assert_approx_eq!(i[0].t, 1.0);
+        assert_approx_eq!(i[1].t, 3.0);
     }
 
     #[test]
     fn intersecting_the_caps_of_a_closed_cylinder() {
-        let c = Cylinder::new(1.0, 2.0, true);
+        let o = Object::cylinder_builder(1.0, 2.0, true).build();
+
+        let Shape::Cylinder(c) = &o.shape else { unreachable!() };
 
         let test = |r, t0, t1| {
-            let i = c.intersect(&r).unwrap();
+            let i = c.intersect(&r, &o).unwrap();
 
             assert_eq!(i.len(), 2);
-            assert_approx_eq!(i[0], t0, epsilon = 0.000_01);
-            assert_approx_eq!(i[1], t1, epsilon = 0.000_01);
+            assert_approx_eq!(i[0].t, t0, epsilon = 0.000_01);
+            assert_approx_eq!(i[1].t, t1, epsilon = 0.000_01);
         };
 
         test(Ray::new(Point::new(0.0, 3.0, 0.0), -Vector::y_axis()), 2.0, 1.0);

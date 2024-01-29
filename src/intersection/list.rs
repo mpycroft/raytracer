@@ -45,7 +45,7 @@ impl<'a> Default for List<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{intersection::TList, math::float::*, Object};
+    use crate::{math::float::*, Object};
 
     #[test]
     fn creating_a_list() {
@@ -133,8 +133,14 @@ mod tests {
     fn the_hit_is_always_the_lowest_nonnegative_intersection() {
         let o = Object::test_builder().build();
 
-        let h =
-            TList::from(vec![5.0, 7.0, -3.0, 2.0]).into_list(&o).hit().unwrap();
+        let h = List::from(vec![
+            Intersection::new(&o, 5.0),
+            Intersection::new(&o, 7.0),
+            Intersection::new(&o, -3.0),
+            Intersection::new(&o, 2.0),
+        ])
+        .hit()
+        .unwrap();
 
         assert_approx_eq!(h.object, &o);
         assert_approx_eq!(h.t, 2.0);
@@ -144,15 +150,14 @@ mod tests {
     fn the_hit_with_nan_and_inf() {
         let o = Object::test_builder().build();
 
-        let h = TList::from(vec![
-            5.0,
-            f64::NAN,
-            f64::INFINITY,
-            2.5,
-            f64::NEG_INFINITY,
-            -f64::NAN,
+        let h = List::from(vec![
+            Intersection::new(&o, 5.0),
+            Intersection::new(&o, f64::NAN),
+            Intersection::new(&o, f64::INFINITY),
+            Intersection::new(&o, 2.5),
+            Intersection::new(&o, f64::NEG_INFINITY),
+            Intersection::new(&o, -f64::NAN),
         ])
-        .into_list(&o)
         .hit()
         .unwrap();
 

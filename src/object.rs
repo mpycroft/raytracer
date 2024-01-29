@@ -27,7 +27,7 @@ pub struct Object {
     pub(super) casts_shadow: bool,
     pub(super) shape: Shape,
     #[builder(default = BoundingBox::default(), setter(skip))]
-    pub bounding_box: BoundingBox,
+    pub(super) bounding_box: BoundingBox,
 }
 
 macro_rules! add_builder_fn {
@@ -89,11 +89,7 @@ impl Object {
         } else {
             let ray = self.to_object_space(ray);
 
-            let Some(t_list) = self.shape.intersect(&ray) else {
-                return None;
-            };
-
-            Some(t_list.into_list(self))
+            self.shape.intersect(&ray, self)
         }
     }
 

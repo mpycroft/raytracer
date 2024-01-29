@@ -1,13 +1,12 @@
 mod computations;
 mod list;
-mod t_list;
 
 use std::f64::EPSILON;
 
 use derive_new::new;
 use float_cmp::{ApproxEq, F64Margin};
 
-pub use self::{computations::Computations, list::List, t_list::TList};
+pub use self::{computations::Computations, list::List};
 use crate::{
     math::{float::approx_eq, Ray},
     Object,
