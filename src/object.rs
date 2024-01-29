@@ -40,7 +40,6 @@ macro_rules! add_builder_fn {
                     Shape::[<new_ $shape:lower>]($($args,)*)
                 )
             }
-
         }
     };
 }
@@ -55,6 +54,19 @@ impl Object {
     #[cfg(test)]
     add_builder_fn!(Test());
     add_builder_fn!(Triangle(point1: Point, point2: Point, point3: Point));
+
+    pub fn smooth_triangle_builder(
+        point1: Point,
+        point2: Point,
+        point3: Point,
+        normal1: Vector,
+        normal2: Vector,
+        normal3: Vector,
+    ) -> ObjectBuilder<((), (), (), (Shape,))> {
+        Self::_builder().shape(Shape::new_smooth_triangle(
+            point1, point2, point3, normal1, normal2, normal3,
+        ))
+    }
 
     #[must_use]
     pub fn to_object_space<T: Transformable>(&self, value: &T) -> T {

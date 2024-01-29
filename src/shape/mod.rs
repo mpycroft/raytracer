@@ -63,6 +63,20 @@ impl Shape {
     #[cfg(test)]
     add_new_fn!(Test());
     add_new_fn!(Triangle(point1: Point, point2: Point, point3: Point));
+
+    #[must_use]
+    pub fn new_smooth_triangle(
+        point1: Point,
+        point2: Point,
+        point3: Point,
+        normal1: Vector,
+        normal2: Vector,
+        normal3: Vector,
+    ) -> Shape {
+        Self::Triangle(Triangle::new_with_normals(
+            point1, point2, point3, normal1, normal2, normal3,
+        ))
+    }
 }
 
 impl ApproxEq for &Shape {
@@ -118,6 +132,22 @@ mod tests {
             Point::new(0.0, 1.0, 0.0),
             Point::new(0.0, 0.0, -1.0),
         );
+        let s12 = Shape::new_smooth_triangle(
+            Point::origin(),
+            Point::new(1.0, 0.0, 0.0),
+            Point::new(0.0, -1.0, 0.0),
+            Vector::x_axis(),
+            Vector::y_axis(),
+            Vector::z_axis(),
+        );
+        let s13 = Shape::new_smooth_triangle(
+            Point::origin(),
+            Point::new(1.0, 0.0, 0.0),
+            Point::new(0.0, -1.0, 0.0),
+            Vector::x_axis(),
+            Vector::y_axis(),
+            -Vector::z_axis(),
+        );
 
         assert_approx_eq!(s1, &s2);
 
@@ -127,5 +157,6 @@ mod tests {
         assert_approx_ne!(s6, &s7);
         assert_approx_ne!(s8, &s9);
         assert_approx_ne!(s10, &s11);
+        assert_approx_ne!(s12, &s13);
     }
 }

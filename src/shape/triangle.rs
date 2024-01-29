@@ -105,7 +105,7 @@ impl Intersectable for Triangle {
 
         let t = f * self.edge2.dot(&origin_cross_e1);
 
-        Some(List::from(Intersection::new(object, t)))
+        Some(List::from(Intersection::new_with_u_v(object, t, u, v)))
     }
 
     #[must_use]
@@ -152,6 +152,27 @@ mod tests {
     use super::*;
     use crate::{math::float::*, shape::Shape};
 
+    fn create_triangle() -> Object {
+        Object::triangle_builder(
+            Point::new(0.0, 1.0, 0.0),
+            Point::new(-1.0, 0.0, 0.0),
+            Point::new(1.0, 0.0, 0.0),
+        )
+        .build()
+    }
+
+    fn create_smooth_triangle() -> Object {
+        Object::smooth_triangle_builder(
+            Point::new(0.0, 1.0, 0.0),
+            Point::new(-1.0, 0.0, 0.0),
+            Point::new(1.0, 0.0, 0.0),
+            Vector::y_axis(),
+            -Vector::x_axis(),
+            Vector::x_axis(),
+        )
+        .build()
+    }
+
     #[test]
     fn constructing_a_triangle() {
         let p1 = Point::new(0.0, 1.0, 0.0);
@@ -168,15 +189,28 @@ mod tests {
         assert_approx_eq!(t.edge2, Vector::new(1.0, -1.0, 0.0));
 
         assert_approx_eq!(t.normal, Normal::Flat(-Vector::z_axis()));
+
+        let n1 = Vector::y_axis();
+        let n2 = -Vector::x_axis();
+        let n3 = Vector::x_axis();
+
+        let t = Triangle::new_with_normals(p1, p2, p3, n1, n2, n3);
+
+        assert_approx_eq!(t.point1, p1);
+        assert_approx_eq!(t.point2, p2);
+        assert_approx_eq!(t.point3, p3);
+
+        assert_approx_eq!(t.edge1, Vector::new(-1.0, -1.0, 0.0));
+        assert_approx_eq!(t.edge2, Vector::new(1.0, -1.0, 0.0));
+
+        assert_approx_eq!(t.normal, Normal::Smooth(n1, n2, n3));
     }
 
     #[test]
     fn finding_the_normal_on_a_triangle() {
-        let t = Triangle::new(
-            Point::new(0.0, 1.0, 0.0),
-            Point::new(-1.0, 0.0, 0.0),
-            Point::new(1.0, 0.0, 0.0),
-        );
+        let o = create_triangle();
+
+        let Shape::Triangle(t) = &o.shape else { unreachable!() };
 
         let Normal::Flat(normal) = t.normal else { unreachable!() };
 
@@ -187,12 +221,7 @@ mod tests {
 
     #[test]
     fn intersecting_a_ray_parallel_to_the_triangle() {
-        let o = Object::triangle_builder(
-            Point::new(0.0, 1.0, 0.0),
-            Point::new(-1.0, 0.0, 0.0),
-            Point::new(1.0, 0.0, 0.0),
-        )
-        .build();
+        let o = create_triangle();
 
         let Shape::Triangle(t) = &o.shape else { unreachable!() };
 
@@ -206,12 +235,7 @@ mod tests {
 
     #[test]
     fn a_ray_misses_the_p1_p3_edge() {
-        let o = Object::triangle_builder(
-            Point::new(0.0, 1.0, 0.0),
-            Point::new(-1.0, 0.0, 0.0),
-            Point::new(1.0, 0.0, 0.0),
-        )
-        .build();
+        let o = create_triangle();
 
         let Shape::Triangle(t) = &o.shape else { unreachable!() };
 
@@ -225,12 +249,7 @@ mod tests {
 
     #[test]
     fn a_ray_misses_the_p1_p2_edge() {
-        let o = Object::triangle_builder(
-            Point::new(0.0, 1.0, 0.0),
-            Point::new(-1.0, 0.0, 0.0),
-            Point::new(1.0, 0.0, 0.0),
-        )
-        .build();
+        let o = create_triangle();
 
         let Shape::Triangle(t) = &o.shape else { unreachable!() };
 
@@ -244,12 +263,7 @@ mod tests {
 
     #[test]
     fn a_ray_misses_the_p2_p3_edge() {
-        let o = Object::triangle_builder(
-            Point::new(0.0, 1.0, 0.0),
-            Point::new(-1.0, 0.0, 0.0),
-            Point::new(1.0, 0.0, 0.0),
-        )
-        .build();
+        let o = create_triangle();
 
         let Shape::Triangle(t) = &o.shape else { unreachable!() };
 
@@ -263,12 +277,7 @@ mod tests {
 
     #[test]
     fn a_ray_strikes_a_triangle() {
-        let o = Object::triangle_builder(
-            Point::new(0.0, 1.0, 0.0),
-            Point::new(-1.0, 0.0, 0.0),
-            Point::new(1.0, 0.0, 0.0),
-        )
-        .build();
+        let o = create_triangle();
 
         let Shape::Triangle(t) = &o.shape else { unreachable!() };
 
@@ -301,6 +310,27 @@ mod tests {
                 Point::new(0.0, 1.0, 1.0)
             )
         );
+    }
+
+    #[test]
+    fn an_intersection_with_a_smooth_triangle_stores_u_v() {
+        let o = create_smooth_triangle();
+
+        let Shape::Triangle(t) = &o.shape else { unreachable!() };
+
+        let l = t.intersect(
+            &Ray::new(Point::new(-0.2, 0.3, -2.0), Vector::z_axis()),
+            &o,
+        );
+
+        assert!(l.is_some());
+
+        let l = l.unwrap();
+
+        assert_eq!(l.len(), 1);
+
+        assert_approx_eq!(l[0].u.unwrap(), 0.45);
+        assert_approx_eq!(l[0].v.unwrap(), 0.25);
     }
 
     #[test]
