@@ -3,8 +3,9 @@ use derive_new::new;
 use super::Intersectable;
 use crate::{
     bounding_box::{Bounded, BoundingBox},
-    intersection::TList,
+    intersection::{Intersection, List},
     math::{Point, Ray, Vector},
+    Object,
 };
 
 /// A `Cube` is an axis aligned cube of size 2 (-1.0..1.0) on each axis.
@@ -13,7 +14,7 @@ pub struct Cube;
 
 impl Intersectable for Cube {
     #[must_use]
-    fn intersect(&self, ray: &Ray) -> Option<TList> {
+    fn intersect<'a>(&self, ray: &Ray, object: &'a Object) -> Option<List<'a>> {
         let (x_min, x_max) =
             BoundingBox::check_axis(ray.origin.x, ray.direction.x, -1.0, 1.0);
         let (y_min, y_max) =
@@ -28,11 +29,14 @@ impl Intersectable for Cube {
             return None;
         }
 
-        Some(TList::from(vec![min, max]))
+        Some(List::from(vec![
+            Intersection::new(object, min),
+            Intersection::new(object, max),
+        ]))
     }
 
     #[must_use]
-    fn normal_at(&self, point: &Point) -> Vector {
+    fn normal_at(&self, point: &Point, _intersection: &Intersection) -> Vector {
         let abs_x = point.x.abs();
         let abs_y = point.y.abs();
         let abs_z = point.z.abs();
@@ -63,16 +67,19 @@ impl Bounded for Cube {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::float::*;
+    use crate::{math::float::*, shape::Shape};
 
     #[test]
     fn a_ray_intersects_a_cube() {
-        let c = Cube::new();
-        let test = |r, t1, t2| {
-            let l = c.intersect(&r).unwrap();
+        let o = Object::cube_builder().build();
 
-            assert_approx_eq!(l[0], t1);
-            assert_approx_eq!(l[1], t2);
+        let Shape::Cube(c) = &o.shape else { unreachable!() };
+
+        let test = |r, t1, t2| {
+            let l = c.intersect(&r, &o).unwrap();
+
+            assert_approx_eq!(l[0].t, t1);
+            assert_approx_eq!(l[1].t, t2);
         };
 
         test(Ray::new(Point::new(5.0, 0.5, 0.0), -Vector::x_axis()), 4.0, 6.0);
@@ -87,10 +94,12 @@ mod tests {
 
     #[test]
     fn a_ray_misses_a_cube() {
-        let c = Cube::new();
+        let o = Object::cube_builder().build();
+
+        let Shape::Cube(c) = &o.shape else { unreachable!() };
 
         let test = |r| {
-            let l = c.intersect(&r);
+            let l = c.intersect(&r, &o);
 
             assert!(l.is_none());
         };
@@ -116,43 +125,47 @@ mod tests {
 
     #[test]
     fn the_normal_on_a_cube() {
-        let c = Cube::new();
+        let o = Object::cube_builder().build();
+
+        let Shape::Cube(c) = &o.shape else { unreachable!() };
+
+        let i = Intersection::new(&o, 0.0);
 
         assert_approx_eq!(
-            c.normal_at(&Point::new(1.0, 0.5, -0.8)),
+            c.normal_at(&Point::new(1.0, 0.5, -0.8), &i),
             Vector::x_axis()
         );
         assert_approx_eq!(
-            c.normal_at(&Point::new(-1.0, -0.2, 0.9)),
+            c.normal_at(&Point::new(-1.0, -0.2, 0.9), &i),
             -Vector::x_axis()
         );
         assert_approx_eq!(
-            c.normal_at(&Point::new(-0.4, 1.0, -0.1)),
+            c.normal_at(&Point::new(-0.4, 1.0, -0.1), &i),
             Vector::y_axis()
         );
         assert_approx_eq!(
-            c.normal_at(&Point::new(0.3, -1.0, -0.7)),
+            c.normal_at(&Point::new(0.3, -1.0, -0.7), &i),
             -Vector::y_axis()
         );
         assert_approx_eq!(
-            c.normal_at(&Point::new(-0.6, 0.3, 1.0)),
+            c.normal_at(&Point::new(-0.6, 0.3, 1.0), &i),
             Vector::z_axis()
         );
         assert_approx_eq!(
-            c.normal_at(&Point::new(0.4, 0.4, -1.0)),
+            c.normal_at(&Point::new(0.4, 0.4, -1.0), &i),
             -Vector::z_axis()
         );
         assert_approx_eq!(
-            c.normal_at(&Point::new(0.3, 0.4, 1.0)),
+            c.normal_at(&Point::new(0.3, 0.4, 1.0), &i),
             Vector::z_axis()
         );
 
         assert_approx_eq!(
-            c.normal_at(&Point::new(1.0, 1.0, 1.0)),
+            c.normal_at(&Point::new(1.0, 1.0, 1.0), &i),
             Vector::x_axis()
         );
         assert_approx_eq!(
-            c.normal_at(&Point::new(-1.0, -1.0, -1.0)),
+            c.normal_at(&Point::new(-1.0, -1.0, -1.0), &i),
             -Vector::x_axis()
         );
     }

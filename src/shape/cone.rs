@@ -6,11 +6,12 @@ use float_cmp::{ApproxEq, F64Margin};
 use super::Intersectable;
 use crate::{
     bounding_box::{Bounded, BoundingBox},
-    intersection::TList,
+    intersection::{Intersection, List},
     math::{
         float::{approx_eq, approx_ne},
         Point, Ray, Vector,
     },
+    Object,
 };
 
 // A `Cone` is a double napped cone centred on the origin and extending in both
@@ -25,7 +26,12 @@ pub struct Cone {
 
 impl Cone {
     #[must_use]
-    fn intersect_caps(&self, ray: &Ray, list: &mut TList) -> Option<TList> {
+    fn intersect_caps<'a>(
+        &self,
+        ray: &Ray,
+        object: &'a Object,
+        mut list: List<'a>,
+    ) -> Option<List<'a>> {
         let check_cap = |t: f64, r: f64| {
             let x = ray.origin.x + t * ray.direction.x;
             let z = ray.origin.z + t * ray.direction.z;
@@ -37,13 +43,13 @@ impl Cone {
             let t = (self.minimum - ray.origin.y) / ray.direction.y;
 
             if check_cap(t, self.minimum) {
-                list.push(t);
+                list.push(Intersection::new(object, t));
             }
 
             let t = (self.maximum - ray.origin.y) / ray.direction.y;
 
             if check_cap(t, self.maximum) {
-                list.push(t);
+                list.push(Intersection::new(object, t));
             }
         }
 
@@ -51,13 +57,13 @@ impl Cone {
             return None;
         };
 
-        Some(list.to_owned())
+        Some(list)
     }
 }
 
 impl Intersectable for Cone {
     #[must_use]
-    fn intersect(&self, ray: &Ray) -> Option<TList> {
+    fn intersect<'a>(&self, ray: &Ray, object: &'a Object) -> Option<List<'a>> {
         let a = ray.direction.x.powi(2) - ray.direction.y.powi(2)
             + ray.direction.z.powi(2);
 
@@ -68,11 +74,11 @@ impl Intersectable for Cone {
         let c =
             ray.origin.x.powi(2) - ray.origin.y.powi(2) + ray.origin.z.powi(2);
 
-        let mut list = TList::new();
+        let mut list = List::new();
 
         if approx_eq!(a, 0.0) {
             if approx_ne!(b, 0.0) {
-                list.push(-c / (2.0 * b));
+                list.push(Intersection::new(object, -c / (2.0 * b)));
             }
         } else {
             let discriminant = b.powi(2) - 4.0 * a * c;
@@ -89,20 +95,20 @@ impl Intersectable for Cone {
 
             let y0 = ray.origin.y + t0 * ray.direction.y;
             if self.minimum < y0 && y0 < self.maximum {
-                list.push(t0);
+                list.push(Intersection::new(object, t0));
             }
 
             let y1 = ray.origin.y + t1 * ray.direction.y;
             if self.minimum < y1 && y1 < self.maximum {
-                list.push(t1);
+                list.push(Intersection::new(object, t1));
             }
         }
 
-        self.intersect_caps(ray, &mut list)
+        self.intersect_caps(ray, object, list)
     }
 
     #[must_use]
-    fn normal_at(&self, point: &Point) -> Vector {
+    fn normal_at(&self, point: &Point, _intersection: &Intersection) -> Vector {
         let distance = point.x.powi(2) + point.z.powi(2);
 
         if distance < 1.0 && point.y >= self.maximum - EPSILON {
@@ -154,22 +160,27 @@ mod tests {
     };
 
     use super::*;
-    use crate::math::float::*;
+    use crate::{math::float::*, shape::Shape};
 
     #[test]
     fn intersecting_a_cone_with_a_ray() {
-        let c = Cone::new(-INFINITY, INFINITY, false);
+        let o = Object::cone_builder(-INFINITY, INFINITY, false).build();
+
+        let Shape::Cone(c) = &o.shape else { unreachable!() };
 
         assert!(c
-            .intersect(&Ray::new(Point::new(5.0, 0.0, 5.0), Vector::z_axis()))
+            .intersect(
+                &Ray::new(Point::new(5.0, 0.0, 5.0), Vector::z_axis()),
+                &o
+            )
             .is_none());
 
         let test = |r, t0, t1| {
-            let i = c.intersect(&r).unwrap();
+            let i = c.intersect(&r, &o).unwrap();
 
             assert_eq!(i.len(), 2);
-            assert_approx_eq!(i[0], t0, epsilon = 0.000_01);
-            assert_approx_eq!(i[1], t1, epsilon = 0.000_01);
+            assert_approx_eq!(i[0].t, t0, epsilon = 0.000_01);
+            assert_approx_eq!(i[1].t, t1, epsilon = 0.000_01);
         };
 
         test(Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()), 5.0, 5.0);
@@ -193,72 +204,91 @@ mod tests {
 
     #[test]
     fn intersecting_a_cone_with_a_ray_parallel_to_one_of_its_halves() {
-        let c = Cone::new(-INFINITY, INFINITY, false);
+        let o = Object::cone_builder(-INFINITY, INFINITY, false).build();
+
+        let Shape::Cone(c) = &o.shape else { unreachable!() };
 
         let i = c
-            .intersect(&Ray::new(
-                Point::new(0.0, 0.0, -1.0),
-                Vector::new(0.0, 1.0, 1.0).normalise(),
-            ))
+            .intersect(
+                &Ray::new(
+                    Point::new(0.0, 0.0, -1.0),
+                    Vector::new(0.0, 1.0, 1.0).normalise(),
+                ),
+                &o,
+            )
             .unwrap();
 
         assert_eq!(i.len(), 1);
-        assert_approx_eq!(i[0], 0.353_55, epsilon = 0.000_01);
+        assert_approx_eq!(i[0].t, 0.353_55, epsilon = 0.000_01);
     }
 
     #[test]
     fn intersecting_a_cones_end_caps() {
-        let c = Cone::new(-0.5, 0.5, true);
+        let o = Object::cone_builder(-0.5, 0.5, true).build();
 
-        let i = c
-            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::y_axis()));
+        let Shape::Cone(c) = &o.shape else { unreachable!() };
+
+        let i = c.intersect(
+            &Ray::new(Point::new(0.0, 0.0, -5.0), Vector::y_axis()),
+            &o,
+        );
 
         assert!(i.is_none());
 
         let i = c
-            .intersect(&Ray::new(
-                Point::new(0.0, 0.0, -0.25),
-                Vector::new(0.0, 1.0, 1.0).normalise(),
-            ))
+            .intersect(
+                &Ray::new(
+                    Point::new(0.0, 0.0, -0.25),
+                    Vector::new(0.0, 1.0, 1.0).normalise(),
+                ),
+                &o,
+            )
             .unwrap();
 
         assert_eq!(i.len(), 2);
-        assert_approx_eq!(i[0], 0.088_39, epsilon = 0.000_01);
-        assert_approx_eq!(i[1], FRAC_1_SQRT_2, epsilon = 0.000_01);
+        assert_approx_eq!(i[0].t, 0.088_39, epsilon = 0.000_01);
+        assert_approx_eq!(i[1].t, FRAC_1_SQRT_2, epsilon = 0.000_01);
 
         let i = c
-            .intersect(&Ray::new(Point::new(0.0, 0.0, -0.25), Vector::y_axis()))
+            .intersect(
+                &Ray::new(Point::new(0.0, 0.0, -0.25), Vector::y_axis()),
+                &o,
+            )
             .unwrap();
 
         assert_eq!(i.len(), 4);
-        assert_approx_eq!(i[0], 0.25);
-        assert_approx_eq!(i[1], -0.25);
-        assert_approx_eq!(i[2], -0.5);
-        assert_approx_eq!(i[3], 0.5);
+        assert_approx_eq!(i[0].t, 0.25);
+        assert_approx_eq!(i[1].t, -0.25);
+        assert_approx_eq!(i[2].t, -0.5);
+        assert_approx_eq!(i[3].t, 0.5);
     }
 
     #[test]
     fn computing_the_normal_vector_on_a_cone() {
-        let c = Cone::new(-1.5, 1.5, true);
+        let o = Object::cone_builder(-1.5, 1.5, true).build();
+
+        let Shape::Cone(c) = &o.shape else { unreachable!() };
+
+        let i = Intersection::new(&o, 0.0);
 
         assert_approx_eq!(
-            c.normal_at(&Point::origin()),
+            c.normal_at(&Point::origin(), &i),
             Vector::new(0.0, 0.0, 0.0)
         );
         assert_approx_eq!(
-            c.normal_at(&Point::new(1.0, 1.0, 1.0)),
+            c.normal_at(&Point::new(1.0, 1.0, 1.0), &i),
             Vector::new(1.0, -SQRT_2, 1.0)
         );
         assert_approx_eq!(
-            c.normal_at(&Point::new(-1.0, -1.0, 0.0)),
+            c.normal_at(&Point::new(-1.0, -1.0, 0.0), &i),
             Vector::new(-1.0, 1.0, 0.0)
         );
         assert_approx_eq!(
-            c.normal_at(&Point::new(0.25, 1.5, 0.5)),
+            c.normal_at(&Point::new(0.25, 1.5, 0.5), &i),
             Vector::y_axis()
         );
         assert_approx_eq!(
-            c.normal_at(&Point::new(0.25, -1.5, 0.5)),
+            c.normal_at(&Point::new(0.25, -1.5, 0.5), &i),
             -Vector::y_axis()
         );
     }

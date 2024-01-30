@@ -1,29 +1,43 @@
 mod computations;
 mod list;
-mod t_list;
 
 use std::f64::EPSILON;
 
-use derive_new::new;
 use float_cmp::{ApproxEq, F64Margin};
 
-pub use self::{computations::Computations, list::List, t_list::TList};
+pub use self::{computations::Computations, list::List};
 use crate::{
     math::{float::approx_eq, Ray},
     Object,
 };
 
-/// An Intersection stores both the t value of the intersection in addition to a
-/// reference to the object that was intersected.
-/// An `Intersection` stores both the t value of the intersection in addition to
-/// a reference to the `Object` that was intersected.
-#[derive(Clone, Copy, Debug, new)]
+/// An `Intersection` stores both the t value of the intersection in addition to a
+/// reference to the object that was intersected. Optionally it holds the u and
+/// v values that the intersection occurred at.
+#[derive(Clone, Copy, Debug)]
 pub struct Intersection<'a> {
     pub object: &'a Object,
     pub t: f64,
+    pub u: Option<f64>,
+    pub v: Option<f64>,
 }
 
 impl<'a> Intersection<'a> {
+    #[must_use]
+    pub const fn new(object: &'a Object, t: f64) -> Self {
+        Self { object, t, u: None, v: None }
+    }
+
+    #[must_use]
+    pub const fn new_with_u_v(
+        object: &'a Object,
+        t: f64,
+        u: f64,
+        v: f64,
+    ) -> Self {
+        Self { object, t, u: Some(u), v: Some(v) }
+    }
+
     #[must_use]
     pub fn prepare_computations(
         &self,
@@ -33,7 +47,7 @@ impl<'a> Intersection<'a> {
         let point = ray.position(self.t);
 
         let eye = -ray.direction;
-        let mut normal = self.object.normal_at(&point);
+        let mut normal = self.object.normal_at(&point, self);
 
         let inside = if normal.dot(&eye) < 0.0 {
             normal *= -1.0;
@@ -123,6 +137,15 @@ mod tests {
 
         assert_approx_eq!(i.object, &o);
         assert_approx_eq!(i.t, 1.5);
+        assert_eq!(i.u, None);
+        assert_eq!(i.v, None);
+
+        let i = Intersection::new_with_u_v(&o, 0.6, 0.5, 0.4);
+
+        assert_approx_eq!(i.object, &o);
+        assert_approx_eq!(i.t, 0.6);
+        assert_eq!(i.u, Some(0.5));
+        assert_eq!(i.v, Some(0.4));
     }
 
     #[test]
@@ -259,6 +282,34 @@ mod tests {
 
         assert!(c.under_point.z > EPSILON / 2.0);
         assert!(c.point.z < c.under_point.z);
+    }
+
+    #[test]
+    #[allow(clippy::many_single_char_names)]
+    fn preparing_the_normal_on_a_smooth_triangle() {
+        let o = Object::smooth_triangle_builder(
+            Point::new(0.0, 1.0, 0.0),
+            Point::new(-1.0, 0.0, 0.0),
+            Point::new(1.0, 0.0, 0.0),
+            Vector::y_axis(),
+            -Vector::x_axis(),
+            Vector::x_axis(),
+        )
+        .build();
+
+        let i = Intersection::new_with_u_v(&o, 1.0, 0.45, 0.25);
+
+        let r = Ray::new(Point::new(-0.2, 0.3, -2.0), Vector::z_axis());
+
+        let l = List::from(i);
+
+        let c = i.prepare_computations(&r, &l);
+
+        assert_approx_eq!(
+            c.normal,
+            Vector::new(-0.554_7, 0.832_05, 0.0),
+            epsilon = 0.000_01
+        );
     }
 
     #[test]

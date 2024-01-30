@@ -3,6 +3,7 @@ mod chapter11;
 mod chapter12;
 mod chapter13;
 mod chapter14;
+mod chapter15;
 mod chapter6;
 mod chapter8;
 mod chapter9;
@@ -31,6 +32,7 @@ pub enum Scene {
     Chapter13,
     Chapter14,
     Chapter14Spheres,
+    Chapter15,
 }
 
 impl Scene {
@@ -53,6 +55,7 @@ impl Scene {
             Self::Chapter14Spheres => {
                 chapter14::generate_sphere_scene(arguments, rng)
             }
+            Self::Chapter15 => chapter15::generate_scene(arguments),
         }
     }
 }

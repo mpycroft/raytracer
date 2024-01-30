@@ -3,8 +3,9 @@ use derive_new::new;
 use super::Intersectable;
 use crate::{
     bounding_box::{Bounded, BoundingBox},
-    intersection::TList,
+    intersection::{Intersection, List},
     math::{Point, Ray, Vector},
+    Object,
 };
 
 /// A `Sphere` is a unit sphere centred at the origin (0, 0, 0).
@@ -13,7 +14,7 @@ pub struct Sphere;
 
 impl Intersectable for Sphere {
     #[must_use]
-    fn intersect(&self, ray: &Ray) -> Option<TList> {
+    fn intersect<'a>(&self, ray: &Ray, object: &'a Object) -> Option<List<'a>> {
         let sphere_to_ray = ray.origin - Point::origin();
 
         let a = ray.direction.dot(&ray.direction);
@@ -32,11 +33,14 @@ impl Intersectable for Sphere {
         let t1 = (-b - discriminant) / a;
         let t2 = (-b + discriminant) / a;
 
-        Some(TList::from(vec![t1, t2]))
+        Some(List::from(vec![
+            Intersection::new(object, t1),
+            Intersection::new(object, t2),
+        ]))
     }
 
     #[must_use]
-    fn normal_at(&self, point: &Point) -> Vector {
+    fn normal_at(&self, point: &Point, _intersection: &Intersection) -> Vector {
         *point - Point::origin()
     }
 }
@@ -53,99 +57,132 @@ impl Bounded for Sphere {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::float::*;
+    use crate::{math::float::*, shape::Shape};
 
     #[test]
     fn a_ray_intersects_a_sphere_at_two_points() {
-        let s = Sphere::new();
+        let o = Object::sphere_builder().build();
+
+        let Shape::Sphere(s) = &o.shape else { unreachable!() };
 
         let l = s
-            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()))
+            .intersect(
+                &Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()),
+                &o,
+            )
             .unwrap();
 
         assert_eq!(l.len(), 2);
 
-        assert_approx_eq!(l[0], 4.0);
-        assert_approx_eq!(l[1], 6.0);
+        assert_approx_eq!(l[0].t, 4.0);
+        assert_approx_eq!(l[1].t, 6.0);
     }
 
     #[test]
     fn a_ray_intersects_a_sphere_at_a_tangent() {
-        let s = Sphere::new();
+        let o = Object::sphere_builder().build();
+
+        let Shape::Sphere(s) = &o.shape else { unreachable!() };
 
         let l = s
-            .intersect(&Ray::new(Point::new(0.0, 1.0, -5.0), Vector::z_axis()))
+            .intersect(
+                &Ray::new(Point::new(0.0, 1.0, -5.0), Vector::z_axis()),
+                &o,
+            )
             .unwrap();
 
         assert_eq!(l.len(), 2);
 
-        assert_approx_eq!(l[0], 5.0);
-        assert_approx_eq!(l[1], 5.0);
+        assert_approx_eq!(l[0].t, 5.0);
+        assert_approx_eq!(l[1].t, 5.0);
     }
 
     #[test]
     fn a_ray_misses_a_sphere() {
-        let s = Sphere::new();
+        let o = Object::sphere_builder().build();
+
+        let Shape::Sphere(s) = &o.shape else { unreachable!() };
 
         assert!(s
-            .intersect(&Ray::new(Point::new(0.0, 2.0, -5.0), Vector::z_axis()))
+            .intersect(
+                &Ray::new(Point::new(0.0, 2.0, -5.0), Vector::z_axis()),
+                &o
+            )
             .is_none());
     }
 
     #[test]
     fn a_ray_originates_inside_a_sphere() {
-        let s = Sphere::new();
+        let o = Object::sphere_builder().build();
 
-        let l =
-            s.intersect(&Ray::new(Point::origin(), Vector::z_axis())).unwrap();
-
-        assert_eq!(l.len(), 2);
-
-        assert_approx_eq!(l[0], -1.0);
-        assert_approx_eq!(l[1], 1.0);
-    }
-
-    #[test]
-    fn a_sphere_is_behind_a_ray() {
-        let s = Sphere::new();
+        let Shape::Sphere(s) = &o.shape else { unreachable!() };
 
         let l = s
-            .intersect(&Ray::new(Point::new(0.0, 0.0, 5.0), Vector::z_axis()))
+            .intersect(&Ray::new(Point::origin(), Vector::z_axis()), &o)
             .unwrap();
 
         assert_eq!(l.len(), 2);
 
-        assert_approx_eq!(l[0], -6.0);
-        assert_approx_eq!(l[1], -4.0);
+        assert_approx_eq!(l[0].t, -1.0);
+        assert_approx_eq!(l[1].t, 1.0);
+    }
+
+    #[test]
+    fn a_sphere_is_behind_a_ray() {
+        let o = Object::sphere_builder().build();
+
+        let Shape::Sphere(s) = &o.shape else { unreachable!() };
+
+        let l = s
+            .intersect(
+                &Ray::new(Point::new(0.0, 0.0, 5.0), Vector::z_axis()),
+                &o,
+            )
+            .unwrap();
+
+        assert_eq!(l.len(), 2);
+
+        assert_approx_eq!(l[0].t, -6.0);
+        assert_approx_eq!(l[1].t, -4.0);
     }
 
     #[test]
     fn the_normal_on_a_sphere_at_a_point_on_an_axis() {
-        let s = Sphere::new();
+        let o = Object::sphere_builder().build();
+
+        let Shape::Sphere(s) = &o.shape else { unreachable!() };
+
+        let i = Intersection::new(&o, 0.0);
 
         assert_approx_eq!(
-            s.normal_at(&Point::new(1.0, 0.0, 0.0)),
+            s.normal_at(&Point::new(1.0, 0.0, 0.0), &i),
             Vector::x_axis()
         );
 
         assert_approx_eq!(
-            s.normal_at(&Point::new(0.0, 1.0, 0.0)),
+            s.normal_at(&Point::new(0.0, 1.0, 0.0), &i),
             Vector::y_axis()
         );
 
         assert_approx_eq!(
-            s.normal_at(&Point::new(0.0, 0.0, 1.0)),
+            s.normal_at(&Point::new(0.0, 0.0, 1.0), &i),
             Vector::z_axis()
         );
     }
 
     #[test]
     fn the_normal_on_a_sphere_at_a_non_axial_point() {
-        let s = Sphere::new();
+        let o = Object::sphere_builder().build();
+
+        let Shape::Sphere(s) = &o.shape else { unreachable!() };
+
+        let i = Intersection::new(&o, 0.0);
 
         let sqrt_3_div_3 = f64::sqrt(3.0) / 3.0;
-        let n =
-            s.normal_at(&Point::new(sqrt_3_div_3, sqrt_3_div_3, sqrt_3_div_3));
+        let n = s.normal_at(
+            &Point::new(sqrt_3_div_3, sqrt_3_div_3, sqrt_3_div_3),
+            &i,
+        );
 
         assert_approx_eq!(
             n,

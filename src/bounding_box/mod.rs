@@ -1,7 +1,7 @@
 mod bounded;
 
 use std::{
-    f64::{EPSILON, INFINITY, NEG_INFINITY},
+    f64::{INFINITY, NEG_INFINITY},
     ops::{Add, AddAssign},
 };
 
@@ -9,7 +9,8 @@ use derive_new::new;
 
 pub use self::bounded::Bounded;
 use crate::math::{
-    float::impl_approx_eq, Point, Ray, Transformable, Transformation,
+    float::{approx_eq, impl_approx_eq},
+    Point, Ray, Transformable, Transformation,
 };
 
 /// A `BoundingBox` is an axis aligned box that can be used to cut down the
@@ -62,10 +63,10 @@ impl BoundingBox {
         let min_numerator = min - origin;
         let max_numerator = max - origin;
 
-        let (min, max) = if direction.abs() >= EPSILON {
-            (min_numerator / direction, max_numerator / direction)
-        } else {
+        let (min, max) = if approx_eq!(direction, 0.0) {
             (min_numerator * INFINITY, max_numerator * INFINITY)
+        } else {
+            (min_numerator / direction, max_numerator / direction)
         };
 
         if min > max {
@@ -110,6 +111,34 @@ impl AddAssign for BoundingBox {
     }
 }
 
+impl From<Vec<Point>> for BoundingBox {
+    fn from(value: Vec<Point>) -> Self {
+        let (minimum, maximum) = {
+            let mut minimum = Point::new(INFINITY, INFINITY, INFINITY);
+            let mut maximum =
+                Point::new(NEG_INFINITY, NEG_INFINITY, NEG_INFINITY);
+
+            for point in value {
+                minimum = Point::new(
+                    minimum.x.min(point.x),
+                    minimum.y.min(point.y),
+                    minimum.z.min(point.z),
+                );
+
+                maximum = Point::new(
+                    maximum.x.max(point.x),
+                    maximum.y.max(point.y),
+                    maximum.z.max(point.z),
+                );
+            }
+
+            (minimum, maximum)
+        };
+
+        Self::new(minimum, maximum)
+    }
+}
+
 impl Transformable for BoundingBox {
     fn apply(&self, transformation: &Transformation) -> Self {
         let p1 = self.minimum.apply(transformation);
@@ -127,39 +156,7 @@ impl Transformable for BoundingBox {
             .apply(transformation);
         let p8 = self.maximum.apply(transformation);
 
-        macro_rules! find {
-            ($func:path, $axis:ident) => {
-                $func(
-                    p1.$axis,
-                    $func(
-                        p2.$axis,
-                        $func(
-                            p3.$axis,
-                            $func(
-                                p4.$axis,
-                                $func(
-                                    p5.$axis,
-                                    $func(p6.$axis, $func(p7.$axis, p8.$axis)),
-                                ),
-                            ),
-                        ),
-                    ),
-                )
-            };
-        }
-
-        let minimum = Point::new(
-            find!(f64::min, x),
-            find!(f64::min, y),
-            find!(f64::min, z),
-        );
-        let maximum = Point::new(
-            find!(f64::max, x),
-            find!(f64::max, y),
-            find!(f64::max, z),
-        );
-
-        Self::new(minimum, maximum)
+        Self::from(vec![p1, p2, p3, p4, p5, p6, p7, p8])
     }
 }
 
@@ -295,6 +292,31 @@ mod tests {
             BoundingBox::new(
                 Point::new(-2.0, -2.0, -5.0),
                 Point::new(4.0, 2.0, 2.0)
+            )
+        );
+    }
+
+    #[test]
+    fn creating_a_bounding_box_from_points() {
+        let p1 = Point::new(1.0, 2.0, 0.0);
+        let p2 = Point::new(3.0, 4.0, 5.0);
+
+        assert_approx_eq!(
+            BoundingBox::from(vec![p1, p2]),
+            BoundingBox::new(p1, p2)
+        );
+
+        let p1 = Point::origin();
+        let p2 = Point::new(-1.0, 2.0, 2.0);
+        let p3 = Point::new(5.0, 5.0, 5.0);
+        let p4 = Point::new(0.0, -2.0, 0.0);
+        let p5 = Point::new(4.5, -1.0, -0.5);
+
+        assert_approx_eq!(
+            BoundingBox::from(vec![p1, p2, p3, p4, p5]),
+            BoundingBox::new(
+                Point::new(-1.0, -2.0, -0.5),
+                Point::new(5.0, 5.0, 5.0)
             )
         );
     }

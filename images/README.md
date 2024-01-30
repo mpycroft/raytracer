@@ -55,3 +55,9 @@ A shape using cylinders and spheres in groups.
 Randomly generated spheres spread into several groups.
 
 ![Sphere groups](chapter14-spheres.png)
+
+## Chapter 15
+
+An imported image of a teapot using triangles.
+
+![Teapot](chapter15.png)
