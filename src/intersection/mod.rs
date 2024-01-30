@@ -24,12 +24,17 @@ pub struct Intersection<'a> {
 
 impl<'a> Intersection<'a> {
     #[must_use]
-    pub fn new(object: &'a Object, t: f64) -> Self {
+    pub const fn new(object: &'a Object, t: f64) -> Self {
         Self { object, t, u: None, v: None }
     }
 
     #[must_use]
-    pub fn new_with_u_v(object: &'a Object, t: f64, u: f64, v: f64) -> Self {
+    pub const fn new_with_u_v(
+        object: &'a Object,
+        t: f64,
+        u: f64,
+        v: f64,
+    ) -> Self {
         Self { object, t, u: Some(u), v: Some(v) }
     }
 

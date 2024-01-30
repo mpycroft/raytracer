@@ -72,7 +72,7 @@ impl Shape {
         normal1: Vector,
         normal2: Vector,
         normal3: Vector,
-    ) -> Shape {
+    ) -> Self {
         Self::Triangle(Triangle::new_with_normals(
             point1, point2, point3, normal1, normal2, normal3,
         ))

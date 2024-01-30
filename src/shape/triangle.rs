@@ -400,5 +400,6 @@ mod tests {
         assert_approx_eq!(t4, &t5);
 
         assert_approx_ne!(t4, &t3);
+        assert_approx_ne!(t3, &t4);
     }
 }
