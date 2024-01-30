@@ -7,11 +7,17 @@ use std::{
 
 use anyhow::{bail, Result};
 
-use crate::{math::Point, object::ObjectBuilder, shape::Shape, Object};
+use crate::{
+    math::{Point, Vector},
+    object::ObjectBuilder,
+    shape::Shape,
+    Object,
+};
 
 #[derive(Debug)]
 pub struct ObjParser {
     pub vertices: Vec<Point>,
+    pub normals: Vec<Vector>,
     pub groups: Vec<Object>,
     pub ignored: usize,
 }
@@ -19,7 +25,12 @@ pub struct ObjParser {
 impl ObjParser {
     #[must_use]
     fn new() -> Self {
-        Self { vertices: Vec::new(), groups: Vec::new(), ignored: 0 }
+        Self {
+            vertices: Vec::new(),
+            normals: Vec::new(),
+            groups: Vec::new(),
+            ignored: 0,
+        }
     }
 
     /// Parse a given OBJ file.
@@ -45,6 +56,8 @@ impl ObjParser {
 
             if line.starts_with("v ") {
                 parser.parse_vertex(line)?;
+            } else if line.starts_with("vn ") {
+                parser.parse_normal(line)?;
             } else if line.starts_with("f ") {
                 parser.parse_face(line, current_group)?;
             } else if line.starts_with("g ") {
@@ -66,9 +79,12 @@ impl ObjParser {
         Ok(parser)
     }
 
+    fn split(line: &str) -> Vec<&str> {
+        line.split(' ').filter(|&s| !s.is_empty()).collect()
+    }
+
     fn parse_vertex(&mut self, line: &str) -> Result<()> {
-        let items: Vec<&str> =
-            line.split(' ').filter(|&s| !s.is_empty()).collect();
+        let items = Self::split(line);
 
         if items.len() != 4 {
             bail!(
@@ -88,13 +104,33 @@ Found {} items.",
         Ok(())
     }
 
+    fn parse_normal(&mut self, line: &str) -> Result<()> {
+        let items = Self::split(line);
+
+        if items.len() != 4 {
+            bail!(
+                "\
+Expected 'vn' followed by 3 space separated numbers for a normal.
+Found {} items.",
+                items.len()
+            );
+        }
+
+        let x = items[1].parse()?;
+        let y = items[2].parse()?;
+        let z = items[3].parse()?;
+
+        self.normals.push(Vector::new(x, y, z));
+
+        Ok(())
+    }
+
     fn parse_face(
         &mut self,
         line: &str,
         group: &mut Vec<Object>,
     ) -> Result<()> {
-        let items: Vec<&str> =
-            line.split(' ').filter(|&s| !s.is_empty()).collect();
+        let items = Self::split(line);
 
         if items.len() < 4 {
             bail!(
@@ -145,7 +181,10 @@ Found {} items.",
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, shape::Shape};
+    use crate::{
+        math::{float::*, Vector},
+        shape::Shape,
+    };
 
     #[test]
     fn ignoring_unrecognised_lines() {
@@ -324,5 +363,38 @@ Found 3 items."
         let e = p.unwrap_err();
 
         assert_eq!(e.to_string(), "Group FirstGroup is repeated.");
+    }
+
+    #[test]
+    fn parse_vertex_normal() {
+        let p = ObjParser::parse("obj/test/normals.obj").unwrap();
+
+        assert_eq!(p.normals.len(), 3);
+
+        assert_approx_eq!(p.normals[0], Vector::z_axis());
+        assert_approx_eq!(p.normals[1], Vector::new(0.707, 0.0, 0.707));
+        assert_approx_eq!(p.normals[2], Vector::new(1.0, 2.0, -3.0));
+    }
+
+    #[test]
+    fn parsing_invalid_normals() {
+        let p = ObjParser::parse("obj/test/too_many_normals.obj");
+
+        let e = p.unwrap_err();
+
+        assert_eq!(
+            e.to_string(),
+            "\
+Expected 'vn' followed by 3 space separated numbers for a normal.
+Found 6 items."
+        );
+
+        let p = ObjParser::parse("obj/test/invalid_normals.obj");
+
+        assert!(p.is_err());
+
+        let e = p.unwrap_err();
+
+        assert_eq!(e.to_string(), "invalid float literal");
     }
 }
