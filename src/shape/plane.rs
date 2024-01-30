@@ -28,7 +28,11 @@ impl Intersectable for Plane {
     }
 
     #[must_use]
-    fn normal_at(&self, _point: &Point) -> Vector {
+    fn normal_at(
+        &self,
+        _point: &Point,
+        _intersection: &Intersection,
+    ) -> Vector {
         Vector::y_axis()
     }
 }
@@ -101,13 +105,17 @@ mod tests {
 
     #[test]
     fn the_normal_of_a_plane_is_constant_everywhere() {
-        let p = Plane::new();
+        let o = Object::plane_builder().build();
+
+        let Shape::Plane(p) = &o.shape else { unreachable!() };
+
+        let i = Intersection::new(&o, 0.0);
 
         let n = Vector::y_axis();
 
-        assert_approx_eq!(p.normal_at(&Point::origin()), n);
-        assert_approx_eq!(p.normal_at(&Point::new(10.0, 0.0, -10.0)), n);
-        assert_approx_eq!(p.normal_at(&Point::new(-5.0, 0.0, 150.0)), n);
+        assert_approx_eq!(p.normal_at(&Point::origin(), &i), n);
+        assert_approx_eq!(p.normal_at(&Point::new(10.0, 0.0, -10.0), &i), n);
+        assert_approx_eq!(p.normal_at(&Point::new(-5.0, 0.0, 150.0), &i), n);
     }
 
     #[test]

@@ -37,7 +37,7 @@ impl Intersectable for Test {
     }
 
     #[must_use]
-    fn normal_at(&self, point: &Point) -> Vector {
+    fn normal_at(&self, point: &Point, _intersection: &Intersection) -> Vector {
         *point - Point::origin()
     }
 }
@@ -71,10 +71,14 @@ mod tests {
 
     #[test]
     fn normal_at_on_a_test_shape() {
-        let t = Test::new();
+        let o = Object::test_builder().build();
+
+        let Shape::Test(t) = &o.shape else { unreachable!() };
+
+        let i = Intersection::new(&o, 1.0);
 
         assert_approx_eq!(
-            t.normal_at(&Point::new(1.0, 2.0, 3.0)),
+            t.normal_at(&Point::new(1.0, 2.0, 3.0), &i),
             Vector::new(1.0, 2.0, 3.0)
         );
     }

@@ -1,7 +1,7 @@
 use enum_dispatch::enum_dispatch;
 
 use crate::{
-    intersection::List,
+    intersection::{Intersection, List},
     math::{Point, Ray, Vector},
     Object,
 };
@@ -14,5 +14,5 @@ pub trait Intersectable {
     fn intersect<'a>(&self, ray: &Ray, object: &'a Object) -> Option<List<'a>>;
 
     #[must_use]
-    fn normal_at(&self, point: &Point) -> Vector;
+    fn normal_at(&self, point: &Point, intersection: &Intersection) -> Vector;
 }

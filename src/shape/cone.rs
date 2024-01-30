@@ -108,7 +108,7 @@ impl Intersectable for Cone {
     }
 
     #[must_use]
-    fn normal_at(&self, point: &Point) -> Vector {
+    fn normal_at(&self, point: &Point, _intersection: &Intersection) -> Vector {
         let distance = point.x.powi(2) + point.z.powi(2);
 
         if distance < 1.0 && point.y >= self.maximum - EPSILON {
@@ -265,26 +265,30 @@ mod tests {
 
     #[test]
     fn computing_the_normal_vector_on_a_cone() {
-        let c = Cone::new(-1.5, 1.5, true);
+        let o = Object::cone_builder(-1.5, 1.5, true).build();
+
+        let Shape::Cone(c) = &o.shape else { unreachable!() };
+
+        let i = Intersection::new(&o, 0.0);
 
         assert_approx_eq!(
-            c.normal_at(&Point::origin()),
+            c.normal_at(&Point::origin(), &i),
             Vector::new(0.0, 0.0, 0.0)
         );
         assert_approx_eq!(
-            c.normal_at(&Point::new(1.0, 1.0, 1.0)),
+            c.normal_at(&Point::new(1.0, 1.0, 1.0), &i),
             Vector::new(1.0, -SQRT_2, 1.0)
         );
         assert_approx_eq!(
-            c.normal_at(&Point::new(-1.0, -1.0, 0.0)),
+            c.normal_at(&Point::new(-1.0, -1.0, 0.0), &i),
             Vector::new(-1.0, 1.0, 0.0)
         );
         assert_approx_eq!(
-            c.normal_at(&Point::new(0.25, 1.5, 0.5)),
+            c.normal_at(&Point::new(0.25, 1.5, 0.5), &i),
             Vector::y_axis()
         );
         assert_approx_eq!(
-            c.normal_at(&Point::new(0.25, -1.5, 0.5)),
+            c.normal_at(&Point::new(0.25, -1.5, 0.5), &i),
             -Vector::y_axis()
         );
     }

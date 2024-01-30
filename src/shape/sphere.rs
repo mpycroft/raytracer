@@ -40,7 +40,7 @@ impl Intersectable for Sphere {
     }
 
     #[must_use]
-    fn normal_at(&self, point: &Point) -> Vector {
+    fn normal_at(&self, point: &Point, _intersection: &Intersection) -> Vector {
         *point - Point::origin()
     }
 }
@@ -148,31 +148,41 @@ mod tests {
 
     #[test]
     fn the_normal_on_a_sphere_at_a_point_on_an_axis() {
-        let s = Sphere::new();
+        let o = Object::sphere_builder().build();
+
+        let Shape::Sphere(s) = &o.shape else { unreachable!() };
+
+        let i = Intersection::new(&o, 0.0);
 
         assert_approx_eq!(
-            s.normal_at(&Point::new(1.0, 0.0, 0.0)),
+            s.normal_at(&Point::new(1.0, 0.0, 0.0), &i),
             Vector::x_axis()
         );
 
         assert_approx_eq!(
-            s.normal_at(&Point::new(0.0, 1.0, 0.0)),
+            s.normal_at(&Point::new(0.0, 1.0, 0.0), &i),
             Vector::y_axis()
         );
 
         assert_approx_eq!(
-            s.normal_at(&Point::new(0.0, 0.0, 1.0)),
+            s.normal_at(&Point::new(0.0, 0.0, 1.0), &i),
             Vector::z_axis()
         );
     }
 
     #[test]
     fn the_normal_on_a_sphere_at_a_non_axial_point() {
-        let s = Sphere::new();
+        let o = Object::sphere_builder().build();
+
+        let Shape::Sphere(s) = &o.shape else { unreachable!() };
+
+        let i = Intersection::new(&o, 0.0);
 
         let sqrt_3_div_3 = f64::sqrt(3.0) / 3.0;
-        let n =
-            s.normal_at(&Point::new(sqrt_3_div_3, sqrt_3_div_3, sqrt_3_div_3));
+        let n = s.normal_at(
+            &Point::new(sqrt_3_div_3, sqrt_3_div_3, sqrt_3_div_3),
+            &i,
+        );
 
         assert_approx_eq!(
             n,

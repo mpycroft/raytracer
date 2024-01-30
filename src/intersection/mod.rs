@@ -42,7 +42,7 @@ impl<'a> Intersection<'a> {
         let point = ray.position(self.t);
 
         let eye = -ray.direction;
-        let mut normal = self.object.normal_at(&point);
+        let mut normal = self.object.normal_at(&point, self);
 
         let inside = if normal.dot(&eye) < 0.0 {
             normal *= -1.0;
@@ -277,6 +277,34 @@ mod tests {
 
         assert!(c.under_point.z > EPSILON / 2.0);
         assert!(c.point.z < c.under_point.z);
+    }
+
+    #[test]
+    #[allow(clippy::many_single_char_names)]
+    fn preparing_the_normal_on_a_smooth_triangle() {
+        let o = Object::smooth_triangle_builder(
+            Point::new(0.0, 1.0, 0.0),
+            Point::new(-1.0, 0.0, 0.0),
+            Point::new(1.0, 0.0, 0.0),
+            Vector::y_axis(),
+            -Vector::x_axis(),
+            Vector::x_axis(),
+        )
+        .build();
+
+        let i = Intersection::new_with_u_v(&o, 1.0, 0.45, 0.25);
+
+        let r = Ray::new(Point::new(-0.2, 0.3, -2.0), Vector::z_axis());
+
+        let l = List::from(i);
+
+        let c = i.prepare_computations(&r, &l);
+
+        assert_approx_eq!(
+            c.normal,
+            Vector::new(-0.554_7, 0.832_05, 0.0),
+            epsilon = 0.000_01
+        );
     }
 
     #[test]

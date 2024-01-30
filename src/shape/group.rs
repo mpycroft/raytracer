@@ -4,7 +4,7 @@ use float_cmp::{ApproxEq, F64Margin};
 use super::Intersectable;
 use crate::{
     bounding_box::{Bounded, BoundingBox},
-    intersection::List,
+    intersection::{Intersection, List},
     math::{Point, Ray, Vector},
     shape::Shape,
     Object,
@@ -66,7 +66,11 @@ impl Intersectable for Group {
     }
 
     #[must_use]
-    fn normal_at(&self, _point: &Point) -> Vector {
+    fn normal_at(
+        &self,
+        _point: &Point,
+        _intersection: &Intersection,
+    ) -> Vector {
         unreachable!()
     }
 }

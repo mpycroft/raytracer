@@ -103,7 +103,7 @@ impl Intersectable for Cylinder {
     }
 
     #[must_use]
-    fn normal_at(&self, point: &Point) -> Vector {
+    fn normal_at(&self, point: &Point, _intersection: &Intersection) -> Vector {
         let distance = point.x.powi(2) + point.z.powi(2);
 
         if distance < 1.0 && point.y >= self.maximum - EPSILON {
@@ -304,52 +304,60 @@ mod tests {
 
     #[test]
     fn normal_vector_on_a_cylinder() {
-        let c = Cylinder::new(-INFINITY, INFINITY, false);
+        let o = Object::cylinder_builder(-INFINITY, INFINITY, false).build();
+
+        let Shape::Cylinder(c) = &o.shape else { unreachable!() };
+
+        let i = Intersection::new(&o, 0.0);
 
         assert_approx_eq!(
-            c.normal_at(&Point::new(1.0, 0.0, 0.0)),
+            c.normal_at(&Point::new(1.0, 0.0, 0.0), &i),
             Vector::x_axis()
         );
         assert_approx_eq!(
-            c.normal_at(&Point::new(0.0, 5.0, -1.0)),
+            c.normal_at(&Point::new(0.0, 5.0, -1.0), &i),
             -Vector::z_axis()
         );
         assert_approx_eq!(
-            c.normal_at(&Point::new(0.0, -2.0, 1.0)),
+            c.normal_at(&Point::new(0.0, -2.0, 1.0), &i),
             Vector::z_axis()
         );
         assert_approx_eq!(
-            c.normal_at(&Point::new(-1.0, 1.0, 0.0)),
+            c.normal_at(&Point::new(-1.0, 1.0, 0.0), &i),
             -Vector::x_axis()
         );
     }
 
     #[test]
     fn the_normal_vector_on_a_cylinders_end_caps() {
-        let c = Cylinder::new(1.0, 2.0, true);
+        let o = Object::cylinder_builder(1.0, 2.0, true).build();
+
+        let Shape::Cylinder(c) = &o.shape else { unreachable!() };
+
+        let i = Intersection::new(&o, 0.0);
 
         assert_approx_eq!(
-            c.normal_at(&Point::new(0.0, 1.0, 0.0)),
+            c.normal_at(&Point::new(0.0, 1.0, 0.0), &i),
             -Vector::y_axis()
         );
         assert_approx_eq!(
-            c.normal_at(&Point::new(0.5, 1.0, 0.0)),
+            c.normal_at(&Point::new(0.5, 1.0, 0.0), &i),
             -Vector::y_axis()
         );
         assert_approx_eq!(
-            c.normal_at(&Point::new(0.0, 1.0, 0.5)),
+            c.normal_at(&Point::new(0.0, 1.0, 0.5), &i),
             -Vector::y_axis()
         );
         assert_approx_eq!(
-            c.normal_at(&Point::new(0.0, 2.0, 0.0)),
+            c.normal_at(&Point::new(0.0, 2.0, 0.0), &i),
             Vector::y_axis()
         );
         assert_approx_eq!(
-            c.normal_at(&Point::new(0.5, 2.0, 0.0)),
+            c.normal_at(&Point::new(0.5, 2.0, 0.0), &i),
             Vector::y_axis()
         );
         assert_approx_eq!(
-            c.normal_at(&Point::new(0.0, 2.0, 0.5)),
+            c.normal_at(&Point::new(0.0, 2.0, 0.5), &i),
             Vector::y_axis()
         );
     }

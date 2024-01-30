@@ -109,10 +109,16 @@ impl Intersectable for Triangle {
     }
 
     #[must_use]
-    fn normal_at(&self, _point: &Point) -> Vector {
+    fn normal_at(&self, _point: &Point, intersection: &Intersection) -> Vector {
         match self.normal {
             Normal::Flat(normal) => normal,
-            Normal::Smooth(_, _, _) => todo!(),
+            Normal::Smooth(normal1, normal2, normal3) => {
+                // The u and v values will always be set for triangles.
+                let Some(u) = intersection.u else { unreachable!() };
+                let Some(v) = intersection.v else { unreachable!() };
+
+                normal2 * u + normal3 * v + normal1 * (1.0 - u - v)
+            }
         }
     }
 }
@@ -212,11 +218,16 @@ mod tests {
 
         let Shape::Triangle(t) = &o.shape else { unreachable!() };
 
+        let i = Intersection::new(&o, 0.0);
+
         let Normal::Flat(normal) = t.normal else { unreachable!() };
 
-        assert_approx_eq!(t.normal_at(&Point::new(0.0, 0.5, 0.0)), normal);
-        assert_approx_eq!(t.normal_at(&Point::new(-0.5, 0.75, 0.0)), normal);
-        assert_approx_eq!(t.normal_at(&Point::new(0.5, 0.25, 0.0)), normal);
+        assert_approx_eq!(t.normal_at(&Point::new(0.0, 0.5, 0.0), &i), normal);
+        assert_approx_eq!(
+            t.normal_at(&Point::new(-0.5, 0.75, 0.0), &i),
+            normal
+        );
+        assert_approx_eq!(t.normal_at(&Point::new(0.5, 0.25, 0.0), &i), normal);
     }
 
     #[test]
@@ -331,6 +342,21 @@ mod tests {
 
         assert_approx_eq!(l[0].u.unwrap(), 0.45);
         assert_approx_eq!(l[0].v.unwrap(), 0.25);
+    }
+
+    #[test]
+    fn a_smooth_triangle_uses_u_v_to_interpolate_the_normal() {
+        let o = create_smooth_triangle();
+
+        let Shape::Triangle(t) = &o.shape else { unreachable!() };
+
+        let i = Intersection::new_with_u_v(&o, 1.0, 0.45, 0.25);
+
+        assert_approx_eq!(
+            t.normal_at(&Point::origin(), &i).normalise(),
+            Vector::new(-0.554_7, 0.832_05, 0.0),
+            epsilon = 0.000_01
+        );
     }
 
     #[test]

@@ -3,7 +3,7 @@ use typed_builder::{Optional, TypedBuilder};
 
 use crate::{
     bounding_box::{Bounded, BoundingBox},
-    intersection::List,
+    intersection::{Intersection, List},
     math::{
         float::impl_approx_eq, Point, Ray, Transformable, Transformation,
         Vector,
@@ -106,10 +106,14 @@ impl Object {
     }
 
     #[must_use]
-    pub fn normal_at(&self, point: &Point) -> Vector {
+    pub fn normal_at(
+        &self,
+        point: &Point,
+        intersection: &Intersection,
+    ) -> Vector {
         let object_point = self.to_object_space(point);
 
-        let object_normal = self.shape.normal_at(&object_point);
+        let object_normal = self.shape.normal_at(&object_point, intersection);
 
         self.to_world_space(&object_normal).normalise()
     }
@@ -246,8 +250,13 @@ mod tests {
             .transformation(Transformation::new().translate(0.0, 1.0, 0.0))
             .build();
 
+        let i = Intersection::new(&o, 2.5);
+
         assert_approx_eq!(
-            o.normal_at(&Point::new(0.0, 1.0 + FRAC_1_SQRT_2, -FRAC_1_SQRT_2)),
+            o.normal_at(
+                &Point::new(0.0, 1.0 + FRAC_1_SQRT_2, -FRAC_1_SQRT_2),
+                &i
+            ),
             Vector::new(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2)
         );
 
@@ -259,9 +268,11 @@ mod tests {
             )
             .build();
 
+        let i = Intersection::new(&o, 2.5);
+
         let sqrt_2_div_d = SQRT_2 / 2.0;
         assert_approx_eq!(
-            o.normal_at(&Point::new(0.0, sqrt_2_div_d, -sqrt_2_div_d)),
+            o.normal_at(&Point::new(0.0, sqrt_2_div_d, -sqrt_2_div_d), &i),
             Vector::new(0.0, 0.970_14, -0.242_54),
             epsilon = 0.000_01
         );
@@ -306,8 +317,13 @@ mod tests {
             .transformation(Transformation::new().translate(0.0, 1.0, 0.0))
             .build();
 
+        let i = Intersection::new(&o, 0.0);
+
         assert_approx_eq!(
-            o.normal_at(&Point::new(0.0, 1.0 + FRAC_1_SQRT_2, -FRAC_1_SQRT_2)),
+            o.normal_at(
+                &Point::new(0.0, 1.0 + FRAC_1_SQRT_2, -FRAC_1_SQRT_2),
+                &i
+            ),
             Vector::new(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2)
         );
     }
@@ -322,9 +338,11 @@ mod tests {
             )
             .build();
 
+        let i = Intersection::new(&o, 2.1);
+
         let sqrt_2_div_2 = SQRT_2 / 2.0;
         assert_approx_eq!(
-            o.normal_at(&Point::new(0.0, sqrt_2_div_2, -sqrt_2_div_2)),
+            o.normal_at(&Point::new(0.0, sqrt_2_div_2, -sqrt_2_div_2), &i),
             Vector::new(0.0, 0.970_14, -0.242_54),
             epsilon = 0.000_01
         );
@@ -453,8 +471,12 @@ mod tests {
         let Shape::Group(g) = &g.objects()[0].shape else { unreachable!() };
         let s = &g.objects()[0];
 
+        let o = Object::test_builder().build();
+
+        let i = Intersection::new(&o, 1.2);
+
         assert_approx_eq!(
-            s.normal_at(&Point::new(1.732_1, 1.154_7, -5.577_4)),
+            s.normal_at(&Point::new(1.732_1, 1.154_7, -5.577_4), &i),
             Vector::new(0.285_7, 0.428_54, -0.857_16),
             epsilon = 0.000_01
         );
