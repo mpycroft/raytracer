@@ -83,6 +83,21 @@ impl ObjParser {
         line.split(' ').filter(|&s| !s.is_empty()).collect()
     }
 
+    fn split_face(item: &str) -> Result<Vec<&str>> {
+        let values: Vec<&str> = item.split('/').collect();
+
+        if values.len() != 1 && values.len() != 3 {
+            bail!(
+                "\
+Expected face values to be either 'num' or 'num//num' or 'num/num/num'
+Found {}.",
+                item
+            )
+        }
+
+        Ok(values)
+    }
+
     fn parse_vertex(&mut self, line: &str) -> Result<()> {
         let items = Self::split(line);
 
@@ -141,20 +156,61 @@ Found {} items.",
             );
         }
 
-        let vertex1 = items[1].parse::<usize>()? - 1;
+        let get_vertex_normal = |item: &str| -> Result<(usize, Option<usize>)> {
+            let values = Self::split_face(item)?;
+
+            let vertex = values[0].parse::<usize>()? - 1;
+            let normal = if values.len() == 1 {
+                None
+            } else {
+                Some(values[2].parse::<usize>()? - 1)
+            };
+
+            Ok((vertex, normal))
+        };
+
+        let (vertex1, normal1) = get_vertex_normal(items[1])?;
 
         for index in 2..(items.len() - 1) {
-            let vertex2 = items[index].parse::<usize>()? - 1;
-            let vertex3 = items[index + 1].parse::<usize>()? - 1;
+            let (vertex2, normal2) = get_vertex_normal(items[index])?;
+            let (vertex3, normal3) = get_vertex_normal(items[index + 1])?;
 
-            group.push(
-                Object::triangle_builder(
-                    self.vertices[vertex1],
-                    self.vertices[vertex2],
-                    self.vertices[vertex3],
-                )
-                .build(),
-            );
+            let is_smooth = if normal1.is_none() {
+                false
+            } else {
+                if normal2.is_none() || normal3.is_none() {
+                    bail!(
+                        "\
+If one vertex normal is specified, all faces must also provide vertex normals."
+                    )
+                }
+
+                true
+            };
+
+            if is_smooth {
+                group.push(
+                    Object::smooth_triangle_builder(
+                        self.vertices[vertex1],
+                        self.vertices[vertex2],
+                        self.vertices[vertex3],
+                        // We have already checked these are all Some().
+                        self.normals[normal1.unwrap()],
+                        self.normals[normal2.unwrap()],
+                        self.normals[normal3.unwrap()],
+                    )
+                    .build(),
+                );
+            } else {
+                group.push(
+                    Object::triangle_builder(
+                        self.vertices[vertex1],
+                        self.vertices[vertex2],
+                        self.vertices[vertex3],
+                    )
+                    .build(),
+                );
+            }
         }
 
         Ok(())
@@ -396,5 +452,57 @@ Found 6 items."
         let e = p.unwrap_err();
 
         assert_eq!(e.to_string(), "invalid float literal");
+    }
+
+    #[test]
+    fn parsing_face_normals() {
+        let p = ObjParser::parse("obj/test/face_normals.obj").unwrap();
+
+        let Shape::Group(g) = &p.groups[0].shape else { unreachable!() };
+        let c = g.objects();
+
+        assert_eq!(c.len(), 2);
+
+        let t = Object::smooth_triangle_builder(
+            Point::new(0.0, 1.0, 0.0),
+            Point::new(-1.0, 0.0, 0.0),
+            Point::new(1.0, 0.0, 0.0),
+            Vector::y_axis(),
+            -Vector::x_axis(),
+            Vector::x_axis(),
+        )
+        .build();
+
+        assert_approx_eq!(c[0], &t);
+        assert_approx_eq!(c[1], &t);
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "index out of bounds: the len is 2 but the index is 2"
+    )]
+    fn parsing_invalid_face_normals() {
+        let p = ObjParser::parse("obj/test/inconsistent_face_normals.obj");
+
+        let e = p.unwrap_err();
+
+        assert_eq!(
+            e.to_string(),
+            "\
+If one vertex normal is specified, all faces must also provide vertex normals."
+        );
+
+        let p = ObjParser::parse("obj/test/invalid_face_normals.obj");
+
+        let e = p.unwrap_err();
+
+        assert_eq!(
+            e.to_string(),
+            "\
+Expected face values to be either 'num' or 'num//num' or 'num/num/num'
+Found 2///3."
+        );
+
+        let _ = ObjParser::parse("obj/test/invalid_index_face_normals.obj");
     }
 }
