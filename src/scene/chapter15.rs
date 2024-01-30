@@ -1,4 +1,4 @@
-use std::f64::consts::FRAC_PI_3;
+use std::f64::consts::{FRAC_PI_2, FRAC_PI_3};
 
 use raytracer::{
     math::{Angle, Point, Transformation, Vector},
@@ -48,7 +48,12 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
         ObjParser::parse("obj/teapot.obj")
             .unwrap()
             .into_group()
-            .transformation(Transformation::new().translate(0.0, 0.0, 10.0))
+            .transformation(
+                Transformation::new()
+                    .rotate_x(-Angle(FRAC_PI_2))
+                    .scale(0.3, 0.3, 0.3)
+                    .translate(0.0, 0.0, 10.0),
+            )
             .build(),
     );
 
