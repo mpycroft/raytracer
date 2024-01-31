@@ -5,7 +5,7 @@ use crate::{
     bounding_box::{Bounded, BoundingBox},
     intersection::{Intersection, List},
     math::{Point, Ray, Vector},
-    Shape,
+    Object,
 };
 
 /// A `Sphere` is a unit sphere centred at the origin (0, 0, 0).
@@ -14,7 +14,7 @@ pub struct Sphere;
 
 impl Intersectable for Sphere {
     #[must_use]
-    fn intersect<'a>(&self, ray: &Ray, object: &'a Shape) -> Option<List<'a>> {
+    fn intersect<'a>(&self, ray: &Ray, object: &'a Object) -> Option<List<'a>> {
         let sphere_to_ray = ray.origin - Point::origin();
 
         let a = ray.direction.dot(&ray.direction);
@@ -57,13 +57,14 @@ impl Bounded for Sphere {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, object::shapes::Shapes, Object};
+    use crate::{math::float::*, object::shapes::Shapes};
 
     #[test]
     fn a_ray_intersects_a_sphere_at_two_points() {
         let o = Object::sphere_builder().build();
 
-        let Shapes::Sphere(s) = &o.shape else { unreachable!() };
+        let Object::Shape(s) = o.clone();
+        let Shapes::Sphere(s) = &s.shape else { unreachable!() };
 
         let l = s
             .intersect(
@@ -82,7 +83,8 @@ mod tests {
     fn a_ray_intersects_a_sphere_at_a_tangent() {
         let o = Object::sphere_builder().build();
 
-        let Shapes::Sphere(s) = &o.shape else { unreachable!() };
+        let Object::Shape(s) = o.clone();
+        let Shapes::Sphere(s) = &s.shape else { unreachable!() };
 
         let l = s
             .intersect(
@@ -101,7 +103,8 @@ mod tests {
     fn a_ray_misses_a_sphere() {
         let o = Object::sphere_builder().build();
 
-        let Shapes::Sphere(s) = &o.shape else { unreachable!() };
+        let Object::Shape(s) = o.clone();
+        let Shapes::Sphere(s) = &s.shape else { unreachable!() };
 
         assert!(s
             .intersect(
@@ -115,7 +118,8 @@ mod tests {
     fn a_ray_originates_inside_a_sphere() {
         let o = Object::sphere_builder().build();
 
-        let Shapes::Sphere(s) = &o.shape else { unreachable!() };
+        let Object::Shape(s) = o.clone();
+        let Shapes::Sphere(s) = &s.shape else { unreachable!() };
 
         let l = s
             .intersect(&Ray::new(Point::origin(), Vector::z_axis()), &o)
@@ -131,7 +135,8 @@ mod tests {
     fn a_sphere_is_behind_a_ray() {
         let o = Object::sphere_builder().build();
 
-        let Shapes::Sphere(s) = &o.shape else { unreachable!() };
+        let Object::Shape(s) = o.clone();
+        let Shapes::Sphere(s) = &s.shape else { unreachable!() };
 
         let l = s
             .intersect(
@@ -150,7 +155,8 @@ mod tests {
     fn the_normal_on_a_sphere_at_a_point_on_an_axis() {
         let o = Object::sphere_builder().build();
 
-        let Shapes::Sphere(s) = &o.shape else { unreachable!() };
+        let Object::Shape(s) = o.clone();
+        let Shapes::Sphere(s) = &s.shape else { unreachable!() };
 
         let i = Intersection::new(&o, 0.0);
 
@@ -174,7 +180,8 @@ mod tests {
     fn the_normal_on_a_sphere_at_a_non_axial_point() {
         let o = Object::sphere_builder().build();
 
-        let Shapes::Sphere(s) = &o.shape else { unreachable!() };
+        let Object::Shape(s) = o.clone();
+        let Shapes::Sphere(s) = &s.shape else { unreachable!() };
 
         let i = Intersection::new(&o, 0.0);
 

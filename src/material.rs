@@ -2,7 +2,7 @@ use typed_builder::TypedBuilder;
 
 use crate::{
     math::{float::impl_approx_eq, Point, Vector},
-    Colour, Pattern, PointLight, Shape,
+    Colour, Object, Pattern, PointLight,
 };
 
 /// A `Material` represents what a given object is made up of including what
@@ -42,7 +42,7 @@ impl Material {
     #[must_use]
     pub fn lighting(
         &self,
-        object: &Shape,
+        object: &Object,
         light: &PointLight,
         point: &Point,
         eye: &Vector,

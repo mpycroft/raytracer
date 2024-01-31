@@ -7,7 +7,7 @@ use crate::{
     bounding_box::{Bounded, BoundingBox},
     intersection::{Intersection, List},
     math::{float::approx_eq, Point, Ray, Vector},
-    Shape,
+    Object,
 };
 
 /// A `Plane` is an infinitely large plane situated along the x and z axes.
@@ -16,7 +16,7 @@ pub struct Plane;
 
 impl Intersectable for Plane {
     #[must_use]
-    fn intersect<'a>(&self, ray: &Ray, object: &'a Shape) -> Option<List<'a>> {
+    fn intersect<'a>(&self, ray: &Ray, object: &'a Object) -> Option<List<'a>> {
         if approx_eq!(ray.direction.y, 0.0) {
             return None;
         }
@@ -49,13 +49,14 @@ impl Bounded for Plane {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, object::shapes::Shapes, Object};
+    use crate::{math::float::*, object::shapes::Shapes};
 
     #[test]
     fn intersect_with_a_ray_parallel_to_the_plane() {
         let o = Object::plane_builder().build();
 
-        let Shapes::Plane(p) = &o.shape else { unreachable!() };
+        let Object::Shape(s) = o.clone();
+        let Shapes::Plane(p) = &s.shape else { unreachable!() };
 
         assert!(p
             .intersect(
@@ -73,7 +74,8 @@ mod tests {
     fn a_ray_intersecting_a_plane_from_above() {
         let o = Object::plane_builder().build();
 
-        let Shapes::Plane(p) = &o.shape else { unreachable!() };
+        let Object::Shape(s) = o.clone();
+        let Shapes::Plane(p) = &s.shape else { unreachable!() };
 
         let l = p
             .intersect(
@@ -90,7 +92,8 @@ mod tests {
     fn a_ray_intersecting_a_plane_from_below() {
         let o = Object::plane_builder().build();
 
-        let Shapes::Plane(p) = &o.shape else { unreachable!() };
+        let Object::Shape(s) = o.clone();
+        let Shapes::Plane(p) = &s.shape else { unreachable!() };
 
         let l = p
             .intersect(
@@ -104,10 +107,12 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::many_single_char_names)]
     fn the_normal_of_a_plane_is_constant_everywhere() {
         let o = Object::plane_builder().build();
 
-        let Shapes::Plane(p) = &o.shape else { unreachable!() };
+        let Object::Shape(s) = o.clone();
+        let Shapes::Plane(p) = &s.shape else { unreachable!() };
 
         let i = Intersection::new(&o, 0.0);
 

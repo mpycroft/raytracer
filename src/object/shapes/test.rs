@@ -5,7 +5,7 @@ use crate::{
     bounding_box::{Bounded, BoundingBox},
     intersection::{Intersection, List},
     math::{Point, Ray, Vector},
-    object::Shape,
+    Object,
 };
 /// A `Test` is a shape intended purely for testing functions on `Object`.
 #[derive(Clone, Copy, Debug, new)]
@@ -25,7 +25,7 @@ impl Test {
 
 impl Intersectable for Test {
     #[must_use]
-    fn intersect<'a>(&self, ray: &Ray, object: &'a Shape) -> Option<List<'a>> {
+    fn intersect<'a>(&self, ray: &Ray, object: &'a Object) -> Option<List<'a>> {
         Some(List::from(vec![
             Intersection::new(object, ray.origin.x),
             Intersection::new(object, ray.origin.y),
@@ -51,14 +51,15 @@ impl Bounded for Test {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, object::shapes::Shapes, Object};
+    use crate::{math::float::*, object::shapes::Shapes};
 
     #[test]
     #[allow(clippy::many_single_char_names)]
     fn intersecting_a_test_shape() {
         let o = Object::test_builder().build();
 
-        let Shapes::Test(t) = &o.shape else { unreachable!() };
+        let Object::Shape(s) = o;
+        let Shapes::Test(t) = &s.shape else { unreachable!() };
 
         let r = Ray::new(Point::new(1.0, 2.0, 1.0), Vector::x_axis());
 
@@ -73,7 +74,8 @@ mod tests {
     fn normal_at_on_a_test_shape() {
         let o = Object::test_builder().build();
 
-        let Shapes::Test(t) = &o.shape else { unreachable!() };
+        let Object::Shape(s) = o.clone();
+        let Shapes::Test(t) = &s.shape else { unreachable!() };
 
         let i = Intersection::new(&o, 1.0);
 

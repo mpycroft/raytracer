@@ -10,14 +10,14 @@ use anyhow::{bail, Result};
 use crate::{
     math::{Point, Vector},
     object::{shapes::Shapes, ShapeBuilder},
-    Object, Shape,
+    Object,
 };
 
 #[derive(Debug)]
 pub struct ObjParser {
     pub vertices: Vec<Point>,
     pub normals: Vec<Vector>,
-    pub groups: Vec<Shape>,
+    pub groups: Vec<Object>,
     pub ignored: usize,
 }
 
@@ -139,7 +139,11 @@ Found {} items.",
         Ok(())
     }
 
-    fn parse_face(&mut self, line: &str, group: &mut Vec<Shape>) -> Result<()> {
+    fn parse_face(
+        &mut self,
+        line: &str,
+        group: &mut Vec<Object>,
+    ) -> Result<()> {
         let items = Self::split(line);
 
         if items.len() < 4 {
@@ -213,8 +217,8 @@ If one vertex normal is specified, all faces must also provide vertex normals."
 
     fn parse_group<'a>(
         line: &str,
-        groups: &'a mut HashMap<String, Vec<Shape>>,
-    ) -> Result<&'a mut Vec<Shape>> {
+        groups: &'a mut HashMap<String, Vec<Object>>,
+    ) -> Result<&'a mut Vec<Object>> {
         let group_name = line[1..].trim();
 
         if groups.insert(String::from(group_name), Vec::new()).is_some() {
@@ -279,7 +283,8 @@ Found 5 items."
     fn parsing_faces() {
         let p = ObjParser::parse("obj/test/faces.obj").unwrap();
 
-        let Shapes::Group(g) = &p.groups[0].shape else { unreachable!() };
+        let Object::Shape(o) = &p.groups[0];
+        let Shapes::Group(g) = &o.shape else { unreachable!() };
         let c = g.objects();
 
         assert_eq!(c.len(), 2);
@@ -327,7 +332,8 @@ Found 3 items."
     fn triangulating_polygons() {
         let p = ObjParser::parse("obj/test/triangulating.obj").unwrap();
 
-        let Shapes::Group(g) = &p.groups[0].shape else { unreachable!() };
+        let Object::Shape(o) = &p.groups[0];
+        let Shapes::Group(g) = &o.shape else { unreachable!() };
         let c = g.objects();
 
         assert_eq!(c.len(), 3);
@@ -368,12 +374,14 @@ Found 3 items."
             .into_group()
             .build();
 
+        let Object::Shape(o) = o;
         let Shapes::Group(g) = &o.shape else { unreachable!() };
         let c = g.objects();
 
         assert_eq!(c.len(), 2);
 
-        let Shapes::Group(g) = &c[0].shape else { unreachable!() };
+        let Object::Shape(o) = &c[0];
+        let Shapes::Group(g) = &o.shape else { unreachable!() };
         let c1 = g.objects();
 
         assert_eq!(c1.len(), 1);
@@ -388,7 +396,8 @@ Found 3 items."
             .build()
         );
 
-        let Shapes::Group(g) = &c[1].shape else { unreachable!() };
+        let Object::Shape(o) = &c[1];
+        let Shapes::Group(g) = &o.shape else { unreachable!() };
         let c2 = g.objects();
 
         assert_eq!(c2.len(), 1);
@@ -447,10 +456,12 @@ Found 6 items."
     }
 
     #[test]
+    #[allow(clippy::many_single_char_names)]
     fn parsing_face_normals() {
         let p = ObjParser::parse("obj/test/face_normals.obj").unwrap();
 
-        let Shapes::Group(g) = &p.groups[0].shape else { unreachable!() };
+        let Object::Shape(o) = &p.groups[0];
+        let Shapes::Group(g) = &o.shape else { unreachable!() };
         let c = g.objects();
 
         assert_eq!(c.len(), 2);

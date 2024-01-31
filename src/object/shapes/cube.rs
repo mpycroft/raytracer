@@ -5,7 +5,7 @@ use crate::{
     bounding_box::{Bounded, BoundingBox},
     intersection::{Intersection, List},
     math::{Point, Ray, Vector},
-    Shape,
+    Object,
 };
 
 /// A `Cube` is an axis aligned cube of size 2 (-1.0..1.0) on each axis.
@@ -14,7 +14,7 @@ pub struct Cube;
 
 impl Intersectable for Cube {
     #[must_use]
-    fn intersect<'a>(&self, ray: &Ray, object: &'a Shape) -> Option<List<'a>> {
+    fn intersect<'a>(&self, ray: &Ray, object: &'a Object) -> Option<List<'a>> {
         let (x_min, x_max) =
             BoundingBox::check_axis(ray.origin.x, ray.direction.x, -1.0, 1.0);
         let (y_min, y_max) =
@@ -67,13 +67,14 @@ impl Bounded for Cube {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, object::shapes::Shapes, Object};
+    use crate::{math::float::*, object::shapes::Shapes};
 
     #[test]
     fn a_ray_intersects_a_cube() {
         let o = Object::cube_builder().build();
 
-        let Shapes::Cube(c) = &o.shape else { unreachable!() };
+        let Object::Shape(s) = o.clone();
+        let Shapes::Cube(c) = &s.shape else { unreachable!() };
 
         let test = |r, t1, t2| {
             let l = c.intersect(&r, &o).unwrap();
@@ -96,7 +97,8 @@ mod tests {
     fn a_ray_misses_a_cube() {
         let o = Object::cube_builder().build();
 
-        let Shapes::Cube(c) = &o.shape else { unreachable!() };
+        let Object::Shape(s) = o.clone();
+        let Shapes::Cube(c) = &s.shape else { unreachable!() };
 
         let test = |r| {
             let l = c.intersect(&r, &o);
@@ -127,7 +129,8 @@ mod tests {
     fn the_normal_on_a_cube() {
         let o = Object::cube_builder().build();
 
-        let Shapes::Cube(c) = &o.shape else { unreachable!() };
+        let Object::Shape(s) = o.clone();
+        let Shapes::Cube(c) = &s.shape else { unreachable!() };
 
         let i = Intersection::new(&o, 0.0);
 

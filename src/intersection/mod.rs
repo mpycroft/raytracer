@@ -8,7 +8,7 @@ use float_cmp::{ApproxEq, F64Margin};
 pub use self::{computations::Computations, list::List};
 use crate::{
     math::{float::approx_eq, Ray},
-    Shape,
+    Object,
 };
 
 /// An `Intersection` stores both the t value of the intersection in addition to a
@@ -16,7 +16,7 @@ use crate::{
 /// v values that the intersection occurred at.
 #[derive(Clone, Copy, Debug)]
 pub struct Intersection<'a> {
-    pub object: &'a Shape,
+    pub object: &'a Object,
     pub t: f64,
     pub u: Option<f64>,
     pub v: Option<f64>,
@@ -24,13 +24,13 @@ pub struct Intersection<'a> {
 
 impl<'a> Intersection<'a> {
     #[must_use]
-    pub const fn new(object: &'a Shape, t: f64) -> Self {
+    pub const fn new(object: &'a Object, t: f64) -> Self {
         Self { object, t, u: None, v: None }
     }
 
     #[must_use]
     pub const fn new_with_u_v(
-        object: &'a Shape,
+        object: &'a Object,
         t: f64,
         u: f64,
         v: f64,
@@ -59,7 +59,7 @@ impl<'a> Intersection<'a> {
         let over_point = point + normal * 100_000.0 * EPSILON;
         let under_point = point - normal * 100_000.0 * EPSILON;
 
-        let mut container = Vec::<&Shape>::new();
+        let mut container = Vec::<&Object>::new();
 
         let mut n1 = f64::NAN;
         let mut n2 = f64::NAN;
@@ -70,7 +70,7 @@ impl<'a> Intersection<'a> {
             if is_hit {
                 n1 = container.last().map_or_else(
                     || 1.0,
-                    |object| object.material.refractive_index,
+                    |object| object.material().refractive_index,
                 );
             }
 
@@ -86,7 +86,7 @@ impl<'a> Intersection<'a> {
             if is_hit {
                 n2 = container.last().map_or_else(
                     || 1.0,
-                    |object| object.material.refractive_index,
+                    |object| object.material().refractive_index,
                 );
 
                 break;
@@ -229,17 +229,21 @@ mod tests {
             .material(Material::glass())
             .build();
 
-        let mut b = Object::sphere_builder()
-            .transformation(Transformation::new().translate(0.0, 0.0, -0.25))
-            .material(Material::glass())
-            .build();
-        b.material.refractive_index = 2.0;
+        let mut m = Material::glass();
+        m.refractive_index = 2.0;
 
-        let mut c = Object::sphere_builder()
-            .transformation(Transformation::new().translate(0.0, 0.0, 0.25))
-            .material(Material::glass())
+        let b = Object::sphere_builder()
+            .transformation(Transformation::new().translate(0.0, 0.0, -0.25))
+            .material(m)
             .build();
-        c.material.refractive_index = 2.5;
+
+        let mut m = Material::glass();
+        m.refractive_index = 2.5;
+
+        let c = Object::sphere_builder()
+            .transformation(Transformation::new().translate(0.0, 0.0, 0.25))
+            .material(m)
+            .build();
 
         let r = Ray::new(Point::new(0.0, 0.0, -4.0), Vector::z_axis());
 

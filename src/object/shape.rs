@@ -1,6 +1,9 @@
 use typed_builder::{Optional, TypedBuilder};
 
-use super::shapes::{Intersectable, Shapes};
+use super::{
+    shapes::{Intersectable, Shapes},
+    Object,
+};
 use crate::{
     bounding_box::{Bounded, BoundingBox},
     intersection::{Intersection, List},
@@ -41,7 +44,11 @@ impl Shape {
     }
 
     #[must_use]
-    pub fn intersect(&self, ray: &Ray) -> Option<List> {
+    pub fn intersect<'a>(
+        &'a self,
+        ray: &Ray,
+        object: &'a Object,
+    ) -> Option<List<'a>> {
         if let Shapes::Group(group) = &self.shape {
             if !self.bounding_box.is_intersected_by(ray) {
                 return None;
@@ -49,8 +56,8 @@ impl Shape {
 
             let mut list = List::new();
 
-            for object in group.objects() {
-                if let Some(object_list) = object.intersect(ray) {
+            for group_object in group.objects() {
+                if let Some(object_list) = group_object.intersect(ray) {
                     list.extend(object_list.iter());
                 };
             }
@@ -63,7 +70,7 @@ impl Shape {
         } else {
             let ray = self.to_object_space(ray);
 
-            self.shape.intersect(&ray, self)
+            self.shape.intersect(&ray, object)
         }
     }
 
@@ -96,13 +103,14 @@ impl<T: Optional<Transformation>, M: Optional<Material>, S: Optional<bool>>
     ShapeBuilder<(T, M, S, (Shapes,))>
 {
     #[must_use]
-    pub fn build(self) -> Shape {
+    pub fn build(self) -> Object {
         let mut object = self._build();
 
         object.inverse_transformation = object.transformation.invert();
 
         if let Shapes::Group(group) = &mut object.shape {
             for child_object in group.iter_no_groups() {
+                let Object::Shape(child_object) = child_object;
                 child_object.transformation =
                     child_object.transformation.extend(&object.transformation);
                 child_object.inverse_transformation =
@@ -118,7 +126,7 @@ impl<T: Optional<Transformation>, M: Optional<Material>, S: Optional<bool>>
 
         object.bounding_box = object.bounding_box();
 
-        object
+        object.into()
     }
 }
 
@@ -153,6 +161,8 @@ mod tests {
                         .casts_shadow(false)
                         .build();
 
+                    let Object::Shape(o) = o;
+
                     assert_approx_eq!(o.transformation, t);
                     assert_approx_eq!(o.inverse_transformation, ti);
                     assert_approx_eq!(o.material, &m);
@@ -161,6 +171,8 @@ mod tests {
 
                     let o = Object::[<$shape:lower _builder>]($($args,)*)
                         .build();
+
+                    let Object::Shape(o) = o;
 
                     assert_approx_eq!(o.transformation, Transformation::new());
                     assert_approx_eq!(
@@ -380,8 +392,10 @@ mod tests {
         .transformation(Transformation::new().rotate_y(Angle(FRAC_PI_2)))
         .build();
 
-        let Shapes::Group(g) = o.shape else { unreachable!() };
-        let Shapes::Group(g) = &g.objects()[0].shape else { unreachable!() };
+        let Object::Shape(s) = o;
+        let Shapes::Group(g) = s.shape else { unreachable!() };
+        let Object::Shape(s) = &g.objects()[0];
+        let Shapes::Group(g) = &s.shape else { unreachable!() };
         let s = &g.objects()[0];
 
         assert_approx_eq!(
@@ -402,8 +416,10 @@ mod tests {
         .transformation(Transformation::new().rotate_y(Angle(FRAC_PI_2)))
         .build();
 
-        let Shapes::Group(g) = o.shape else { unreachable!() };
-        let Shapes::Group(g) = &g.objects()[0].shape else { unreachable!() };
+        let Object::Shape(s) = o;
+        let Shapes::Group(g) = s.shape else { unreachable!() };
+        let Object::Shape(s) = &g.objects()[0];
+        let Shapes::Group(g) = &s.shape else { unreachable!() };
         let s = &g.objects()[0];
 
         let sqrt_3_div_3 = f64::sqrt(3.0) / 3.0;
@@ -431,8 +447,10 @@ mod tests {
         .transformation(Transformation::new().rotate_y(Angle(FRAC_PI_2)))
         .build();
 
-        let Shapes::Group(g) = o.shape else { unreachable!() };
-        let Shapes::Group(g) = &g.objects()[0].shape else { unreachable!() };
+        let Object::Shape(s) = o;
+        let Shapes::Group(g) = s.shape else { unreachable!() };
+        let Object::Shape(s) = &g.objects()[0];
+        let Shapes::Group(g) = &s.shape else { unreachable!() };
         let s = &g.objects()[0];
 
         let o = Object::test_builder().build();
@@ -456,6 +474,8 @@ mod tests {
             )
             .build();
 
+        let Object::Shape(o) = o;
+
         assert_approx_eq!(
             o.bounding_box(),
             BoundingBox::new(
@@ -473,6 +493,8 @@ mod tests {
                 .build()])
             .transformation(Transformation::new().translate(1.0, 1.0, 0.0))
             .build();
+
+        let Object::Shape(o) = o;
 
         assert_approx_eq!(
             o.bounding_box(),
@@ -495,6 +517,8 @@ mod tests {
         ])
         .transformation(Transformation::new().translate(-1.0, 0.0, 0.0))
         .build();
+
+        let Object::Shape(o) = o;
 
         assert_approx_eq!(
             o.bounding_box(),

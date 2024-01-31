@@ -25,7 +25,7 @@ use self::{
 };
 use crate::{
     math::{float::impl_approx_eq, Point, Transformable, Transformation},
-    Colour, Shape,
+    Colour, Object,
 };
 
 /// A `Pattern` describes a specific pattern that can be applied to a `Material`
@@ -78,7 +78,7 @@ impl Pattern {
     }
 
     #[must_use]
-    pub fn pattern_at(&self, object: &Shape, point: &Point) -> Colour {
+    pub fn pattern_at(&self, object: &Object, point: &Point) -> Colour {
         let object_point = object.to_object_space(point);
 
         self.sub_pattern_at(&object_point)

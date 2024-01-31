@@ -2,7 +2,7 @@ use derive_new::new;
 
 use crate::{
     math::{Point, Vector},
-    Shape,
+    Object,
 };
 
 /// The `Computations` struct is a helper structure to store precomputed values
@@ -10,7 +10,7 @@ use crate::{
 #[derive(Clone, Copy, Debug, new)]
 #[allow(clippy::too_many_arguments)]
 pub struct Computations<'a> {
-    pub object: &'a Shape,
+    pub object: &'a Object,
     pub t: f64,
     pub point: Point,
     pub over_point: Point,

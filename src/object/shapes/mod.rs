@@ -24,7 +24,7 @@ use crate::{
     bounding_box::{Bounded, BoundingBox},
     intersection::{Intersection, List},
     math::{Point, Ray, Vector},
-    Shape,
+    Object,
 };
 
 /// `Shape` is the list of the various geometries that can be rendered.
@@ -57,7 +57,7 @@ impl Shapes {
     add_new_fn!(Cone(minimum: f64, maximum: f64, closed: bool));
     add_new_fn!(Cube());
     add_new_fn!(Cylinder(minimum: f64, maximum: f64, closed: bool));
-    add_new_fn!(Group(objects: Vec<Shape>));
+    add_new_fn!(Group(objects: Vec<Object>));
     add_new_fn!(Plane());
     add_new_fn!(Sphere());
     #[cfg(test)]
@@ -111,7 +111,7 @@ impl ApproxEq for &Shapes {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, Object};
+    use crate::math::float::*;
 
     #[test]
     fn comparing_shapes() {

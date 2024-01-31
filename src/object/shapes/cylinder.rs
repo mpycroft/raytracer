@@ -11,7 +11,7 @@ use crate::{
         float::{approx_eq, approx_ne},
         Point, Ray, Vector,
     },
-    Shape,
+    Object,
 };
 
 // A `Cylinder` is an cylinder of radius 1 centred on the y axis which extends
@@ -29,7 +29,7 @@ impl Cylinder {
     fn intersect_caps<'a>(
         &self,
         ray: &Ray,
-        object: &'a Shape,
+        object: &'a Object,
         mut list: List<'a>,
     ) -> Option<List<'a>> {
         let check_cap = |t: f64| {
@@ -63,7 +63,7 @@ impl Cylinder {
 
 impl Intersectable for Cylinder {
     #[must_use]
-    fn intersect<'a>(&self, ray: &Ray, object: &'a Shape) -> Option<List<'a>> {
+    fn intersect<'a>(&self, ray: &Ray, object: &'a Object) -> Option<List<'a>> {
         let a = ray.direction.x.powi(2) + ray.direction.z.powi(2);
 
         let mut list = List::new();
@@ -147,13 +147,14 @@ mod tests {
     use std::f64::INFINITY;
 
     use super::*;
-    use crate::{math::float::*, object::shapes::Shapes, Object};
+    use crate::{math::float::*, object::shapes::Shapes};
 
     #[test]
     fn a_ray_misses_a_cylinder() {
         let o = Object::cylinder_builder(-INFINITY, INFINITY, false).build();
 
-        let Shapes::Cylinder(c) = &o.shape else { unreachable!() };
+        let Object::Shape(s) = o.clone();
+        let Shapes::Cylinder(c) = &s.shape else { unreachable!() };
 
         assert!(c
             .intersect(
@@ -179,7 +180,8 @@ mod tests {
     fn a_ray_strikes_a_cylinder() {
         let o = Object::cylinder_builder(-INFINITY, INFINITY, false).build();
 
-        let Shapes::Cylinder(c) = &o.shape else { unreachable!() };
+        let Object::Shape(s) = o.clone();
+        let Shapes::Cylinder(c) = &s.shape else { unreachable!() };
 
         let test = |r, t0, t1| {
             let i = c.intersect(&r, &o).unwrap();
@@ -205,7 +207,8 @@ mod tests {
     fn intersecting_a_constrained_cylinder() {
         let o = Object::cylinder_builder(1.0, 2.0, false).build();
 
-        let Shapes::Cylinder(c) = &o.shape else { unreachable!() };
+        let Object::Shape(s) = o.clone();
+        let Shapes::Cylinder(c) = &s.shape else { unreachable!() };
 
         assert!(c
             .intersect(
@@ -257,7 +260,8 @@ mod tests {
     fn intersecting_the_caps_of_a_closed_cylinder() {
         let o = Object::cylinder_builder(1.0, 2.0, true).build();
 
-        let Shapes::Cylinder(c) = &o.shape else { unreachable!() };
+        let Object::Shape(s) = o.clone();
+        let Shapes::Cylinder(c) = &s.shape else { unreachable!() };
 
         let test = |r, t0, t1| {
             let i = c.intersect(&r, &o).unwrap();
@@ -306,7 +310,8 @@ mod tests {
     fn normal_vector_on_a_cylinder() {
         let o = Object::cylinder_builder(-INFINITY, INFINITY, false).build();
 
-        let Shapes::Cylinder(c) = &o.shape else { unreachable!() };
+        let Object::Shape(s) = o.clone();
+        let Shapes::Cylinder(c) = &s.shape else { unreachable!() };
 
         let i = Intersection::new(&o, 0.0);
 
@@ -332,7 +337,8 @@ mod tests {
     fn the_normal_vector_on_a_cylinders_end_caps() {
         let o = Object::cylinder_builder(1.0, 2.0, true).build();
 
-        let Shapes::Cylinder(c) = &o.shape else { unreachable!() };
+        let Object::Shape(s) = o.clone();
+        let Shapes::Cylinder(c) = &s.shape else { unreachable!() };
 
         let i = Intersection::new(&o, 0.0);
 
