@@ -128,6 +128,13 @@ impl Object {
         }
     }
 
+    pub fn update_material(&mut self, material: &Material) {
+        match self {
+            Self::Shape(shape) => shape.update_material(material),
+            Self::Group(group) => group.update_material(material),
+        }
+    }
+
     /// Parse a given OBJ file and return a partially formed `Group` containing
     /// all the triangles from the OBJ file.
     ///

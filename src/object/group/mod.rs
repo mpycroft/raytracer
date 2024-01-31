@@ -8,6 +8,7 @@ use super::{Bounded, BoundingBox, Object};
 use crate::{
     intersection::List,
     math::{Ray, Transformation},
+    Material,
 };
 
 /// A `Group` is a collection of `Object`s that can be treated as a single
@@ -54,6 +55,12 @@ impl Group {
             object.update_transformation(transformation);
         }
     }
+
+    pub fn update_material(&mut self, material: &Material) {
+        for object in &mut self.objects {
+            object.update_material(material);
+        }
+    }
 }
 
 impl Bounded for Group {
@@ -96,6 +103,7 @@ mod tests {
     use crate::{
         intersection::Intersection,
         math::{float::*, Angle, Point, Transformation, Vector},
+        Colour,
     };
 
     #[test]
@@ -331,6 +339,28 @@ mod tests {
                 Point::new(3.0, 2.0, 4.0)
             )
         );
+    }
+
+    #[test]
+    fn a_groups_material_overwrites_objects() {
+        let s = Object::sphere_builder().material(Material::glass()).build();
+
+        let m = Material::builder()
+            .pattern(Colour::new(0.4, 0.9, 1.0).into())
+            .ambient(0.7)
+            .diffuse(0.5)
+            .transparency(0.0)
+            .reflective(0.7)
+            .refractive_index(0.0)
+            .build();
+
+        let g =
+            Object::group_builder().add_object(s).material(m.clone()).build();
+
+        let Object::Group(g) = g else { unreachable!() };
+        let Object::Shape(s) = &g.objects[0] else { unreachable!() };
+
+        assert_approx_eq!(s.material, &m);
     }
 
     #[test]

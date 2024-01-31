@@ -73,6 +73,10 @@ impl Shape {
 
         self.bounding_box = self.bounding_box();
     }
+
+    pub fn update_material(&mut self, material: &Material) {
+        self.material = material.clone();
+    }
 }
 
 impl Bounded for Shape {

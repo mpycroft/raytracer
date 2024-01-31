@@ -20,8 +20,8 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
         vertical_size,
         field_of_view,
         Transformation::view_transformation(
-            &Point::new(0.0, 5.0, -1.0),
-            &Point::new(0.0, 4.5, 0.0),
+            &Point::new(0.0, 6.0, -1.0),
+            &Point::new(0.0, 5.5, 0.0),
             &Vector::y_axis(),
         ),
     );
@@ -51,13 +51,20 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
                 Transformation::new()
                     .rotate_x(-Angle(FRAC_PI_2))
                     .scale(0.3, 0.3, 0.3)
-                    .translate(0.0, 0.0, 10.0),
+                    .translate(-0.4, 0.0, 7.0),
+            )
+            .material(
+                Material::builder()
+                    .pattern(Colour::new(0.0, 0.4, 0.6).into())
+                    .shininess(100.0)
+                    .reflective(0.05)
+                    .build(),
             )
             .build(),
     );
 
     world.add_light(PointLight::new(
-        Point::new(-10.0, 10.0, -10.0),
+        Point::new(-100.0, 50.0, -50.0),
         Colour::white(),
     ));
 

@@ -85,7 +85,7 @@ impl Camera {
                 ProgressStyle::with_template(
                     "\
 {prefix} {bar:40.cyan/blue} {human_pos:>7}/{human_len:7} ({percent}%)
-Elapsed: {elapsed}, estimated: {eta}, rows/sec: {per_sec}",
+Elapsed: {elapsed}, remaining: {eta}, rows/sec: {per_sec}",
                 )?
                 .progress_chars("#>-"),
             )
