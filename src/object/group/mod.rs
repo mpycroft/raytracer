@@ -4,9 +4,8 @@ use float_cmp::{ApproxEq, F64Margin};
 
 #[allow(clippy::module_name_repetitions)]
 pub use self::helper::{BuildableGroup, Helper};
-use super::Object;
+use super::{Bounded, BoundingBox, Object};
 use crate::{
-    bounding_box::{Bounded, BoundingBox},
     intersection::List,
     math::{Ray, Transformation},
 };

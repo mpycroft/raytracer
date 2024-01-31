@@ -1,7 +1,8 @@
+mod bounding_box;
 mod group;
 mod obj_parser;
 mod shape;
-pub mod shapes;
+mod shapes;
 
 use std::path::Path;
 
@@ -13,9 +14,12 @@ use paste::paste;
 pub use shape::{Shape, ShapeBuilder};
 use shapes::Shapes;
 
-use self::{group::BuildableGroup, obj_parser::ObjParser};
-use crate::{
+use self::{
     bounding_box::{Bounded, BoundingBox},
+    group::BuildableGroup,
+    obj_parser::ObjParser,
+};
+use crate::{
     intersection::{Intersection, List},
     math::{Point, Ray, Transformable, Transformation, Vector},
     Material,

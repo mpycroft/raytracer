@@ -19,8 +19,8 @@ use self::{
     cone::Cone, cube::Cube, cylinder::Cylinder, plane::Plane, sphere::Sphere,
     triangle::Triangle,
 };
+use super::{Bounded, BoundingBox};
 use crate::{
-    bounding_box::{Bounded, BoundingBox},
     intersection::{Intersection, TList},
     math::{Point, Ray, Vector},
 };

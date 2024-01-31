@@ -2,10 +2,9 @@ use typed_builder::{Optional, TypedBuilder};
 
 use super::{
     shapes::{Intersectable, Shapes},
-    Object,
+    Bounded, BoundingBox, Object,
 };
 use crate::{
-    bounding_box::{Bounded, BoundingBox},
     intersection::{Intersection, List},
     math::{
         float::impl_approx_eq, Point, Ray, Transformable, Transformation,

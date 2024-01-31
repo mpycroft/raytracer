@@ -1,8 +1,7 @@
 use float_cmp::{ApproxEq, F64Margin};
 
-use super::Intersectable;
+use super::{Bounded, BoundingBox, Intersectable};
 use crate::{
-    bounding_box::{Bounded, BoundingBox},
     intersection::{Intersection, TList, TValues},
     math::{
         float::{approx_eq, impl_approx_eq},

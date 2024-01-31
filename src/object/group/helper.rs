@@ -1,7 +1,7 @@
 use typed_builder::{Optional, TypedBuilder};
 
-use super::{Group, Object};
-use crate::{bounding_box::Bounded, math::Transformation};
+use super::{Bounded, Group, Object};
+use crate::math::Transformation;
 
 pub type BuildableGroup = HelperBuilder<((), (Vec<Object>,))>;
 

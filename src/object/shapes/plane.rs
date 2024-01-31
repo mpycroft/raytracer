@@ -2,9 +2,8 @@ use std::f64::{INFINITY, NEG_INFINITY};
 
 use derive_new::new;
 
-use super::Intersectable;
+use super::{Bounded, BoundingBox, Intersectable};
 use crate::{
-    bounding_box::{Bounded, BoundingBox},
     intersection::{Intersection, TList},
     math::{float::approx_eq, Point, Ray, Vector},
 };
