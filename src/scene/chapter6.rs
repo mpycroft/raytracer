@@ -1,6 +1,6 @@
 use raytracer::{
     math::{Angle, Point, Transformation, Vector},
-    Camera, Colour, Material, Object, PointLight, World,
+    Camera, Colour, Material, PointLight, Shape, World,
 };
 
 use super::SceneData;
@@ -26,7 +26,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     let mut world = World::new();
 
     world.add_object(
-        Object::sphere_builder()
+        Shape::sphere_builder()
             .material(
                 Material::builder()
                     .pattern(Colour::new(1.0, 0.2, 1.0).into())

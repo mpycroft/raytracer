@@ -2,7 +2,7 @@ use std::f64::{consts::FRAC_PI_3, INFINITY};
 
 use raytracer::{
     math::{Angle, Point, Transformation, Vector},
-    Camera, Colour, Material, Object, Pattern, PointLight, World,
+    Camera, Colour, Material, Pattern, PointLight, Shape, World,
 };
 
 use super::SceneData;
@@ -29,7 +29,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     let mut world = World::new();
 
     world.add_object(
-        Object::plane_builder()
+        Shape::plane_builder()
             .material(
                 Material::builder()
                     .pattern(
@@ -45,7 +45,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Object::cylinder_builder(0.0, 1.0, false)
+        Shape::cylinder_builder(0.0, 1.0, false)
             .transformation(
                 Transformation::new()
                     .scale(5.0, 1.0, 5.0)
@@ -56,7 +56,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Object::cylinder_builder(0.0, 1.0, false)
+        Shape::cylinder_builder(0.0, 1.0, false)
             .transformation(
                 Transformation::new()
                     .scale(3.5, 1.0, 3.5)
@@ -71,7 +71,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Object::cylinder_builder(0.0, 2.0, true)
+        Shape::cylinder_builder(0.0, 2.0, true)
             .transformation(Transformation::new().translate(0.0, 0.0, 10.0))
             .material(
                 Material::builder().pattern(Colour::blue().into()).build(),
@@ -80,7 +80,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Object::cylinder_builder(-INFINITY, INFINITY, false)
+        Shape::cylinder_builder(-INFINITY, INFINITY, false)
             .transformation(Transformation::new().translate(5.0, 0.0, 20.0))
             .material(
                 Material::builder().pattern(Colour::green().into()).build(),
@@ -89,7 +89,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Object::cone_builder(-1.0, 1.0, true)
+        Shape::cone_builder(-1.0, 1.0, true)
             .transformation(
                 Transformation::new()
                     .translate(-3.0, 1.0, 10.0)
@@ -104,7 +104,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Object::cone_builder(-INFINITY, INFINITY, false)
+        Shape::cone_builder(-INFINITY, INFINITY, false)
             .transformation(Transformation::new().translate(0.0, 0.0, 30.0))
             .material(
                 Material::builder()

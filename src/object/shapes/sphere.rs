@@ -5,7 +5,7 @@ use crate::{
     bounding_box::{Bounded, BoundingBox},
     intersection::{Intersection, List},
     math::{Point, Ray, Vector},
-    Object,
+    Shape,
 };
 
 /// A `Sphere` is a unit sphere centred at the origin (0, 0, 0).
@@ -14,7 +14,7 @@ pub struct Sphere;
 
 impl Intersectable for Sphere {
     #[must_use]
-    fn intersect<'a>(&self, ray: &Ray, object: &'a Object) -> Option<List<'a>> {
+    fn intersect<'a>(&self, ray: &Ray, object: &'a Shape) -> Option<List<'a>> {
         let sphere_to_ray = ray.origin - Point::origin();
 
         let a = ray.direction.dot(&ray.direction);
@@ -61,7 +61,7 @@ mod tests {
 
     #[test]
     fn a_ray_intersects_a_sphere_at_two_points() {
-        let o = Object::sphere_builder().build();
+        let o = Shape::sphere_builder().build();
 
         let Shapes::Sphere(s) = &o.shape else { unreachable!() };
 
@@ -80,7 +80,7 @@ mod tests {
 
     #[test]
     fn a_ray_intersects_a_sphere_at_a_tangent() {
-        let o = Object::sphere_builder().build();
+        let o = Shape::sphere_builder().build();
 
         let Shapes::Sphere(s) = &o.shape else { unreachable!() };
 
@@ -99,7 +99,7 @@ mod tests {
 
     #[test]
     fn a_ray_misses_a_sphere() {
-        let o = Object::sphere_builder().build();
+        let o = Shape::sphere_builder().build();
 
         let Shapes::Sphere(s) = &o.shape else { unreachable!() };
 
@@ -113,7 +113,7 @@ mod tests {
 
     #[test]
     fn a_ray_originates_inside_a_sphere() {
-        let o = Object::sphere_builder().build();
+        let o = Shape::sphere_builder().build();
 
         let Shapes::Sphere(s) = &o.shape else { unreachable!() };
 
@@ -129,7 +129,7 @@ mod tests {
 
     #[test]
     fn a_sphere_is_behind_a_ray() {
-        let o = Object::sphere_builder().build();
+        let o = Shape::sphere_builder().build();
 
         let Shapes::Sphere(s) = &o.shape else { unreachable!() };
 
@@ -148,7 +148,7 @@ mod tests {
 
     #[test]
     fn the_normal_on_a_sphere_at_a_point_on_an_axis() {
-        let o = Object::sphere_builder().build();
+        let o = Shape::sphere_builder().build();
 
         let Shapes::Sphere(s) = &o.shape else { unreachable!() };
 
@@ -172,7 +172,7 @@ mod tests {
 
     #[test]
     fn the_normal_on_a_sphere_at_a_non_axial_point() {
-        let o = Object::sphere_builder().build();
+        let o = Shape::sphere_builder().build();
 
         let Shapes::Sphere(s) = &o.shape else { unreachable!() };
 

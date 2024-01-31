@@ -24,7 +24,7 @@ use crate::{
     bounding_box::{Bounded, BoundingBox},
     intersection::{Intersection, List},
     math::{Point, Ray, Vector},
-    Object,
+    Shape,
 };
 
 /// `Shape` is the list of the various geometries that can be rendered.
@@ -57,7 +57,7 @@ impl Shapes {
     add_new_fn!(Cone(minimum: f64, maximum: f64, closed: bool));
     add_new_fn!(Cube());
     add_new_fn!(Cylinder(minimum: f64, maximum: f64, closed: bool));
-    add_new_fn!(Group(objects: Vec<Object>));
+    add_new_fn!(Group(objects: Vec<Shape>));
     add_new_fn!(Plane());
     add_new_fn!(Sphere());
     #[cfg(test)]
@@ -122,8 +122,8 @@ mod tests {
         let s5 = Shapes::new_cylinder(1.0, 2.0, true);
         let s6 = Shapes::new_cone(-1.5, 1.5, true);
         let s7 = Shapes::new_cone(-1.5, 1.500_1, true);
-        let s8 = Shapes::new_group(vec![Object::sphere_builder().build()]);
-        let s9 = Shapes::new_group(vec![Object::plane_builder().build()]);
+        let s8 = Shapes::new_group(vec![Shape::sphere_builder().build()]);
+        let s9 = Shapes::new_group(vec![Shape::plane_builder().build()]);
         let s10 = Shapes::new_triangle(
             Point::new(1.0, 0.0, 0.0),
             Point::new(0.0, 1.0, 0.0),

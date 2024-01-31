@@ -3,7 +3,7 @@ use enum_dispatch::enum_dispatch;
 use crate::{
     intersection::{Intersection, List},
     math::{Point, Ray, Vector},
-    Object,
+    Shape,
 };
 
 /// A trait that `Shape`s need to implement if they can be intersected in a
@@ -11,7 +11,7 @@ use crate::{
 #[enum_dispatch(Shapes)]
 pub trait Intersectable {
     #[must_use]
-    fn intersect<'a>(&self, ray: &Ray, object: &'a Object) -> Option<List<'a>>;
+    fn intersect<'a>(&self, ray: &Ray, object: &'a Shape) -> Option<List<'a>>;
 
     #[must_use]
     fn normal_at(&self, point: &Point, intersection: &Intersection) -> Vector;

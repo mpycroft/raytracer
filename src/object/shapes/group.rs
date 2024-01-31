@@ -7,23 +7,23 @@ use crate::{
     intersection::{Intersection, List},
     math::{Point, Ray, Vector},
     object::shapes::Shapes,
-    Object,
+    Shape,
 };
 
 /// A `Group` is a collection of `Object`s that can be treated as a single
 /// entity.
 #[derive(Clone, Debug, new)]
-pub struct Group(Vec<Object>);
+pub struct Group(Vec<Shape>);
 
 impl Group {
     #[must_use]
-    pub const fn objects(&self) -> &Vec<Object> {
+    pub const fn objects(&self) -> &Vec<Shape> {
         &self.0
     }
 
     #[must_use]
-    pub fn iter_no_groups(&mut self) -> Vec<&mut Object> {
-        let mut objects: Vec<&mut Object> = Vec::new();
+    pub fn iter_no_groups(&mut self) -> Vec<&mut Shape> {
+        let mut objects: Vec<&mut Shape> = Vec::new();
 
         for object in &mut self.0 {
             // There must be a nicer way to handle this in a single match block
@@ -60,7 +60,7 @@ impl Intersectable for Group {
     fn intersect<'a>(
         &self,
         _ray: &Ray,
-        _object: &'a Object,
+        _object: &'a Shape,
     ) -> Option<List<'a>> {
         unreachable!()
     }
@@ -114,18 +114,18 @@ mod tests {
 
     #[test]
     fn iter_no_groups() {
-        let s1 = Object::sphere_builder().build();
-        let s2 = Object::sphere_builder()
+        let s1 = Shape::sphere_builder().build();
+        let s2 = Shape::sphere_builder()
             .transformation(Transformation::new().translate(1.0, 0.0, 0.0))
             .build();
-        let s3 = Object::sphere_builder()
+        let s3 = Shape::sphere_builder()
             .transformation(Transformation::new().translate(0.0, 1.0, 0.0))
             .build();
 
-        let mut o = Object::group_builder(vec![Object::group_builder(vec![
-            Object::group_builder(vec![
+        let mut o = Shape::group_builder(vec![Shape::group_builder(vec![
+            Shape::group_builder(vec![
                 s2.clone(),
-                Object::group_builder(vec![s3.clone()]).build(),
+                Shape::group_builder(vec![s3.clone()]).build(),
             ])
             .build(),
             s1.clone(),
@@ -146,17 +146,17 @@ mod tests {
     #[test]
     fn comparing_groups() {
         let g1 = Group::new(vec![
-            Object::sphere_builder().build(),
-            Object::plane_builder().build(),
+            Shape::sphere_builder().build(),
+            Shape::plane_builder().build(),
         ]);
         let g2 = Group::new(vec![
-            Object::sphere_builder().build(),
-            Object::plane_builder().build(),
+            Shape::sphere_builder().build(),
+            Shape::plane_builder().build(),
         ]);
         let g3 = Group::new(vec![
-            Object::sphere_builder().build(),
-            Object::plane_builder().build(),
-            Object::plane_builder().build(),
+            Shape::sphere_builder().build(),
+            Shape::plane_builder().build(),
+            Shape::plane_builder().build(),
         ]);
 
         assert_approx_eq!(g1, &g2);

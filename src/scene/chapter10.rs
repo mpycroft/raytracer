@@ -3,7 +3,7 @@ use std::f64::consts::{FRAC_PI_2, FRAC_PI_3};
 use rand::Rng;
 use raytracer::{
     math::{Angle, Point, Transformation, Vector},
-    Camera, Colour, Material, Object, Pattern, PointLight, World,
+    Camera, Colour, Material, Pattern, PointLight, Shape, World,
 };
 
 use super::SceneData;
@@ -30,7 +30,7 @@ pub fn generate_scene<R: Rng>(arguments: &Arguments, rng: &mut R) -> SceneData {
     let mut world = World::new();
 
     world.add_object(
-        Object::plane_builder()
+        Shape::plane_builder()
             .material(
                 Material::builder()
                     .pattern(
@@ -66,7 +66,7 @@ pub fn generate_scene<R: Rng>(arguments: &Arguments, rng: &mut R) -> SceneData {
             .build(),
     );
     world.add_object(
-        Object::plane_builder()
+        Shape::plane_builder()
             .transformation(
                 Transformation::new()
                     .rotate_x(Angle(FRAC_PI_2))
@@ -87,7 +87,7 @@ pub fn generate_scene<R: Rng>(arguments: &Arguments, rng: &mut R) -> SceneData {
     );
 
     world.add_object(
-        Object::sphere_builder()
+        Shape::sphere_builder()
             .transformation(Transformation::new().translate(-0.5, 1.0, 0.5))
             .material(
                 Material::builder()
@@ -112,7 +112,7 @@ pub fn generate_scene<R: Rng>(arguments: &Arguments, rng: &mut R) -> SceneData {
     );
 
     world.add_object(
-        Object::sphere_builder()
+        Shape::sphere_builder()
             .transformation(
                 Transformation::new()
                     .scale(0.5, 0.5, 0.5)
@@ -138,7 +138,7 @@ pub fn generate_scene<R: Rng>(arguments: &Arguments, rng: &mut R) -> SceneData {
     );
 
     world.add_object(
-        Object::sphere_builder()
+        Shape::sphere_builder()
             .transformation(
                 Transformation::new()
                     .scale(0.33, 0.33, 0.33)

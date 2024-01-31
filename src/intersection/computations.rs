@@ -2,7 +2,7 @@ use derive_new::new;
 
 use crate::{
     math::{Point, Vector},
-    Object,
+    Shape,
 };
 
 /// The `Computations` struct is a helper structure to store precomputed values
@@ -10,7 +10,7 @@ use crate::{
 #[derive(Clone, Copy, Debug, new)]
 #[allow(clippy::too_many_arguments)]
 pub struct Computations<'a> {
-    pub object: &'a Object,
+    pub object: &'a Shape,
     pub t: f64,
     pub point: Point,
     pub over_point: Point,
@@ -58,7 +58,7 @@ mod tests {
 
     #[test]
     fn the_schlick_approximation_under_total_internal_reflection() {
-        let o = Object::sphere_builder().material(Material::glass()).build();
+        let o = Shape::sphere_builder().material(Material::glass()).build();
 
         let sqrt_2_div_2 = SQRT_2 / 2.0;
 
@@ -76,7 +76,7 @@ mod tests {
 
     #[test]
     fn the_schlick_approximation_with_a_perpendicular_viewing_angle() {
-        let o = Object::sphere_builder().material(Material::glass()).build();
+        let o = Shape::sphere_builder().material(Material::glass()).build();
 
         let r = Ray::new(Point::origin(), Vector::y_axis());
 
@@ -92,7 +92,7 @@ mod tests {
 
     #[test]
     fn the_schlick_approximation_with_small_angle_and_n2_greater_n1() {
-        let o = Object::sphere_builder().material(Material::glass()).build();
+        let o = Shape::sphere_builder().material(Material::glass()).build();
 
         let r = Ray::new(Point::new(0.0, 0.99, -2.0), Vector::z_axis());
 

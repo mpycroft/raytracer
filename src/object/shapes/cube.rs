@@ -5,7 +5,7 @@ use crate::{
     bounding_box::{Bounded, BoundingBox},
     intersection::{Intersection, List},
     math::{Point, Ray, Vector},
-    Object,
+    Shape,
 };
 
 /// A `Cube` is an axis aligned cube of size 2 (-1.0..1.0) on each axis.
@@ -14,7 +14,7 @@ pub struct Cube;
 
 impl Intersectable for Cube {
     #[must_use]
-    fn intersect<'a>(&self, ray: &Ray, object: &'a Object) -> Option<List<'a>> {
+    fn intersect<'a>(&self, ray: &Ray, object: &'a Shape) -> Option<List<'a>> {
         let (x_min, x_max) =
             BoundingBox::check_axis(ray.origin.x, ray.direction.x, -1.0, 1.0);
         let (y_min, y_max) =
@@ -71,7 +71,7 @@ mod tests {
 
     #[test]
     fn a_ray_intersects_a_cube() {
-        let o = Object::cube_builder().build();
+        let o = Shape::cube_builder().build();
 
         let Shapes::Cube(c) = &o.shape else { unreachable!() };
 
@@ -94,7 +94,7 @@ mod tests {
 
     #[test]
     fn a_ray_misses_a_cube() {
-        let o = Object::cube_builder().build();
+        let o = Shape::cube_builder().build();
 
         let Shapes::Cube(c) = &o.shape else { unreachable!() };
 
@@ -125,7 +125,7 @@ mod tests {
 
     #[test]
     fn the_normal_on_a_cube() {
-        let o = Object::cube_builder().build();
+        let o = Shape::cube_builder().build();
 
         let Shapes::Cube(c) = &o.shape else { unreachable!() };
 

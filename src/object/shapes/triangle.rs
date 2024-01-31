@@ -8,7 +8,7 @@ use crate::{
         float::{approx_eq, impl_approx_eq},
         Point, Ray, Vector,
     },
-    Object,
+    Shape,
 };
 
 /// A `Triangle` is a simple triangle defined by three vertices.
@@ -78,7 +78,7 @@ impl Triangle {
 
 impl Intersectable for Triangle {
     #[must_use]
-    fn intersect<'a>(&self, ray: &Ray, object: &'a Object) -> Option<List<'a>> {
+    fn intersect<'a>(&self, ray: &Ray, object: &'a Shape) -> Option<List<'a>> {
         let dir_cross_e2 = ray.direction.cross(&self.edge2);
         let det = self.edge1.dot(&dir_cross_e2);
 
@@ -158,8 +158,8 @@ mod tests {
     use super::*;
     use crate::{math::float::*, object::shapes::Shapes};
 
-    fn create_triangle() -> Object {
-        Object::triangle_builder(
+    fn create_triangle() -> Shape {
+        Shape::triangle_builder(
             Point::new(0.0, 1.0, 0.0),
             Point::new(-1.0, 0.0, 0.0),
             Point::new(1.0, 0.0, 0.0),
@@ -167,8 +167,8 @@ mod tests {
         .build()
     }
 
-    fn create_smooth_triangle() -> Object {
-        Object::smooth_triangle_builder(
+    fn create_smooth_triangle() -> Shape {
+        Shape::smooth_triangle_builder(
             Point::new(0.0, 1.0, 0.0),
             Point::new(-1.0, 0.0, 0.0),
             Point::new(1.0, 0.0, 0.0),

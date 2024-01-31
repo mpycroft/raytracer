@@ -9,15 +9,15 @@ use anyhow::{bail, Result};
 
 use crate::{
     math::{Point, Vector},
-    object::{shapes::Shapes, ObjectBuilder},
-    Object,
+    object::{shapes::Shapes, ShapeBuilder},
+    Shape,
 };
 
 #[derive(Debug)]
 pub struct ObjParser {
     pub vertices: Vec<Point>,
     pub normals: Vec<Vector>,
-    pub groups: Vec<Object>,
+    pub groups: Vec<Shape>,
     pub ignored: usize,
 }
 
@@ -71,7 +71,7 @@ impl ObjParser {
 
         for (_, triangles) in groups {
             if !triangles.is_empty() {
-                parser.groups.push(Object::group_builder(triangles).build());
+                parser.groups.push(Shape::group_builder(triangles).build());
             }
         }
 
@@ -139,11 +139,7 @@ Found {} items.",
         Ok(())
     }
 
-    fn parse_face(
-        &mut self,
-        line: &str,
-        group: &mut Vec<Object>,
-    ) -> Result<()> {
+    fn parse_face(&mut self, line: &str, group: &mut Vec<Shape>) -> Result<()> {
         let items = Self::split(line);
 
         if items.len() < 4 {
@@ -189,7 +185,7 @@ If one vertex normal is specified, all faces must also provide vertex normals."
 
             if is_smooth {
                 group.push(
-                    Object::smooth_triangle_builder(
+                    Shape::smooth_triangle_builder(
                         self.vertices[vertex1],
                         self.vertices[vertex2],
                         self.vertices[vertex3],
@@ -202,7 +198,7 @@ If one vertex normal is specified, all faces must also provide vertex normals."
                 );
             } else {
                 group.push(
-                    Object::triangle_builder(
+                    Shape::triangle_builder(
                         self.vertices[vertex1],
                         self.vertices[vertex2],
                         self.vertices[vertex3],
@@ -217,8 +213,8 @@ If one vertex normal is specified, all faces must also provide vertex normals."
 
     fn parse_group<'a>(
         line: &str,
-        groups: &'a mut HashMap<String, Vec<Object>>,
-    ) -> Result<&'a mut Vec<Object>> {
+        groups: &'a mut HashMap<String, Vec<Shape>>,
+    ) -> Result<&'a mut Vec<Shape>> {
         let group_name = line[1..].trim();
 
         if groups.insert(String::from(group_name), Vec::new()).is_some() {
@@ -228,8 +224,8 @@ If one vertex normal is specified, all faces must also provide vertex normals."
         groups.get_mut(group_name).ok_or_else(|| unreachable!())
     }
 
-    pub fn into_group(self) -> ObjectBuilder<((), (), (), (Shapes,))> {
-        Object::group_builder(self.groups)
+    pub fn into_group(self) -> ShapeBuilder<((), (), (), (Shapes,))> {
+        Shape::group_builder(self.groups)
     }
 }
 
@@ -290,7 +286,7 @@ Found 5 items."
 
         assert_approx_eq!(
             c[0],
-            &Object::triangle_builder(
+            &Shape::triangle_builder(
                 Point::new(-1.0, 1.0, 0.0),
                 Point::new(-1.0, 0.0, 0.0),
                 Point::new(1.0, 0.0, 0.0)
@@ -299,7 +295,7 @@ Found 5 items."
         );
         assert_approx_eq!(
             c[1],
-            &Object::triangle_builder(
+            &Shape::triangle_builder(
                 Point::new(-1.0, 1.0, 0.0),
                 Point::new(1.0, 0.0, 0.0),
                 Point::new(1.0, 1.0, 0.0)
@@ -338,7 +334,7 @@ Found 3 items."
 
         assert_approx_eq!(
             c[0],
-            &Object::triangle_builder(
+            &Shape::triangle_builder(
                 Point::new(-1.0, 1.0, 0.0),
                 Point::new(-1.0, 0.0, 0.0),
                 Point::new(1.0, 0.0, 0.0)
@@ -347,7 +343,7 @@ Found 3 items."
         );
         assert_approx_eq!(
             c[1],
-            &Object::triangle_builder(
+            &Shape::triangle_builder(
                 Point::new(-1.0, 1.0, 0.0),
                 Point::new(1.0, 0.0, 0.0),
                 Point::new(1.0, 1.0, 0.0)
@@ -356,7 +352,7 @@ Found 3 items."
         );
         assert_approx_eq!(
             c[2],
-            &Object::triangle_builder(
+            &Shape::triangle_builder(
                 Point::new(-1.0, 1.0, 0.0),
                 Point::new(1.0, 1.0, 0.0),
                 Point::new(0.0, 2.0, 0.0)
@@ -384,7 +380,7 @@ Found 3 items."
 
         assert_approx_eq!(
             c1[0],
-            &Object::triangle_builder(
+            &Shape::triangle_builder(
                 Point::new(-1.0, 1.0, 0.0),
                 Point::new(-1.0, 0.0, 0.0),
                 Point::new(1.0, 0.0, 0.0)
@@ -399,7 +395,7 @@ Found 3 items."
 
         assert_approx_eq!(
             c2[0],
-            &Object::triangle_builder(
+            &Shape::triangle_builder(
                 Point::new(-1.0, 1.0, 0.0),
                 Point::new(1.0, 0.0, 0.0),
                 Point::new(1.0, 1.0, 0.0)
@@ -459,7 +455,7 @@ Found 6 items."
 
         assert_eq!(c.len(), 2);
 
-        let t = Object::smooth_triangle_builder(
+        let t = Shape::smooth_triangle_builder(
             Point::new(0.0, 1.0, 0.0),
             Point::new(-1.0, 0.0, 0.0),
             Point::new(1.0, 0.0, 0.0),

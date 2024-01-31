@@ -18,7 +18,7 @@ pub use canvas::Canvas;
 pub use colour::Colour;
 pub use material::Material;
 pub use obj_parser::ObjParser;
-pub use object::Object;
+pub use object::Shape;
 pub use pattern::Pattern;
 pub use point_light::PointLight;
 pub use world::World;

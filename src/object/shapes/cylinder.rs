@@ -11,7 +11,7 @@ use crate::{
         float::{approx_eq, approx_ne},
         Point, Ray, Vector,
     },
-    Object,
+    Shape,
 };
 
 // A `Cylinder` is an cylinder of radius 1 centred on the y axis which extends
@@ -29,7 +29,7 @@ impl Cylinder {
     fn intersect_caps<'a>(
         &self,
         ray: &Ray,
-        object: &'a Object,
+        object: &'a Shape,
         mut list: List<'a>,
     ) -> Option<List<'a>> {
         let check_cap = |t: f64| {
@@ -63,7 +63,7 @@ impl Cylinder {
 
 impl Intersectable for Cylinder {
     #[must_use]
-    fn intersect<'a>(&self, ray: &Ray, object: &'a Object) -> Option<List<'a>> {
+    fn intersect<'a>(&self, ray: &Ray, object: &'a Shape) -> Option<List<'a>> {
         let a = ray.direction.x.powi(2) + ray.direction.z.powi(2);
 
         let mut list = List::new();
@@ -151,7 +151,7 @@ mod tests {
 
     #[test]
     fn a_ray_misses_a_cylinder() {
-        let o = Object::cylinder_builder(-INFINITY, INFINITY, false).build();
+        let o = Shape::cylinder_builder(-INFINITY, INFINITY, false).build();
 
         let Shapes::Cylinder(c) = &o.shape else { unreachable!() };
 
@@ -177,7 +177,7 @@ mod tests {
 
     #[test]
     fn a_ray_strikes_a_cylinder() {
-        let o = Object::cylinder_builder(-INFINITY, INFINITY, false).build();
+        let o = Shape::cylinder_builder(-INFINITY, INFINITY, false).build();
 
         let Shapes::Cylinder(c) = &o.shape else { unreachable!() };
 
@@ -203,7 +203,7 @@ mod tests {
 
     #[test]
     fn intersecting_a_constrained_cylinder() {
-        let o = Object::cylinder_builder(1.0, 2.0, false).build();
+        let o = Shape::cylinder_builder(1.0, 2.0, false).build();
 
         let Shapes::Cylinder(c) = &o.shape else { unreachable!() };
 
@@ -255,7 +255,7 @@ mod tests {
 
     #[test]
     fn intersecting_the_caps_of_a_closed_cylinder() {
-        let o = Object::cylinder_builder(1.0, 2.0, true).build();
+        let o = Shape::cylinder_builder(1.0, 2.0, true).build();
 
         let Shapes::Cylinder(c) = &o.shape else { unreachable!() };
 
@@ -304,7 +304,7 @@ mod tests {
 
     #[test]
     fn normal_vector_on_a_cylinder() {
-        let o = Object::cylinder_builder(-INFINITY, INFINITY, false).build();
+        let o = Shape::cylinder_builder(-INFINITY, INFINITY, false).build();
 
         let Shapes::Cylinder(c) = &o.shape else { unreachable!() };
 
@@ -330,7 +330,7 @@ mod tests {
 
     #[test]
     fn the_normal_vector_on_a_cylinders_end_caps() {
-        let o = Object::cylinder_builder(1.0, 2.0, true).build();
+        let o = Shape::cylinder_builder(1.0, 2.0, true).build();
 
         let Shapes::Cylinder(c) = &o.shape else { unreachable!() };
 

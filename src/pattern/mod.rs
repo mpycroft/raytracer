@@ -25,7 +25,7 @@ use self::{
 };
 use crate::{
     math::{float::impl_approx_eq, Point, Transformable, Transformation},
-    Colour, Object,
+    Colour, Shape,
 };
 
 /// A `Pattern` describes a specific pattern that can be applied to a `Material`
@@ -78,7 +78,7 @@ impl Pattern {
     }
 
     #[must_use]
-    pub fn pattern_at(&self, object: &Object, point: &Point) -> Colour {
+    pub fn pattern_at(&self, object: &Shape, point: &Point) -> Colour {
         let object_point = object.to_object_space(point);
 
         self.sub_pattern_at(&object_point)
@@ -182,7 +182,7 @@ mod tests {
 
     #[test]
     fn a_pattern_with_an_object_transformation() {
-        let o = Object::test_builder()
+        let o = Shape::test_builder()
             .transformation(Transformation::new().translate(1.0, 0.5, 1.5))
             .build();
 
@@ -196,7 +196,7 @@ mod tests {
 
     #[test]
     fn a_pattern_with_a_pattern_transformation() {
-        let o = Object::test_builder().build();
+        let o = Shape::test_builder().build();
 
         let p = Pattern::test_builder()
             .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
@@ -210,7 +210,7 @@ mod tests {
 
     #[test]
     fn a_pattern_with_both_an_object_and_a_pattern_transformation() {
-        let o = Object::test_builder()
+        let o = Shape::test_builder()
             .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
             .build();
 
@@ -226,7 +226,7 @@ mod tests {
 
     #[test]
     fn a_stripe_pattern_with_an_object_transformation() {
-        let o = Object::test_builder()
+        let o = Shape::test_builder()
             .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
             .build();
 
@@ -244,7 +244,7 @@ mod tests {
 
     #[test]
     fn a_stripe_pattern_with_a_pattern_transformation() {
-        let o = Object::test_builder().build();
+        let o = Shape::test_builder().build();
 
         let p = Pattern::stripe_builder(
             Colour::white().into(),
@@ -261,7 +261,7 @@ mod tests {
 
     #[test]
     fn a_stripe_pattern_with_both_an_object_and_pattern_transformation() {
-        let o = Object::test_builder()
+        let o = Shape::test_builder()
             .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
             .build();
 

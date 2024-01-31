@@ -18,7 +18,7 @@ use crate::{
 #[derive(Clone, Debug, TypedBuilder)]
 #[builder(builder_method(vis = "", name = _builder))]
 #[builder(build_method(vis = "", name = _build))]
-pub struct Object {
+pub struct Shape {
     #[builder(default = Transformation::new())]
     transformation: Transformation,
     #[builder(default = Transformation::new(), setter(skip))]
@@ -36,7 +36,7 @@ macro_rules! add_builder_fn {
     ($shape:ident($($args:ident : $ty:ty $(,)?)*)) => {
         paste! {
             pub fn [<$shape:lower _builder>]($($args:$ty,)*) ->
-                ObjectBuilder<((), (), (), (Shapes,))>
+                ShapeBuilder<((), (), (), (Shapes,))>
             {
                 Self::_builder().shape(
                     Shapes::[<new_ $shape:lower>]($($args,)*)
@@ -46,7 +46,7 @@ macro_rules! add_builder_fn {
     };
 }
 
-impl Object {
+impl Shape {
     add_builder_fn!(Cone(minimum: f64, maximum:f64, closed: bool));
     add_builder_fn!(Cube());
     add_builder_fn!(Cylinder(minimum: f64, maximum: f64, closed: bool));
@@ -64,7 +64,7 @@ impl Object {
         normal1: Vector,
         normal2: Vector,
         normal3: Vector,
-    ) -> ObjectBuilder<((), (), (), (Shapes,))> {
+    ) -> ShapeBuilder<((), (), (), (Shapes,))> {
         Self::_builder().shape(Shapes::new_smooth_triangle(
             point1, point2, point3, normal1, normal2, normal3,
         ))
@@ -121,7 +121,7 @@ impl Object {
     }
 }
 
-impl Bounded for Object {
+impl Bounded for Shape {
     #[must_use]
     fn bounding_box(&self) -> BoundingBox {
         let bounding_box = self.shape.bounding_box();
@@ -130,13 +130,13 @@ impl Bounded for Object {
     }
 }
 
-impl_approx_eq!(&Object { ref shape, transformation, ref material });
+impl_approx_eq!(&Shape { ref shape, transformation, ref material });
 
 impl<T: Optional<Transformation>, M: Optional<Material>, S: Optional<bool>>
-    ObjectBuilder<(T, M, S, (Shapes,))>
+    ShapeBuilder<(T, M, S, (Shapes,))>
 {
     #[must_use]
-    pub fn build(self) -> Object {
+    pub fn build(self) -> Shape {
         let mut object = self._build();
 
         object.inverse_transformation = object.transformation.invert();
@@ -185,7 +185,7 @@ mod tests {
                 paste! {
                     let s = Shapes::[<new_ $shape:lower>]($($args,)*);
 
-                    let o = Object::[<$shape:lower _builder>]($($args,)*)
+                    let o = Shape::[<$shape:lower _builder>]($($args,)*)
                         .transformation(t)
                         .material(m.clone())
                         .casts_shadow(false)
@@ -197,7 +197,7 @@ mod tests {
                     assert!(!o.casts_shadow);
                     assert_approx_eq!(o.shape, &s);
 
-                    let o = Object::[<$shape:lower _builder>]($($args,)*)
+                    let o = Shape::[<$shape:lower _builder>]($($args,)*)
                         .build();
 
                     assert_approx_eq!(o.transformation, Transformation::new());
@@ -223,7 +223,7 @@ mod tests {
     fn intersecting_a_transformed_object_with_a_ray() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
 
-        let o = Object::test_builder()
+        let o = Shape::test_builder()
             .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
             .build();
 
@@ -234,7 +234,7 @@ mod tests {
             Ray::new(Point::new(0.0, 0.0, -2.5), Vector::new(0.0, 0.0, 0.5))
         );
 
-        let o = Object::test_builder()
+        let o = Shape::test_builder()
             .transformation(Transformation::new().translate(5.0, 0.0, 0.0))
             .build();
 
@@ -248,7 +248,7 @@ mod tests {
 
     #[test]
     fn computing_the_normal_on_a_transformed_shape() {
-        let o = Object::test_builder()
+        let o = Shape::test_builder()
             .transformation(Transformation::new().translate(0.0, 1.0, 0.0))
             .build();
 
@@ -262,7 +262,7 @@ mod tests {
             Vector::new(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2)
         );
 
-        let o = Object::test_builder()
+        let o = Shape::test_builder()
             .transformation(
                 Transformation::new()
                     .rotate_z(Angle(PI / 5.0))
@@ -284,7 +284,7 @@ mod tests {
     fn intersecting_a_scaled_sphere_with_a_ray() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
 
-        let o = Object::sphere_builder()
+        let o = Shape::sphere_builder()
             .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
             .build();
 
@@ -305,7 +305,7 @@ mod tests {
     fn intersecting_a_translated_sphere_with_a_ray() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
 
-        let o = Object::sphere_builder()
+        let o = Shape::sphere_builder()
             .transformation(Transformation::new().translate(5.0, 0.0, 0.0))
             .build();
 
@@ -315,7 +315,7 @@ mod tests {
 
     #[test]
     fn computing_the_normal_on_a_translated_sphere() {
-        let o = Object::sphere_builder()
+        let o = Shape::sphere_builder()
             .transformation(Transformation::new().translate(0.0, 1.0, 0.0))
             .build();
 
@@ -332,7 +332,7 @@ mod tests {
 
     #[test]
     fn computing_the_normal_on_a_transformed_sphere() {
-        let o = Object::sphere_builder()
+        let o = Shape::sphere_builder()
             .transformation(
                 Transformation::new()
                     .rotate_z(Angle::from_degrees(36.0))
@@ -352,7 +352,7 @@ mod tests {
 
     #[test]
     fn intersecting_an_empty_group() {
-        let o = Object::group_builder(Vec::new()).build();
+        let o = Shape::group_builder(Vec::new()).build();
 
         assert!(o
             .intersect(&Ray::new(Point::origin(), Vector::z_axis()))
@@ -361,15 +361,15 @@ mod tests {
 
     #[test]
     fn intersecting_a_ray_with_a_non_empty_group() {
-        let s1 = Object::sphere_builder().build();
-        let s2 = Object::sphere_builder()
+        let s1 = Shape::sphere_builder().build();
+        let s2 = Shape::sphere_builder()
             .transformation(Transformation::new().translate(0.0, 0.0, -3.0))
             .build();
-        let s3 = Object::sphere_builder()
+        let s3 = Shape::sphere_builder()
             .transformation(Transformation::new().translate(5.0, 0.0, 0.0))
             .build();
 
-        let o = Object::group_builder(vec![s1.clone(), s2.clone(), s3]).build();
+        let o = Shape::group_builder(vec![s1.clone(), s2.clone(), s3]).build();
 
         let l = o
             .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()))
@@ -388,7 +388,7 @@ mod tests {
 
     #[test]
     fn intersecting_a_transformed_group() {
-        let o = Object::group_builder(vec![Object::sphere_builder()
+        let o = Shape::group_builder(vec![Shape::sphere_builder()
             .transformation(Transformation::new().translate(5.0, 0.0, 0.0))
             .build()])
         .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
@@ -408,8 +408,8 @@ mod tests {
 
     #[test]
     fn converting_a_point_from_world_to_object_space_with_groups() {
-        let o = Object::group_builder(vec![Object::group_builder(vec![
-            Object::sphere_builder()
+        let o = Shape::group_builder(vec![Shape::group_builder(vec![
+            Shape::sphere_builder()
                 .transformation(Transformation::new().translate(5.0, 0.0, 0.0))
                 .build(),
         ])
@@ -430,8 +430,8 @@ mod tests {
 
     #[test]
     fn converting_a_normal_from_object_to_world_space_with_groups() {
-        let o = Object::group_builder(vec![Object::group_builder(vec![
-            Object::sphere_builder()
+        let o = Shape::group_builder(vec![Shape::group_builder(vec![
+            Shape::sphere_builder()
                 .transformation(Transformation::new().translate(5.0, 0.0, 0.0))
                 .build(),
         ])
@@ -459,8 +459,8 @@ mod tests {
 
     #[test]
     fn finding_the_normal_on_a_child_object() {
-        let o = Object::group_builder(vec![Object::group_builder(vec![
-            Object::sphere_builder()
+        let o = Shape::group_builder(vec![Shape::group_builder(vec![
+            Shape::sphere_builder()
                 .transformation(Transformation::new().translate(5.0, 0.0, 0.0))
                 .build(),
         ])
@@ -473,7 +473,7 @@ mod tests {
         let Shapes::Group(g) = &g.objects()[0].shape else { unreachable!() };
         let s = &g.objects()[0];
 
-        let o = Object::test_builder().build();
+        let o = Shape::test_builder().build();
 
         let i = Intersection::new(&o, 1.2);
 
@@ -486,7 +486,7 @@ mod tests {
 
     #[test]
     fn the_bounding_box_of_an_object() {
-        let o = Object::sphere_builder()
+        let o = Shape::sphere_builder()
             .transformation(
                 Transformation::new()
                     .translate(1.0, 0.0, -1.0)
@@ -505,12 +505,11 @@ mod tests {
 
     #[test]
     fn the_bounding_box_of_a_group() {
-        let o =
-            Object::group_builder(vec![Object::cone_builder(1.0, 3.0, true)
-                .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
-                .build()])
-            .transformation(Transformation::new().translate(1.0, 1.0, 0.0))
-            .build();
+        let o = Shape::group_builder(vec![Shape::cone_builder(1.0, 3.0, true)
+            .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
+            .build()])
+        .transformation(Transformation::new().translate(1.0, 1.0, 0.0))
+        .build();
 
         assert_approx_eq!(
             o.bounding_box(),
@@ -523,11 +522,11 @@ mod tests {
 
     #[test]
     fn the_bounding_box_of_multiple_objects() {
-        let o = Object::group_builder(vec![
-            Object::sphere_builder()
+        let o = Shape::group_builder(vec![
+            Shape::sphere_builder()
                 .transformation(Transformation::new().translate(3.0, 1.0, 3.0))
                 .build(),
-            Object::cube_builder()
+            Shape::cube_builder()
                 .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
                 .build(),
         ])
@@ -545,9 +544,9 @@ mod tests {
 
     #[test]
     fn comparing_objects() {
-        let o1 = Object::test_builder().build();
-        let o2 = Object::test_builder().build();
-        let o3 = Object::test_builder()
+        let o1 = Shape::test_builder().build();
+        let o2 = Shape::test_builder().build();
+        let o3 = Shape::test_builder()
             .transformation(Transformation::new().scale(1.0, 2.0, 1.0))
             .build();
 

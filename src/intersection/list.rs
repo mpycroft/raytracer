@@ -45,7 +45,7 @@ impl<'a> Default for List<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, Object};
+    use crate::{math::float::*, Shape};
 
     #[test]
     fn creating_a_list() {
@@ -53,7 +53,7 @@ mod tests {
 
         assert_eq!(List::default().len(), 0);
 
-        let o = Object::test_builder().build();
+        let o = Shape::test_builder().build();
 
         assert_eq!(List::from(Intersection::new(&o, -1.1)).len(), 1);
 
@@ -71,7 +71,7 @@ mod tests {
     fn adding_to_a_list() {
         let mut l = List::new();
 
-        let o = Object::test_builder().build();
+        let o = Shape::test_builder().build();
 
         l.push(Intersection::new(&o, 1.2));
         l.push(Intersection::new(&o, 3.5));
@@ -82,7 +82,7 @@ mod tests {
 
     #[test]
     fn dereferencing_a_list() {
-        let o = Object::test_builder().build();
+        let o = Shape::test_builder().build();
         let i1 = Intersection::new(&o, 1.2);
         let i2 = Intersection::new(&o, 2.4);
 
@@ -98,7 +98,7 @@ mod tests {
 
     #[test]
     fn the_hit_when_all_intersections_are_positive() {
-        let o = Object::test_builder().build();
+        let o = Shape::test_builder().build();
         let i1 = Intersection::new(&o, 1.0);
         let i2 = Intersection::new(&o, 2.0);
 
@@ -110,7 +110,7 @@ mod tests {
 
     #[test]
     fn the_hit_when_some_intersections_are_negative() {
-        let o = Object::test_builder().build();
+        let o = Shape::test_builder().build();
         let i1 = Intersection::new(&o, 1.0);
         let i2 = Intersection::new(&o, -1.0);
 
@@ -122,7 +122,7 @@ mod tests {
 
     #[test]
     fn the_hit_when_all_intersections_are_negative() {
-        let o = Object::test_builder().build();
+        let o = Shape::test_builder().build();
         let i1 = Intersection::new(&o, -2.0);
         let i2 = Intersection::new(&o, -1.0);
 
@@ -131,7 +131,7 @@ mod tests {
 
     #[test]
     fn the_hit_is_always_the_lowest_nonnegative_intersection() {
-        let o = Object::test_builder().build();
+        let o = Shape::test_builder().build();
 
         let h = List::from(vec![
             Intersection::new(&o, 5.0),
@@ -148,7 +148,7 @@ mod tests {
 
     #[test]
     fn the_hit_with_nan_and_inf() {
-        let o = Object::test_builder().build();
+        let o = Shape::test_builder().build();
 
         let h = List::from(vec![
             Intersection::new(&o, 5.0),

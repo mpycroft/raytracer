@@ -2,7 +2,7 @@ use std::f64::consts::{FRAC_PI_2, FRAC_PI_3, FRAC_PI_4};
 
 use raytracer::{
     math::{Angle, Point, Transformation, Vector},
-    Camera, Colour, Material, Object, PointLight, World,
+    Camera, Colour, Material, PointLight, Shape, World,
 };
 
 use super::SceneData;
@@ -35,14 +35,14 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     let floor_transformation = Transformation::new().scale(10.0, 0.01, 10.0);
 
     world.add_object(
-        Object::sphere_builder()
+        Shape::sphere_builder()
             .transformation(floor_transformation)
             .material(floor_material.clone())
             .build(),
     );
 
     world.add_object(
-        Object::sphere_builder()
+        Shape::sphere_builder()
             .transformation(
                 floor_transformation
                     .rotate_x(Angle(FRAC_PI_2))
@@ -54,7 +54,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Object::sphere_builder()
+        Shape::sphere_builder()
             .transformation(
                 floor_transformation
                     .rotate_x(Angle(FRAC_PI_2))
@@ -66,7 +66,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Object::sphere_builder()
+        Shape::sphere_builder()
             .transformation(Transformation::new().translate(-0.5, 1.0, 0.5))
             .material(
                 Material::builder()
@@ -79,7 +79,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Object::sphere_builder()
+        Shape::sphere_builder()
             .transformation(
                 Transformation::new()
                     .scale(0.5, 0.5, 0.5)
@@ -96,7 +96,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Object::sphere_builder()
+        Shape::sphere_builder()
             .transformation(
                 Transformation::new()
                     .scale(0.33, 0.33, 0.33)

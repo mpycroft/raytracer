@@ -1,14 +1,14 @@
 use crate::{
     intersection::{Computations, List},
     math::{float::approx_eq, Point, Ray},
-    Colour, Object, PointLight,
+    Colour, PointLight, Shape,
 };
 
 /// A `World` represents all the objects and light sources in a given scene that
 /// we are rendering.
 #[derive(Clone, Debug)]
 pub struct World {
-    objects: Vec<Object>,
+    objects: Vec<Shape>,
     lights: Vec<PointLight>,
 }
 
@@ -18,7 +18,7 @@ impl World {
         Self { objects: Vec::new(), lights: Vec::new() }
     }
 
-    pub fn add_object(&mut self, object: Object) {
+    pub fn add_object(&mut self, object: Shape) {
         self.objects.push(object);
     }
 
@@ -194,7 +194,7 @@ mod tests {
         let mut w = World::new();
 
         w.add_object(
-            Object::sphere_builder()
+            Shape::sphere_builder()
                 .material(
                     Material::builder()
                         .pattern(Colour::new(0.8, 1.0, 0.6).into())
@@ -205,7 +205,7 @@ mod tests {
                 .build(),
         );
         w.add_object(
-            Object::sphere_builder()
+            Shape::sphere_builder()
                 .transformation(Transformation::new().scale(0.5, 0.5, 0.5))
                 .build(),
         );
@@ -233,8 +233,8 @@ mod tests {
     fn adding_elements_to_a_world() {
         let mut w = World::new();
 
-        let o1 = Object::test_builder().build();
-        let o2 = Object::sphere_builder()
+        let o1 = Shape::test_builder().build();
+        let o2 = Shape::sphere_builder()
             .transformation(Transformation::new().translate(1.0, 2.0, 3.0))
             .build();
 
@@ -297,13 +297,13 @@ mod tests {
         w.add_light(PointLight::new(Point::origin(), Colour::white()));
 
         w.add_object(
-            Object::plane_builder()
+            Shape::plane_builder()
                 .transformation(Transformation::new().translate(0.0, 1.0, 0.0))
                 .material(Material::builder().reflective(1.0).build())
                 .build(),
         );
         w.add_object(
-            Object::plane_builder()
+            Shape::plane_builder()
                 .transformation(Transformation::new().translate(0.0, -1.0, 0.0))
                 .material(Material::builder().reflective(1.0).build())
                 .build(),
@@ -364,9 +364,9 @@ mod tests {
             Colour::white(),
         ));
 
-        w.add_object(Object::sphere_builder().build());
+        w.add_object(Shape::sphere_builder().build());
 
-        let o = Object::sphere_builder()
+        let o = Shape::sphere_builder()
             .transformation(Transformation::new().translate(0.0, 0.0, 10.0))
             .build();
         w.add_object(o.clone());
@@ -385,7 +385,7 @@ mod tests {
         let mut w = test_world();
 
         w.add_object(
-            Object::plane_builder()
+            Shape::plane_builder()
                 .transformation(Transformation::new().translate(0.0, -1.0, 0.0))
                 .material(Material::builder().reflective(0.5).build())
                 .build(),
@@ -415,7 +415,7 @@ mod tests {
         let mut w = test_world();
 
         w.add_object(
-            Object::plane_builder()
+            Shape::plane_builder()
                 .transformation(Transformation::new().translate(0.0, -1.0, 0.0))
                 .material(
                     Material::builder()
@@ -426,7 +426,7 @@ mod tests {
                 .build(),
         );
         w.add_object(
-            Object::sphere_builder()
+            Shape::sphere_builder()
                 .transformation(
                     Transformation::new().translate(0.0, -3.5, -0.5),
                 )
@@ -465,7 +465,7 @@ mod tests {
         let mut w = test_world();
 
         w.add_object(
-            Object::plane_builder()
+            Shape::plane_builder()
                 .transformation(Transformation::new().translate(0.0, -1.0, 0.0))
                 .material(
                     Material::builder()
@@ -477,7 +477,7 @@ mod tests {
                 .build(),
         );
         w.add_object(
-            Object::sphere_builder()
+            Shape::sphere_builder()
                 .transformation(
                     Transformation::new().translate(0.0, -3.5, -0.5),
                 )
@@ -536,7 +536,7 @@ intersection list.")]
         let mut w = World::new();
 
         w.add_object(
-            Object::sphere_builder()
+            Shape::sphere_builder()
                 .transformation(Transformation::new().translate(
                     0.0,
                     0.0,
@@ -652,7 +652,7 @@ intersection list.")]
         let mut w = test_world();
 
         w.add_object(
-            Object::plane_builder()
+            Shape::plane_builder()
                 .transformation(Transformation::new().translate(0.0, -1.0, 0.0))
                 .material(Material::builder().reflective(0.5).build())
                 .build(),
@@ -681,7 +681,7 @@ intersection list.")]
         let mut w = test_world();
 
         w.add_object(
-            Object::plane_builder()
+            Shape::plane_builder()
                 .transformation(Transformation::new().translate(0.0, -1.0, 0.0))
                 .material(Material::builder().reflective(0.5).build())
                 .build(),
