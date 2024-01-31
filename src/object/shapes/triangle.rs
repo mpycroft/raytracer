@@ -114,8 +114,7 @@ impl Intersectable for Triangle {
             Normal::Flat(normal) => normal,
             Normal::Smooth(normal1, normal2, normal3) => {
                 // The u and v values will always be set for triangles.
-                let Some(u) = intersection.u else { unreachable!() };
-                let Some(v) = intersection.v else { unreachable!() };
+                let Some((u, v)) = intersection.u_v else { unreachable!() };
 
                 normal2 * u + normal3 * v + normal1 * (1.0 - u - v)
             }
@@ -330,6 +329,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::many_single_char_names)]
     fn an_intersection_with_a_smooth_triangle_stores_u_v() {
         let o = create_smooth_triangle();
 
@@ -347,8 +347,9 @@ mod tests {
 
         assert_eq!(l.len(), 1);
 
-        assert_approx_eq!(l[0].u.unwrap(), 0.45);
-        assert_approx_eq!(l[0].v.unwrap(), 0.25);
+        let (u, v) = l[0].u_v.unwrap();
+        assert_approx_eq!(u, 0.45);
+        assert_approx_eq!(v, 0.25);
     }
 
     #[test]
