@@ -67,13 +67,13 @@ impl Bounded for Cube {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, object::shape::Shape};
+    use crate::{math::float::*, object::shapes::Shapes};
 
     #[test]
     fn a_ray_intersects_a_cube() {
         let o = Object::cube_builder().build();
 
-        let Shape::Cube(c) = &o.shape else { unreachable!() };
+        let Shapes::Cube(c) = &o.shape else { unreachable!() };
 
         let test = |r, t1, t2| {
             let l = c.intersect(&r, &o).unwrap();
@@ -96,7 +96,7 @@ mod tests {
     fn a_ray_misses_a_cube() {
         let o = Object::cube_builder().build();
 
-        let Shape::Cube(c) = &o.shape else { unreachable!() };
+        let Shapes::Cube(c) = &o.shape else { unreachable!() };
 
         let test = |r| {
             let l = c.intersect(&r, &o);
@@ -127,7 +127,7 @@ mod tests {
     fn the_normal_on_a_cube() {
         let o = Object::cube_builder().build();
 
-        let Shape::Cube(c) = &o.shape else { unreachable!() };
+        let Shapes::Cube(c) = &o.shape else { unreachable!() };
 
         let i = Intersection::new(&o, 0.0);
 

@@ -57,13 +57,13 @@ impl Bounded for Sphere {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, object::shape::Shape};
+    use crate::{math::float::*, object::shapes::Shapes};
 
     #[test]
     fn a_ray_intersects_a_sphere_at_two_points() {
         let o = Object::sphere_builder().build();
 
-        let Shape::Sphere(s) = &o.shape else { unreachable!() };
+        let Shapes::Sphere(s) = &o.shape else { unreachable!() };
 
         let l = s
             .intersect(
@@ -82,7 +82,7 @@ mod tests {
     fn a_ray_intersects_a_sphere_at_a_tangent() {
         let o = Object::sphere_builder().build();
 
-        let Shape::Sphere(s) = &o.shape else { unreachable!() };
+        let Shapes::Sphere(s) = &o.shape else { unreachable!() };
 
         let l = s
             .intersect(
@@ -101,7 +101,7 @@ mod tests {
     fn a_ray_misses_a_sphere() {
         let o = Object::sphere_builder().build();
 
-        let Shape::Sphere(s) = &o.shape else { unreachable!() };
+        let Shapes::Sphere(s) = &o.shape else { unreachable!() };
 
         assert!(s
             .intersect(
@@ -115,7 +115,7 @@ mod tests {
     fn a_ray_originates_inside_a_sphere() {
         let o = Object::sphere_builder().build();
 
-        let Shape::Sphere(s) = &o.shape else { unreachable!() };
+        let Shapes::Sphere(s) = &o.shape else { unreachable!() };
 
         let l = s
             .intersect(&Ray::new(Point::origin(), Vector::z_axis()), &o)
@@ -131,7 +131,7 @@ mod tests {
     fn a_sphere_is_behind_a_ray() {
         let o = Object::sphere_builder().build();
 
-        let Shape::Sphere(s) = &o.shape else { unreachable!() };
+        let Shapes::Sphere(s) = &o.shape else { unreachable!() };
 
         let l = s
             .intersect(
@@ -150,7 +150,7 @@ mod tests {
     fn the_normal_on_a_sphere_at_a_point_on_an_axis() {
         let o = Object::sphere_builder().build();
 
-        let Shape::Sphere(s) = &o.shape else { unreachable!() };
+        let Shapes::Sphere(s) = &o.shape else { unreachable!() };
 
         let i = Intersection::new(&o, 0.0);
 
@@ -174,7 +174,7 @@ mod tests {
     fn the_normal_on_a_sphere_at_a_non_axial_point() {
         let o = Object::sphere_builder().build();
 
-        let Shape::Sphere(s) = &o.shape else { unreachable!() };
+        let Shapes::Sphere(s) = &o.shape else { unreachable!() };
 
         let i = Intersection::new(&o, 0.0);
 

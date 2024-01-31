@@ -147,13 +147,13 @@ mod tests {
     use std::f64::INFINITY;
 
     use super::*;
-    use crate::{math::float::*, object::shape::Shape};
+    use crate::{math::float::*, object::shapes::Shapes};
 
     #[test]
     fn a_ray_misses_a_cylinder() {
         let o = Object::cylinder_builder(-INFINITY, INFINITY, false).build();
 
-        let Shape::Cylinder(c) = &o.shape else { unreachable!() };
+        let Shapes::Cylinder(c) = &o.shape else { unreachable!() };
 
         assert!(c
             .intersect(
@@ -179,7 +179,7 @@ mod tests {
     fn a_ray_strikes_a_cylinder() {
         let o = Object::cylinder_builder(-INFINITY, INFINITY, false).build();
 
-        let Shape::Cylinder(c) = &o.shape else { unreachable!() };
+        let Shapes::Cylinder(c) = &o.shape else { unreachable!() };
 
         let test = |r, t0, t1| {
             let i = c.intersect(&r, &o).unwrap();
@@ -205,7 +205,7 @@ mod tests {
     fn intersecting_a_constrained_cylinder() {
         let o = Object::cylinder_builder(1.0, 2.0, false).build();
 
-        let Shape::Cylinder(c) = &o.shape else { unreachable!() };
+        let Shapes::Cylinder(c) = &o.shape else { unreachable!() };
 
         assert!(c
             .intersect(
@@ -257,7 +257,7 @@ mod tests {
     fn intersecting_the_caps_of_a_closed_cylinder() {
         let o = Object::cylinder_builder(1.0, 2.0, true).build();
 
-        let Shape::Cylinder(c) = &o.shape else { unreachable!() };
+        let Shapes::Cylinder(c) = &o.shape else { unreachable!() };
 
         let test = |r, t0, t1| {
             let i = c.intersect(&r, &o).unwrap();
@@ -306,7 +306,7 @@ mod tests {
     fn normal_vector_on_a_cylinder() {
         let o = Object::cylinder_builder(-INFINITY, INFINITY, false).build();
 
-        let Shape::Cylinder(c) = &o.shape else { unreachable!() };
+        let Shapes::Cylinder(c) = &o.shape else { unreachable!() };
 
         let i = Intersection::new(&o, 0.0);
 
@@ -332,7 +332,7 @@ mod tests {
     fn the_normal_vector_on_a_cylinders_end_caps() {
         let o = Object::cylinder_builder(1.0, 2.0, true).build();
 
-        let Shape::Cylinder(c) = &o.shape else { unreachable!() };
+        let Shapes::Cylinder(c) = &o.shape else { unreachable!() };
 
         let i = Intersection::new(&o, 0.0);
 

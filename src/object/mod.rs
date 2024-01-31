@@ -1,9 +1,9 @@
-pub mod shape;
+pub mod shapes;
 
 use paste::paste;
 use typed_builder::{Optional, TypedBuilder};
 
-use self::shape::{Intersectable, Shape};
+use self::shapes::{Intersectable, Shapes};
 use crate::{
     bounding_box::{Bounded, BoundingBox},
     intersection::{Intersection, List},
@@ -27,7 +27,7 @@ pub struct Object {
     pub(super) material: Material,
     #[builder(default = true)]
     pub(super) casts_shadow: bool,
-    pub(super) shape: Shape,
+    pub(super) shape: Shapes,
     #[builder(default = BoundingBox::default(), setter(skip))]
     pub(super) bounding_box: BoundingBox,
 }
@@ -36,10 +36,10 @@ macro_rules! add_builder_fn {
     ($shape:ident($($args:ident : $ty:ty $(,)?)*)) => {
         paste! {
             pub fn [<$shape:lower _builder>]($($args:$ty,)*) ->
-                ObjectBuilder<((), (), (), (Shape,))>
+                ObjectBuilder<((), (), (), (Shapes,))>
             {
                 Self::_builder().shape(
-                    Shape::[<new_ $shape:lower>]($($args,)*)
+                    Shapes::[<new_ $shape:lower>]($($args,)*)
                 )
             }
         }
@@ -64,8 +64,8 @@ impl Object {
         normal1: Vector,
         normal2: Vector,
         normal3: Vector,
-    ) -> ObjectBuilder<((), (), (), (Shape,))> {
-        Self::_builder().shape(Shape::new_smooth_triangle(
+    ) -> ObjectBuilder<((), (), (), (Shapes,))> {
+        Self::_builder().shape(Shapes::new_smooth_triangle(
             point1, point2, point3, normal1, normal2, normal3,
         ))
     }
@@ -82,7 +82,7 @@ impl Object {
 
     #[must_use]
     pub fn intersect(&self, ray: &Ray) -> Option<List> {
-        if let Shape::Group(group) = &self.shape {
+        if let Shapes::Group(group) = &self.shape {
             if !self.bounding_box.is_intersected_by(ray) {
                 return None;
             }
@@ -133,7 +133,7 @@ impl Bounded for Object {
 impl_approx_eq!(&Object { ref shape, transformation, ref material });
 
 impl<T: Optional<Transformation>, M: Optional<Material>, S: Optional<bool>>
-    ObjectBuilder<(T, M, S, (Shape,))>
+    ObjectBuilder<(T, M, S, (Shapes,))>
 {
     #[must_use]
     pub fn build(self) -> Object {
@@ -141,7 +141,7 @@ impl<T: Optional<Transformation>, M: Optional<Material>, S: Optional<bool>>
 
         object.inverse_transformation = object.transformation.invert();
 
-        if let Shape::Group(group) = &mut object.shape {
+        if let Shapes::Group(group) = &mut object.shape {
             for child_object in group.iter_no_groups() {
                 child_object.transformation =
                     child_object.transformation.extend(&object.transformation);
@@ -169,7 +169,7 @@ mod tests {
     use super::*;
     use crate::{
         math::{float::*, Angle},
-        object::shape::test::Test,
+        object::shapes::test::Test,
         Colour,
     };
 
@@ -183,7 +183,7 @@ mod tests {
         macro_rules! test_object {
             ($shape:ident($($args:expr $(,)?)*)) => {{
                 paste! {
-                    let s = Shape::[<new_ $shape:lower>]($($args,)*);
+                    let s = Shapes::[<new_ $shape:lower>]($($args,)*);
 
                     let o = Object::[<$shape:lower _builder>]($($args,)*)
                         .transformation(t)
@@ -418,8 +418,8 @@ mod tests {
         .transformation(Transformation::new().rotate_y(Angle(FRAC_PI_2)))
         .build();
 
-        let Shape::Group(g) = o.shape else { unreachable!() };
-        let Shape::Group(g) = &g.objects()[0].shape else { unreachable!() };
+        let Shapes::Group(g) = o.shape else { unreachable!() };
+        let Shapes::Group(g) = &g.objects()[0].shape else { unreachable!() };
         let s = &g.objects()[0];
 
         assert_approx_eq!(
@@ -440,8 +440,8 @@ mod tests {
         .transformation(Transformation::new().rotate_y(Angle(FRAC_PI_2)))
         .build();
 
-        let Shape::Group(g) = o.shape else { unreachable!() };
-        let Shape::Group(g) = &g.objects()[0].shape else { unreachable!() };
+        let Shapes::Group(g) = o.shape else { unreachable!() };
+        let Shapes::Group(g) = &g.objects()[0].shape else { unreachable!() };
         let s = &g.objects()[0];
 
         let sqrt_3_div_3 = f64::sqrt(3.0) / 3.0;
@@ -469,8 +469,8 @@ mod tests {
         .transformation(Transformation::new().rotate_y(Angle(FRAC_PI_2)))
         .build();
 
-        let Shape::Group(g) = o.shape else { unreachable!() };
-        let Shape::Group(g) = &g.objects()[0].shape else { unreachable!() };
+        let Shapes::Group(g) = o.shape else { unreachable!() };
+        let Shapes::Group(g) = &g.objects()[0].shape else { unreachable!() };
         let s = &g.objects()[0];
 
         let o = Object::test_builder().build();

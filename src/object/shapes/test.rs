@@ -51,14 +51,14 @@ impl Bounded for Test {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, object::shape::Shape, Object};
+    use crate::{math::float::*, object::shapes::Shapes, Object};
 
     #[test]
     #[allow(clippy::many_single_char_names)]
     fn intersecting_a_test_shape() {
         let o = Object::test_builder().build();
 
-        let Shape::Test(t) = &o.shape else { unreachable!() };
+        let Shapes::Test(t) = &o.shape else { unreachable!() };
 
         let r = Ray::new(Point::new(1.0, 2.0, 1.0), Vector::x_axis());
 
@@ -73,7 +73,7 @@ mod tests {
     fn normal_at_on_a_test_shape() {
         let o = Object::test_builder().build();
 
-        let Shape::Test(t) = &o.shape else { unreachable!() };
+        let Shapes::Test(t) = &o.shape else { unreachable!() };
 
         let i = Intersection::new(&o, 1.0);
 

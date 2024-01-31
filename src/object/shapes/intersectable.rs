@@ -8,7 +8,7 @@ use crate::{
 
 /// A trait that `Shape`s need to implement if they can be intersected in a
 /// scene, returns an optional `TList`.
-#[enum_dispatch(Shape)]
+#[enum_dispatch(Shapes)]
 pub trait Intersectable {
     #[must_use]
     fn intersect<'a>(&self, ray: &Ray, object: &'a Object) -> Option<List<'a>>;

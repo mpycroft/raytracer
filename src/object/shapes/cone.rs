@@ -160,13 +160,13 @@ mod tests {
     };
 
     use super::*;
-    use crate::{math::float::*, object::shape::Shape};
+    use crate::{math::float::*, object::shapes::Shapes};
 
     #[test]
     fn intersecting_a_cone_with_a_ray() {
         let o = Object::cone_builder(-INFINITY, INFINITY, false).build();
 
-        let Shape::Cone(c) = &o.shape else { unreachable!() };
+        let Shapes::Cone(c) = &o.shape else { unreachable!() };
 
         assert!(c
             .intersect(
@@ -206,7 +206,7 @@ mod tests {
     fn intersecting_a_cone_with_a_ray_parallel_to_one_of_its_halves() {
         let o = Object::cone_builder(-INFINITY, INFINITY, false).build();
 
-        let Shape::Cone(c) = &o.shape else { unreachable!() };
+        let Shapes::Cone(c) = &o.shape else { unreachable!() };
 
         let i = c
             .intersect(
@@ -226,7 +226,7 @@ mod tests {
     fn intersecting_a_cones_end_caps() {
         let o = Object::cone_builder(-0.5, 0.5, true).build();
 
-        let Shape::Cone(c) = &o.shape else { unreachable!() };
+        let Shapes::Cone(c) = &o.shape else { unreachable!() };
 
         let i = c.intersect(
             &Ray::new(Point::new(0.0, 0.0, -5.0), Vector::y_axis()),
@@ -267,7 +267,7 @@ mod tests {
     fn computing_the_normal_vector_on_a_cone() {
         let o = Object::cone_builder(-1.5, 1.5, true).build();
 
-        let Shape::Cone(c) = &o.shape else { unreachable!() };
+        let Shapes::Cone(c) = &o.shape else { unreachable!() };
 
         let i = Intersection::new(&o, 0.0);
 

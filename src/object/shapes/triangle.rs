@@ -156,7 +156,7 @@ impl ApproxEq for Normal {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, object::shape::Shape};
+    use crate::{math::float::*, object::shapes::Shapes};
 
     fn create_triangle() -> Object {
         Object::triangle_builder(
@@ -216,7 +216,7 @@ mod tests {
     fn finding_the_normal_on_a_triangle() {
         let o = create_triangle();
 
-        let Shape::Triangle(t) = &o.shape else { unreachable!() };
+        let Shapes::Triangle(t) = &o.shape else { unreachable!() };
 
         let i = Intersection::new(&o, 0.0);
 
@@ -234,7 +234,7 @@ mod tests {
     fn intersecting_a_ray_parallel_to_the_triangle() {
         let o = create_triangle();
 
-        let Shape::Triangle(t) = &o.shape else { unreachable!() };
+        let Shapes::Triangle(t) = &o.shape else { unreachable!() };
 
         assert!(t
             .intersect(
@@ -248,7 +248,7 @@ mod tests {
     fn a_ray_misses_the_p1_p3_edge() {
         let o = create_triangle();
 
-        let Shape::Triangle(t) = &o.shape else { unreachable!() };
+        let Shapes::Triangle(t) = &o.shape else { unreachable!() };
 
         assert!(t
             .intersect(
@@ -262,7 +262,7 @@ mod tests {
     fn a_ray_misses_the_p1_p2_edge() {
         let o = create_triangle();
 
-        let Shape::Triangle(t) = &o.shape else { unreachable!() };
+        let Shapes::Triangle(t) = &o.shape else { unreachable!() };
 
         assert!(t
             .intersect(
@@ -276,7 +276,7 @@ mod tests {
     fn a_ray_misses_the_p2_p3_edge() {
         let o = create_triangle();
 
-        let Shape::Triangle(t) = &o.shape else { unreachable!() };
+        let Shapes::Triangle(t) = &o.shape else { unreachable!() };
 
         assert!(t
             .intersect(
@@ -290,7 +290,7 @@ mod tests {
     fn a_ray_strikes_a_triangle() {
         let o = create_triangle();
 
-        let Shape::Triangle(t) = &o.shape else { unreachable!() };
+        let Shapes::Triangle(t) = &o.shape else { unreachable!() };
 
         let l = t.intersect(
             &Ray::new(Point::new(0.0, 0.5, -2.0), Vector::z_axis()),
@@ -327,7 +327,7 @@ mod tests {
     fn an_intersection_with_a_smooth_triangle_stores_u_v() {
         let o = create_smooth_triangle();
 
-        let Shape::Triangle(t) = &o.shape else { unreachable!() };
+        let Shapes::Triangle(t) = &o.shape else { unreachable!() };
 
         let l = t.intersect(
             &Ray::new(Point::new(-0.2, 0.3, -2.0), Vector::z_axis()),
@@ -348,7 +348,7 @@ mod tests {
     fn a_smooth_triangle_uses_u_v_to_interpolate_the_normal() {
         let o = create_smooth_triangle();
 
-        let Shape::Triangle(t) = &o.shape else { unreachable!() };
+        let Shapes::Triangle(t) = &o.shape else { unreachable!() };
 
         let i = Intersection::new_with_u_v(&o, 1.0, 0.45, 0.25);
 

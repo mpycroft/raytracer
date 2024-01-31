@@ -9,7 +9,7 @@ use anyhow::{bail, Result};
 
 use crate::{
     math::{Point, Vector},
-    object::{shape::Shape, ObjectBuilder},
+    object::{shapes::Shapes, ObjectBuilder},
     Object,
 };
 
@@ -228,7 +228,7 @@ If one vertex normal is specified, all faces must also provide vertex normals."
         groups.get_mut(group_name).ok_or_else(|| unreachable!())
     }
 
-    pub fn into_group(self) -> ObjectBuilder<((), (), (), (Shape,))> {
+    pub fn into_group(self) -> ObjectBuilder<((), (), (), (Shapes,))> {
         Object::group_builder(self.groups)
     }
 }
@@ -283,7 +283,7 @@ Found 5 items."
     fn parsing_faces() {
         let p = ObjParser::parse("obj/test/faces.obj").unwrap();
 
-        let Shape::Group(g) = &p.groups[0].shape else { unreachable!() };
+        let Shapes::Group(g) = &p.groups[0].shape else { unreachable!() };
         let c = g.objects();
 
         assert_eq!(c.len(), 2);
@@ -331,7 +331,7 @@ Found 3 items."
     fn triangulating_polygons() {
         let p = ObjParser::parse("obj/test/triangulating.obj").unwrap();
 
-        let Shape::Group(g) = &p.groups[0].shape else { unreachable!() };
+        let Shapes::Group(g) = &p.groups[0].shape else { unreachable!() };
         let c = g.objects();
 
         assert_eq!(c.len(), 3);
@@ -372,12 +372,12 @@ Found 3 items."
             .into_group()
             .build();
 
-        let Shape::Group(g) = &o.shape else { unreachable!() };
+        let Shapes::Group(g) = &o.shape else { unreachable!() };
         let c = g.objects();
 
         assert_eq!(c.len(), 2);
 
-        let Shape::Group(g) = &c[0].shape else { unreachable!() };
+        let Shapes::Group(g) = &c[0].shape else { unreachable!() };
         let c1 = g.objects();
 
         assert_eq!(c1.len(), 1);
@@ -392,7 +392,7 @@ Found 3 items."
             .build()
         );
 
-        let Shape::Group(g) = &c[1].shape else { unreachable!() };
+        let Shapes::Group(g) = &c[1].shape else { unreachable!() };
         let c2 = g.objects();
 
         assert_eq!(c2.len(), 1);
@@ -454,7 +454,7 @@ Found 6 items."
     fn parsing_face_normals() {
         let p = ObjParser::parse("obj/test/face_normals.obj").unwrap();
 
-        let Shape::Group(g) = &p.groups[0].shape else { unreachable!() };
+        let Shapes::Group(g) = &p.groups[0].shape else { unreachable!() };
         let c = g.objects();
 
         assert_eq!(c.len(), 2);

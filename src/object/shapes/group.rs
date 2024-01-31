@@ -6,7 +6,7 @@ use crate::{
     bounding_box::{Bounded, BoundingBox},
     intersection::{Intersection, List},
     math::{Point, Ray, Vector},
-    object::shape::Shape,
+    object::shapes::Shapes,
     Object,
 };
 
@@ -30,8 +30,8 @@ impl Group {
             // or if let else statement. However no matter the construction I
             // can't seem to get it right, we aren't able to reborrow object to
             // add to objects because we are matching on &mut object.shape.
-            if matches!(object.shape, Shape::Group(_)) {
-                let Shape::Group(group) = &mut object.shape else {
+            if matches!(object.shape, Shapes::Group(_)) {
+                let Shapes::Group(group) = &mut object.shape else {
                     unreachable!()
                 };
 
@@ -46,7 +46,7 @@ impl Group {
 
     pub fn update_bounding_box(&mut self) {
         for object in &mut self.0 {
-            if let Shape::Group(group) = &mut object.shape {
+            if let Shapes::Group(group) = &mut object.shape {
                 group.update_bounding_box();
 
                 object.bounding_box = object.bounding_box();
@@ -133,7 +133,7 @@ mod tests {
         .build()])
         .build();
 
-        let Shape::Group(g) = &mut o.shape else { unreachable!() };
+        let Shapes::Group(g) = &mut o.shape else { unreachable!() };
 
         let v = g.iter_no_groups();
 
