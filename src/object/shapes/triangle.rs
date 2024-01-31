@@ -156,10 +156,10 @@ impl ApproxEq for Normal {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, object::shapes::Shapes};
+    use crate::{math::float::*, object::shapes::Shapes, Object};
 
     fn create_triangle() -> Shape {
-        Shape::triangle_builder(
+        Object::triangle_builder(
             Point::new(0.0, 1.0, 0.0),
             Point::new(-1.0, 0.0, 0.0),
             Point::new(1.0, 0.0, 0.0),
@@ -168,7 +168,7 @@ mod tests {
     }
 
     fn create_smooth_triangle() -> Shape {
-        Shape::smooth_triangle_builder(
+        Object::smooth_triangle_builder(
             Point::new(0.0, 1.0, 0.0),
             Point::new(-1.0, 0.0, 0.0),
             Point::new(1.0, 0.0, 0.0),

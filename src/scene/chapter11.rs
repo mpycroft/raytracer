@@ -2,7 +2,7 @@ use std::f64::consts::{FRAC_PI_2, FRAC_PI_3};
 
 use raytracer::{
     math::{Angle, Point, Transformation, Vector},
-    Camera, Colour, Material, Pattern, PointLight, Shape, World,
+    Camera, Colour, Material, Object, Pattern, PointLight, World,
 };
 
 use super::SceneData;
@@ -29,7 +29,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     let mut world = World::new();
 
     world.add_object(
-        Shape::plane_builder()
+        Object::plane_builder()
             .material(
                 Material::builder()
                     .pattern(
@@ -47,7 +47,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Shape::plane_builder()
+        Object::plane_builder()
             .transformation(
                 Transformation::new()
                     .rotate_x(Angle(FRAC_PI_2))
@@ -64,14 +64,14 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Shape::sphere_builder()
+        Object::sphere_builder()
             .transformation(Transformation::new().translate(-0.5, 1.0, 0.5))
             .material(Material::glass())
             .build(),
     );
 
     world.add_object(
-        Shape::sphere_builder()
+        Object::sphere_builder()
             .transformation(
                 Transformation::new()
                     .scale(0.5, 0.5, 0.5)
@@ -90,7 +90,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Shape::sphere_builder()
+        Object::sphere_builder()
             .transformation(
                 Transformation::new()
                     .scale(0.4, 0.4, 0.4)
@@ -108,7 +108,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Shape::sphere_builder()
+        Object::sphere_builder()
             .transformation(
                 Transformation::new()
                     .scale(0.3, 0.3, 0.3)
@@ -125,7 +125,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Shape::sphere_builder()
+        Object::sphere_builder()
             .transformation(
                 Transformation::new()
                     .scale(0.5, 0.5, 0.5)
@@ -136,7 +136,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Shape::sphere_builder()
+        Object::sphere_builder()
             .transformation(
                 Transformation::new()
                     .scale(0.33, 0.33, 0.33)
@@ -182,7 +182,7 @@ pub fn generate_water_scene(arguments: &Arguments) -> SceneData {
     let mut world = World::new();
 
     world.add_object(
-        Shape::plane_builder()
+        Object::plane_builder()
             .transformation(Transformation::new().translate(0.0, -5.0, 0.0))
             .material(
                 Material::builder()
@@ -200,7 +200,7 @@ pub fn generate_water_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Shape::plane_builder()
+        Object::plane_builder()
             .transformation(
                 Transformation::new()
                     .rotate_x(Angle(FRAC_PI_2))
@@ -221,7 +221,7 @@ pub fn generate_water_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Shape::sphere_builder()
+        Object::sphere_builder()
             .transformation(
                 Transformation::new()
                     .scale(0.5, 0.5, 0.5)
@@ -233,7 +233,7 @@ pub fn generate_water_scene(arguments: &Arguments) -> SceneData {
             .build(),
     );
     world.add_object(
-        Shape::sphere_builder()
+        Object::sphere_builder()
             .transformation(
                 Transformation::new()
                     .scale(0.5, 0.5, 0.5)
@@ -245,7 +245,7 @@ pub fn generate_water_scene(arguments: &Arguments) -> SceneData {
             .build(),
     );
     world.add_object(
-        Shape::sphere_builder()
+        Object::sphere_builder()
             .transformation(
                 Transformation::new()
                     .scale(0.5, 0.5, 0.5)
@@ -256,7 +256,7 @@ pub fn generate_water_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Shape::plane_builder()
+        Object::plane_builder()
             .transformation(Transformation::new().translate(0.0, -2.0, 0.0))
             .material(
                 Material::builder()

@@ -110,22 +110,25 @@ impl ApproxEq for &Group {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::{float::*, Transformation};
+    use crate::{
+        math::{float::*, Transformation},
+        Object,
+    };
 
     #[test]
     fn iter_no_groups() {
-        let s1 = Shape::sphere_builder().build();
-        let s2 = Shape::sphere_builder()
+        let s1 = Object::sphere_builder().build();
+        let s2 = Object::sphere_builder()
             .transformation(Transformation::new().translate(1.0, 0.0, 0.0))
             .build();
-        let s3 = Shape::sphere_builder()
+        let s3 = Object::sphere_builder()
             .transformation(Transformation::new().translate(0.0, 1.0, 0.0))
             .build();
 
-        let mut o = Shape::group_builder(vec![Shape::group_builder(vec![
-            Shape::group_builder(vec![
+        let mut o = Object::group_builder(vec![Object::group_builder(vec![
+            Object::group_builder(vec![
                 s2.clone(),
-                Shape::group_builder(vec![s3.clone()]).build(),
+                Object::group_builder(vec![s3.clone()]).build(),
             ])
             .build(),
             s1.clone(),
@@ -146,17 +149,17 @@ mod tests {
     #[test]
     fn comparing_groups() {
         let g1 = Group::new(vec![
-            Shape::sphere_builder().build(),
-            Shape::plane_builder().build(),
+            Object::sphere_builder().build(),
+            Object::plane_builder().build(),
         ]);
         let g2 = Group::new(vec![
-            Shape::sphere_builder().build(),
-            Shape::plane_builder().build(),
+            Object::sphere_builder().build(),
+            Object::plane_builder().build(),
         ]);
         let g3 = Group::new(vec![
-            Shape::sphere_builder().build(),
-            Shape::plane_builder().build(),
-            Shape::plane_builder().build(),
+            Object::sphere_builder().build(),
+            Object::plane_builder().build(),
+            Object::plane_builder().build(),
         ]);
 
         assert_approx_eq!(g1, &g2);

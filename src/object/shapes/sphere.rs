@@ -57,11 +57,11 @@ impl Bounded for Sphere {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, object::shapes::Shapes};
+    use crate::{math::float::*, object::shapes::Shapes, Object};
 
     #[test]
     fn a_ray_intersects_a_sphere_at_two_points() {
-        let o = Shape::sphere_builder().build();
+        let o = Object::sphere_builder().build();
 
         let Shapes::Sphere(s) = &o.shape else { unreachable!() };
 
@@ -80,7 +80,7 @@ mod tests {
 
     #[test]
     fn a_ray_intersects_a_sphere_at_a_tangent() {
-        let o = Shape::sphere_builder().build();
+        let o = Object::sphere_builder().build();
 
         let Shapes::Sphere(s) = &o.shape else { unreachable!() };
 
@@ -99,7 +99,7 @@ mod tests {
 
     #[test]
     fn a_ray_misses_a_sphere() {
-        let o = Shape::sphere_builder().build();
+        let o = Object::sphere_builder().build();
 
         let Shapes::Sphere(s) = &o.shape else { unreachable!() };
 
@@ -113,7 +113,7 @@ mod tests {
 
     #[test]
     fn a_ray_originates_inside_a_sphere() {
-        let o = Shape::sphere_builder().build();
+        let o = Object::sphere_builder().build();
 
         let Shapes::Sphere(s) = &o.shape else { unreachable!() };
 
@@ -129,7 +129,7 @@ mod tests {
 
     #[test]
     fn a_sphere_is_behind_a_ray() {
-        let o = Shape::sphere_builder().build();
+        let o = Object::sphere_builder().build();
 
         let Shapes::Sphere(s) = &o.shape else { unreachable!() };
 
@@ -148,7 +148,7 @@ mod tests {
 
     #[test]
     fn the_normal_on_a_sphere_at_a_point_on_an_axis() {
-        let o = Shape::sphere_builder().build();
+        let o = Object::sphere_builder().build();
 
         let Shapes::Sphere(s) = &o.shape else { unreachable!() };
 
@@ -172,7 +172,7 @@ mod tests {
 
     #[test]
     fn the_normal_on_a_sphere_at_a_non_axial_point() {
-        let o = Shape::sphere_builder().build();
+        let o = Object::sphere_builder().build();
 
         let Shapes::Sphere(s) = &o.shape else { unreachable!() };
 

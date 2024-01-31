@@ -160,11 +160,11 @@ mod tests {
     };
 
     use super::*;
-    use crate::{math::float::*, object::shapes::Shapes};
+    use crate::{math::float::*, object::shapes::Shapes, Object};
 
     #[test]
     fn intersecting_a_cone_with_a_ray() {
-        let o = Shape::cone_builder(-INFINITY, INFINITY, false).build();
+        let o = Object::cone_builder(-INFINITY, INFINITY, false).build();
 
         let Shapes::Cone(c) = &o.shape else { unreachable!() };
 
@@ -204,7 +204,7 @@ mod tests {
 
     #[test]
     fn intersecting_a_cone_with_a_ray_parallel_to_one_of_its_halves() {
-        let o = Shape::cone_builder(-INFINITY, INFINITY, false).build();
+        let o = Object::cone_builder(-INFINITY, INFINITY, false).build();
 
         let Shapes::Cone(c) = &o.shape else { unreachable!() };
 
@@ -224,7 +224,7 @@ mod tests {
 
     #[test]
     fn intersecting_a_cones_end_caps() {
-        let o = Shape::cone_builder(-0.5, 0.5, true).build();
+        let o = Object::cone_builder(-0.5, 0.5, true).build();
 
         let Shapes::Cone(c) = &o.shape else { unreachable!() };
 
@@ -265,7 +265,7 @@ mod tests {
 
     #[test]
     fn computing_the_normal_vector_on_a_cone() {
-        let o = Shape::cone_builder(-1.5, 1.5, true).build();
+        let o = Object::cone_builder(-1.5, 1.5, true).build();
 
         let Shapes::Cone(c) = &o.shape else { unreachable!() };
 

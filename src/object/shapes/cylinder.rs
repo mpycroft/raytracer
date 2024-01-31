@@ -147,11 +147,11 @@ mod tests {
     use std::f64::INFINITY;
 
     use super::*;
-    use crate::{math::float::*, object::shapes::Shapes};
+    use crate::{math::float::*, object::shapes::Shapes, Object};
 
     #[test]
     fn a_ray_misses_a_cylinder() {
-        let o = Shape::cylinder_builder(-INFINITY, INFINITY, false).build();
+        let o = Object::cylinder_builder(-INFINITY, INFINITY, false).build();
 
         let Shapes::Cylinder(c) = &o.shape else { unreachable!() };
 
@@ -177,7 +177,7 @@ mod tests {
 
     #[test]
     fn a_ray_strikes_a_cylinder() {
-        let o = Shape::cylinder_builder(-INFINITY, INFINITY, false).build();
+        let o = Object::cylinder_builder(-INFINITY, INFINITY, false).build();
 
         let Shapes::Cylinder(c) = &o.shape else { unreachable!() };
 
@@ -203,7 +203,7 @@ mod tests {
 
     #[test]
     fn intersecting_a_constrained_cylinder() {
-        let o = Shape::cylinder_builder(1.0, 2.0, false).build();
+        let o = Object::cylinder_builder(1.0, 2.0, false).build();
 
         let Shapes::Cylinder(c) = &o.shape else { unreachable!() };
 
@@ -255,7 +255,7 @@ mod tests {
 
     #[test]
     fn intersecting_the_caps_of_a_closed_cylinder() {
-        let o = Shape::cylinder_builder(1.0, 2.0, true).build();
+        let o = Object::cylinder_builder(1.0, 2.0, true).build();
 
         let Shapes::Cylinder(c) = &o.shape else { unreachable!() };
 
@@ -304,7 +304,7 @@ mod tests {
 
     #[test]
     fn normal_vector_on_a_cylinder() {
-        let o = Shape::cylinder_builder(-INFINITY, INFINITY, false).build();
+        let o = Object::cylinder_builder(-INFINITY, INFINITY, false).build();
 
         let Shapes::Cylinder(c) = &o.shape else { unreachable!() };
 
@@ -330,7 +330,7 @@ mod tests {
 
     #[test]
     fn the_normal_vector_on_a_cylinders_end_caps() {
-        let o = Shape::cylinder_builder(1.0, 2.0, true).build();
+        let o = Object::cylinder_builder(1.0, 2.0, true).build();
 
         let Shapes::Cylinder(c) = &o.shape else { unreachable!() };
 

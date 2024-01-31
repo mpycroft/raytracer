@@ -49,11 +49,11 @@ impl Bounded for Plane {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, object::shapes::Shapes};
+    use crate::{math::float::*, object::shapes::Shapes, Object};
 
     #[test]
     fn intersect_with_a_ray_parallel_to_the_plane() {
-        let o = Shape::plane_builder().build();
+        let o = Object::plane_builder().build();
 
         let Shapes::Plane(p) = &o.shape else { unreachable!() };
 
@@ -71,7 +71,7 @@ mod tests {
 
     #[test]
     fn a_ray_intersecting_a_plane_from_above() {
-        let o = Shape::plane_builder().build();
+        let o = Object::plane_builder().build();
 
         let Shapes::Plane(p) = &o.shape else { unreachable!() };
 
@@ -88,7 +88,7 @@ mod tests {
 
     #[test]
     fn a_ray_intersecting_a_plane_from_below() {
-        let o = Shape::plane_builder().build();
+        let o = Object::plane_builder().build();
 
         let Shapes::Plane(p) = &o.shape else { unreachable!() };
 
@@ -105,7 +105,7 @@ mod tests {
 
     #[test]
     fn the_normal_of_a_plane_is_constant_everywhere() {
-        let o = Shape::plane_builder().build();
+        let o = Object::plane_builder().build();
 
         let Shapes::Plane(p) = &o.shape else { unreachable!() };
 

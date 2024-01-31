@@ -122,7 +122,7 @@ mod tests {
     use rand_xoshiro::Xoroshiro128PlusPlus;
 
     use super::*;
-    use crate::math::float::*;
+    use crate::{math::float::*, Object};
 
     #[test]
     #[allow(clippy::many_single_char_names)]
@@ -182,7 +182,7 @@ mod tests {
 
     #[test]
     fn a_pattern_with_an_object_transformation() {
-        let o = Shape::test_builder()
+        let o = Object::test_builder()
             .transformation(Transformation::new().translate(1.0, 0.5, 1.5))
             .build();
 
@@ -196,7 +196,7 @@ mod tests {
 
     #[test]
     fn a_pattern_with_a_pattern_transformation() {
-        let o = Shape::test_builder().build();
+        let o = Object::test_builder().build();
 
         let p = Pattern::test_builder()
             .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
@@ -210,7 +210,7 @@ mod tests {
 
     #[test]
     fn a_pattern_with_both_an_object_and_a_pattern_transformation() {
-        let o = Shape::test_builder()
+        let o = Object::test_builder()
             .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
             .build();
 
@@ -226,7 +226,7 @@ mod tests {
 
     #[test]
     fn a_stripe_pattern_with_an_object_transformation() {
-        let o = Shape::test_builder()
+        let o = Object::test_builder()
             .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
             .build();
 
@@ -244,7 +244,7 @@ mod tests {
 
     #[test]
     fn a_stripe_pattern_with_a_pattern_transformation() {
-        let o = Shape::test_builder().build();
+        let o = Object::test_builder().build();
 
         let p = Pattern::stripe_builder(
             Colour::white().into(),
@@ -261,7 +261,7 @@ mod tests {
 
     #[test]
     fn a_stripe_pattern_with_both_an_object_and_pattern_transformation() {
-        let o = Shape::test_builder()
+        let o = Object::test_builder()
             .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
             .build();
 

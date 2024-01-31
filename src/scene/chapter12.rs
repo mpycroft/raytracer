@@ -2,7 +2,7 @@ use std::f64::consts::FRAC_PI_2;
 
 use raytracer::{
     math::{Angle, Point, Transformation, Vector},
-    Camera, Colour, Material, PointLight, Shape, World,
+    Camera, Colour, Material, Object, PointLight, World,
 };
 
 use super::SceneData;
@@ -29,7 +29,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     let mut world = World::new();
 
     world.add_object(
-        Shape::cube_builder()
+        Object::cube_builder()
             .transformation(Transformation::new().scale(5.0, 5.0, 5.0))
             .material(
                 Material::builder()
@@ -40,7 +40,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Shape::cube_builder()
+        Object::cube_builder()
             .transformation(
                 Transformation::new()
                     .scale(5.0, 0.1, 2.0)
@@ -50,7 +50,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
             .build(),
     );
     world.add_object(
-        Shape::cube_builder()
+        Object::cube_builder()
             .transformation(
                 Transformation::new()
                     .scale(0.2, 0.7, 0.2)
@@ -62,7 +62,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
             .build(),
     );
     world.add_object(
-        Shape::cube_builder()
+        Object::cube_builder()
             .transformation(
                 Transformation::new()
                     .rotate_y(Angle::from_degrees(30.0))
@@ -76,7 +76,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Shape::sphere_builder()
+        Object::sphere_builder()
             .transformation(
                 Transformation::new()
                     .scale(0.5, 0.5, 0.5)
@@ -87,7 +87,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Shape::cube_builder()
+        Object::cube_builder()
             .transformation(
                 Transformation::new()
                     .scale(0.1, 1.5, 3.0)

@@ -2,7 +2,7 @@ use std::f64::consts::{FRAC_PI_2, FRAC_PI_3};
 
 use raytracer::{
     math::{Angle, Point, Transformation, Vector},
-    Camera, Colour, Material, ObjParser, Pattern, PointLight, Shape, World,
+    Camera, Colour, Material, ObjParser, Object, Pattern, PointLight, World,
 };
 
 use super::SceneData;
@@ -29,7 +29,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     let mut world = World::new();
 
     world.add_object(
-        Shape::plane_builder()
+        Object::plane_builder()
             .material(
                 Material::builder()
                     .pattern(

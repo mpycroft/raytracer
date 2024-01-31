@@ -111,7 +111,7 @@ impl ApproxEq for &Shapes {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::float::*;
+    use crate::{math::float::*, Object};
 
     #[test]
     fn comparing_shapes() {
@@ -122,8 +122,8 @@ mod tests {
         let s5 = Shapes::new_cylinder(1.0, 2.0, true);
         let s6 = Shapes::new_cone(-1.5, 1.5, true);
         let s7 = Shapes::new_cone(-1.5, 1.500_1, true);
-        let s8 = Shapes::new_group(vec![Shape::sphere_builder().build()]);
-        let s9 = Shapes::new_group(vec![Shape::plane_builder().build()]);
+        let s8 = Shapes::new_group(vec![Object::sphere_builder().build()]);
+        let s9 = Shapes::new_group(vec![Object::plane_builder().build()]);
         let s10 = Shapes::new_triangle(
             Point::new(1.0, 0.0, 0.0),
             Point::new(0.0, 1.0, 0.0),

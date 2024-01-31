@@ -3,7 +3,7 @@ use std::f64::consts::{FRAC_PI_2, FRAC_PI_3, FRAC_PI_6};
 use rand::Rng;
 use raytracer::{
     math::{Angle, Point, Transformation, Vector},
-    Camera, Colour, Material, Pattern, PointLight, Shape, World,
+    Camera, Colour, Material, Object, Pattern, PointLight, World,
 };
 
 use super::SceneData;
@@ -31,15 +31,15 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     let mut sides = Vec::new();
     for n in 0..=5 {
         sides.push(
-            Shape::group_builder(vec![
-                Shape::sphere_builder()
+            Object::group_builder(vec![
+                Object::sphere_builder()
                     .transformation(
                         Transformation::new()
                             .scale(0.25, 0.25, 0.25)
                             .translate(0.0, 0.0, -1.0),
                     )
                     .build(),
-                Shape::cylinder_builder(0.0, 1.0, false)
+                Object::cylinder_builder(0.0, 1.0, false)
                     .transformation(
                         Transformation::new()
                             .scale(0.25, 1.0, 0.25)
@@ -58,7 +58,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     }
 
     world.add_object(
-        Shape::group_builder(sides)
+        Object::group_builder(sides)
             .transformation(
                 Transformation::new()
                     .scale(4.0, 4.0, 4.0)
@@ -99,7 +99,7 @@ pub fn generate_sphere_scene<R: Rng>(
     let mut world = World::new();
 
     world.add_object(
-        Shape::plane_builder()
+        Object::plane_builder()
             .material(
                 Material::builder()
                     .pattern(
@@ -175,7 +175,7 @@ pub fn generate_sphere_scene<R: Rng>(
             };
 
             spheres.push(
-                Shape::sphere_builder()
+                Object::sphere_builder()
                     .transformation(
                         Transformation::new()
                             .scale(0.5, 0.5, 0.5)
@@ -190,42 +190,42 @@ pub fn generate_sphere_scene<R: Rng>(
     };
 
     world.add_object(
-        Shape::group_builder(generate_spheres(20, -10.0, 10.0))
+        Object::group_builder(generate_spheres(20, -10.0, 10.0))
             .transformation(Transformation::new().translate(-10.0, 0.0, 35.0))
             .build(),
     );
     world.add_object(
-        Shape::group_builder(generate_spheres(20, -10.0, 10.0))
+        Object::group_builder(generate_spheres(20, -10.0, 10.0))
             .transformation(Transformation::new().translate(10.0, 0.0, 35.0))
             .build(),
     );
     world.add_object(
-        Shape::group_builder(generate_spheres(20, -10.0, 10.0))
+        Object::group_builder(generate_spheres(20, -10.0, 10.0))
             .transformation(Transformation::new().translate(-8.0, 0.0, 25.0))
             .build(),
     );
     world.add_object(
-        Shape::group_builder(generate_spheres(20, -10.0, 10.0))
+        Object::group_builder(generate_spheres(20, -10.0, 10.0))
             .transformation(Transformation::new().translate(8.0, 0.0, 25.0))
             .build(),
     );
     world.add_object(
-        Shape::group_builder(generate_spheres(10, -5.0, 5.0))
+        Object::group_builder(generate_spheres(10, -5.0, 5.0))
             .transformation(Transformation::new().translate(-5.0, 0.0, 10.0))
             .build(),
     );
     world.add_object(
-        Shape::group_builder(generate_spheres(10, -5.0, 5.0))
+        Object::group_builder(generate_spheres(10, -5.0, 5.0))
             .transformation(Transformation::new().translate(5.0, 0.0, 10.0))
             .build(),
     );
     world.add_object(
-        Shape::group_builder(generate_spheres(10, -5.0, 5.0))
+        Object::group_builder(generate_spheres(10, -5.0, 5.0))
             .transformation(Transformation::new().translate(-5.0, 0.0, 0.0))
             .build(),
     );
     world.add_object(
-        Shape::group_builder(generate_spheres(10, -5.0, 5.0))
+        Object::group_builder(generate_spheres(10, -5.0, 5.0))
             .transformation(Transformation::new().translate(5.0, 0.0, 0.0))
             .build(),
     );

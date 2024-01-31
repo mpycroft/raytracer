@@ -127,12 +127,12 @@ mod tests {
     use super::*;
     use crate::{
         math::{float::*, Point, Transformation, Vector},
-        Material,
+        Material, Object,
     };
 
     #[test]
     fn creating_an_intersection() {
-        let o = Shape::test_builder().build();
+        let o = Object::test_builder().build();
         let i = Intersection::new(&o, 1.5);
 
         assert_approx_eq!(i.object, &o);
@@ -152,7 +152,7 @@ mod tests {
     #[allow(clippy::many_single_char_names)]
     fn precomputing_the_state_of_an_intersection() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
-        let o = Shape::test_builder().build();
+        let o = Object::test_builder().build();
         let t = 4.0;
         let i = Intersection::new(&o, t);
 
@@ -170,7 +170,7 @@ mod tests {
     #[allow(clippy::many_single_char_names)]
     fn the_hit_when_an_intersection_occurs_on_the_inside() {
         let r = Ray::new(Point::origin(), Vector::z_axis());
-        let o = Shape::test_builder().build();
+        let o = Object::test_builder().build();
         let t = 1.0;
 
         let i = Intersection::new(&o, t);
@@ -189,7 +189,7 @@ mod tests {
     fn the_hit_should_offset_the_point() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
 
-        let o = Shape::test_builder()
+        let o = Object::test_builder()
             .transformation(Transformation::new().translate(0.0, 0.0, 1.0))
             .build();
 
@@ -203,7 +203,7 @@ mod tests {
 
     #[test]
     fn precomputing_the_reflection_vector() {
-        let o = Shape::plane_builder().build();
+        let o = Object::plane_builder().build();
 
         let sqrt_2_div_2 = SQRT_2 / 2.0;
         let r = Ray::new(
@@ -224,18 +224,18 @@ mod tests {
     #[test]
     #[allow(clippy::many_single_char_names)]
     fn finding_n1_and_n2_at_various_intersections() {
-        let a = Shape::sphere_builder()
+        let a = Object::sphere_builder()
             .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
             .material(Material::glass())
             .build();
 
-        let mut b = Shape::sphere_builder()
+        let mut b = Object::sphere_builder()
             .transformation(Transformation::new().translate(0.0, 0.0, -0.25))
             .material(Material::glass())
             .build();
         b.material.refractive_index = 2.0;
 
-        let mut c = Shape::sphere_builder()
+        let mut c = Object::sphere_builder()
             .transformation(Transformation::new().translate(0.0, 0.0, 0.25))
             .material(Material::glass())
             .build();
@@ -271,7 +271,7 @@ mod tests {
     fn the_under_point_is_offset_below_the_surface() {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
 
-        let o = Shape::sphere_builder()
+        let o = Object::sphere_builder()
             .transformation(Transformation::new().translate(0.0, 0.0, 1.0))
             .material(Material::glass())
             .build();
@@ -287,7 +287,7 @@ mod tests {
     #[test]
     #[allow(clippy::many_single_char_names)]
     fn preparing_the_normal_on_a_smooth_triangle() {
-        let o = Shape::smooth_triangle_builder(
+        let o = Object::smooth_triangle_builder(
             Point::new(0.0, 1.0, 0.0),
             Point::new(-1.0, 0.0, 0.0),
             Point::new(1.0, 0.0, 0.0),
@@ -314,10 +314,10 @@ mod tests {
 
     #[test]
     fn comparing_intersections() {
-        let o1 = Shape::test_builder().build();
+        let o1 = Object::test_builder().build();
         let i1 = Intersection::new(&o1, 3.2);
         let i2 = Intersection::new(&o1, 3.2);
-        let o2 = Shape::test_builder()
+        let o2 = Object::test_builder()
             .transformation(Transformation::new().translate(1.0, 0.0, 0.0))
             .build();
         let i3 = Intersection::new(&o2, 3.2);

@@ -2,7 +2,7 @@ use std::f64::consts::{FRAC_PI_2, FRAC_PI_3};
 
 use raytracer::{
     math::{Angle, Point, Transformation, Vector},
-    Camera, Colour, Material, PointLight, Shape, World,
+    Camera, Colour, Material, Object, PointLight, World,
 };
 
 use super::SceneData;
@@ -33,10 +33,10 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
         .build();
 
     world.add_object(
-        Shape::plane_builder().material(floor_material.clone()).build(),
+        Object::plane_builder().material(floor_material.clone()).build(),
     );
     world.add_object(
-        Shape::plane_builder()
+        Object::plane_builder()
             .transformation(
                 Transformation::new()
                     .rotate_x(Angle(FRAC_PI_2))
@@ -47,7 +47,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Shape::sphere_builder()
+        Object::sphere_builder()
             .transformation(Transformation::new().translate(-0.5, 1.0, 0.5))
             .material(
                 Material::builder()
@@ -60,7 +60,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Shape::sphere_builder()
+        Object::sphere_builder()
             .transformation(
                 Transformation::new()
                     .scale(0.5, 0.5, 0.5)
@@ -77,7 +77,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        Shape::sphere_builder()
+        Object::sphere_builder()
             .transformation(
                 Transformation::new()
                     .scale(0.33, 0.33, 0.33)
