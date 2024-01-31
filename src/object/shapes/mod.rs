@@ -1,7 +1,6 @@
 mod cone;
 mod cube;
 mod cylinder;
-mod group;
 mod intersectable;
 mod plane;
 mod sphere;
@@ -17,14 +16,13 @@ pub use self::intersectable::Intersectable;
 #[cfg(test)]
 use self::test::Test;
 use self::{
-    cone::Cone, cube::Cube, cylinder::Cylinder, group::Group, plane::Plane,
-    sphere::Sphere, triangle::Triangle,
+    cone::Cone, cube::Cube, cylinder::Cylinder, plane::Plane, sphere::Sphere,
+    triangle::Triangle,
 };
 use crate::{
     bounding_box::{Bounded, BoundingBox},
     intersection::{Intersection, TList},
     math::{Point, Ray, Vector},
-    Object,
 };
 
 /// `Shape` is the list of the various geometries that can be rendered.
@@ -34,7 +32,6 @@ pub enum Shapes {
     Cone(Cone),
     Cube(Cube),
     Cylinder(Cylinder),
-    Group(Group),
     Plane(Plane),
     Sphere(Sphere),
     #[cfg(test)]
@@ -57,7 +54,6 @@ impl Shapes {
     add_new_fn!(Cone(minimum: f64, maximum: f64, closed: bool));
     add_new_fn!(Cube());
     add_new_fn!(Cylinder(minimum: f64, maximum: f64, closed: bool));
-    add_new_fn!(Group(objects: Vec<Object>));
     add_new_fn!(Plane());
     add_new_fn!(Sphere());
     #[cfg(test)]
@@ -93,9 +89,6 @@ impl ApproxEq for &Shapes {
             (Shapes::Cylinder(lhs), Shapes::Cylinder(rhs)) => {
                 lhs.approx_eq(rhs, margin)
             }
-            (Shapes::Group(lhs), Shapes::Group(rhs)) => {
-                lhs.approx_eq(rhs, margin)
-            }
             (Shapes::Sphere(_), Shapes::Sphere(_)) => true,
             (Shapes::Plane(_), Shapes::Plane(_)) => true,
             #[cfg(test)]
@@ -122,19 +115,17 @@ mod tests {
         let s5 = Shapes::new_cylinder(1.0, 2.0, true);
         let s6 = Shapes::new_cone(-1.5, 1.5, true);
         let s7 = Shapes::new_cone(-1.5, 1.500_1, true);
-        let s8 = Shapes::new_group(vec![Object::sphere_builder().build()]);
-        let s9 = Shapes::new_group(vec![Object::plane_builder().build()]);
-        let s10 = Shapes::new_triangle(
+        let s8 = Shapes::new_triangle(
             Point::new(1.0, 0.0, 0.0),
             Point::new(0.0, 1.0, 0.0),
             Point::new(0.0, 0.0, 1.0),
         );
-        let s11 = Shapes::new_triangle(
+        let s9 = Shapes::new_triangle(
             Point::new(1.0, 0.0, 0.0),
             Point::new(0.0, 1.0, 0.0),
             Point::new(0.0, 0.0, -1.0),
         );
-        let s12 = Shapes::new_smooth_triangle(
+        let s10 = Shapes::new_smooth_triangle(
             Point::origin(),
             Point::new(1.0, 0.0, 0.0),
             Point::new(0.0, -1.0, 0.0),
@@ -142,7 +133,7 @@ mod tests {
             Vector::y_axis(),
             Vector::z_axis(),
         );
-        let s13 = Shapes::new_smooth_triangle(
+        let s11 = Shapes::new_smooth_triangle(
             Point::origin(),
             Point::new(1.0, 0.0, 0.0),
             Point::new(0.0, -1.0, 0.0),
@@ -159,6 +150,5 @@ mod tests {
         assert_approx_ne!(s6, &s7);
         assert_approx_ne!(s8, &s9);
         assert_approx_ne!(s10, &s11);
-        assert_approx_ne!(s12, &s13);
     }
 }

@@ -31,34 +31,36 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     let mut sides = Vec::new();
     for n in 0..=5 {
         sides.push(
-            Object::group_builder(vec![
-                Object::sphere_builder()
-                    .transformation(
-                        Transformation::new()
-                            .scale(0.25, 0.25, 0.25)
-                            .translate(0.0, 0.0, -1.0),
-                    )
-                    .build(),
-                Object::cylinder_builder(0.0, 1.0, false)
-                    .transformation(
-                        Transformation::new()
-                            .scale(0.25, 1.0, 0.25)
-                            .rotate_z(-Angle(FRAC_PI_2))
-                            .rotate_y(-Angle(FRAC_PI_6))
-                            .translate(0.0, 0.0, -1.0),
-                    )
-                    .build(),
-            ])
-            .transformation(
-                #[allow(clippy::cast_lossless)]
-                Transformation::new().rotate_y(Angle(n as f64 * FRAC_PI_3)),
-            )
-            .build(),
+            Object::group_builder()
+                .set_objects(vec![
+                    Object::sphere_builder()
+                        .transformation(
+                            Transformation::new()
+                                .scale(0.25, 0.25, 0.25)
+                                .translate(0.0, 0.0, -1.0),
+                        )
+                        .build(),
+                    Object::cylinder_builder(0.0, 1.0, false)
+                        .transformation(
+                            Transformation::new()
+                                .scale(0.25, 1.0, 0.25)
+                                .rotate_z(-Angle(FRAC_PI_2))
+                                .rotate_y(-Angle(FRAC_PI_6))
+                                .translate(0.0, 0.0, -1.0),
+                        )
+                        .build(),
+                ])
+                .transformation(
+                    #[allow(clippy::cast_lossless)]
+                    Transformation::new().rotate_y(Angle(n as f64 * FRAC_PI_3)),
+                )
+                .build(),
         );
     }
 
     world.add_object(
-        Object::group_builder(sides)
+        Object::group_builder()
+            .set_objects(sides)
             .transformation(
                 Transformation::new()
                     .scale(4.0, 4.0, 4.0)
@@ -190,42 +192,50 @@ pub fn generate_sphere_scene<R: Rng>(
     };
 
     world.add_object(
-        Object::group_builder(generate_spheres(20, -10.0, 10.0))
+        Object::group_builder()
+            .set_objects(generate_spheres(20, -10.0, 10.0))
             .transformation(Transformation::new().translate(-10.0, 0.0, 35.0))
             .build(),
     );
     world.add_object(
-        Object::group_builder(generate_spheres(20, -10.0, 10.0))
+        Object::group_builder()
+            .set_objects(generate_spheres(20, -10.0, 10.0))
             .transformation(Transformation::new().translate(10.0, 0.0, 35.0))
             .build(),
     );
     world.add_object(
-        Object::group_builder(generate_spheres(20, -10.0, 10.0))
+        Object::group_builder()
+            .set_objects(generate_spheres(20, -10.0, 10.0))
             .transformation(Transformation::new().translate(-8.0, 0.0, 25.0))
             .build(),
     );
     world.add_object(
-        Object::group_builder(generate_spheres(20, -10.0, 10.0))
+        Object::group_builder()
+            .set_objects(generate_spheres(20, -10.0, 10.0))
             .transformation(Transformation::new().translate(8.0, 0.0, 25.0))
             .build(),
     );
     world.add_object(
-        Object::group_builder(generate_spheres(10, -5.0, 5.0))
+        Object::group_builder()
+            .set_objects(generate_spheres(10, -5.0, 5.0))
             .transformation(Transformation::new().translate(-5.0, 0.0, 10.0))
             .build(),
     );
     world.add_object(
-        Object::group_builder(generate_spheres(10, -5.0, 5.0))
+        Object::group_builder()
+            .set_objects(generate_spheres(10, -5.0, 5.0))
             .transformation(Transformation::new().translate(5.0, 0.0, 10.0))
             .build(),
     );
     world.add_object(
-        Object::group_builder(generate_spheres(10, -5.0, 5.0))
+        Object::group_builder()
+            .set_objects(generate_spheres(10, -5.0, 5.0))
             .transformation(Transformation::new().translate(-5.0, 0.0, 0.0))
             .build(),
     );
     world.add_object(
-        Object::group_builder(generate_spheres(10, -5.0, 5.0))
+        Object::group_builder()
+            .set_objects(generate_spheres(10, -5.0, 5.0))
             .transformation(Transformation::new().translate(5.0, 0.0, 0.0))
             .build(),
     );

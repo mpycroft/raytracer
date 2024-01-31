@@ -8,12 +8,12 @@ pub struct TValues {
 
 impl TValues {
     #[must_use]
-    pub fn new(t: f64) -> Self {
+    pub const fn new(t: f64) -> Self {
         Self { t, u_v: None }
     }
 
     #[must_use]
-    pub fn new_with_u_v(t: f64, u: f64, v: f64) -> Self {
+    pub const fn new_with_u_v(t: f64, u: f64, v: f64) -> Self {
         Self { t, u_v: Some((u, v)) }
     }
 }

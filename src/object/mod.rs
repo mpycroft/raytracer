@@ -1,21 +1,28 @@
+mod group;
 mod shape;
 pub mod shapes;
 
+use enum_dispatch::enum_dispatch;
 use float_cmp::{ApproxEq, F64Margin};
+use group::Group;
 use paste::paste;
 pub use shape::{Shape, ShapeBuilder};
 use shapes::Shapes;
 
+pub use self::group::HelperBuilder;
 use crate::{
+    bounding_box::{Bounded, BoundingBox},
     intersection::{Intersection, List},
-    math::{Point, Ray, Transformable, Vector},
+    math::{Point, Ray, Transformable, Transformation, Vector},
     Material,
 };
 
 /// An 'Object' represents some entity in the scene that can be rendered.
 #[derive(Clone, Debug)]
+#[enum_dispatch]
 pub enum Object {
     Shape(Shape),
+    Group(Group),
 }
 
 macro_rules! add_builder_fn {
@@ -36,7 +43,6 @@ impl Object {
     add_builder_fn!(Cone(minimum: f64, maximum:f64, closed: bool));
     add_builder_fn!(Cube());
     add_builder_fn!(Cylinder(minimum: f64, maximum: f64, closed: bool));
-    add_builder_fn!(Group(objects: Vec<Object>));
     add_builder_fn!(Plane());
     add_builder_fn!(Sphere());
     #[cfg(test)]
@@ -56,10 +62,15 @@ impl Object {
         ))
     }
 
+    pub fn group_builder() -> HelperBuilder<((), (Vec<Self>,))> {
+        Group::builder()
+    }
+
     #[must_use]
     pub fn intersect(&self, ray: &Ray) -> Option<List> {
         match self {
             Self::Shape(shape) => shape.intersect(ray, self),
+            Self::Group(group) => group.intersect(ray),
         }
     }
 
@@ -71,6 +82,7 @@ impl Object {
     ) -> Vector {
         match self {
             Self::Shape(shape) => shape.normal_at(point, intersection),
+            Self::Group(_) => unreachable!(),
         }
     }
 
@@ -78,6 +90,7 @@ impl Object {
     pub fn material(&self) -> &Material {
         match self {
             Self::Shape(shape) => &shape.material,
+            Self::Group(_) => unreachable!(),
         }
     }
 
@@ -85,6 +98,7 @@ impl Object {
     pub fn casts_shadow(&self) -> bool {
         match self {
             Self::Shape(shape) => shape.casts_shadow,
+            Self::Group(_) => unreachable!(),
         }
     }
 
@@ -92,37 +106,15 @@ impl Object {
     pub fn to_object_space<T: Transformable>(&self, value: &T) -> T {
         match self {
             Self::Shape(shape) => shape.to_object_space(value),
+            Self::Group(_) => unreachable!(),
         }
     }
 
-    #[must_use]
-    pub fn to_world_space<T: Transformable>(&self, value: &T) -> T {
+    pub fn update_transformation(&mut self, transformation: &Transformation) {
         match self {
-            Self::Shape(shape) => shape.to_world_space(value),
+            Self::Shape(shape) => shape.update_transformation(transformation),
+            Self::Group(group) => group.update_transformation(transformation),
         }
-    }
-
-    #[must_use]
-    pub fn is_group(&self) -> bool {
-        match self {
-            Self::Shape(shape) => matches!(shape.shape, Shapes::Group(_)),
-        }
-    }
-
-    #[must_use]
-    pub fn iter_no_groups(&mut self) -> Vec<&mut Object> {
-        match self {
-            Self::Shape(shape) => match &mut shape.shape {
-                Shapes::Group(group) => group.iter_no_groups(),
-                _ => unreachable!(),
-            },
-        }
-    }
-}
-
-impl From<Shape> for Object {
-    fn from(value: Shape) -> Self {
-        Self::Shape(value)
     }
 }
 
@@ -136,6 +128,27 @@ impl ApproxEq for &Object {
             (Object::Shape(lhs), Object::Shape(rhs)) => {
                 lhs.approx_eq(rhs, margin)
             }
+            (Object::Group(lhs), Object::Group(rhs)) => {
+                lhs.approx_eq(rhs, margin)
+            }
+            (_, _) => false,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::math::float::*;
+
+    #[test]
+    fn comparing_objects() {
+        let o1 = Object::group_builder().build();
+        let o2 = Object::group_builder().build();
+        let o3 = Object::sphere_builder().build();
+
+        assert_approx_eq!(o1, &o2);
+
+        assert_approx_ne!(o1, &o3);
     }
 }
