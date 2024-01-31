@@ -188,7 +188,7 @@ If one vertex normal is specified, all faces must also provide vertex normals."
 
             if is_smooth {
                 group.push(
-                    Object::smooth_triangle_builder(
+                    Object::triangle_builder(
                         self.vertices[vertex1],
                         self.vertices[vertex2],
                         self.vertices[vertex3],
@@ -201,7 +201,7 @@ If one vertex normal is specified, all faces must also provide vertex normals."
                 );
             } else {
                 group.push(
-                    Object::triangle_builder(
+                    Object::flat_triangle_builder(
                         self.vertices[vertex1],
                         self.vertices[vertex2],
                         self.vertices[vertex3],
@@ -289,7 +289,7 @@ Found 5 items."
 
         assert_approx_eq!(
             c[0],
-            &Object::triangle_builder(
+            &Object::flat_triangle_builder(
                 Point::new(-1.0, 1.0, 0.0),
                 Point::new(-1.0, 0.0, 0.0),
                 Point::new(1.0, 0.0, 0.0)
@@ -298,7 +298,7 @@ Found 5 items."
         );
         assert_approx_eq!(
             c[1],
-            &Object::triangle_builder(
+            &Object::flat_triangle_builder(
                 Point::new(-1.0, 1.0, 0.0),
                 Point::new(1.0, 0.0, 0.0),
                 Point::new(1.0, 1.0, 0.0)
@@ -337,7 +337,7 @@ Found 3 items."
 
         assert_approx_eq!(
             c[0],
-            &Object::triangle_builder(
+            &Object::flat_triangle_builder(
                 Point::new(-1.0, 1.0, 0.0),
                 Point::new(-1.0, 0.0, 0.0),
                 Point::new(1.0, 0.0, 0.0)
@@ -346,7 +346,7 @@ Found 3 items."
         );
         assert_approx_eq!(
             c[1],
-            &Object::triangle_builder(
+            &Object::flat_triangle_builder(
                 Point::new(-1.0, 1.0, 0.0),
                 Point::new(1.0, 0.0, 0.0),
                 Point::new(1.0, 1.0, 0.0)
@@ -355,7 +355,7 @@ Found 3 items."
         );
         assert_approx_eq!(
             c[2],
-            &Object::triangle_builder(
+            &Object::flat_triangle_builder(
                 Point::new(-1.0, 1.0, 0.0),
                 Point::new(1.0, 1.0, 0.0),
                 Point::new(0.0, 2.0, 0.0)
@@ -383,7 +383,7 @@ Found 3 items."
 
         assert_approx_eq!(
             c1[0],
-            &Object::triangle_builder(
+            &Object::flat_triangle_builder(
                 Point::new(-1.0, 1.0, 0.0),
                 Point::new(-1.0, 0.0, 0.0),
                 Point::new(1.0, 0.0, 0.0)
@@ -398,7 +398,7 @@ Found 3 items."
 
         assert_approx_eq!(
             c2[0],
-            &Object::triangle_builder(
+            &Object::flat_triangle_builder(
                 Point::new(-1.0, 1.0, 0.0),
                 Point::new(1.0, 0.0, 0.0),
                 Point::new(1.0, 1.0, 0.0)
@@ -459,7 +459,7 @@ Found 6 items."
 
         assert_eq!(c.len(), 2);
 
-        let t = Object::smooth_triangle_builder(
+        let t = Object::triangle_builder(
             Point::new(0.0, 1.0, 0.0),
             Point::new(-1.0, 0.0, 0.0),
             Point::new(1.0, 0.0, 0.0),

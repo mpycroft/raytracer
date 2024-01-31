@@ -58,20 +58,22 @@ impl Shapes {
     add_new_fn!(Sphere());
     #[cfg(test)]
     add_new_fn!(Test());
-    add_new_fn!(Triangle(point1: Point, point2: Point, point3: Point));
-
-    #[must_use]
-    pub fn new_smooth_triangle(
+    add_new_fn!(Triangle(
         point1: Point,
         point2: Point,
         point3: Point,
         normal1: Vector,
         normal2: Vector,
         normal3: Vector,
+    ));
+
+    #[must_use]
+    pub fn new_flat_triangle(
+        point1: Point,
+        point2: Point,
+        point3: Point,
     ) -> Self {
-        Self::Triangle(Triangle::new_with_normals(
-            point1, point2, point3, normal1, normal2, normal3,
-        ))
+        Self::Triangle(Triangle::new_flat(point1, point2, point3))
     }
 }
 
@@ -115,17 +117,17 @@ mod tests {
         let s5 = Shapes::new_cylinder(1.0, 2.0, true);
         let s6 = Shapes::new_cone(-1.5, 1.5, true);
         let s7 = Shapes::new_cone(-1.5, 1.500_1, true);
-        let s8 = Shapes::new_triangle(
+        let s8 = Shapes::new_flat_triangle(
             Point::new(1.0, 0.0, 0.0),
             Point::new(0.0, 1.0, 0.0),
             Point::new(0.0, 0.0, 1.0),
         );
-        let s9 = Shapes::new_triangle(
+        let s9 = Shapes::new_flat_triangle(
             Point::new(1.0, 0.0, 0.0),
             Point::new(0.0, 1.0, 0.0),
             Point::new(0.0, 0.0, -1.0),
         );
-        let s10 = Shapes::new_smooth_triangle(
+        let s10 = Shapes::new_triangle(
             Point::origin(),
             Point::new(1.0, 0.0, 0.0),
             Point::new(0.0, -1.0, 0.0),
@@ -133,7 +135,7 @@ mod tests {
             Vector::y_axis(),
             Vector::z_axis(),
         );
-        let s11 = Shapes::new_smooth_triangle(
+        let s11 = Shapes::new_triangle(
             Point::origin(),
             Point::new(1.0, 0.0, 0.0),
             Point::new(0.0, -1.0, 0.0),

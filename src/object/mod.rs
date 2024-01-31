@@ -55,19 +55,22 @@ impl Object {
     add_builder_fn!(Sphere());
     #[cfg(test)]
     add_builder_fn!(Test());
-    add_builder_fn!(Triangle(point1: Point, point2: Point, point3: Point));
-
-    pub fn smooth_triangle_builder(
+    add_builder_fn!(Triangle(
         point1: Point,
         point2: Point,
         point3: Point,
         normal1: Vector,
         normal2: Vector,
         normal3: Vector,
+    ));
+
+    pub fn flat_triangle_builder(
+        point1: Point,
+        point2: Point,
+        point3: Point,
     ) -> ShapeBuilder<((), (), (), (Shapes,))> {
-        Shape::_builder().shape(Shapes::new_smooth_triangle(
-            point1, point2, point3, normal1, normal2, normal3,
-        ))
+        Shape::_builder()
+            .shape(Shapes::new_flat_triangle(point1, point2, point3))
     }
 
     pub fn group_builder() -> BuildableGroup {

@@ -292,7 +292,7 @@ mod tests {
     #[test]
     #[allow(clippy::many_single_char_names)]
     fn preparing_the_normal_on_a_smooth_triangle() {
-        let o = Object::smooth_triangle_builder(
+        let o = Object::triangle_builder(
             Point::new(0.0, 1.0, 0.0),
             Point::new(-1.0, 0.0, 0.0),
             Point::new(1.0, 0.0, 0.0),
