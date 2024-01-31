@@ -174,6 +174,12 @@ mod tests {
     use crate::math::float::*;
 
     #[test]
+    fn create_from_obj_file() {
+        let _ =
+            Object::from_obj_file("obj/test/triangles.obj").unwrap().build();
+    }
+
+    #[test]
     fn comparing_objects() {
         let o1 = Object::group_builder().build();
         let o2 = Object::group_builder().build();

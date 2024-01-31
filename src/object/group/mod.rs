@@ -343,8 +343,6 @@ mod tests {
 
     #[test]
     fn a_groups_material_overwrites_objects() {
-        let s = Object::sphere_builder().material(Material::glass()).build();
-
         let m = Material::builder()
             .pattern(Colour::new(0.4, 0.9, 1.0).into())
             .ambient(0.7)
@@ -354,11 +352,27 @@ mod tests {
             .refractive_index(0.0)
             .build();
 
-        let g =
-            Object::group_builder().add_object(s).material(m.clone()).build();
+        let g = Object::group_builder()
+            .add_object(
+                Object::group_builder()
+                    .set_objects(vec![
+                        Object::sphere_builder()
+                            .material(Material::glass())
+                            .build(),
+                        Object::sphere_builder().build(),
+                    ])
+                    .build(),
+            )
+            .material(m.clone())
+            .build();
 
         let Object::Group(g) = g else { unreachable!() };
+        let Object::Group(g) = &g.objects[0] else { unreachable!() };
         let Object::Shape(s) = &g.objects[0] else { unreachable!() };
+
+        assert_approx_eq!(s.material, &m);
+
+        let Object::Shape(s) = &g.objects[1] else { unreachable!() };
 
         assert_approx_eq!(s.material, &m);
     }
