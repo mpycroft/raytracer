@@ -5,9 +5,8 @@ use derive_new::new;
 use super::Intersectable;
 use crate::{
     bounding_box::{Bounded, BoundingBox},
-    intersection::{Intersection, List},
+    intersection::{Intersection, TList},
     math::{float::approx_eq, Point, Ray, Vector},
-    Object,
 };
 
 /// A `Plane` is an infinitely large plane situated along the x and z axes.
@@ -16,15 +15,12 @@ pub struct Plane;
 
 impl Intersectable for Plane {
     #[must_use]
-    fn intersect<'a>(&self, ray: &Ray, object: &'a Object) -> Option<List<'a>> {
+    fn intersect(&self, ray: &Ray) -> Option<TList> {
         if approx_eq!(ray.direction.y, 0.0) {
             return None;
         }
 
-        Some(List::from(Intersection::new(
-            object,
-            -ray.origin.y / ray.direction.y,
-        )))
+        Some(TList::from(-ray.origin.y / ray.direction.y))
     }
 
     #[must_use]
@@ -49,39 +45,27 @@ impl Bounded for Plane {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, object::shapes::Shapes};
+    use crate::{math::float::*, Object};
 
     #[test]
     fn intersect_with_a_ray_parallel_to_the_plane() {
-        let o = Object::plane_builder().build();
-
-        let Object::Shape(s) = o.clone();
-        let Shapes::Plane(p) = &s.shape else { unreachable!() };
+        let p = Plane::new();
 
         assert!(p
-            .intersect(
-                &Ray::new(Point::new(0.0, 10.0, 0.0), Vector::z_axis()),
-                &o
-            )
+            .intersect(&Ray::new(Point::new(0.0, 10.0, 0.0), Vector::z_axis()),)
             .is_none());
 
         assert!(p
-            .intersect(&Ray::new(Point::origin(), Vector::z_axis()), &o)
+            .intersect(&Ray::new(Point::origin(), Vector::z_axis()))
             .is_none());
     }
 
     #[test]
     fn a_ray_intersecting_a_plane_from_above() {
-        let o = Object::plane_builder().build();
-
-        let Object::Shape(s) = o.clone();
-        let Shapes::Plane(p) = &s.shape else { unreachable!() };
+        let p = Plane::new();
 
         let l = p
-            .intersect(
-                &Ray::new(Point::new(0.0, 1.0, 0.0), -Vector::y_axis()),
-                &o,
-            )
+            .intersect(&Ray::new(Point::new(0.0, 1.0, 0.0), -Vector::y_axis()))
             .unwrap();
 
         assert_eq!(l.len(), 1);
@@ -90,16 +74,10 @@ mod tests {
 
     #[test]
     fn a_ray_intersecting_a_plane_from_below() {
-        let o = Object::plane_builder().build();
-
-        let Object::Shape(s) = o.clone();
-        let Shapes::Plane(p) = &s.shape else { unreachable!() };
+        let p = Plane::new();
 
         let l = p
-            .intersect(
-                &Ray::new(Point::new(0.0, -1.0, 0.0), Vector::y_axis()),
-                &o,
-            )
+            .intersect(&Ray::new(Point::new(0.0, -1.0, 0.0), Vector::y_axis()))
             .unwrap();
 
         assert_eq!(l.len(), 1);
@@ -109,11 +87,9 @@ mod tests {
     #[test]
     #[allow(clippy::many_single_char_names)]
     fn the_normal_of_a_plane_is_constant_everywhere() {
-        let o = Object::plane_builder().build();
+        let p = Plane::new();
 
-        let Object::Shape(s) = o.clone();
-        let Shapes::Plane(p) = &s.shape else { unreachable!() };
-
+        let o = Object::test_builder().build();
         let i = Intersection::new(&o, 0.0);
 
         let n = Vector::y_axis();

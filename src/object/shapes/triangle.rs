@@ -3,12 +3,11 @@ use float_cmp::{ApproxEq, F64Margin};
 use super::Intersectable;
 use crate::{
     bounding_box::{Bounded, BoundingBox},
-    intersection::{Intersection, List},
+    intersection::{Intersection, TList, TValues},
     math::{
         float::{approx_eq, impl_approx_eq},
         Point, Ray, Vector,
     },
-    Object,
 };
 
 /// A `Triangle` is a simple triangle defined by three vertices.
@@ -78,7 +77,7 @@ impl Triangle {
 
 impl Intersectable for Triangle {
     #[must_use]
-    fn intersect<'a>(&self, ray: &Ray, object: &'a Object) -> Option<List<'a>> {
+    fn intersect(&self, ray: &Ray) -> Option<TList> {
         let dir_cross_e2 = ray.direction.cross(&self.edge2);
         let det = self.edge1.dot(&dir_cross_e2);
 
@@ -105,7 +104,7 @@ impl Intersectable for Triangle {
 
         let t = f * self.edge2.dot(&origin_cross_e1);
 
-        Some(List::from(Intersection::new_with_u_v(object, t, u, v)))
+        Some(TList::from(TValues::new_with_u_v(t, u, v)))
     }
 
     #[must_use]
@@ -155,19 +154,18 @@ impl ApproxEq for Normal {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, object::shapes::Shapes};
+    use crate::{math::float::*, Object};
 
-    fn create_triangle() -> Object {
-        Object::triangle_builder(
+    fn create_triangle() -> Triangle {
+        Triangle::new(
             Point::new(0.0, 1.0, 0.0),
             Point::new(-1.0, 0.0, 0.0),
             Point::new(1.0, 0.0, 0.0),
         )
-        .build()
     }
 
-    fn create_smooth_triangle() -> Object {
-        Object::smooth_triangle_builder(
+    fn create_smooth_triangle() -> Triangle {
+        Triangle::new_with_normals(
             Point::new(0.0, 1.0, 0.0),
             Point::new(-1.0, 0.0, 0.0),
             Point::new(1.0, 0.0, 0.0),
@@ -175,7 +173,6 @@ mod tests {
             -Vector::x_axis(),
             Vector::x_axis(),
         )
-        .build()
     }
 
     #[test]
@@ -213,11 +210,9 @@ mod tests {
 
     #[test]
     fn finding_the_normal_on_a_triangle() {
-        let o = create_triangle();
+        let t = create_triangle();
 
-        let Object::Shape(s) = o.clone();
-        let Shapes::Triangle(t) = &s.shape else { unreachable!() };
-
+        let o = Object::test_builder().build();
         let i = Intersection::new(&o, 0.0);
 
         let Normal::Flat(normal) = t.normal else { unreachable!() };
@@ -232,75 +227,50 @@ mod tests {
 
     #[test]
     fn intersecting_a_ray_parallel_to_the_triangle() {
-        let o = create_triangle();
+        let t = create_triangle();
 
-        let Object::Shape(s) = o.clone();
-        let Shapes::Triangle(t) = &s.shape else { unreachable!() };
-
-        assert!(t
-            .intersect(
-                &Ray::new(Point::new(0.0, -1.0, -2.0), Vector::y_axis()),
-                &o
-            )
-            .is_none());
+        assert!(
+            t.intersect(&Ray::new(
+                Point::new(0.0, -1.0, -2.0),
+                Vector::y_axis()
+            ),)
+                .is_none()
+        );
     }
 
     #[test]
     fn a_ray_misses_the_p1_p3_edge() {
-        let o = create_triangle();
-
-        let Object::Shape(s) = o.clone();
-        let Shapes::Triangle(t) = &s.shape else { unreachable!() };
+        let t = create_triangle();
 
         assert!(t
-            .intersect(
-                &Ray::new(Point::new(1.0, 1.0, -2.0), Vector::z_axis()),
-                &o
-            )
+            .intersect(&Ray::new(Point::new(1.0, 1.0, -2.0), Vector::z_axis()),)
             .is_none());
     }
 
     #[test]
     fn a_ray_misses_the_p1_p2_edge() {
-        let o = create_triangle();
-
-        let Object::Shape(s) = o.clone();
-        let Shapes::Triangle(t) = &s.shape else { unreachable!() };
+        let t = create_triangle();
 
         assert!(t
-            .intersect(
-                &Ray::new(Point::new(-1.0, 1.0, -2.0), Vector::z_axis()),
-                &o
-            )
+            .intersect(&Ray::new(Point::new(-1.0, 1.0, -2.0), Vector::z_axis()))
             .is_none());
     }
 
     #[test]
     fn a_ray_misses_the_p2_p3_edge() {
-        let o = create_triangle();
-
-        let Object::Shape(s) = o.clone();
-        let Shapes::Triangle(t) = &s.shape else { unreachable!() };
+        let t = create_triangle();
 
         assert!(t
-            .intersect(
-                &Ray::new(Point::new(0.0, -1.0, -2.0), Vector::z_axis()),
-                &o
-            )
+            .intersect(&Ray::new(Point::new(0.0, -1.0, -2.0), Vector::z_axis()))
             .is_none());
     }
 
     #[test]
     fn a_ray_strikes_a_triangle() {
-        let o = create_triangle();
+        let t = create_triangle();
 
-        let Object::Shape(s) = o.clone();
-        let Shapes::Triangle(t) = &s.shape else { unreachable!() };
-
-        let l = t.intersect(
-            &Ray::new(Point::new(0.0, 0.5, -2.0), Vector::z_axis()),
-            &o,
-        );
+        let l = t
+            .intersect(&Ray::new(Point::new(0.0, 0.5, -2.0), Vector::z_axis()));
 
         assert!(l.is_some());
 
@@ -331,15 +301,12 @@ mod tests {
     #[test]
     #[allow(clippy::many_single_char_names)]
     fn an_intersection_with_a_smooth_triangle_stores_u_v() {
-        let o = create_smooth_triangle();
+        let t = create_smooth_triangle();
 
-        let Object::Shape(s) = o.clone();
-        let Shapes::Triangle(t) = &s.shape else { unreachable!() };
-
-        let l = t.intersect(
-            &Ray::new(Point::new(-0.2, 0.3, -2.0), Vector::z_axis()),
-            &o,
-        );
+        let l = t.intersect(&Ray::new(
+            Point::new(-0.2, 0.3, -2.0),
+            Vector::z_axis(),
+        ));
 
         assert!(l.is_some());
 
@@ -354,11 +321,9 @@ mod tests {
 
     #[test]
     fn a_smooth_triangle_uses_u_v_to_interpolate_the_normal() {
-        let o = create_smooth_triangle();
+        let t = create_smooth_triangle();
 
-        let Object::Shape(s) = o.clone();
-        let Shapes::Triangle(t) = &s.shape else { unreachable!() };
-
+        let o = Object::test_builder().build();
         let i = Intersection::new_with_u_v(&o, 1.0, 0.45, 0.25);
 
         assert_approx_eq!(

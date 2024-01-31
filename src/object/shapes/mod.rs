@@ -22,7 +22,7 @@ use self::{
 };
 use crate::{
     bounding_box::{Bounded, BoundingBox},
-    intersection::{Intersection, List},
+    intersection::{Intersection, TList},
     math::{Point, Ray, Vector},
     Object,
 };

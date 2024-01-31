@@ -70,7 +70,7 @@ impl Shape {
         } else {
             let ray = self.to_object_space(ray);
 
-            self.shape.intersect(&ray, object)
+            self.shape.intersect(&ray).map(|t_list| t_list.into_list(object))
         }
     }
 

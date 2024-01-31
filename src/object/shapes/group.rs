@@ -4,7 +4,7 @@ use float_cmp::{ApproxEq, F64Margin};
 use super::Intersectable;
 use crate::{
     bounding_box::{Bounded, BoundingBox},
-    intersection::{Intersection, List},
+    intersection::{Intersection, TList},
     math::{Point, Ray, Vector},
     object::shapes::Shapes,
     Object,
@@ -54,11 +54,7 @@ impl Group {
 
 impl Intersectable for Group {
     #[must_use]
-    fn intersect<'a>(
-        &self,
-        _ray: &Ray,
-        _object: &'a Object,
-    ) -> Option<List<'a>> {
+    fn intersect(&self, _ray: &Ray) -> Option<TList> {
         unreachable!()
     }
 
