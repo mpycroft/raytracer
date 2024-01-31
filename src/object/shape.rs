@@ -27,6 +27,7 @@ pub struct Shape {
     pub material: Material,
     #[builder(default = true)]
     pub casts_shadow: bool,
+    #[allow(clippy::struct_field_names)]
     pub shape: Shapes,
     #[builder(default = BoundingBox::default(), setter(skip))]
     pub bounding_box: BoundingBox,

@@ -7,11 +7,8 @@ use std::{
 
 use anyhow::{bail, Result};
 
-use crate::{
-    math::{Point, Vector},
-    object::HelperBuilder,
-    Object,
-};
+use super::{group::BuildableGroup, Object};
+use crate::math::{Point, Vector};
 
 #[derive(Debug)]
 pub struct ObjParser {
@@ -230,7 +227,7 @@ If one vertex normal is specified, all faces must also provide vertex normals."
         groups.get_mut(group_name).ok_or_else(|| unreachable!())
     }
 
-    pub fn into_group(self) -> HelperBuilder<((), (Vec<Object>,))> {
+    pub fn into_group(self) -> BuildableGroup {
         Object::group_builder().set_objects(self.groups)
     }
 }

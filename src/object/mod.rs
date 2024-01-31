@@ -1,7 +1,11 @@
 mod group;
+mod obj_parser;
 mod shape;
 pub mod shapes;
 
+use std::path::Path;
+
+use anyhow::Result;
 use enum_dispatch::enum_dispatch;
 use float_cmp::{ApproxEq, F64Margin};
 use group::Group;
@@ -9,7 +13,7 @@ use paste::paste;
 pub use shape::{Shape, ShapeBuilder};
 use shapes::Shapes;
 
-pub use self::group::HelperBuilder;
+use self::{group::BuildableGroup, obj_parser::ObjParser};
 use crate::{
     bounding_box::{Bounded, BoundingBox},
     intersection::{Intersection, List},
@@ -62,7 +66,7 @@ impl Object {
         ))
     }
 
-    pub fn group_builder() -> HelperBuilder<((), (Vec<Self>,))> {
+    pub fn group_builder() -> BuildableGroup {
         Group::builder()
     }
 
@@ -115,6 +119,20 @@ impl Object {
             Self::Shape(shape) => shape.update_transformation(transformation),
             Self::Group(group) => group.update_transformation(transformation),
         }
+    }
+
+    /// Parse a given OBJ file and return a partially formed `Group` containing
+    /// all the triangles from the OBJ file.
+    ///
+    /// # Errors
+    ///
+    /// Will return errors if unable to read or parse the file.
+    pub fn from_obj_file<P: AsRef<Path>>(
+        filename: P,
+    ) -> Result<BuildableGroup> {
+        let parser = ObjParser::parse(filename)?;
+
+        Ok(parser.into_group())
     }
 }
 

@@ -2,7 +2,7 @@ use std::f64::consts::{FRAC_PI_2, FRAC_PI_3};
 
 use raytracer::{
     math::{Angle, Point, Transformation, Vector},
-    Camera, Colour, Material, ObjParser, Object, Pattern, PointLight, World,
+    Camera, Colour, Material, Object, Pattern, PointLight, World,
 };
 
 use super::SceneData;
@@ -45,9 +45,8 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     );
 
     world.add_object(
-        ObjParser::parse("obj/teapot.obj")
+        Object::from_obj_file("obj/teapot.obj")
             .unwrap()
-            .into_group()
             .transformation(
                 Transformation::new()
                     .rotate_x(-Angle(FRAC_PI_2))

@@ -3,6 +3,8 @@ use typed_builder::{Optional, TypedBuilder};
 use super::{Group, Object};
 use crate::{bounding_box::Bounded, math::Transformation};
 
+pub type BuildableGroup = HelperBuilder<((), (Vec<Object>,))>;
+
 #[derive(Clone, Debug, TypedBuilder)]
 #[builder(build_method(vis = "", name = _build))]
 pub struct Helper {
