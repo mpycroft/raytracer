@@ -67,7 +67,7 @@ impl Bounded for Cube {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, shape::Shape};
+    use crate::{math::float::*, object::shape::Shape};
 
     #[test]
     fn a_ray_intersects_a_cube() {

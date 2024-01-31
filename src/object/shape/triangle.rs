@@ -156,7 +156,7 @@ impl ApproxEq for Normal {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, shape::Shape};
+    use crate::{math::float::*, object::shape::Shape};
 
     fn create_triangle() -> Object {
         Object::triangle_builder(

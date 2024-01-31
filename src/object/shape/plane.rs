@@ -49,7 +49,7 @@ impl Bounded for Plane {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, shape::Shape};
+    use crate::{math::float::*, object::shape::Shape};
 
     #[test]
     fn intersect_with_a_ray_parallel_to_the_plane() {

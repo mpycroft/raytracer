@@ -160,7 +160,7 @@ mod tests {
     };
 
     use super::*;
-    use crate::{math::float::*, shape::Shape};
+    use crate::{math::float::*, object::shape::Shape};
 
     #[test]
     fn intersecting_a_cone_with_a_ray() {

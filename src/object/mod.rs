@@ -1,6 +1,9 @@
+pub mod shape;
+
 use paste::paste;
 use typed_builder::{Optional, TypedBuilder};
 
+use self::shape::{Intersectable, Shape};
 use crate::{
     bounding_box::{Bounded, BoundingBox},
     intersection::{Intersection, List},
@@ -8,7 +11,6 @@ use crate::{
         float::impl_approx_eq, Point, Ray, Transformable, Transformation,
         Vector,
     },
-    shape::{Intersectable, Shape},
     Material,
 };
 
@@ -167,7 +169,7 @@ mod tests {
     use super::*;
     use crate::{
         math::{float::*, Angle},
-        shape::test::Test,
+        object::shape::test::Test,
         Colour,
     };
 

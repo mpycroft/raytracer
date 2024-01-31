@@ -11,7 +11,6 @@ mod obj_parser;
 mod object;
 mod pattern;
 mod point_light;
-mod shape;
 mod world;
 
 pub use camera::Camera;

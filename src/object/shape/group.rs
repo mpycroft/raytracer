@@ -6,7 +6,7 @@ use crate::{
     bounding_box::{Bounded, BoundingBox},
     intersection::{Intersection, List},
     math::{Point, Ray, Vector},
-    shape::Shape,
+    object::shape::Shape,
     Object,
 };
 

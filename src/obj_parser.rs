@@ -9,8 +9,7 @@ use anyhow::{bail, Result};
 
 use crate::{
     math::{Point, Vector},
-    object::ObjectBuilder,
-    shape::Shape,
+    object::{shape::Shape, ObjectBuilder},
     Object,
 };
 
@@ -237,10 +236,7 @@ If one vertex normal is specified, all faces must also provide vertex normals."
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        math::{float::*, Vector},
-        shape::Shape,
-    };
+    use crate::math::{float::*, Vector};
 
     #[test]
     fn ignoring_unrecognised_lines() {

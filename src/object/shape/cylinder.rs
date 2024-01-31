@@ -147,7 +147,7 @@ mod tests {
     use std::f64::INFINITY;
 
     use super::*;
-    use crate::{math::float::*, shape::Shape};
+    use crate::{math::float::*, object::shape::Shape};
 
     #[test]
     fn a_ray_misses_a_cylinder() {

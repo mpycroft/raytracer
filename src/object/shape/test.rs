@@ -51,7 +51,7 @@ impl Bounded for Test {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, shape::Shape, Object};
+    use crate::{math::float::*, object::shape::Shape, Object};
 
     #[test]
     #[allow(clippy::many_single_char_names)]
