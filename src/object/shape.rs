@@ -86,6 +86,13 @@ impl Shape {
 
         self.to_world_space(&object_normal).normalise()
     }
+
+    pub fn update_transformation(&mut self, transformation: &Transformation) {
+        self.transformation = self.transformation.extend(transformation);
+        self.inverse_transformation = self.transformation.invert();
+
+        self.bounding_box = self.bounding_box();
+    }
 }
 
 impl Bounded for Shape {
@@ -111,11 +118,7 @@ impl<T: Optional<Transformation>, M: Optional<Material>, S: Optional<bool>>
         if let Shapes::Group(group) = &mut object.shape {
             for child_object in group.iter_no_groups() {
                 let Object::Shape(child_object) = child_object;
-                child_object.transformation =
-                    child_object.transformation.extend(&object.transformation);
-                child_object.inverse_transformation =
-                    child_object.transformation.invert();
-                child_object.bounding_box = child_object.bounding_box();
+                child_object.update_transformation(&object.transformation);
             }
 
             object.transformation = Transformation::new();
