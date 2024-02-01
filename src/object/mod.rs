@@ -12,17 +12,17 @@ use std::path::Path;
 use anyhow::Result;
 use enum_dispatch::enum_dispatch;
 use float_cmp::{ApproxEq, F64Margin};
-use group::Group;
 use paste::paste;
-use shape::{Shape, ShapeBuilder};
-use shapes::Shapes;
 
 pub use self::updatable::Updatable;
 use self::{
     bounding_box::{Bounded, BoundingBox},
-    group::GroupBuilder,
+    csg::{Csg, Operation},
+    group::{Group, GroupBuilder},
     includes::Includes,
     obj_parser::ObjParser,
+    shape::{Shape, ShapeBuilder},
+    shapes::Shapes,
 };
 use crate::{
     intersection::{Intersection, List},
@@ -34,8 +34,9 @@ use crate::{
 #[derive(Clone, Debug)]
 #[enum_dispatch]
 pub enum Object {
-    Shape(Shape),
+    Csg(Csg),
     Group(Group),
+    Shape(Shape),
 }
 
 macro_rules! add_builder_fn {
@@ -80,6 +81,14 @@ impl Object {
         Group::builder()
     }
 
+    pub fn new_csg(
+        operation: Operation,
+        left: Object,
+        right: Object,
+    ) -> Object {
+        Csg::new(operation, left, right).into()
+    }
+
     /// Parse a given OBJ file and return a partially formed `Group` containing
     /// all the triangles from the OBJ file.
     ///
@@ -93,8 +102,9 @@ impl Object {
     #[must_use]
     pub fn intersect(&self, ray: &Ray) -> Option<List> {
         match self {
-            Self::Shape(shape) => shape.intersect(ray, self),
+            Self::Csg(_) => todo!(),
             Self::Group(group) => group.intersect(ray),
+            Self::Shape(shape) => shape.intersect(ray, self),
         }
     }
 
@@ -105,32 +115,32 @@ impl Object {
         intersection: &Intersection,
     ) -> Vector {
         match self {
+            Self::Csg(_) | Self::Group(_) => unreachable!(),
             Self::Shape(shape) => shape.normal_at(point, intersection),
-            Self::Group(_) => unreachable!(),
         }
     }
 
     #[must_use]
     pub fn material(&self) -> &Material {
         match self {
+            Self::Csg(_) | Self::Group(_) => unreachable!(),
             Self::Shape(shape) => &shape.material,
-            Self::Group(_) => unreachable!(),
         }
     }
 
     #[must_use]
     pub fn casts_shadow(&self) -> bool {
         match self {
+            Self::Csg(_) | Self::Group(_) => unreachable!(),
             Self::Shape(shape) => shape.casts_shadow,
-            Self::Group(_) => unreachable!(),
         }
     }
 
     #[must_use]
     pub fn to_object_space<T: Transformable>(&self, value: &T) -> T {
         match self {
+            Self::Csg(_) | Self::Group(_) => unreachable!(),
             Self::Shape(shape) => shape.to_object_space(value),
-            Self::Group(_) => unreachable!(),
         }
     }
 }
@@ -142,10 +152,11 @@ impl ApproxEq for &Object {
         let margin = margin.into();
 
         match (self, other) {
-            (Object::Shape(lhs), Object::Shape(rhs)) => {
+            (Object::Csg(lhs), Object::Csg(rhs)) => lhs.approx_eq(rhs, margin),
+            (Object::Group(lhs), Object::Group(rhs)) => {
                 lhs.approx_eq(rhs, margin)
             }
-            (Object::Group(lhs), Object::Group(rhs)) => {
+            (Object::Shape(lhs), Object::Shape(rhs)) => {
                 lhs.approx_eq(rhs, margin)
             }
             (_, _) => false,

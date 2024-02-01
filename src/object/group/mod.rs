@@ -21,11 +21,6 @@ pub struct Group {
 }
 
 impl Group {
-    #[must_use]
-    fn new(objects: Vec<Object>) -> Self {
-        Self { objects, bounding_box: BoundingBox::default() }
-    }
-
     pub fn builder() -> GroupBuilder {
         Helper::builder()
     }
@@ -421,25 +416,35 @@ mod tests {
 
     #[test]
     fn comparing_groups() {
-        let g1 = Group::new(vec![
-            Object::sphere_builder().build(),
-            Object::plane_builder().build(),
-        ]);
-        let g2 = Group::new(vec![
-            Object::sphere_builder().build(),
-            Object::plane_builder().build(),
-        ]);
-        let g3 = Group::new(vec![
-            Object::sphere_builder().build(),
-            Object::plane_builder().build(),
-            Object::plane_builder().build(),
-        ]);
-        let g4 = Group::new(vec![
-            Object::sphere_builder().build(),
-            Object::plane_builder()
-                .transformation(Transformation::new().translate(1.0, 2.0, 3.0))
-                .build(),
-        ]);
+        let g1 = Object::group_builder()
+            .set_objects(vec![
+                Object::sphere_builder().build(),
+                Object::plane_builder().build(),
+            ])
+            .build();
+        let g2 = Object::group_builder()
+            .set_objects(vec![
+                Object::sphere_builder().build(),
+                Object::plane_builder().build(),
+            ])
+            .build();
+        let g3 = Object::group_builder()
+            .set_objects(vec![
+                Object::sphere_builder().build(),
+                Object::plane_builder().build(),
+                Object::plane_builder().build(),
+            ])
+            .build();
+        let g4 = Object::group_builder()
+            .set_objects(vec![
+                Object::sphere_builder().build(),
+                Object::plane_builder()
+                    .transformation(
+                        Transformation::new().translate(1.0, 2.0, 3.0),
+                    )
+                    .build(),
+            ])
+            .build();
 
         assert_approx_eq!(g1, &g2);
 

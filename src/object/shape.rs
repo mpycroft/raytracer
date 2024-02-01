@@ -14,7 +14,7 @@ use crate::{
 };
 
 #[allow(clippy::module_name_repetitions)]
-pub type ShapeBuilder = _ShapeBuilder<((), (), (), (Shapes,))>;
+pub(super) type ShapeBuilder = _ShapeBuilder<((), (), (), (Shapes,))>;
 
 /// A `Shape` is a simple geometric shape, fixed around the origin.
 #[derive(Clone, Debug, TypedBuilder)]
@@ -23,7 +23,7 @@ pub type ShapeBuilder = _ShapeBuilder<((), (), (), (Shapes,))>;
 #[builder(build_method(vis = "", name = _build))]
 pub struct Shape {
     #[builder(default = Transformation::new())]
-    transformation: Transformation,
+    pub(super) transformation: Transformation,
     #[builder(default = Transformation::new(), setter(skip))]
     inverse_transformation: Transformation,
     #[builder(default = Material::default())]
@@ -32,8 +32,6 @@ pub struct Shape {
     pub(super) casts_shadow: bool,
     #[allow(clippy::struct_field_names)]
     shape: Shapes,
-    #[builder(default = BoundingBox::default(), setter(skip))]
-    bounding_box: BoundingBox,
 }
 
 impl Shape {
@@ -76,8 +74,6 @@ impl Updatable for Shape {
     fn update_transformation(&mut self, transformation: &Transformation) {
         self.transformation = self.transformation.extend(transformation);
         self.inverse_transformation = self.transformation.invert();
-
-        self.bounding_box = self.bounding_box();
     }
 
     fn replace_material(&mut self, material: &Material) {
@@ -118,8 +114,6 @@ where
         let mut shape = self._build();
 
         shape.inverse_transformation = shape.transformation.invert();
-
-        shape.bounding_box = shape.bounding_box();
 
         shape.into()
     }
