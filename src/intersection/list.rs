@@ -35,6 +35,19 @@ impl<'a> List<'a> {
     pub fn into_iter(self) -> IntoIter<Intersection<'a>> {
         self.0.into_iter()
     }
+
+    pub fn sort(&mut self) {
+        self.sort_by(|a, b| {
+            a.t.partial_cmp(&b.t).unwrap_or_else(|| {
+                panic!(
+                    "\
+Failed to compare floating point values '{}' and '{}' when sorting \
+intersection list.",
+                    a.t, b.t
+                )
+            })
+        });
+    }
 }
 
 impl<'a> From<Intersection<'a>> for List<'a> {
@@ -51,6 +64,8 @@ impl<'a> Default for List<'a> {
 
 #[cfg(test)]
 mod tests {
+    use std::f64::{INFINITY, NEG_INFINITY};
+
     use super::*;
     use crate::{math::float::*, Object};
 
@@ -170,5 +185,47 @@ mod tests {
 
         assert_approx_eq!(h.object, &o);
         assert_approx_eq!(h.t, 2.5);
+    }
+
+    #[test]
+    fn sorting_a_list() {
+        let o = Object::test_builder().build();
+
+        let mut l = List::from(vec![
+            Intersection::new(&o, 1.0),
+            Intersection::new(&o, 2.0),
+            Intersection::new(&o, 3.6),
+            Intersection::new(&o, INFINITY),
+            Intersection::new(&o, -0.5),
+            Intersection::new(&o, 2.5),
+            Intersection::new(&o, NEG_INFINITY),
+        ]);
+
+        l.sort();
+
+        assert_approx_eq!(l[0].t, NEG_INFINITY);
+        assert_approx_eq!(l[1].t, -0.5);
+        assert_approx_eq!(l[2].t, 1.0);
+        assert_approx_eq!(l[3].t, 2.0);
+        assert_approx_eq!(l[4].t, 2.5);
+        assert_approx_eq!(l[5].t, 3.6);
+        assert_approx_eq!(l[6].t, INFINITY);
+    }
+
+    #[test]
+    #[should_panic(expected = "\
+Failed to compare floating point values 'NaN' and '0' when sorting \
+intersection list.")]
+    fn sorting_with_nan() {
+        let o = Object::test_builder().build();
+
+        let mut l = List::from(vec![
+            Intersection::new(&o, 0.0),
+            Intersection::new(&o, f64::NAN),
+            Intersection::new(&o, 1.0),
+            Intersection::new(&o, -f64::NAN),
+        ]);
+
+        l.sort();
     }
 }
