@@ -87,7 +87,7 @@ mod tests {
         let s = Sphere::new();
 
         assert!(s
-            .intersect(&Ray::new(Point::new(0.0, 2.0, -5.0), Vector::z_axis()),)
+            .intersect(&Ray::new(Point::new(0.0, 2.0, -5.0), Vector::z_axis()))
             .is_none());
     }
 

@@ -59,9 +59,6 @@ impl<'a> Intersection<'a> {
             false
         };
 
-        let over_point = point + normal * 100_000.0 * EPSILON;
-        let under_point = point - normal * 100_000.0 * EPSILON;
-
         let mut container = Vec::<&Object>::new();
 
         let mut n1 = f64::NAN;
@@ -100,14 +97,14 @@ impl<'a> Intersection<'a> {
             self.object,
             self.t,
             point,
-            over_point,
+            point + normal * 100_000.0 * EPSILON,
+            point - normal * 100_000.0 * EPSILON,
             eye,
             normal,
             inside,
             ray.direction.reflect(&normal),
             n1,
             n2,
-            under_point,
         )
     }
 }

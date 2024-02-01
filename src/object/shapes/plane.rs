@@ -51,7 +51,7 @@ mod tests {
         let p = Plane::new();
 
         assert!(p
-            .intersect(&Ray::new(Point::new(0.0, 10.0, 0.0), Vector::z_axis()),)
+            .intersect(&Ray::new(Point::new(0.0, 10.0, 0.0), Vector::z_axis()))
             .is_none());
 
         assert!(p

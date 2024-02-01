@@ -147,16 +147,16 @@ mod tests {
         let c = Cylinder::new(-INFINITY, INFINITY, false);
 
         assert!(c
-            .intersect(&Ray::new(Point::new(1.0, 0.0, 0.0), Vector::y_axis()),)
+            .intersect(&Ray::new(Point::new(1.0, 0.0, 0.0), Vector::y_axis()))
             .is_none());
         assert!(c
-            .intersect(&Ray::new(Point::origin(), Vector::y_axis()),)
+            .intersect(&Ray::new(Point::origin(), Vector::y_axis()))
             .is_none());
         assert!(c
             .intersect(&Ray::new(
                 Point::new(0.0, 0.0, -5.0),
                 Vector::new(1.0, 1.0, 1.0).normalise()
-            ),)
+            ))
             .is_none());
     }
 
@@ -192,19 +192,19 @@ mod tests {
             .intersect(&Ray::new(
                 Point::new(0.0, 1.5, 0.0),
                 Vector::new(0.1, 1.0, 0.0).normalise()
-            ),)
+            ))
             .is_none());
         assert!(c
-            .intersect(&Ray::new(Point::new(0.0, 3.0, -5.0), Vector::z_axis()),)
+            .intersect(&Ray::new(Point::new(0.0, 3.0, -5.0), Vector::z_axis()))
             .is_none());
         assert!(c
-            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()),)
+            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()))
             .is_none());
         assert!(c
-            .intersect(&Ray::new(Point::new(0.0, 2.0, -5.0), Vector::z_axis()),)
+            .intersect(&Ray::new(Point::new(0.0, 2.0, -5.0), Vector::z_axis()))
             .is_none());
         assert!(c
-            .intersect(&Ray::new(Point::new(0.0, 1.0, -5.0), Vector::z_axis()),)
+            .intersect(&Ray::new(Point::new(0.0, 1.0, -5.0), Vector::z_axis()))
             .is_none());
 
         let i = c

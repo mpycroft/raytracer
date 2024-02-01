@@ -11,12 +11,12 @@ use enum_dispatch::enum_dispatch;
 use float_cmp::{ApproxEq, F64Margin};
 use group::Group;
 use paste::paste;
-pub use shape::{Shape, ShapeBuilder};
+use shape::{Shape, ShapeBuilder};
 use shapes::Shapes;
 
 use self::{
     bounding_box::{Bounded, BoundingBox},
-    group::BuildableGroup,
+    group::GroupBuilder,
     obj_parser::ObjParser,
 };
 use crate::{
@@ -36,10 +36,8 @@ pub enum Object {
 macro_rules! add_builder_fn {
     ($shape:ident($($args:ident : $ty:ty $(,)?)*)) => {
         paste! {
-            pub fn [<$shape:lower _builder>]($($args:$ty,)*) ->
-                ShapeBuilder<((), (), (), (Shapes,))>
-            {
-                Shape::_builder().shape(
+            pub fn [<$shape:lower _builder>]($($args:$ty,)*) -> ShapeBuilder {
+                Shape::builder().shape(
                     Shapes::[<new_ $shape:lower>]($($args,)*)
                 )
             }
@@ -68,13 +66,23 @@ impl Object {
         point1: Point,
         point2: Point,
         point3: Point,
-    ) -> ShapeBuilder<((), (), (), (Shapes,))> {
-        Shape::_builder()
+    ) -> ShapeBuilder {
+        Shape::builder()
             .shape(Shapes::new_flat_triangle(point1, point2, point3))
     }
 
-    pub fn group_builder() -> BuildableGroup {
+    pub fn group_builder() -> GroupBuilder {
         Group::builder()
+    }
+
+    /// Parse a given OBJ file and return a partially formed `Group` containing
+    /// all the triangles from the OBJ file.
+    ///
+    /// # Errors
+    ///
+    /// Will return errors if unable to read or parse the file.
+    pub fn from_obj_file<P: AsRef<Path>>(filename: P) -> Result<GroupBuilder> {
+        Ok(ObjParser::parse(filename)?.into_group())
     }
 
     #[must_use]
@@ -121,32 +129,18 @@ impl Object {
         }
     }
 
-    pub fn update_transformation(&mut self, transformation: &Transformation) {
+    fn update_transformation(&mut self, transformation: &Transformation) {
         match self {
             Self::Shape(shape) => shape.update_transformation(transformation),
             Self::Group(group) => group.update_transformation(transformation),
         }
     }
 
-    pub fn update_material(&mut self, material: &Material) {
+    fn update_material(&mut self, material: &Material) {
         match self {
             Self::Shape(shape) => shape.update_material(material),
             Self::Group(group) => group.update_material(material),
         }
-    }
-
-    /// Parse a given OBJ file and return a partially formed `Group` containing
-    /// all the triangles from the OBJ file.
-    ///
-    /// # Errors
-    ///
-    /// Will return errors if unable to read or parse the file.
-    pub fn from_obj_file<P: AsRef<Path>>(
-        filename: P,
-    ) -> Result<BuildableGroup> {
-        let parser = ObjParser::parse(filename)?;
-
-        Ok(parser.into_group())
     }
 }
 

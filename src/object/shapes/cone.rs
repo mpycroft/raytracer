@@ -160,7 +160,7 @@ mod tests {
         let c = Cone::new(-INFINITY, INFINITY, false);
 
         assert!(c
-            .intersect(&Ray::new(Point::new(5.0, 0.0, 5.0), Vector::z_axis()),)
+            .intersect(&Ray::new(Point::new(5.0, 0.0, 5.0), Vector::z_axis()))
             .is_none());
 
         let test = |r, t0, t1| {

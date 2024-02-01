@@ -3,7 +3,8 @@ mod helper;
 use float_cmp::{ApproxEq, F64Margin};
 
 #[allow(clippy::module_name_repetitions)]
-pub use self::helper::{BuildableGroup, Helper};
+pub use self::helper::GroupBuilder;
+use self::helper::Helper;
 use super::{Bounded, BoundingBox, Object};
 use crate::{
     intersection::List,
@@ -15,7 +16,7 @@ use crate::{
 /// entity.
 #[derive(Clone, Debug)]
 pub struct Group {
-    pub objects: Vec<Object>,
+    pub(super) objects: Vec<Object>,
     bounding_box: BoundingBox,
 }
 
@@ -25,7 +26,7 @@ impl Group {
         Self { objects, bounding_box: BoundingBox::default() }
     }
 
-    pub fn builder() -> BuildableGroup {
+    pub fn builder() -> GroupBuilder {
         Helper::builder()
     }
 
@@ -50,13 +51,18 @@ impl Group {
         Some(list)
     }
 
-    pub fn update_transformation(&mut self, transformation: &Transformation) {
+    pub(super) fn update_transformation(
+        &mut self,
+        transformation: &Transformation,
+    ) {
         for object in &mut self.objects {
             object.update_transformation(transformation);
         }
+
+        self.bounding_box = self.bounding_box();
     }
 
-    pub fn update_material(&mut self, material: &Material) {
+    pub(super) fn update_material(&mut self, material: &Material) {
         for object in &mut self.objects {
             object.update_material(material);
         }
@@ -142,6 +148,17 @@ mod tests {
 
         assert!(o
             .intersect(&Ray::new(Point::origin(), Vector::z_axis()))
+            .is_none());
+    }
+
+    #[test]
+    fn intersecting_a_group_outside_its_bounding_box() {
+        let o = Object::group_builder()
+            .add_object(Object::sphere_builder().build())
+            .build();
+
+        assert!(o
+            .intersect(&Ray::new(Point::new(2.0, 3.0, 5.0), Vector::z_axis()))
             .is_none());
     }
 

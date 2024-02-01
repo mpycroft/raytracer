@@ -14,13 +14,13 @@ pub struct Computations<'a> {
     pub t: f64,
     pub point: Point,
     pub over_point: Point,
+    pub under_point: Point,
     pub eye: Vector,
     pub normal: Vector,
     pub inside: bool,
     pub reflect: Vector,
     pub n1: f64,
     pub n2: f64,
-    pub under_point: Point,
 }
 
 impl<'a> Computations<'a> {

@@ -117,7 +117,7 @@ impl_approx_eq!(&Triangle {
     point3,
     normal1,
     normal2,
-    normal3
+    normal3,
 });
 
 #[cfg(test)]
@@ -210,13 +210,9 @@ mod tests {
     fn intersecting_a_ray_parallel_to_the_triangle() {
         let t = create_flat_triangle();
 
-        assert!(
-            t.intersect(&Ray::new(
-                Point::new(0.0, -1.0, -2.0),
-                Vector::y_axis()
-            ),)
-                .is_none()
-        );
+        assert!(t
+            .intersect(&Ray::new(Point::new(0.0, -1.0, -2.0), Vector::y_axis()))
+            .is_none());
     }
 
     #[test]
@@ -224,7 +220,7 @@ mod tests {
         let t = create_flat_triangle();
 
         assert!(t
-            .intersect(&Ray::new(Point::new(1.0, 1.0, -2.0), Vector::z_axis()),)
+            .intersect(&Ray::new(Point::new(1.0, 1.0, -2.0), Vector::z_axis()))
             .is_none());
     }
 

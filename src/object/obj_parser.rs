@@ -7,7 +7,7 @@ use std::{
 
 use anyhow::{bail, Result};
 
-use super::{group::BuildableGroup, Object};
+use super::{group::GroupBuilder, Object};
 use crate::math::{Point, Vector};
 
 #[derive(Debug)]
@@ -227,7 +227,7 @@ If one vertex normal is specified, all faces must also provide vertex normals."
         groups.get_mut(group_name).ok_or_else(|| unreachable!())
     }
 
-    pub fn into_group(self) -> BuildableGroup {
+    pub fn into_group(self) -> GroupBuilder {
         Object::group_builder().set_objects(self.groups)
     }
 }

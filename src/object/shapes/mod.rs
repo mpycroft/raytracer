@@ -5,7 +5,7 @@ mod intersectable;
 mod plane;
 mod sphere;
 #[cfg(test)]
-pub mod test;
+pub(super) mod test;
 mod triangle;
 
 use enum_dispatch::enum_dispatch;
@@ -25,7 +25,7 @@ use crate::{
     math::{Point, Ray, Vector},
 };
 
-/// `Shape` is the list of the various geometries that can be rendered.
+/// `Shapes` is the list of the various geometries that can be rendered.
 #[derive(Clone, Debug)]
 #[enum_dispatch]
 pub enum Shapes {

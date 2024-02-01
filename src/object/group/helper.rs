@@ -1,11 +1,16 @@
 use typed_builder::{Optional, TypedBuilder};
 
-use super::{Bounded, Group, Object};
+use super::{Group, Object};
 use crate::{math::Transformation, Material};
 
-pub type BuildableGroup = HelperBuilder<((), (), (Vec<Object>,))>;
+pub type GroupBuilder = HelperBuilder<((), (), (Vec<Object>,))>;
 
+/// This is a helper struct for constructing `Groups`, since we don't actually
+/// store the transformation or material for a group but do use them to "push
+/// down" the values to children we don't want them in the actual `Group` struct
+/// itself.
 #[derive(Clone, Debug, TypedBuilder)]
+#[builder(builder_method(vis = "pub(super)"))]
 #[builder(build_method(vis = "", name = _build))]
 pub struct Helper {
     #[builder(default = Transformation::new())]
@@ -25,23 +30,25 @@ pub struct Helper {
     objects: Vec<Object>,
 }
 
-impl<T: Optional<Transformation>, M: Optional<Option<Material>>>
-    HelperBuilder<(T, M, (Vec<Object>,))>
+impl<T, M> HelperBuilder<(T, M, (Vec<Object>,))>
+where
+    T: Optional<Transformation>,
+    M: Optional<Option<Material>>,
 {
     #[must_use]
     pub fn build(self) -> Object {
-        let mut group_helper = self._build();
+        let group_helper = self._build();
 
-        for object in &mut group_helper.objects {
-            object.update_transformation(&group_helper.transformation);
-
-            if let Some(material) = &group_helper.material {
-                object.update_material(material);
-            }
-        }
+        let transformation = group_helper.transformation;
+        let material = group_helper.material;
 
         let mut group = Group::new(group_helper.objects);
-        group.bounding_box = group.bounding_box();
+
+        group.update_transformation(&transformation);
+
+        if let Some(material) = material {
+            group.update_material(&material);
+        }
 
         group.into()
     }

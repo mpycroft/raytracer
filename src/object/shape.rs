@@ -13,9 +13,13 @@ use crate::{
     Material,
 };
 
+#[allow(clippy::module_name_repetitions)]
+pub type ShapeBuilder = _ShapeBuilder<((), (), (), (Shapes,))>;
+
 /// A `Shape` is a simple geometric shape, fixed around the origin.
 #[derive(Clone, Debug, TypedBuilder)]
-#[builder(builder_method(vis = "pub(super)", name = _builder))]
+#[builder(builder_type(name = _ShapeBuilder))]
+#[builder(builder_method(vis = "pub(super)"))]
 #[builder(build_method(vis = "", name = _build))]
 pub struct Shape {
     #[builder(default = Transformation::new())]
@@ -23,13 +27,13 @@ pub struct Shape {
     #[builder(default = Transformation::new(), setter(skip))]
     inverse_transformation: Transformation,
     #[builder(default = Material::default())]
-    pub material: Material,
+    pub(super) material: Material,
     #[builder(default = true)]
-    pub casts_shadow: bool,
+    pub(super) casts_shadow: bool,
     #[allow(clippy::struct_field_names)]
-    pub shape: Shapes,
+    shape: Shapes,
     #[builder(default = BoundingBox::default(), setter(skip))]
-    pub bounding_box: BoundingBox,
+    bounding_box: BoundingBox,
 }
 
 impl Shape {
@@ -67,14 +71,17 @@ impl Shape {
         self.to_world_space(&object_normal).normalise()
     }
 
-    pub fn update_transformation(&mut self, transformation: &Transformation) {
+    pub(super) fn update_transformation(
+        &mut self,
+        transformation: &Transformation,
+    ) {
         self.transformation = self.transformation.extend(transformation);
         self.inverse_transformation = self.transformation.invert();
 
         self.bounding_box = self.bounding_box();
     }
 
-    pub fn update_material(&mut self, material: &Material) {
+    pub(super) fn update_material(&mut self, material: &Material) {
         self.material = material.clone();
     }
 }
@@ -90,8 +97,11 @@ impl Bounded for Shape {
 
 impl_approx_eq!(&Shape { ref shape, transformation, ref material });
 
-impl<T: Optional<Transformation>, M: Optional<Material>, S: Optional<bool>>
-    ShapeBuilder<(T, M, S, (Shapes,))>
+impl<T, M, S> _ShapeBuilder<(T, M, S, (Shapes,))>
+where
+    T: Optional<Transformation>,
+    M: Optional<Material>,
+    S: Optional<bool>,
 {
     #[must_use]
     pub fn build(self) -> Object {

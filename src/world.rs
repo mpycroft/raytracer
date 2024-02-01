@@ -788,7 +788,7 @@ intersection list.")]
     #[test]
     #[allow(clippy::many_single_char_names)]
     fn the_refracted_colour_at_the_maximum_recursion_depth() {
-        let mut w = test_world();
+        let mut w = World::new();
 
         w.add_object(
             Object::sphere_builder()
@@ -831,7 +831,7 @@ intersection list.")]
     #[test]
     #[allow(clippy::many_single_char_names)]
     fn the_refracted_colour_under_total_internal_reflection() {
-        let mut w = test_world();
+        let mut w = World::new();
 
         w.add_object(
             Object::sphere_builder()
