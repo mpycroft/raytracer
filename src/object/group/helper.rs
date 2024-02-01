@@ -1,7 +1,7 @@
 use typed_builder::{Optional, TypedBuilder};
 
 use super::{Group, Object};
-use crate::{math::Transformation, Material};
+use crate::{math::Transformation, object::updatable::Updatable, Material};
 
 pub type GroupBuilder = HelperBuilder<((), (), (Vec<Object>,))>;
 
@@ -47,7 +47,7 @@ where
         group.update_transformation(&transformation);
 
         if let Some(material) = material {
-            group.update_material(&material);
+            group.replace_material(&material);
         }
 
         group.into()

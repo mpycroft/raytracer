@@ -2,7 +2,7 @@ use typed_builder::{Optional, TypedBuilder};
 
 use super::{
     shapes::{Intersectable, Shapes},
-    Bounded, BoundingBox, Object,
+    Bounded, BoundingBox, Object, Updatable,
 };
 use crate::{
     intersection::{Intersection, List},
@@ -70,18 +70,17 @@ impl Shape {
 
         self.to_world_space(&object_normal).normalise()
     }
+}
 
-    pub(super) fn update_transformation(
-        &mut self,
-        transformation: &Transformation,
-    ) {
+impl Updatable for Shape {
+    fn update_transformation(&mut self, transformation: &Transformation) {
         self.transformation = self.transformation.extend(transformation);
         self.inverse_transformation = self.transformation.invert();
 
         self.bounding_box = self.bounding_box();
     }
 
-    pub(super) fn update_material(&mut self, material: &Material) {
+    fn replace_material(&mut self, material: &Material) {
         self.material = material.clone();
     }
 }

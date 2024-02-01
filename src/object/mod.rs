@@ -3,6 +3,7 @@ mod group;
 mod obj_parser;
 mod shape;
 mod shapes;
+mod updatable;
 
 use std::path::Path;
 
@@ -14,6 +15,7 @@ use paste::paste;
 use shape::{Shape, ShapeBuilder};
 use shapes::Shapes;
 
+pub use self::updatable::Updatable;
 use self::{
     bounding_box::{Bounded, BoundingBox},
     group::GroupBuilder,
@@ -126,20 +128,6 @@ impl Object {
         match self {
             Self::Shape(shape) => shape.to_object_space(value),
             Self::Group(_) => unreachable!(),
-        }
-    }
-
-    fn update_transformation(&mut self, transformation: &Transformation) {
-        match self {
-            Self::Shape(shape) => shape.update_transformation(transformation),
-            Self::Group(group) => group.update_transformation(transformation),
-        }
-    }
-
-    fn update_material(&mut self, material: &Material) {
-        match self {
-            Self::Shape(shape) => shape.update_material(material),
-            Self::Group(group) => group.update_material(material),
         }
     }
 }

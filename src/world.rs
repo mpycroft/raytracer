@@ -184,6 +184,7 @@ mod tests {
     use crate::{
         intersection::Intersection,
         math::{float::*, Angle, Transformation, Vector},
+        object::Updatable,
         Camera, Material, Output, Pattern,
     };
 
@@ -277,31 +278,18 @@ mod tests {
 
     #[test]
     fn the_colour_with_an_intersection_behind_the_ray() {
-        let mut w = World::new();
+        let mut w = test_world();
 
-        w.add_object(
-            Object::sphere_builder()
-                .material(
-                    Material::builder()
-                        .pattern(Colour::new(0.8, 1.0, 0.6).into())
-                        .ambient(1.0)
-                        .diffuse(0.7)
-                        .specular(0.2)
-                        .build(),
-                )
+        w.objects[0].replace_material(
+            &Material::builder()
+                .pattern(Colour::new(0.8, 1.0, 0.6).into())
+                .ambient(1.0)
+                .diffuse(0.7)
+                .specular(0.2)
                 .build(),
         );
-        w.add_object(
-            Object::sphere_builder()
-                .transformation(Transformation::new().scale(0.5, 0.5, 0.5))
-                .material(Material::builder().ambient(1.0).build())
-                .build(),
-        );
-
-        w.add_light(PointLight::new(
-            Point::new(-10.0, 10.0, -10.0),
-            Colour::white(),
-        ));
+        w.objects[1]
+            .replace_material(&Material::builder().ambient(1.0).build());
 
         let r = Ray::new(Point::new(0.0, 0.0, 0.75), -Vector::z_axis());
 
@@ -630,30 +618,18 @@ intersection list.")]
 
     #[test]
     fn no_shadow_when_an_object_does_not_cast_shadow() {
-        let mut w = World::new();
+        let mut w = test_world();
 
-        w.add_object(
-            Object::sphere_builder()
-                .material(
-                    Material::builder()
-                        .pattern(Colour::new(0.8, 1.0, 0.6).into())
-                        .diffuse(0.7)
-                        .specular(0.2)
-                        .build(),
-                )
-                .casts_shadow(false)
-                .build(),
-        );
-        w.add_object(
-            Object::sphere_builder()
-                .transformation(Transformation::new().scale(0.5, 0.5, 0.5))
-                .build(),
-        );
-
-        w.add_light(PointLight::new(
-            Point::new(-10.0, 10.0, -10.0),
-            Colour::white(),
-        ));
+        w.objects[0] = Object::sphere_builder()
+            .material(
+                Material::builder()
+                    .pattern(Colour::new(0.8, 1.0, 0.6).into())
+                    .diffuse(0.7)
+                    .specular(0.2)
+                    .build(),
+            )
+            .casts_shadow(false)
+            .build();
 
         assert!(!w.is_shadowed(&w.lights[0], &Point::new(10.0, -10.0, 10.0)));
     }
@@ -675,30 +651,17 @@ intersection list.")]
     #[test]
     #[allow(clippy::many_single_char_names)]
     fn the_reflected_colour_for_a_non_reflective_material() {
-        let mut w = World::new();
+        let mut w = test_world();
 
-        w.add_object(
-            Object::sphere_builder()
-                .material(
-                    Material::builder()
-                        .pattern(Colour::new(0.8, 1.0, 0.6).into())
-                        .diffuse(0.7)
-                        .specular(0.2)
-                        .build(),
-                )
+        w.objects[0].replace_material(
+            &Material::builder()
+                .pattern(Colour::new(0.8, 1.0, 0.6).into())
+                .diffuse(0.7)
+                .specular(0.2)
                 .build(),
         );
-        w.add_object(
-            Object::sphere_builder()
-                .transformation(Transformation::new().scale(0.5, 0.5, 0.5))
-                .material(Material::builder().ambient(1.0).build())
-                .build(),
-        );
-
-        w.add_light(PointLight::new(
-            Point::new(-10.0, 10.0, -10.0),
-            Colour::white(),
-        ));
+        w.objects[1]
+            .replace_material(&Material::builder().ambient(1.0).build());
 
         let r = Ray::new(Point::origin(), Vector::z_axis());
 
@@ -787,31 +750,17 @@ intersection list.")]
     #[test]
     #[allow(clippy::many_single_char_names)]
     fn the_refracted_colour_at_the_maximum_recursion_depth() {
-        let mut w = World::new();
+        let mut w = test_world();
 
-        w.add_object(
-            Object::sphere_builder()
-                .material(
-                    Material::builder()
-                        .pattern(Colour::new(0.8, 1.0, 0.6).into())
-                        .diffuse(0.7)
-                        .specular(0.2)
-                        .transparency(1.0)
-                        .refractive_index(1.5)
-                        .build(),
-                )
+        w.objects[0].replace_material(
+            &Material::builder()
+                .pattern(Colour::new(0.8, 1.0, 0.6).into())
+                .diffuse(0.7)
+                .specular(0.2)
+                .transparency(1.0)
+                .refractive_index(1.5)
                 .build(),
         );
-        w.add_object(
-            Object::sphere_builder()
-                .transformation(Transformation::new().scale(0.5, 0.5, 0.5))
-                .build(),
-        );
-
-        w.add_light(PointLight::new(
-            Point::new(-10.0, 10.0, -10.0),
-            Colour::white(),
-        ));
 
         let o = &w.objects[0];
 
@@ -830,31 +779,17 @@ intersection list.")]
     #[test]
     #[allow(clippy::many_single_char_names)]
     fn the_refracted_colour_under_total_internal_reflection() {
-        let mut w = World::new();
+        let mut w = test_world();
 
-        w.add_object(
-            Object::sphere_builder()
-                .material(
-                    Material::builder()
-                        .pattern(Colour::new(0.8, 1.0, 0.6).into())
-                        .diffuse(0.7)
-                        .specular(0.2)
-                        .transparency(1.0)
-                        .refractive_index(1.5)
-                        .build(),
-                )
+        w.objects[0].replace_material(
+            &Material::builder()
+                .pattern(Colour::new(0.8, 1.0, 0.6).into())
+                .diffuse(0.7)
+                .specular(0.2)
+                .transparency(1.0)
+                .refractive_index(1.5)
                 .build(),
         );
-        w.add_object(
-            Object::sphere_builder()
-                .transformation(Transformation::new().scale(0.5, 0.5, 0.5))
-                .build(),
-        );
-
-        w.add_light(PointLight::new(
-            Point::new(-10.0, 10.0, -10.0),
-            Colour::white(),
-        ));
 
         let o = &w.objects[0];
 
@@ -874,34 +809,20 @@ intersection list.")]
 
     #[test]
     fn the_refracted_colour_with_a_reflected_ray() {
-        let mut w = World::new();
+        let mut w = test_world();
 
-        w.add_object(
-            Object::sphere_builder()
-                .material(
-                    Material::builder()
-                        .pattern(Pattern::test_builder().build())
-                        .ambient(1.0)
-                        .build(),
-                )
+        w.objects[0].replace_material(
+            &Material::builder()
+                .pattern(Pattern::test_builder().build())
+                .ambient(1.0)
                 .build(),
         );
-        w.add_object(
-            Object::sphere_builder()
-                .transformation(Transformation::new().scale(0.5, 0.5, 0.5))
-                .material(
-                    Material::builder()
-                        .transparency(1.0)
-                        .refractive_index(1.5)
-                        .build(),
-                )
+        w.objects[1].replace_material(
+            &Material::builder()
+                .transparency(1.0)
+                .refractive_index(1.5)
                 .build(),
         );
-
-        w.add_light(PointLight::new(
-            Point::new(-10.0, 10.0, -10.0),
-            Colour::white(),
-        ));
 
         let o1 = &w.objects[0];
         let o2 = &w.objects[1];

@@ -5,7 +5,7 @@ use float_cmp::{ApproxEq, F64Margin};
 #[allow(clippy::module_name_repetitions)]
 pub use self::helper::GroupBuilder;
 use self::helper::Helper;
-use super::{Bounded, BoundingBox, Object};
+use super::{Bounded, BoundingBox, Object, Updatable};
 use crate::{
     intersection::List,
     math::{Ray, Transformation},
@@ -50,11 +50,10 @@ impl Group {
 
         Some(list)
     }
+}
 
-    pub(super) fn update_transformation(
-        &mut self,
-        transformation: &Transformation,
-    ) {
+impl Updatable for Group {
+    fn update_transformation(&mut self, transformation: &Transformation) {
         for object in &mut self.objects {
             object.update_transformation(transformation);
         }
@@ -62,9 +61,9 @@ impl Group {
         self.bounding_box = self.bounding_box();
     }
 
-    pub(super) fn update_material(&mut self, material: &Material) {
+    fn replace_material(&mut self, material: &Material) {
         for object in &mut self.objects {
-            object.update_material(material);
+            object.replace_material(material);
         }
     }
 }
