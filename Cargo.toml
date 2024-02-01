@@ -1,6 +1,6 @@
 [package]
 name = "raytracer"
-version = "0.1.0"
+version = "0.9.0"
 authors = ["Megan Pycroft <megan.pycroft@gmail.com>"]
 edition = "2021"
 description = "A ray tracer written in Rust"
