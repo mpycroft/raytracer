@@ -15,7 +15,7 @@ use clap::ValueEnum;
 use derive_more::Display;
 use derive_new::new;
 use rand::Rng;
-use raytracer::{Camera, Canvas, World};
+use raytracer::{Camera, Canvas, Output, World};
 
 use crate::arguments::Arguments;
 
@@ -71,13 +71,12 @@ pub struct SceneData {
 }
 
 impl SceneData {
-    pub fn render(
+    pub fn render<O: Write>(
         &self,
         depth: u32,
         single_threaded: bool,
-        quiet: bool,
-        buffer: &mut dyn Write,
+        output: &mut Output<O>,
     ) -> Result<Canvas> {
-        self.camera.render(&self.world, depth, single_threaded, quiet, buffer)
+        self.camera.render(&self.world, depth, single_threaded, output)
     }
 }

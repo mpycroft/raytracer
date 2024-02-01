@@ -1,17 +1,16 @@
 use enum_dispatch::enum_dispatch;
 
 use crate::{
-    intersection::{Intersection, List},
+    intersection::{Intersection, TList},
     math::{Point, Ray, Vector},
-    Object,
 };
 
 /// A trait that `Shape`s need to implement if they can be intersected in a
 /// scene, returns an optional `TList`.
-#[enum_dispatch(Shape)]
+#[enum_dispatch(Shapes)]
 pub trait Intersectable {
     #[must_use]
-    fn intersect<'a>(&self, ray: &Ray, object: &'a Object) -> Option<List<'a>>;
+    fn intersect(&self, ray: &Ray) -> Option<TList>;
 
     #[must_use]
     fn normal_at(&self, point: &Point, intersection: &Intersection) -> Vector;

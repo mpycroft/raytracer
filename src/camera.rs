@@ -1,7 +1,6 @@
 use std::{io::Write, time::Instant};
 
 use anyhow::Result;
-use console::Term;
 use indicatif::{
     HumanCount, HumanDuration, ParallelProgressIterator, ProgressBar,
     ProgressDrawTarget, ProgressFinish, ProgressIterator, ProgressStyle,
@@ -10,14 +9,14 @@ use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 use crate::{
     math::{Angle, Point, Ray, Transformable, Transformation},
-    Canvas, Colour, World,
+    Canvas, Colour, Output, World,
 };
 
 /// `Camera` holds all the data representing our view into the scene.
 #[derive(Clone, Copy, Debug)]
 pub struct Camera {
-    pub horizontal_size: usize,
-    pub vertical_size: usize,
+    horizontal_size: usize,
+    vertical_size: usize,
     field_of_view: Angle,
     inverse_transformation: Transformation,
     half_width: f64,
@@ -56,43 +55,52 @@ impl Camera {
         }
     }
 
+    #[must_use]
+    pub fn horizontal_size(&self) -> usize {
+        self.horizontal_size
+    }
+
+    #[must_use]
+    pub fn vertical_size(&self) -> usize {
+        self.vertical_size
+    }
+
     /// Renders the given `World` using the given camera.
     ///
     /// # Errors
     ///
     /// This function will return an error if it can't convert values or there
     /// is an error writing output.
-    pub fn render(
+    pub fn render<O: Write>(
         &self,
         world: &World,
         depth: u32,
         single_threaded: bool,
-        quiet: bool,
-        buffer: &mut dyn Write,
+        output: &mut Output<O>,
     ) -> Result<Canvas> {
         writeln!(
-            buffer,
+            output,
             "Size {} by {}, field of view {:.1} degrees",
             HumanCount(self.horizontal_size.try_into()?),
             HumanCount(self.vertical_size.try_into()?),
             self.field_of_view.to_degrees()
         )?;
 
-        writeln!(buffer, "Rendering scene...")?;
+        writeln!(output, "Rendering scene...")?;
 
         let bar = ProgressBar::new(self.vertical_size.try_into()?)
             .with_style(
                 ProgressStyle::with_template(
                     "\
 {prefix} {bar:40.cyan/blue} {human_pos:>7}/{human_len:7} ({percent}%)
-Elapsed: {elapsed}, estimated: {eta}, rows/sec: {per_sec}",
+Elapsed: {elapsed}, remaining: {eta}, rows/sec: {per_sec}",
                 )?
                 .progress_chars("#>-"),
             )
             .with_prefix("Rows")
             .with_finish(ProgressFinish::AndClear);
 
-        bar.set_draw_target(if quiet {
+        bar.set_draw_target(if output.is_sink() {
             ProgressDrawTarget::hidden()
         } else {
             ProgressDrawTarget::stdout()
@@ -129,12 +137,10 @@ Elapsed: {elapsed}, estimated: {eta}, rows/sec: {per_sec}",
                 .collect()
         };
 
-        if !quiet {
-            Term::stdout().clear_last_lines(1)?;
-        }
+        output.clear_last_line()?;
 
         writeln!(
-            buffer,
+            output,
             "Rendering scene...done\nRendered {} rows in {}",
             HumanCount(self.horizontal_size.try_into()?),
             HumanDuration(started.elapsed())
@@ -164,7 +170,7 @@ Elapsed: {elapsed}, estimated: {eta}, rows/sec: {per_sec}",
 
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::{FRAC_PI_2, FRAC_PI_4, SQRT_2};
+    use std::f64::consts::{FRAC_PI_2, FRAC_PI_4, PI, SQRT_2};
 
     use super::*;
     use crate::math::{float::*, Vector};
@@ -195,6 +201,14 @@ mod tests {
         assert_approx_eq!(c.half_width, 0.625);
         assert_approx_eq!(c.half_height, 1.0);
         assert_approx_eq!(c.pixel_size, 0.01);
+    }
+
+    #[test]
+    fn get_size_of_camera() {
+        let c = Camera::new(20, 30, Angle(PI), Transformation::new());
+
+        assert_eq!(c.horizontal_size(), 20);
+        assert_eq!(c.vertical_size(), 30);
     }
 
     #[test]

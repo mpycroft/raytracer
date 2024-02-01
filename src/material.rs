@@ -98,7 +98,7 @@ mod tests {
     use std::f64::consts::SQRT_2;
 
     use super::*;
-    use crate::{math::float::*, pattern::Pattern};
+    use crate::{math::float::*, pattern::Pattern, Object};
 
     #[test]
     fn creating_a_material() {

@@ -122,7 +122,7 @@ mod tests {
     use rand_xoshiro::Xoroshiro128PlusPlus;
 
     use super::*;
-    use crate::math::float::*;
+    use crate::{math::float::*, Object};
 
     #[test]
     #[allow(clippy::many_single_char_names)]

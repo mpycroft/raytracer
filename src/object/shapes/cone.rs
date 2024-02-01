@@ -3,15 +3,13 @@ use std::f64::EPSILON;
 use derive_new::new;
 use float_cmp::{ApproxEq, F64Margin};
 
-use super::Intersectable;
+use super::{Bounded, BoundingBox, Intersectable};
 use crate::{
-    bounding_box::{Bounded, BoundingBox},
-    intersection::{Intersection, List},
+    intersection::{Intersection, TList, TValues},
     math::{
         float::{approx_eq, approx_ne},
         Point, Ray, Vector,
     },
-    Object,
 };
 
 // A `Cone` is a double napped cone centred on the origin and extending in both
@@ -26,12 +24,7 @@ pub struct Cone {
 
 impl Cone {
     #[must_use]
-    fn intersect_caps<'a>(
-        &self,
-        ray: &Ray,
-        object: &'a Object,
-        mut list: List<'a>,
-    ) -> Option<List<'a>> {
+    fn intersect_caps(&self, ray: &Ray, mut list: TList) -> Option<TList> {
         let check_cap = |t: f64, r: f64| {
             let x = ray.origin.x + t * ray.direction.x;
             let z = ray.origin.z + t * ray.direction.z;
@@ -43,13 +36,13 @@ impl Cone {
             let t = (self.minimum - ray.origin.y) / ray.direction.y;
 
             if check_cap(t, self.minimum) {
-                list.push(Intersection::new(object, t));
+                list.push(TValues::new(t));
             }
 
             let t = (self.maximum - ray.origin.y) / ray.direction.y;
 
             if check_cap(t, self.maximum) {
-                list.push(Intersection::new(object, t));
+                list.push(TValues::new(t));
             }
         }
 
@@ -63,7 +56,7 @@ impl Cone {
 
 impl Intersectable for Cone {
     #[must_use]
-    fn intersect<'a>(&self, ray: &Ray, object: &'a Object) -> Option<List<'a>> {
+    fn intersect(&self, ray: &Ray) -> Option<TList> {
         let a = ray.direction.x.powi(2) - ray.direction.y.powi(2)
             + ray.direction.z.powi(2);
 
@@ -74,11 +67,11 @@ impl Intersectable for Cone {
         let c =
             ray.origin.x.powi(2) - ray.origin.y.powi(2) + ray.origin.z.powi(2);
 
-        let mut list = List::new();
+        let mut list = TList::new();
 
         if approx_eq!(a, 0.0) {
             if approx_ne!(b, 0.0) {
-                list.push(Intersection::new(object, -c / (2.0 * b)));
+                list.push(TValues::new(-c / (2.0 * b)));
             }
         } else {
             let discriminant = b.powi(2) - 4.0 * a * c;
@@ -95,16 +88,16 @@ impl Intersectable for Cone {
 
             let y0 = ray.origin.y + t0 * ray.direction.y;
             if self.minimum < y0 && y0 < self.maximum {
-                list.push(Intersection::new(object, t0));
+                list.push(TValues::new(t0));
             }
 
             let y1 = ray.origin.y + t1 * ray.direction.y;
             if self.minimum < y1 && y1 < self.maximum {
-                list.push(Intersection::new(object, t1));
+                list.push(TValues::new(t1));
             }
         }
 
-        self.intersect_caps(ray, object, list)
+        self.intersect_caps(ray, list)
     }
 
     #[must_use]
@@ -160,23 +153,18 @@ mod tests {
     };
 
     use super::*;
-    use crate::{math::float::*, shape::Shape};
+    use crate::{math::float::*, Object};
 
     #[test]
     fn intersecting_a_cone_with_a_ray() {
-        let o = Object::cone_builder(-INFINITY, INFINITY, false).build();
-
-        let Shape::Cone(c) = &o.shape else { unreachable!() };
+        let c = Cone::new(-INFINITY, INFINITY, false);
 
         assert!(c
-            .intersect(
-                &Ray::new(Point::new(5.0, 0.0, 5.0), Vector::z_axis()),
-                &o
-            )
+            .intersect(&Ray::new(Point::new(5.0, 0.0, 5.0), Vector::z_axis()))
             .is_none());
 
         let test = |r, t0, t1| {
-            let i = c.intersect(&r, &o).unwrap();
+            let i = c.intersect(&r).unwrap();
 
             assert_eq!(i.len(), 2);
             assert_approx_eq!(i[0].t, t0, epsilon = 0.000_01);
@@ -204,18 +192,13 @@ mod tests {
 
     #[test]
     fn intersecting_a_cone_with_a_ray_parallel_to_one_of_its_halves() {
-        let o = Object::cone_builder(-INFINITY, INFINITY, false).build();
-
-        let Shape::Cone(c) = &o.shape else { unreachable!() };
+        let c = Cone::new(-INFINITY, INFINITY, false);
 
         let i = c
-            .intersect(
-                &Ray::new(
-                    Point::new(0.0, 0.0, -1.0),
-                    Vector::new(0.0, 1.0, 1.0).normalise(),
-                ),
-                &o,
-            )
+            .intersect(&Ray::new(
+                Point::new(0.0, 0.0, -1.0),
+                Vector::new(0.0, 1.0, 1.0).normalise(),
+            ))
             .unwrap();
 
         assert_eq!(i.len(), 1);
@@ -224,25 +207,18 @@ mod tests {
 
     #[test]
     fn intersecting_a_cones_end_caps() {
-        let o = Object::cone_builder(-0.5, 0.5, true).build();
+        let c = Cone::new(-0.5, 0.5, true);
 
-        let Shape::Cone(c) = &o.shape else { unreachable!() };
-
-        let i = c.intersect(
-            &Ray::new(Point::new(0.0, 0.0, -5.0), Vector::y_axis()),
-            &o,
-        );
+        let i = c
+            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::y_axis()));
 
         assert!(i.is_none());
 
         let i = c
-            .intersect(
-                &Ray::new(
-                    Point::new(0.0, 0.0, -0.25),
-                    Vector::new(0.0, 1.0, 1.0).normalise(),
-                ),
-                &o,
-            )
+            .intersect(&Ray::new(
+                Point::new(0.0, 0.0, -0.25),
+                Vector::new(0.0, 1.0, 1.0).normalise(),
+            ))
             .unwrap();
 
         assert_eq!(i.len(), 2);
@@ -250,10 +226,7 @@ mod tests {
         assert_approx_eq!(i[1].t, FRAC_1_SQRT_2, epsilon = 0.000_01);
 
         let i = c
-            .intersect(
-                &Ray::new(Point::new(0.0, 0.0, -0.25), Vector::y_axis()),
-                &o,
-            )
+            .intersect(&Ray::new(Point::new(0.0, 0.0, -0.25), Vector::y_axis()))
             .unwrap();
 
         assert_eq!(i.len(), 4);
@@ -265,10 +238,9 @@ mod tests {
 
     #[test]
     fn computing_the_normal_vector_on_a_cone() {
-        let o = Object::cone_builder(-1.5, 1.5, true).build();
+        let c = Cone::new(-1.5, 1.5, true);
 
-        let Shape::Cone(c) = &o.shape else { unreachable!() };
-
+        let o = Object::test_builder().build();
         let i = Intersection::new(&o, 0.0);
 
         assert_approx_eq!(

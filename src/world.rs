@@ -45,7 +45,7 @@ impl World {
         let mut surface = Colour::black();
 
         for light in &self.lights {
-            surface += computations.object.material.lighting(
+            surface += computations.object.material().lighting(
                 computations.object,
                 light,
                 &computations.over_point,
@@ -59,8 +59,8 @@ impl World {
 
         let refracted = self.refracted_colour(computations, depth);
 
-        if computations.object.material.reflective > 0.0
-            && computations.object.material.transparency > 0.0
+        if computations.object.material().reflective > 0.0
+            && computations.object.material().transparency > 0.0
         {
             let reflectance = computations.schlick();
 
@@ -111,7 +111,7 @@ intersection list.",
 
         if let Some(intersections) = self.intersect(&ray) {
             if let Some(hit) = intersections.hit() {
-                if hit.object.casts_shadow && hit.t < distance {
+                if hit.object.casts_shadow() && hit.t < distance {
                     return true;
                 }
             }
@@ -126,7 +126,7 @@ intersection list.",
         computations: &Computations,
         depth: u32,
     ) -> Colour {
-        if depth == 0 || computations.object.material.reflective <= 0.0 {
+        if depth == 0 || computations.object.material().reflective <= 0.0 {
             return Colour::black();
         }
 
@@ -135,7 +135,7 @@ intersection list.",
 
         let colour = self.colour_at(&reflect_ray, depth - 1);
 
-        colour * computations.object.material.reflective
+        colour * computations.object.material().reflective
     }
 
     #[must_use]
@@ -145,7 +145,7 @@ intersection list.",
         depth: u32,
     ) -> Colour {
         if depth == 0
-            || approx_eq!(computations.object.material.transparency, 0.0)
+            || approx_eq!(computations.object.material().transparency, 0.0)
         {
             return Colour::black();
         }
@@ -166,7 +166,7 @@ intersection list.",
         let refracted_ray = Ray::new(computations.under_point, direction);
 
         self.colour_at(&refracted_ray, depth - 1)
-            * computations.object.material.transparency
+            * computations.object.material().transparency
     }
 }
 
@@ -178,16 +178,14 @@ impl Default for World {
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        f64::consts::{FRAC_PI_2, SQRT_2},
-        io::sink,
-    };
+    use std::f64::consts::{FRAC_PI_2, SQRT_2};
 
     use super::*;
     use crate::{
         intersection::Intersection,
         math::{float::*, Angle, Transformation, Vector},
-        Camera, Material, Pattern,
+        object::Updatable,
+        Camera, Material, Output, Pattern,
     };
 
     fn test_world() -> World {
@@ -282,8 +280,16 @@ mod tests {
     fn the_colour_with_an_intersection_behind_the_ray() {
         let mut w = test_world();
 
-        w.objects[0].material.ambient = 1.0;
-        w.objects[1].material.ambient = 1.0;
+        w.objects[0].replace_material(
+            &Material::builder()
+                .pattern(Colour::new(0.8, 1.0, 0.6).into())
+                .ambient(1.0)
+                .diffuse(0.7)
+                .specular(0.2)
+                .build(),
+        );
+        w.objects[1]
+            .replace_material(&Material::builder().ambient(1.0).build());
 
         let r = Ray::new(Point::new(0.0, 0.0, 0.75), -Vector::z_axis());
 
@@ -562,7 +568,8 @@ intersection list.")]
             ),
         );
 
-        let i = c.render(&w, 5, true, true, &mut sink()).unwrap();
+        let mut o = Output::<Vec<_>>::new_sink();
+        let i = c.render(&w, 5, true, &mut o).unwrap();
 
         assert_approx_eq!(
             i.get_pixel(5, 5),
@@ -585,7 +592,8 @@ intersection list.")]
             ),
         );
 
-        let i = c.render(&w, 5, false, true, &mut sink()).unwrap();
+        let mut o = Output::<Vec<_>>::new_sink();
+        let i = c.render(&w, 5, false, &mut o).unwrap();
 
         assert_approx_eq!(
             i.get_pixel(5, 5),
@@ -611,7 +619,17 @@ intersection list.")]
     #[test]
     fn no_shadow_when_an_object_does_not_cast_shadow() {
         let mut w = test_world();
-        w.objects[0].casts_shadow = false;
+
+        w.objects[0] = Object::sphere_builder()
+            .material(
+                Material::builder()
+                    .pattern(Colour::new(0.8, 1.0, 0.6).into())
+                    .diffuse(0.7)
+                    .specular(0.2)
+                    .build(),
+            )
+            .casts_shadow(false)
+            .build();
 
         assert!(!w.is_shadowed(&w.lights[0], &Point::new(10.0, -10.0, 10.0)));
     }
@@ -635,9 +653,18 @@ intersection list.")]
     fn the_reflected_colour_for_a_non_reflective_material() {
         let mut w = test_world();
 
+        w.objects[0].replace_material(
+            &Material::builder()
+                .pattern(Colour::new(0.8, 1.0, 0.6).into())
+                .diffuse(0.7)
+                .specular(0.2)
+                .build(),
+        );
+        w.objects[1]
+            .replace_material(&Material::builder().ambient(1.0).build());
+
         let r = Ray::new(Point::origin(), Vector::z_axis());
 
-        w.objects[1].material.ambient = 1.0;
         let o = &w.objects[1];
 
         let i = Intersection::new(o, 1.0);
@@ -724,8 +751,16 @@ intersection list.")]
     #[allow(clippy::many_single_char_names)]
     fn the_refracted_colour_at_the_maximum_recursion_depth() {
         let mut w = test_world();
-        w.objects[0].material.transparency = 1.0;
-        w.objects[0].material.refractive_index = 1.5;
+
+        w.objects[0].replace_material(
+            &Material::builder()
+                .pattern(Colour::new(0.8, 1.0, 0.6).into())
+                .diffuse(0.7)
+                .specular(0.2)
+                .transparency(1.0)
+                .refractive_index(1.5)
+                .build(),
+        );
 
         let o = &w.objects[0];
 
@@ -745,8 +780,16 @@ intersection list.")]
     #[allow(clippy::many_single_char_names)]
     fn the_refracted_colour_under_total_internal_reflection() {
         let mut w = test_world();
-        w.objects[0].material.transparency = 1.0;
-        w.objects[0].material.refractive_index = 1.5;
+
+        w.objects[0].replace_material(
+            &Material::builder()
+                .pattern(Colour::new(0.8, 1.0, 0.6).into())
+                .diffuse(0.7)
+                .specular(0.2)
+                .transparency(1.0)
+                .refractive_index(1.5)
+                .build(),
+        );
 
         let o = &w.objects[0];
 
@@ -767,12 +810,19 @@ intersection list.")]
     #[test]
     fn the_refracted_colour_with_a_reflected_ray() {
         let mut w = test_world();
-        w.objects[0].material = Material::builder()
-            .pattern(Pattern::test_builder().build())
-            .ambient(1.0)
-            .build();
-        w.objects[1].material.transparency = 1.0;
-        w.objects[1].material.refractive_index = 1.5;
+
+        w.objects[0].replace_material(
+            &Material::builder()
+                .pattern(Pattern::test_builder().build())
+                .ambient(1.0)
+                .build(),
+        );
+        w.objects[1].replace_material(
+            &Material::builder()
+                .transparency(1.0)
+                .refractive_index(1.5)
+                .build(),
+        );
 
         let o1 = &w.objects[0];
         let o2 = &w.objects[1];

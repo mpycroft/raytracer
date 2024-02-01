@@ -1,11 +1,9 @@
 use derive_new::new;
 
-use super::Intersectable;
+use super::{Bounded, BoundingBox, Intersectable};
 use crate::{
-    bounding_box::{Bounded, BoundingBox},
-    intersection::{Intersection, List},
+    intersection::{Intersection, TList},
     math::{Point, Ray, Vector},
-    Object,
 };
 
 /// A `Cube` is an axis aligned cube of size 2 (-1.0..1.0) on each axis.
@@ -14,7 +12,7 @@ pub struct Cube;
 
 impl Intersectable for Cube {
     #[must_use]
-    fn intersect<'a>(&self, ray: &Ray, object: &'a Object) -> Option<List<'a>> {
+    fn intersect(&self, ray: &Ray) -> Option<TList> {
         let (x_min, x_max) =
             BoundingBox::check_axis(ray.origin.x, ray.direction.x, -1.0, 1.0);
         let (y_min, y_max) =
@@ -29,10 +27,7 @@ impl Intersectable for Cube {
             return None;
         }
 
-        Some(List::from(vec![
-            Intersection::new(object, min),
-            Intersection::new(object, max),
-        ]))
+        Some(TList::from(vec![min, max]))
     }
 
     #[must_use]
@@ -67,16 +62,14 @@ impl Bounded for Cube {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::float::*, shape::Shape};
+    use crate::{math::float::*, Object};
 
     #[test]
     fn a_ray_intersects_a_cube() {
-        let o = Object::cube_builder().build();
-
-        let Shape::Cube(c) = &o.shape else { unreachable!() };
+        let c = Cube::new();
 
         let test = |r, t1, t2| {
-            let l = c.intersect(&r, &o).unwrap();
+            let l = c.intersect(&r).unwrap();
 
             assert_approx_eq!(l[0].t, t1);
             assert_approx_eq!(l[1].t, t2);
@@ -94,12 +87,10 @@ mod tests {
 
     #[test]
     fn a_ray_misses_a_cube() {
-        let o = Object::cube_builder().build();
-
-        let Shape::Cube(c) = &o.shape else { unreachable!() };
+        let c = Cube::new();
 
         let test = |r| {
-            let l = c.intersect(&r, &o);
+            let l = c.intersect(&r);
 
             assert!(l.is_none());
         };
@@ -125,10 +116,9 @@ mod tests {
 
     #[test]
     fn the_normal_on_a_cube() {
-        let o = Object::cube_builder().build();
+        let c = Cube::new();
 
-        let Shape::Cube(c) = &o.shape else { unreachable!() };
-
+        let o = Object::test_builder().build();
         let i = Intersection::new(&o, 0.0);
 
         assert_approx_eq!(

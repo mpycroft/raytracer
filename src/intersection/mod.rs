@@ -1,11 +1,15 @@
 mod computations;
 mod list;
+mod t_list;
+mod t_values;
 
 use std::f64::EPSILON;
 
 use float_cmp::{ApproxEq, F64Margin};
 
-pub use self::{computations::Computations, list::List};
+pub use self::{
+    computations::Computations, list::List, t_list::TList, t_values::TValues,
+};
 use crate::{
     math::{float::approx_eq, Ray},
     Object,
@@ -18,14 +22,13 @@ use crate::{
 pub struct Intersection<'a> {
     pub object: &'a Object,
     pub t: f64,
-    pub u: Option<f64>,
-    pub v: Option<f64>,
+    pub u_v: Option<(f64, f64)>,
 }
 
 impl<'a> Intersection<'a> {
     #[must_use]
     pub const fn new(object: &'a Object, t: f64) -> Self {
-        Self { object, t, u: None, v: None }
+        Self { object, t, u_v: None }
     }
 
     #[must_use]
@@ -35,7 +38,7 @@ impl<'a> Intersection<'a> {
         u: f64,
         v: f64,
     ) -> Self {
-        Self { object, t, u: Some(u), v: Some(v) }
+        Self { object, t, u_v: Some((u, v)) }
     }
 
     #[must_use]
@@ -56,9 +59,6 @@ impl<'a> Intersection<'a> {
             false
         };
 
-        let over_point = point + normal * 100_000.0 * EPSILON;
-        let under_point = point - normal * 100_000.0 * EPSILON;
-
         let mut container = Vec::<&Object>::new();
 
         let mut n1 = f64::NAN;
@@ -70,7 +70,7 @@ impl<'a> Intersection<'a> {
             if is_hit {
                 n1 = container.last().map_or_else(
                     || 1.0,
-                    |object| object.material.refractive_index,
+                    |object| object.material().refractive_index,
                 );
             }
 
@@ -86,7 +86,7 @@ impl<'a> Intersection<'a> {
             if is_hit {
                 n2 = container.last().map_or_else(
                     || 1.0,
-                    |object| object.material.refractive_index,
+                    |object| object.material().refractive_index,
                 );
 
                 break;
@@ -97,14 +97,14 @@ impl<'a> Intersection<'a> {
             self.object,
             self.t,
             point,
-            over_point,
+            point + normal * 100_000.0 * EPSILON,
+            point - normal * 100_000.0 * EPSILON,
             eye,
             normal,
             inside,
             ray.direction.reflect(&normal),
             n1,
             n2,
-            under_point,
         )
     }
 }
@@ -127,7 +127,7 @@ mod tests {
     use super::*;
     use crate::{
         math::{float::*, Point, Transformation, Vector},
-        Material,
+        Material, Object,
     };
 
     #[test]
@@ -137,15 +137,13 @@ mod tests {
 
         assert_approx_eq!(i.object, &o);
         assert_approx_eq!(i.t, 1.5);
-        assert_eq!(i.u, None);
-        assert_eq!(i.v, None);
+        assert_eq!(i.u_v, None);
 
         let i = Intersection::new_with_u_v(&o, 0.6, 0.5, 0.4);
 
         assert_approx_eq!(i.object, &o);
         assert_approx_eq!(i.t, 0.6);
-        assert_eq!(i.u, Some(0.5));
-        assert_eq!(i.v, Some(0.4));
+        assert_eq!(i.u_v, Some((0.5, 0.4)));
     }
 
     #[test]
@@ -229,17 +227,21 @@ mod tests {
             .material(Material::glass())
             .build();
 
-        let mut b = Object::sphere_builder()
-            .transformation(Transformation::new().translate(0.0, 0.0, -0.25))
-            .material(Material::glass())
-            .build();
-        b.material.refractive_index = 2.0;
+        let mut m = Material::glass();
+        m.refractive_index = 2.0;
 
-        let mut c = Object::sphere_builder()
-            .transformation(Transformation::new().translate(0.0, 0.0, 0.25))
-            .material(Material::glass())
+        let b = Object::sphere_builder()
+            .transformation(Transformation::new().translate(0.0, 0.0, -0.25))
+            .material(m)
             .build();
-        c.material.refractive_index = 2.5;
+
+        let mut m = Material::glass();
+        m.refractive_index = 2.5;
+
+        let c = Object::sphere_builder()
+            .transformation(Transformation::new().translate(0.0, 0.0, 0.25))
+            .material(m)
+            .build();
 
         let r = Ray::new(Point::new(0.0, 0.0, -4.0), Vector::z_axis());
 
@@ -287,7 +289,7 @@ mod tests {
     #[test]
     #[allow(clippy::many_single_char_names)]
     fn preparing_the_normal_on_a_smooth_triangle() {
-        let o = Object::smooth_triangle_builder(
+        let o = Object::triangle_builder(
             Point::new(0.0, 1.0, 0.0),
             Point::new(-1.0, 0.0, 0.0),
             Point::new(1.0, 0.0, 0.0),

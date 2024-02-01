@@ -179,7 +179,7 @@ mod tests {
     };
 
     use super::*;
-    use crate::math::{float::assert_approx_eq, Angle, Vector};
+    use crate::math::{float::*, Angle, Vector};
 
     #[test]
     fn creating_a_bounding_box() {

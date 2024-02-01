@@ -7,12 +7,8 @@ use std::{
 
 use anyhow::{bail, Result};
 
-use crate::{
-    math::{Point, Vector},
-    object::ObjectBuilder,
-    shape::Shape,
-    Object,
-};
+use super::{group::GroupBuilder, Object};
+use crate::math::{Point, Vector};
 
 #[derive(Debug)]
 pub struct ObjParser {
@@ -72,7 +68,9 @@ impl ObjParser {
 
         for (_, triangles) in groups {
             if !triangles.is_empty() {
-                parser.groups.push(Object::group_builder(triangles).build());
+                parser.groups.push(
+                    Object::group_builder().set_objects(triangles).build(),
+                );
             }
         }
 
@@ -190,7 +188,7 @@ If one vertex normal is specified, all faces must also provide vertex normals."
 
             if is_smooth {
                 group.push(
-                    Object::smooth_triangle_builder(
+                    Object::triangle_builder(
                         self.vertices[vertex1],
                         self.vertices[vertex2],
                         self.vertices[vertex3],
@@ -203,7 +201,7 @@ If one vertex normal is specified, all faces must also provide vertex normals."
                 );
             } else {
                 group.push(
-                    Object::triangle_builder(
+                    Object::flat_triangle_builder(
                         self.vertices[vertex1],
                         self.vertices[vertex2],
                         self.vertices[vertex3],
@@ -229,18 +227,15 @@ If one vertex normal is specified, all faces must also provide vertex normals."
         groups.get_mut(group_name).ok_or_else(|| unreachable!())
     }
 
-    pub fn into_group(self) -> ObjectBuilder<((), (), (), (Shape,))> {
-        Object::group_builder(self.groups)
+    pub fn into_group(self) -> GroupBuilder {
+        Object::group_builder().set_objects(self.groups)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        math::{float::*, Vector},
-        shape::Shape,
-    };
+    use crate::math::{float::*, Vector};
 
     #[test]
     fn ignoring_unrecognised_lines() {
@@ -287,14 +282,14 @@ Found 5 items."
     fn parsing_faces() {
         let p = ObjParser::parse("obj/test/faces.obj").unwrap();
 
-        let Shape::Group(g) = &p.groups[0].shape else { unreachable!() };
-        let c = g.objects();
+        let Object::Group(g) = &p.groups[0] else { unreachable!() };
+        let c = &g.objects;
 
         assert_eq!(c.len(), 2);
 
         assert_approx_eq!(
             c[0],
-            &Object::triangle_builder(
+            &Object::flat_triangle_builder(
                 Point::new(-1.0, 1.0, 0.0),
                 Point::new(-1.0, 0.0, 0.0),
                 Point::new(1.0, 0.0, 0.0)
@@ -303,7 +298,7 @@ Found 5 items."
         );
         assert_approx_eq!(
             c[1],
-            &Object::triangle_builder(
+            &Object::flat_triangle_builder(
                 Point::new(-1.0, 1.0, 0.0),
                 Point::new(1.0, 0.0, 0.0),
                 Point::new(1.0, 1.0, 0.0)
@@ -335,14 +330,14 @@ Found 3 items."
     fn triangulating_polygons() {
         let p = ObjParser::parse("obj/test/triangulating.obj").unwrap();
 
-        let Shape::Group(g) = &p.groups[0].shape else { unreachable!() };
-        let c = g.objects();
+        let Object::Group(g) = &p.groups[0] else { unreachable!() };
+        let c = &g.objects;
 
         assert_eq!(c.len(), 3);
 
         assert_approx_eq!(
             c[0],
-            &Object::triangle_builder(
+            &Object::flat_triangle_builder(
                 Point::new(-1.0, 1.0, 0.0),
                 Point::new(-1.0, 0.0, 0.0),
                 Point::new(1.0, 0.0, 0.0)
@@ -351,7 +346,7 @@ Found 3 items."
         );
         assert_approx_eq!(
             c[1],
-            &Object::triangle_builder(
+            &Object::flat_triangle_builder(
                 Point::new(-1.0, 1.0, 0.0),
                 Point::new(1.0, 0.0, 0.0),
                 Point::new(1.0, 1.0, 0.0)
@@ -360,7 +355,7 @@ Found 3 items."
         );
         assert_approx_eq!(
             c[2],
-            &Object::triangle_builder(
+            &Object::flat_triangle_builder(
                 Point::new(-1.0, 1.0, 0.0),
                 Point::new(1.0, 1.0, 0.0),
                 Point::new(0.0, 2.0, 0.0)
@@ -376,19 +371,19 @@ Found 3 items."
             .into_group()
             .build();
 
-        let Shape::Group(g) = &o.shape else { unreachable!() };
-        let c = g.objects();
+        let Object::Group(g) = o else { unreachable!() };
+        let c = &g.objects;
 
         assert_eq!(c.len(), 2);
 
-        let Shape::Group(g) = &c[0].shape else { unreachable!() };
-        let c1 = g.objects();
+        let Object::Group(g) = &c[0] else { unreachable!() };
+        let c1 = &g.objects;
 
         assert_eq!(c1.len(), 1);
 
         assert_approx_eq!(
             c1[0],
-            &Object::triangle_builder(
+            &Object::flat_triangle_builder(
                 Point::new(-1.0, 1.0, 0.0),
                 Point::new(-1.0, 0.0, 0.0),
                 Point::new(1.0, 0.0, 0.0)
@@ -396,14 +391,14 @@ Found 3 items."
             .build()
         );
 
-        let Shape::Group(g) = &c[1].shape else { unreachable!() };
-        let c2 = g.objects();
+        let Object::Group(g) = &c[1] else { unreachable!() };
+        let c2 = &g.objects;
 
         assert_eq!(c2.len(), 1);
 
         assert_approx_eq!(
             c2[0],
-            &Object::triangle_builder(
+            &Object::flat_triangle_builder(
                 Point::new(-1.0, 1.0, 0.0),
                 Point::new(1.0, 0.0, 0.0),
                 Point::new(1.0, 1.0, 0.0)
@@ -455,15 +450,16 @@ Found 6 items."
     }
 
     #[test]
+    #[allow(clippy::many_single_char_names)]
     fn parsing_face_normals() {
         let p = ObjParser::parse("obj/test/face_normals.obj").unwrap();
 
-        let Shape::Group(g) = &p.groups[0].shape else { unreachable!() };
-        let c = g.objects();
+        let Object::Group(g) = &p.groups[0] else { unreachable!() };
+        let c = &g.objects;
 
         assert_eq!(c.len(), 2);
 
-        let t = Object::smooth_triangle_builder(
+        let t = Object::triangle_builder(
             Point::new(0.0, 1.0, 0.0),
             Point::new(-1.0, 0.0, 0.0),
             Point::new(1.0, 0.0, 0.0),
