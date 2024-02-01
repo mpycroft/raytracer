@@ -51,7 +51,7 @@ impl World {
                 &computations.over_point,
                 &computations.eye,
                 &computations.normal,
-                self.is_shadowed(light, &computations.over_point),
+                self.is_shadowed(&light.position, &computations.over_point),
             );
         }
 
@@ -92,8 +92,8 @@ impl World {
     }
 
     #[must_use]
-    pub fn is_shadowed(&self, light: &PointLight, point: &Point) -> bool {
-        let vector = light.position - *point;
+    pub fn is_shadowed(&self, light_position: &Point, point: &Point) -> bool {
+        let vector = *light_position - *point;
 
         let distance = vector.magnitude();
         let direction = vector.normalise();
@@ -571,17 +571,15 @@ mod tests {
     }
 
     #[test]
-    fn no_shadow_when_nothing_is_collinear_with_point_and_light() {
+    fn is_shadow_tests_for_occlusion_between_two_point() {
         let w = test_world();
 
-        assert!(!w.is_shadowed(&w.lights[0], &Point::new(0.0, 10.0, 0.0)));
-    }
+        let l = Point::new(-10.0, -10.0, -10.0);
 
-    #[test]
-    fn shadow_when_an_object_is_between_point_and_light() {
-        let w = test_world();
-
-        assert!(w.is_shadowed(&w.lights[0], &Point::new(10.0, -10.0, 10.0)));
+        assert!(!w.is_shadowed(&l, &Point::new(-10.0, -10.0, 10.0)));
+        assert!(w.is_shadowed(&l, &Point::new(10.0, 10.0, 10.0)));
+        assert!(!w.is_shadowed(&l, &Point::new(-20.0, -20.0, -20.0)));
+        assert!(!w.is_shadowed(&l, &Point::new(-5.0, -5.0, 5.0)));
     }
 
     #[test]
@@ -599,21 +597,10 @@ mod tests {
             .casts_shadow(false)
             .build();
 
-        assert!(!w.is_shadowed(&w.lights[0], &Point::new(10.0, -10.0, 10.0)));
-    }
-
-    #[test]
-    fn no_shadow_when_an_object_is_behind_the_light() {
-        let w = test_world();
-
-        assert!(!w.is_shadowed(&w.lights[0], &Point::new(-20.0, 20.0, -20.0)));
-    }
-
-    #[test]
-    fn no_shadow_when_an_object_is_behind_the_point() {
-        let w = test_world();
-
-        assert!(!w.is_shadowed(&w.lights[0], &Point::new(-2.0, 2.0, -2.0)));
+        assert!(!w.is_shadowed(
+            &w.lights[0].position,
+            &Point::new(10.0, -10.0, 10.0)
+        ));
     }
 
     #[test]
