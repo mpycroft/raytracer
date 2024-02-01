@@ -3,7 +3,8 @@ mod operation;
 use float_cmp::{ApproxEq, F64Margin};
 pub use operation::Operation;
 
-use crate::Object;
+use super::Includes;
+use crate::{intersection::List, Object};
 
 #[derive(Clone, Debug)]
 pub struct Csg {
@@ -20,12 +21,12 @@ impl Csg {
 
     #[must_use]
     fn intersection_allowed(
-        operation: Operation,
+        &self,
         left_hit: bool,
         in_left: bool,
         in_right: bool,
     ) -> bool {
-        match operation {
+        match self.operation {
             Operation::Difference => {
                 (left_hit && !in_right) || (!left_hit && in_left)
             }
@@ -37,6 +38,41 @@ impl Csg {
                 (left_hit && !in_right) || (!left_hit && !in_left)
             }
         }
+    }
+
+    #[must_use]
+    fn filter_intersections<'a>(&self, intersections: List<'a>) -> List<'a> {
+        let mut in_left = false;
+        let mut in_right = false;
+
+        let mut list = List::new();
+
+        for intersection in intersections.into_iter() {
+            let left_hit = self.left.includes(intersection.object);
+
+            if self.intersection_allowed(left_hit, in_left, in_right) {
+                list.push(intersection);
+            }
+
+            if left_hit {
+                in_left = !in_left;
+            } else {
+                in_right = !in_right;
+            }
+        }
+
+        list
+    }
+}
+
+impl Includes for Csg {
+    #[must_use]
+    fn includes(&self, object: &Object) -> bool {
+        if self.left.includes(object) || self.right.includes(object) {
+            return true;
+        }
+
+        false
     }
 }
 
@@ -55,7 +91,7 @@ impl ApproxEq for Csg {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::float::*;
+    use crate::{intersection::Intersection, math::float::*};
 
     #[test]
     fn creating_a_csg() {
@@ -71,48 +107,80 @@ mod tests {
 
     #[test]
     fn evaluating_the_rules_for_a_csg_operation() {
-        let test_union = |l_hit, in_l, in_r| {
-            Csg::intersection_allowed(Operation::Union, l_hit, in_l, in_r)
+        let u = Csg::new(
+            Operation::Union,
+            Object::test_builder().build(),
+            Object::test_builder().build(),
+        );
+
+        let test = |c: &Csg, l_hit, in_l, in_r| {
+            c.intersection_allowed(l_hit, in_l, in_r)
         };
 
-        assert!(!test_union(true, true, true));
-        assert!(test_union(true, true, false));
-        assert!(!test_union(true, false, true));
-        assert!(test_union(true, false, false));
-        assert!(!test_union(false, true, true));
-        assert!(!test_union(false, true, false));
-        assert!(test_union(false, false, true));
-        assert!(test_union(false, false, false));
+        assert!(!test(&u, true, true, true));
+        assert!(test(&u, true, true, false));
+        assert!(!test(&u, true, false, true));
+        assert!(test(&u, true, false, false));
+        assert!(!test(&u, false, true, true));
+        assert!(!test(&u, false, true, false));
+        assert!(test(&u, false, false, true));
+        assert!(test(&u, false, false, false));
 
-        let test_intersection = |l_hit, in_l, in_r| {
-            Csg::intersection_allowed(
-                Operation::Intersection,
-                l_hit,
-                in_l,
-                in_r,
-            )
+        let i = Csg::new(
+            Operation::Intersection,
+            Object::test_builder().build(),
+            Object::test_builder().build(),
+        );
+
+        assert!(test(&i, true, true, true));
+        assert!(!test(&i, true, true, false));
+        assert!(test(&i, true, false, true));
+        assert!(!test(&i, true, false, false));
+        assert!(test(&i, false, true, true));
+        assert!(test(&i, false, true, false));
+        assert!(!test(&i, false, false, true));
+        assert!(!test(&i, false, false, false));
+
+        let d = Csg::new(
+            Operation::Difference,
+            Object::test_builder().build(),
+            Object::test_builder().build(),
+        );
+
+        assert!(!test(&d, true, true, true));
+        assert!(test(&d, true, true, false));
+        assert!(!test(&d, true, false, true));
+        assert!(test(&d, true, false, false));
+        assert!(test(&d, false, true, true));
+        assert!(test(&d, true, true, false));
+        assert!(!test(&d, false, false, true));
+        assert!(!test(&d, false, false, false));
+    }
+
+    #[test]
+    fn filtering_a_list_of_intersections() {
+        let o1 = Object::sphere_builder().build();
+        let o2 = Object::cube_builder().build();
+
+        let l = List::from(vec![
+            Intersection::new(&o1, 1.0),
+            Intersection::new(&o2, 2.0),
+            Intersection::new(&o1, 3.0),
+            Intersection::new(&o2, 4.0),
+        ]);
+
+        let test = |o, i1: usize, i2: usize| {
+            let c = Csg::new(o, o1.clone(), o2.clone());
+
+            let f = c.filter_intersections(l.clone());
+
+            assert_eq!(f.len(), 2);
+            assert_approx_eq!(f[0], l[i1]);
+            assert_approx_eq!(f[1], l[i2]);
         };
 
-        assert!(test_intersection(true, true, true));
-        assert!(!test_intersection(true, true, false));
-        assert!(test_intersection(true, false, true));
-        assert!(!test_intersection(true, false, false));
-        assert!(test_intersection(false, true, true));
-        assert!(test_intersection(false, true, false));
-        assert!(!test_intersection(false, false, true));
-        assert!(!test_intersection(false, false, false));
-
-        let test_difference = |l_hit, in_l, in_r| {
-            Csg::intersection_allowed(Operation::Difference, l_hit, in_l, in_r)
-        };
-
-        assert!(!test_difference(true, true, true));
-        assert!(test_difference(true, true, false));
-        assert!(!test_difference(true, false, true));
-        assert!(test_difference(true, false, false));
-        assert!(test_difference(false, true, true));
-        assert!(test_difference(true, true, false));
-        assert!(!test_difference(false, false, true));
-        assert!(!test_difference(false, false, false));
+        test(Operation::Union, 0, 3);
+        test(Operation::Intersection, 1, 2);
+        test(Operation::Difference, 0, 1);
     }
 }

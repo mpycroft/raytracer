@@ -1,3 +1,5 @@
+use std::vec::IntoIter;
+
 use derive_more::{Deref, DerefMut, From};
 
 use super::Intersection;
@@ -27,6 +29,11 @@ impl<'a> List<'a> {
                 a.t.partial_cmp(&b.t).unwrap_or_else(|| unreachable!())
             })
             .copied()
+    }
+
+    #[must_use]
+    pub fn into_iter(self) -> IntoIter<Intersection<'a>> {
+        self.0.into_iter()
     }
 }
 
