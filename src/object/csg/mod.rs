@@ -27,7 +27,9 @@ impl Csg {
     ) -> bool {
         match operation {
             Operation::Difference => todo!(),
-            Operation::Intersection => todo!(),
+            Operation::Intersection => {
+                (left_hit && in_right) || (!left_hit && in_left)
+            }
             Operation::Union => {
                 (left_hit && !in_right) || (!left_hit && !in_left)
             }
@@ -78,5 +80,23 @@ mod tests {
         assert!(!test_union(false, true, false));
         assert!(test_union(false, false, true));
         assert!(test_union(false, false, false));
+
+        let test_intersection = |l_hit, in_l, in_r| {
+            Csg::intersection_allowed(
+                Operation::Intersection,
+                l_hit,
+                in_l,
+                in_r,
+            )
+        };
+
+        assert!(test_intersection(true, true, true));
+        assert!(!test_intersection(true, true, false));
+        assert!(test_intersection(true, false, true));
+        assert!(!test_intersection(true, false, false));
+        assert!(test_intersection(false, true, true));
+        assert!(test_intersection(false, true, false));
+        assert!(!test_intersection(false, false, true));
+        assert!(!test_intersection(false, false, false));
     }
 }
