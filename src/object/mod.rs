@@ -1,4 +1,5 @@
 mod bounding_box;
+mod csg;
 mod group;
 mod obj_parser;
 mod shape;
