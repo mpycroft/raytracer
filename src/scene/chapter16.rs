@@ -20,8 +20,8 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
         vertical_size,
         field_of_view,
         Transformation::view_transformation(
-            &Point::new(0.0, 5.0, -1.0),
-            &Point::new(0.0, 4.5, 0.0),
+            &Point::new(0.0, 4.0, -1.0),
+            &Point::new(0.0, 3.5, 0.0),
             &Vector::y_axis(),
         ),
     );
@@ -170,7 +170,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
         Colour::new(0.7, 0.7, 0.7),
     ));
     world.add_light(PointLight::new(
-        Point::new(100.0, 100.0, -100.0),
+        Point::new(10.0, 10.0, -10.0),
         Colour::new(0.2, 0.2, 0.2),
     ));
 

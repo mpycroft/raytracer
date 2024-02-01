@@ -221,6 +221,12 @@ mod tests {
         let o1 = Object::sphere_builder().build();
         let o2 = Object::cube_builder().build();
 
+        let o = Object::new_csg(Operation::Union, o1.clone(), o2.clone());
+
+        let Object::Csg(c) = o else { unreachable!() };
+
+        assert!(c.filter_intersections(List::new()).is_none());
+
         let l = List::from(vec![
             Intersection::new(&o1, 1.0),
             Intersection::new(&o2, 2.0),
