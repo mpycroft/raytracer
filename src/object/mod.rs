@@ -14,16 +14,16 @@ use enum_dispatch::enum_dispatch;
 use float_cmp::{ApproxEq, F64Margin};
 use paste::paste;
 
-pub use self::updatable::Updatable;
 use self::{
     bounding_box::{Bounded, BoundingBox},
-    csg::{Csg, Operation},
+    csg::Csg,
     group::{Group, GroupBuilder},
     includes::Includes,
     obj_parser::ObjParser,
     shape::{Shape, ShapeBuilder},
     shapes::Shapes,
 };
+pub use self::{csg::Operation, updatable::Updatable};
 use crate::{
     intersection::{Intersection, List},
     math::{Point, Ray, Transformable, Transformation, Vector},
@@ -81,11 +81,8 @@ impl Object {
         Group::builder()
     }
 
-    pub fn new_csg(
-        operation: Operation,
-        left: Object,
-        right: Object,
-    ) -> Object {
+    #[must_use]
+    pub fn new_csg(operation: Operation, left: Self, right: Self) -> Self {
         Csg::new(operation, left, right).into()
     }
 
@@ -102,7 +99,7 @@ impl Object {
     #[must_use]
     pub fn intersect(&self, ray: &Ray) -> Option<List> {
         match self {
-            Self::Csg(_) => todo!(),
+            Self::Csg(csg) => csg.intersect(ray),
             Self::Group(group) => group.intersect(ray),
             Self::Shape(shape) => shape.intersect(ray, self),
         }

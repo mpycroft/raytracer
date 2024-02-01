@@ -250,10 +250,8 @@ mod tests {
             .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
             .build();
 
-        let i = o.intersect(&r);
-        assert!(i.is_some());
+        let i = o.intersect(&r).unwrap();
 
-        let i = i.unwrap();
         assert_eq!(i.len(), 2);
 
         assert_approx_eq!(i[0].object, &o);

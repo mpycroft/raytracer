@@ -512,11 +512,8 @@ mod tests {
         let w = test_world();
 
         let i = w
-            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()));
-
-        assert!(i.is_some());
-
-        let i = i.unwrap();
+            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()))
+            .unwrap();
 
         assert_eq!(i.len(), 4);
         assert_approx_eq!(i[0].t, 4.0);

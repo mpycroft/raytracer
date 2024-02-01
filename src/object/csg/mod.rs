@@ -4,7 +4,11 @@ use float_cmp::{ApproxEq, F64Margin};
 
 pub use self::operation::Operation;
 use super::{Bounded, BoundingBox, Includes, Updatable};
-use crate::{intersection::List, math::Transformation, Material, Object};
+use crate::{
+    intersection::List,
+    math::{Ray, Transformation},
+    Material, Object,
+};
 
 /// A `Csg` is a constructive solid geometry object which performs `Operations`
 /// on its two operands allowing the combining of objects in different patterns.
@@ -35,7 +39,6 @@ impl Csg {
             Operation::Intersection => {
                 (left_hit && in_right) || (!left_hit && in_left)
             }
-
             Operation::Union => {
                 (left_hit && !in_right) || (!left_hit && !in_left)
             }
@@ -43,7 +46,10 @@ impl Csg {
     }
 
     #[must_use]
-    fn filter_intersections<'a>(&self, intersections: List<'a>) -> List<'a> {
+    fn filter_intersections<'a>(
+        &self,
+        intersections: List<'a>,
+    ) -> Option<List<'a>> {
         let mut in_left = false;
         let mut in_right = false;
 
@@ -63,7 +69,32 @@ impl Csg {
             }
         }
 
-        list
+        if list.is_empty() {
+            return None;
+        }
+
+        Some(list)
+    }
+
+    #[must_use]
+    pub fn intersect(&self, ray: &Ray) -> Option<List> {
+        let mut intersections = List::new();
+
+        if let Some(left) = &mut self.left.intersect(ray) {
+            intersections.append(left);
+        }
+
+        if let Some(right) = &mut self.right.intersect(ray) {
+            intersections.append(right);
+        };
+
+        if intersections.is_empty() {
+            return None;
+        }
+
+        intersections.sort();
+
+        self.filter_intersections(intersections)
     }
 }
 
@@ -114,7 +145,7 @@ mod tests {
     use super::*;
     use crate::{
         intersection::Intersection,
-        math::{float::*, Point},
+        math::{float::*, Point, Vector},
     };
 
     #[test]
@@ -180,7 +211,7 @@ mod tests {
         assert!(!test(&d, true, false, true));
         assert!(test(&d, true, false, false));
         assert!(test(&d, false, true, true));
-        assert!(test(&d, true, true, false));
+        assert!(test(&d, false, true, false));
         assert!(!test(&d, false, false, true));
         assert!(!test(&d, false, false, false));
     }
@@ -202,7 +233,7 @@ mod tests {
 
             let Object::Csg(c) = o else { unreachable!() };
 
-            let f = c.filter_intersections(l.clone());
+            let f = c.filter_intersections(l.clone()).unwrap();
 
             assert_eq!(f.len(), 2);
             assert_approx_eq!(f[0], l[i1]);
@@ -212,6 +243,40 @@ mod tests {
         test(Operation::Union, 0, 3);
         test(Operation::Intersection, 1, 2);
         test(Operation::Difference, 0, 1);
+    }
+
+    #[test]
+    fn a_ray_misses_a_csg_object() {
+        let o = Object::new_csg(
+            Operation::Union,
+            Object::sphere_builder().build(),
+            Object::cube_builder().build(),
+        );
+
+        assert!(o
+            .intersect(&Ray::new(Point::new(0.0, 2.0, -5.0), Vector::z_axis()))
+            .is_none());
+    }
+
+    #[test]
+    fn a_ray_hits_a_csg_object() {
+        let s1 = Object::sphere_builder().build();
+        let s2 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(0.0, 0.0, 0.5))
+            .build();
+
+        let o = Object::new_csg(Operation::Union, s1.clone(), s2.clone());
+
+        let l = o
+            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()))
+            .unwrap();
+
+        assert_eq!(l.len(), 2);
+
+        assert_approx_eq!(l[0].object, &s1);
+        assert_approx_eq!(l[0].t, 4.0);
+        assert_approx_eq!(l[1].object, &s2);
+        assert_approx_eq!(l[1].t, 6.5);
     }
 
     #[test]

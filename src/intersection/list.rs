@@ -124,10 +124,9 @@ mod tests {
         let i1 = Intersection::new(&o, 1.0);
         let i2 = Intersection::new(&o, 2.0);
 
-        let h = List::from(vec![i1, i2]).hit();
+        let h = List::from(vec![i1, i2]).hit().unwrap();
 
-        assert!(h.is_some());
-        assert_approx_eq!(h.unwrap(), i1);
+        assert_approx_eq!(h, i1);
     }
 
     #[test]
@@ -136,10 +135,9 @@ mod tests {
         let i1 = Intersection::new(&o, 1.0);
         let i2 = Intersection::new(&o, -1.0);
 
-        let h = List::from(vec![i1, i2]).hit();
+        let h = List::from(vec![i1, i2]).hit().unwrap();
 
-        assert!(h.is_some());
-        assert_approx_eq!(h.unwrap(), i1);
+        assert_approx_eq!(h, i1);
     }
 
     #[test]

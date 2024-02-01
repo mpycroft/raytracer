@@ -247,11 +247,8 @@ mod tests {
         let t = create_flat_triangle();
 
         let l = t
-            .intersect(&Ray::new(Point::new(0.0, 0.5, -2.0), Vector::z_axis()));
-
-        assert!(l.is_some());
-
-        let l = l.unwrap();
+            .intersect(&Ray::new(Point::new(0.0, 0.5, -2.0), Vector::z_axis()))
+            .unwrap();
 
         assert_eq!(l.len(), 1);
 
@@ -280,14 +277,9 @@ mod tests {
     fn an_intersection_with_a_smooth_triangle_stores_u_v() {
         let t = create_triangle();
 
-        let l = t.intersect(&Ray::new(
-            Point::new(-0.2, 0.3, -2.0),
-            Vector::z_axis(),
-        ));
-
-        assert!(l.is_some());
-
-        let l = l.unwrap();
+        let l = t
+            .intersect(&Ray::new(Point::new(-0.2, 0.3, -2.0), Vector::z_axis()))
+            .unwrap();
 
         assert_eq!(l.len(), 1);
 
