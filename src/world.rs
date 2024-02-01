@@ -168,6 +168,38 @@ impl Default for World {
 }
 
 #[cfg(test)]
+#[allow(clippy::module_name_repetitions)]
+pub fn test_world() -> World {
+    use crate::{math::Transformation, Material};
+
+    let mut w = World::new();
+
+    w.add_object(
+        Object::sphere_builder()
+            .material(
+                Material::builder()
+                    .pattern(Colour::new(0.8, 1.0, 0.6).into())
+                    .diffuse(0.7)
+                    .specular(0.2)
+                    .build(),
+            )
+            .build(),
+    );
+    w.add_object(
+        Object::sphere_builder()
+            .transformation(Transformation::new().scale(0.5, 0.5, 0.5))
+            .build(),
+    );
+
+    w.add_light(PointLight::new(
+        Point::new(-10.0, 10.0, -10.0),
+        Colour::white(),
+    ));
+
+    w
+}
+
+#[cfg(test)]
 mod tests {
     use std::f64::consts::{FRAC_PI_2, SQRT_2};
 
@@ -178,34 +210,6 @@ mod tests {
         object::Updatable,
         Camera, Material, Output, Pattern,
     };
-
-    fn test_world() -> World {
-        let mut w = World::new();
-
-        w.add_object(
-            Object::sphere_builder()
-                .material(
-                    Material::builder()
-                        .pattern(Colour::new(0.8, 1.0, 0.6).into())
-                        .diffuse(0.7)
-                        .specular(0.2)
-                        .build(),
-                )
-                .build(),
-        );
-        w.add_object(
-            Object::sphere_builder()
-                .transformation(Transformation::new().scale(0.5, 0.5, 0.5))
-                .build(),
-        );
-
-        w.add_light(PointLight::new(
-            Point::new(-10.0, 10.0, -10.0),
-            Colour::white(),
-        ));
-
-        w
-    }
 
     #[test]
     fn creating_a_world() {
