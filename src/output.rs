@@ -84,6 +84,14 @@ mod tests {
     }
 
     #[test]
+    fn flush() {
+        let mut o = Output::new(Vec::new());
+
+        let r = o.flush();
+        assert!(r.is_ok());
+    }
+
+    #[test]
     fn is_sink() {
         assert!(!Output::new(stdout()).is_sink());
         assert!(Output::<Vec<u8>>::new_sink().is_sink());

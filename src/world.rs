@@ -178,16 +178,13 @@ impl Default for World {
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        f64::consts::{FRAC_PI_2, SQRT_2},
-        io::sink,
-    };
+    use std::f64::consts::{FRAC_PI_2, SQRT_2};
 
     use super::*;
     use crate::{
         intersection::Intersection,
         math::{float::*, Angle, Transformation, Vector},
-        Camera, Material, Pattern,
+        Camera, Material, Output, Pattern,
     };
 
     fn test_world() -> World {
@@ -583,7 +580,8 @@ intersection list.")]
             ),
         );
 
-        let i = c.render(&w, 5, true, true, &mut sink()).unwrap();
+        let mut o = Output::<Vec<_>>::new_sink();
+        let i = c.render(&w, 5, true, &mut o).unwrap();
 
         assert_approx_eq!(
             i.get_pixel(5, 5),
@@ -606,7 +604,8 @@ intersection list.")]
             ),
         );
 
-        let i = c.render(&w, 5, false, true, &mut sink()).unwrap();
+        let mut o = Output::<Vec<_>>::new_sink();
+        let i = c.render(&w, 5, false, &mut o).unwrap();
 
         assert_approx_eq!(
             i.get_pixel(5, 5),

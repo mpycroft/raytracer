@@ -3,47 +3,49 @@ mod scene;
 
 use std::{
     fs::write,
-    io::{sink, stdout, Write},
+    io::{stdout, Write},
     path::Path,
 };
 
 use anyhow::Result;
 use clap::Parser;
-use either::Either::{Left, Right};
 use image::{ImageBuffer, Rgb};
 use rand::{random, SeedableRng};
 use rand_xoshiro::Xoroshiro128PlusPlus;
+use raytracer::Output;
 
 use crate::arguments::Arguments;
 
 fn main() -> Result<()> {
     let arguments = Arguments::parse();
 
-    let mut buffer =
-        if arguments.quiet { Left(sink()) } else { Right(stdout()) };
-
-    let buffer: &mut dyn Write = &mut buffer;
+    let mut output = if arguments.quiet {
+        Output::new_sink()
+    } else {
+        Output::new(stdout())
+    };
 
     let seed = arguments.seed.unwrap_or_else(random);
 
-    writeln!(buffer, "Using RNG seed {seed}")?;
+    writeln!(output, "Using RNG seed {seed}")?;
 
     let mut rng = Xoroshiro128PlusPlus::seed_from_u64(seed);
 
-    write!(buffer, "Generating scene '{}'...", arguments.scene)?;
+    let scene_text = format!("Generating scene '{}'...", arguments.scene);
+    writeln!(output, "{scene_text}")?;
 
     let scene = arguments.scene.generate(&arguments, &mut rng);
 
-    writeln!(buffer, "done")?;
+    output.clear_last_line()?;
+    writeln!(output, "{scene_text}done")?;
 
     let canvas = scene.render(
         arguments.depth,
         arguments.single_threaded,
-        arguments.quiet,
-        buffer,
+        &mut output,
     )?;
 
-    writeln!(buffer, "Writing to file {}", arguments.out)?;
+    writeln!(output, "Writing to file {}", arguments.out)?;
 
     let filename = Path::new(&arguments.out);
     if filename.extension().map_or(false, |ext| ext.eq_ignore_ascii_case("ppm"))
@@ -52,8 +54,8 @@ fn main() -> Result<()> {
     } else {
         #[allow(clippy::cast_possible_truncation)]
         let image = ImageBuffer::from_fn(
-            scene.camera.horizontal_size as u32,
-            scene.camera.vertical_size as u32,
+            scene.camera.horizontal_size() as u32,
+            scene.camera.vertical_size() as u32,
             |x, y| Rgb(canvas.get_pixel(x as usize, y as usize).to_u8()),
         );
 
