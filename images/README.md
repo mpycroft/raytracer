@@ -61,3 +61,9 @@ Randomly generated spheres spread into several groups.
 An imported image of a teapot using triangles.
 
 ![Teapot](chapter15.png)
+
+## Chapter 16
+
+An image using various CSG objects.
+
+![CSG objects](chapter16.png)

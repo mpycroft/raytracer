@@ -5,7 +5,7 @@ use float_cmp::{ApproxEq, F64Margin};
 #[allow(clippy::module_name_repetitions)]
 pub use self::helper::GroupBuilder;
 use self::helper::Helper;
-use super::{Bounded, BoundingBox, Object, Updatable};
+use super::{Bounded, BoundingBox, Includes, Object, Updatable};
 use crate::{
     intersection::List,
     math::{Ray, Transformation},
@@ -21,11 +21,6 @@ pub struct Group {
 }
 
 impl Group {
-    #[must_use]
-    fn new(objects: Vec<Object>) -> Self {
-        Self { objects, bounding_box: BoundingBox::default() }
-    }
-
     pub fn builder() -> GroupBuilder {
         Helper::builder()
     }
@@ -77,6 +72,19 @@ impl Bounded for Group {
         }
 
         bounding_box
+    }
+}
+
+impl Includes for Group {
+    #[must_use]
+    fn includes(&self, object: &Object) -> bool {
+        for child_object in &self.objects {
+            if child_object.includes(object) {
+                return true;
+            }
+        }
+
+        false
     }
 }
 
@@ -394,26 +402,49 @@ mod tests {
     }
 
     #[test]
+    fn test_if_a_group_includes_an_object() {
+        let s = Object::sphere_builder().build();
+        let p = Object::plane_builder().build();
+
+        let g = Object::group_builder()
+            .add_object(Object::group_builder().add_object(s.clone()).build())
+            .build();
+
+        assert!(g.includes(&s));
+        assert!(!g.includes(&p));
+    }
+
+    #[test]
     fn comparing_groups() {
-        let g1 = Group::new(vec![
-            Object::sphere_builder().build(),
-            Object::plane_builder().build(),
-        ]);
-        let g2 = Group::new(vec![
-            Object::sphere_builder().build(),
-            Object::plane_builder().build(),
-        ]);
-        let g3 = Group::new(vec![
-            Object::sphere_builder().build(),
-            Object::plane_builder().build(),
-            Object::plane_builder().build(),
-        ]);
-        let g4 = Group::new(vec![
-            Object::sphere_builder().build(),
-            Object::plane_builder()
-                .transformation(Transformation::new().translate(1.0, 2.0, 3.0))
-                .build(),
-        ]);
+        let g1 = Object::group_builder()
+            .set_objects(vec![
+                Object::sphere_builder().build(),
+                Object::plane_builder().build(),
+            ])
+            .build();
+        let g2 = Object::group_builder()
+            .set_objects(vec![
+                Object::sphere_builder().build(),
+                Object::plane_builder().build(),
+            ])
+            .build();
+        let g3 = Object::group_builder()
+            .set_objects(vec![
+                Object::sphere_builder().build(),
+                Object::plane_builder().build(),
+                Object::plane_builder().build(),
+            ])
+            .build();
+        let g4 = Object::group_builder()
+            .set_objects(vec![
+                Object::sphere_builder().build(),
+                Object::plane_builder()
+                    .transformation(
+                        Transformation::new().translate(1.0, 2.0, 3.0),
+                    )
+                    .build(),
+            ])
+            .build();
 
         assert_approx_eq!(g1, &g2);
 

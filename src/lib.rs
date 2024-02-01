@@ -16,7 +16,7 @@ pub use camera::Camera;
 pub use canvas::Canvas;
 pub use colour::Colour;
 pub use material::Material;
-pub use object::Object;
+pub use object::{Object, Operation};
 pub use output::Output;
 pub use pattern::Pattern;
 pub use point_light::PointLight;

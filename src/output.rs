@@ -9,7 +9,7 @@ pub struct Output<O: Write> {
 
 impl<O: Write> Output<O> {
     #[must_use]
-    pub fn new(buffer: O) -> Self {
+    pub const fn new(buffer: O) -> Self {
         Self { buffer: Left(buffer) }
     }
 

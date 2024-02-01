@@ -86,16 +86,7 @@ impl World {
             return None;
         }
 
-        list.sort_by(|a, b| {
-            a.t.partial_cmp(&b.t).unwrap_or_else(|| {
-                panic!(
-                    "\
-Failed to compare floating point values '{}' and '{}' when sorting \
-intersection list.",
-                    a.t, b.t
-                )
-            })
-        });
+        list.sort();
 
         Some(list)
     }
@@ -521,37 +512,14 @@ mod tests {
         let w = test_world();
 
         let i = w
-            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()));
-
-        assert!(i.is_some());
-
-        let i = i.unwrap();
+            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()))
+            .unwrap();
 
         assert_eq!(i.len(), 4);
         assert_approx_eq!(i[0].t, 4.0);
         assert_approx_eq!(i[1].t, 4.5);
         assert_approx_eq!(i[2].t, 5.5);
         assert_approx_eq!(i[3].t, 6.0);
-    }
-
-    #[test]
-    #[should_panic(expected = "\
-Failed to compare floating point values 'NaN' and 'NaN' when sorting \
-intersection list.")]
-    fn intersect_with_nan() {
-        let mut w = World::new();
-
-        w.add_object(
-            Object::sphere_builder()
-                .transformation(Transformation::new().translate(
-                    0.0,
-                    0.0,
-                    f64::NAN,
-                ))
-                .build(),
-        );
-
-        let _ = w.intersect(&Ray::new(Point::origin(), Vector::z_axis()));
     }
 
     #[test]

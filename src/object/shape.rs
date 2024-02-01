@@ -2,19 +2,19 @@ use typed_builder::{Optional, TypedBuilder};
 
 use super::{
     shapes::{Intersectable, Shapes},
-    Bounded, BoundingBox, Object, Updatable,
+    Bounded, BoundingBox, Includes, Object, Updatable,
 };
 use crate::{
     intersection::{Intersection, List},
     math::{
-        float::impl_approx_eq, Point, Ray, Transformable, Transformation,
-        Vector,
+        float::{approx_eq, impl_approx_eq},
+        Point, Ray, Transformable, Transformation, Vector,
     },
     Material,
 };
 
 #[allow(clippy::module_name_repetitions)]
-pub type ShapeBuilder = _ShapeBuilder<((), (), (), (Shapes,))>;
+pub(super) type ShapeBuilder = _ShapeBuilder<((), (), (), (Shapes,))>;
 
 /// A `Shape` is a simple geometric shape, fixed around the origin.
 #[derive(Clone, Debug, TypedBuilder)]
@@ -23,7 +23,7 @@ pub type ShapeBuilder = _ShapeBuilder<((), (), (), (Shapes,))>;
 #[builder(build_method(vis = "", name = _build))]
 pub struct Shape {
     #[builder(default = Transformation::new())]
-    transformation: Transformation,
+    pub(super) transformation: Transformation,
     #[builder(default = Transformation::new(), setter(skip))]
     inverse_transformation: Transformation,
     #[builder(default = Material::default())]
@@ -32,8 +32,6 @@ pub struct Shape {
     pub(super) casts_shadow: bool,
     #[allow(clippy::struct_field_names)]
     shape: Shapes,
-    #[builder(default = BoundingBox::default(), setter(skip))]
-    bounding_box: BoundingBox,
 }
 
 impl Shape {
@@ -76,8 +74,6 @@ impl Updatable for Shape {
     fn update_transformation(&mut self, transformation: &Transformation) {
         self.transformation = self.transformation.extend(transformation);
         self.inverse_transformation = self.transformation.invert();
-
-        self.bounding_box = self.bounding_box();
     }
 
     fn replace_material(&mut self, material: &Material) {
@@ -94,6 +90,17 @@ impl Bounded for Shape {
     }
 }
 
+impl Includes for Shape {
+    #[must_use]
+    fn includes(&self, object: &Object) -> bool {
+        if let Object::Shape(shape) = object {
+            return approx_eq!(self, shape);
+        }
+
+        false
+    }
+}
+
 impl_approx_eq!(&Shape { ref shape, transformation, ref material });
 
 impl<T, M, S> _ShapeBuilder<(T, M, S, (Shapes,))>
@@ -107,8 +114,6 @@ where
         let mut shape = self._build();
 
         shape.inverse_transformation = shape.transformation.invert();
-
-        shape.bounding_box = shape.bounding_box();
 
         shape.into()
     }
@@ -245,10 +250,8 @@ mod tests {
             .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
             .build();
 
-        let i = o.intersect(&r);
-        assert!(i.is_some());
+        let i = o.intersect(&r).unwrap();
 
-        let i = i.unwrap();
         assert_eq!(i.len(), 2);
 
         assert_approx_eq!(i[0].object, &o);
@@ -324,6 +327,34 @@ mod tests {
                 Point::new(4.0, 2.0, 0.0)
             )
         );
+    }
+
+    #[test]
+    fn test_updating_a_shape() {
+        let mut o = Object::sphere_builder().build();
+
+        let t = Transformation::new().translate(1.0, 2.0, 3.0);
+
+        o.update_transformation(&t);
+
+        let m = Material::builder().ambient(1.0).diffuse(1.0).build();
+
+        o.replace_material(&m);
+
+        let Object::Shape(s) = o else { unreachable!() };
+
+        assert_approx_eq!(s.transformation, t);
+
+        assert_approx_eq!(s.material, &m);
+    }
+
+    #[test]
+    fn test_if_a_shape_includes_an_object() {
+        let s = Object::sphere_builder().build();
+        let p = Object::plane_builder().build();
+
+        assert!(s.includes(&s));
+        assert!(!s.includes(&p));
     }
 
     #[test]

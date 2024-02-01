@@ -56,12 +56,12 @@ impl Camera {
     }
 
     #[must_use]
-    pub fn horizontal_size(&self) -> usize {
+    pub const fn horizontal_size(&self) -> usize {
         self.horizontal_size
     }
 
     #[must_use]
-    pub fn vertical_size(&self) -> usize {
+    pub const fn vertical_size(&self) -> usize {
         self.vertical_size
     }
 

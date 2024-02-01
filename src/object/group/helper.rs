@@ -1,7 +1,7 @@
 use typed_builder::{Optional, TypedBuilder};
 
-use super::{Group, Object};
-use crate::{math::Transformation, object::updatable::Updatable, Material};
+use super::{BoundingBox, Group, Object, Updatable};
+use crate::{math::Transformation, Material};
 
 pub type GroupBuilder = HelperBuilder<((), (), (Vec<Object>,))>;
 
@@ -42,7 +42,10 @@ where
         let transformation = group_helper.transformation;
         let material = group_helper.material;
 
-        let mut group = Group::new(group_helper.objects);
+        let mut group = Group {
+            objects: group_helper.objects,
+            bounding_box: BoundingBox::default(),
+        };
 
         group.update_transformation(&transformation);
 
