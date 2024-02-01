@@ -8,8 +8,8 @@ use crate::{
 /// we are rendering.
 #[derive(Clone, Debug)]
 pub struct World {
-    objects: Vec<Object>,
-    lights: Vec<PointLight>,
+    pub(super) objects: Vec<Object>,
+    pub(super) lights: Vec<PointLight>,
 }
 
 impl World {
@@ -51,7 +51,7 @@ impl World {
                 &computations.over_point,
                 &computations.eye,
                 &computations.normal,
-                self.is_shadowed(&light.position, &computations.over_point),
+                light.intensity_at(&computations.over_point, self),
             );
         }
 

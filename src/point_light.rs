@@ -43,8 +43,7 @@ mod tests {
     fn point_lights_evaluate_the_light_intensity_at_a_given_point() {
         let w = test_world();
 
-        let l =
-            &PointLight::new(Point::new(-10.0, 10.0, -10.0), Colour::white());
+        let l = &w.lights[0];
 
         assert_approx_eq!(
             l.intensity_at(&Point::new(0.0, 1.000_01, 0.0), &w),
