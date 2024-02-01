@@ -2,13 +2,13 @@ use typed_builder::{Optional, TypedBuilder};
 
 use super::{
     shapes::{Intersectable, Shapes},
-    Bounded, BoundingBox, Object, Updatable,
+    Bounded, BoundingBox, Includes, Object, Updatable,
 };
 use crate::{
     intersection::{Intersection, List},
     math::{
-        float::impl_approx_eq, Point, Ray, Transformable, Transformation,
-        Vector,
+        float::{approx_eq, impl_approx_eq},
+        Point, Ray, Transformable, Transformation, Vector,
     },
     Material,
 };
@@ -91,6 +91,17 @@ impl Bounded for Shape {
         let bounding_box = self.shape.bounding_box();
 
         bounding_box.apply(&self.transformation)
+    }
+}
+
+impl Includes for Shape {
+    #[must_use]
+    fn includes(&self, object: &Object) -> bool {
+        if let Object::Shape(shape) = object {
+            return approx_eq!(self, shape);
+        }
+
+        false
     }
 }
 
@@ -324,6 +335,34 @@ mod tests {
                 Point::new(4.0, 2.0, 0.0)
             )
         );
+    }
+
+    #[test]
+    fn test_updating_a_shape() {
+        let mut o = Object::sphere_builder().build();
+
+        let t = Transformation::new().translate(1.0, 2.0, 3.0);
+
+        o.update_transformation(&t);
+
+        let m = Material::builder().ambient(1.0).diffuse(1.0).build();
+
+        o.replace_material(&m);
+
+        let Object::Shape(s) = o else { unreachable!() };
+
+        assert_approx_eq!(s.transformation, t);
+
+        assert_approx_eq!(s.material, &m);
+    }
+
+    #[test]
+    fn test_if_a_shape_includes_an_object() {
+        let s = Object::sphere_builder().build();
+        let p = Object::plane_builder().build();
+
+        assert!(s.includes(&s));
+        assert!(!s.includes(&p));
     }
 
     #[test]

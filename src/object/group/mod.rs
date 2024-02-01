@@ -5,7 +5,7 @@ use float_cmp::{ApproxEq, F64Margin};
 #[allow(clippy::module_name_repetitions)]
 pub use self::helper::GroupBuilder;
 use self::helper::Helper;
-use super::{Bounded, BoundingBox, Object, Updatable};
+use super::{Bounded, BoundingBox, Includes, Object, Updatable};
 use crate::{
     intersection::List,
     math::{Ray, Transformation},
@@ -77,6 +77,19 @@ impl Bounded for Group {
         }
 
         bounding_box
+    }
+}
+
+impl Includes for Group {
+    #[must_use]
+    fn includes(&self, object: &Object) -> bool {
+        for child_object in &self.objects {
+            if child_object.includes(object) {
+                return true;
+            }
+        }
+
+        false
     }
 }
 
@@ -391,6 +404,19 @@ mod tests {
         let Object::Shape(s) = &g.objects[1] else { unreachable!() };
 
         assert_approx_eq!(s.material, &m);
+    }
+
+    #[test]
+    fn test_if_a_group_includes_an_object() {
+        let s = Object::sphere_builder().build();
+        let p = Object::plane_builder().build();
+
+        let g = Object::group_builder()
+            .add_object(Object::group_builder().add_object(s.clone()).build())
+            .build();
+
+        assert!(g.includes(&s));
+        assert!(!g.includes(&p));
     }
 
     #[test]

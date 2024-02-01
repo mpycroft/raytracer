@@ -1,6 +1,7 @@
 mod bounding_box;
 mod csg;
 mod group;
+mod includes;
 mod obj_parser;
 mod shape;
 mod shapes;
@@ -20,6 +21,7 @@ pub use self::updatable::Updatable;
 use self::{
     bounding_box::{Bounded, BoundingBox},
     group::GroupBuilder,
+    includes::Includes,
     obj_parser::ObjParser,
 };
 use crate::{
