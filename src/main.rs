@@ -54,8 +54,8 @@ fn main() -> Result<()> {
     } else {
         #[allow(clippy::cast_possible_truncation)]
         let image = ImageBuffer::from_fn(
-            scene.camera.horizontal_size() as u32,
-            scene.camera.vertical_size() as u32,
+            scene.camera.horizontal_size(),
+            scene.camera.vertical_size(),
             |x, y| Rgb(canvas.get_pixel(x as usize, y as usize).to_u8()),
         );
 

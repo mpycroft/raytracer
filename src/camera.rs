@@ -15,8 +15,8 @@ use crate::{
 /// `Camera` holds all the data representing our view into the scene.
 #[derive(Clone, Copy, Debug)]
 pub struct Camera {
-    horizontal_size: usize,
-    vertical_size: usize,
+    horizontal_size: u32,
+    vertical_size: u32,
     field_of_view: Angle,
     inverse_transformation: Transformation,
     half_width: f64,
@@ -27,16 +27,16 @@ pub struct Camera {
 impl Camera {
     #[must_use]
     pub fn new(
-        horizontal_size: usize,
-        vertical_size: usize,
+        horizontal_size: u32,
+        vertical_size: u32,
         field_of_view: Angle,
         transformation: Transformation,
     ) -> Self {
         let half_view = (field_of_view / 2.0).tan();
         #[allow(clippy::cast_precision_loss)]
-        let horizontal_float = horizontal_size as f64;
+        let horizontal_float = f64::from(horizontal_size);
         #[allow(clippy::cast_precision_loss)]
-        let aspect = horizontal_float / vertical_size as f64;
+        let aspect = horizontal_float / f64::from(vertical_size);
 
         let (half_width, half_height) = if aspect > 1.0 {
             (half_view, half_view / aspect)
@@ -56,12 +56,12 @@ impl Camera {
     }
 
     #[must_use]
-    pub const fn horizontal_size(&self) -> usize {
+    pub const fn horizontal_size(&self) -> u32 {
         self.horizontal_size
     }
 
     #[must_use]
-    pub const fn vertical_size(&self) -> usize {
+    pub const fn vertical_size(&self) -> u32 {
         self.vertical_size
     }
 
@@ -81,14 +81,14 @@ impl Camera {
         writeln!(
             output,
             "Size {} by {}, field of view {:.1} degrees",
-            HumanCount(self.horizontal_size.try_into()?),
-            HumanCount(self.vertical_size.try_into()?),
+            HumanCount(self.horizontal_size.into()),
+            HumanCount(self.vertical_size.into()),
             self.field_of_view.to_degrees()
         )?;
 
         writeln!(output, "Rendering scene...")?;
 
-        let bar = ProgressBar::new(self.vertical_size.try_into()?)
+        let bar = ProgressBar::new(self.vertical_size.into())
             .with_style(
                 ProgressStyle::with_template(
                     "\
@@ -109,7 +109,7 @@ Elapsed: {elapsed}, remaining: {eta}, rows/sec: {per_sec}",
         let started = Instant::now();
 
         let iterator_fn = |y| {
-            let mut colours = Vec::with_capacity(self.vertical_size);
+            let mut colours = Vec::with_capacity(self.vertical_size as usize);
 
             for x in 0..self.horizontal_size {
                 let ray = self.ray_for_pixel(x, y);
@@ -142,7 +142,7 @@ Elapsed: {elapsed}, remaining: {eta}, rows/sec: {per_sec}",
         writeln!(
             output,
             "Rendering scene...done\nRendered {} rows in {}",
-            HumanCount(self.horizontal_size.try_into()?),
+            HumanCount(self.horizontal_size.into()),
             HumanDuration(started.elapsed())
         )?;
 
@@ -150,11 +150,11 @@ Elapsed: {elapsed}, remaining: {eta}, rows/sec: {per_sec}",
     }
 
     #[must_use]
-    pub fn ray_for_pixel(&self, x: usize, y: usize) -> Ray {
+    pub fn ray_for_pixel(&self, x: u32, y: u32) -> Ray {
         #[allow(clippy::cast_precision_loss)]
-        let x_offset = (x as f64 + 0.5) * self.pixel_size;
+        let x_offset = (f64::from(x) + 0.5) * self.pixel_size;
         #[allow(clippy::cast_precision_loss)]
-        let y_offset = (y as f64 + 0.5) * self.pixel_size;
+        let y_offset = (f64::from(y) + 0.5) * self.pixel_size;
 
         let world_x = self.half_width - x_offset;
         let world_y = self.half_height - y_offset;

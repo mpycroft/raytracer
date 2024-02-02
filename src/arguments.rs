@@ -29,11 +29,11 @@ pub struct Arguments {
 
     /// Camera width (in pixels)
     #[arg(long)]
-    pub width: Option<usize>,
+    pub width: Option<u32>,
 
     /// Camera height (in pixels)
     #[arg(long)]
-    pub height: Option<usize>,
+    pub height: Option<u32>,
 
     /// Field of view (in radians)
     #[arg(long, value_parser = parse_fov)]

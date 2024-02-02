@@ -9,8 +9,8 @@ use crate::{
 /// directions equally.
 #[derive(Clone, Copy, Debug, new)]
 pub struct Point {
-    pub position: math::Point,
-    pub intensity: Colour,
+    pub(super) position: math::Point,
+    pub(super) intensity: Colour,
 }
 
 impl Point {

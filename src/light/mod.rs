@@ -1,3 +1,4 @@
+mod area;
 mod point;
 
 use float_cmp::{ApproxEq, F64Margin};
