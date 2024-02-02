@@ -3,7 +3,7 @@ use std::f64::consts::{FRAC_PI_2, FRAC_PI_3};
 use rand::Rng;
 use raytracer::{
     math::{Angle, Point, Transformation, Vector},
-    Camera, Colour, Material, Object, Pattern, PointLight, World,
+    Camera, Colour, Light, Material, Object, Pattern, World,
 };
 
 use super::SceneData;
@@ -163,11 +163,11 @@ pub fn generate_scene<R: Rng>(arguments: &Arguments, rng: &mut R) -> SceneData {
             .build(),
     );
 
-    world.add_light(PointLight::new(
+    world.add_light(Light::new_point(
         Point::new(-10.0, 10.0, -10.0),
         Colour::new(0.8, 0.8, 0.8),
     ));
-    world.add_light(PointLight::new(
+    world.add_light(Light::new_point(
         Point::new(10.0, 10.0, -10.0),
         Colour::new(0.1, 0.1, 0.5),
     ));

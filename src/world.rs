@@ -1,7 +1,7 @@
 use crate::{
     intersection::{Computations, List},
     math::{float::approx_eq, Point, Ray},
-    Colour, Object, PointLight,
+    Colour, Light, Object,
 };
 
 /// A `World` represents all the objects and light sources in a given scene that
@@ -9,7 +9,7 @@ use crate::{
 #[derive(Clone, Debug)]
 pub struct World {
     pub(super) objects: Vec<Object>,
-    pub(super) lights: Vec<PointLight>,
+    pub(super) lights: Vec<Light>,
 }
 
 impl World {
@@ -22,7 +22,7 @@ impl World {
         self.objects.push(object);
     }
 
-    pub fn add_light(&mut self, light: PointLight) {
+    pub fn add_light(&mut self, light: Light) {
         self.lights.push(light);
     }
 
@@ -191,7 +191,7 @@ pub fn test_world() -> World {
             .build(),
     );
 
-    w.add_light(PointLight::new(
+    w.add_light(Light::new_point(
         Point::new(-10.0, 10.0, -10.0),
         Colour::white(),
     ));
@@ -238,8 +238,8 @@ mod tests {
         assert_approx_eq!(w.objects[0], &o1);
         assert_approx_eq!(w.objects[1], &o2);
 
-        let l1 = PointLight::new(Point::origin(), Colour::blue());
-        let l2 = PointLight::new(Point::new(1.0, 2.0, 3.0), Colour::green());
+        let l1 = Light::new_point(Point::origin(), Colour::blue());
+        let l2 = Light::new_point(Point::new(1.0, 2.0, 3.0), Colour::green());
 
         w.add_light(l1);
         w.add_light(l2);
@@ -295,7 +295,7 @@ mod tests {
     fn colour_at_with_mutually_reflective_surfaces() {
         let mut w = World::new();
 
-        w.add_light(PointLight::new(Point::origin(), Colour::white()));
+        w.add_light(Light::new_point(Point::origin(), Colour::white()));
 
         w.add_object(
             Object::plane_builder()
@@ -337,7 +337,7 @@ mod tests {
         let mut w = test_world();
 
         w.lights.clear();
-        w.add_light(PointLight::new(
+        w.add_light(Light::new_point(
             Point::new(0.0, 0.25, 0.0),
             Colour::white(),
         ));
@@ -360,7 +360,7 @@ mod tests {
     fn colour_when_intersection_is_in_shadow() {
         let mut w = World::new();
 
-        w.add_light(PointLight::new(
+        w.add_light(Light::new_point(
             Point::new(0.0, 0.0, -10.0),
             Colour::white(),
         ));
@@ -602,7 +602,7 @@ mod tests {
             .build();
 
         assert!(!w.is_shadowed(
-            &w.lights[0].position,
+            &w.lights[0].position(),
             &Point::new(10.0, -10.0, 10.0)
         ));
     }

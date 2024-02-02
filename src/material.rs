@@ -2,7 +2,7 @@ use typed_builder::TypedBuilder;
 
 use crate::{
     math::{float::impl_approx_eq, Point, Vector},
-    Colour, Object, Pattern, PointLight,
+    Colour, Light, Object, Pattern,
 };
 
 /// A `Material` represents what a given object is made up of including what
@@ -43,17 +43,17 @@ impl Material {
     pub fn lighting(
         &self,
         object: &Object,
-        light: &PointLight,
+        light: &Light,
         point: &Point,
         eye: &Vector,
         normal: &Vector,
         intensity: f64,
     ) -> Colour {
-        let colour = self.pattern.pattern_at(object, point) * light.intensity;
+        let colour = self.pattern.pattern_at(object, point) * light.intensity();
 
         let ambient = colour * self.ambient;
 
-        let light_vector = (light.position - *point).normalise();
+        let light_vector = (light.position() - *point).normalise();
         let light_dot_normal = light_vector.dot(normal);
 
         let (diffuse, specular) = if light_dot_normal < 0.0 {
@@ -69,7 +69,7 @@ impl Material {
             } else {
                 let factor = reflect_dot_eye.powf(self.shininess);
 
-                light.intensity * self.specular * factor
+                light.intensity() * self.specular * factor
             };
 
             (diffuse, specular)
@@ -162,7 +162,7 @@ mod tests {
         let e = -Vector::z_axis();
         let n = -Vector::z_axis();
 
-        let l = PointLight::new(Point::new(0.0, 0.0, -10.0), Colour::white());
+        let l = Light::new_point(Point::new(0.0, 0.0, -10.0), Colour::white());
         let o = Object::test_builder().build();
 
         assert_approx_eq!(
@@ -180,7 +180,7 @@ mod tests {
         let e = -Vector::z_axis();
         let n = -Vector::z_axis();
 
-        let l = PointLight::new(Point::new(0.0, 0.0, -10.0), Colour::white());
+        let l = Light::new_point(Point::new(0.0, 0.0, -10.0), Colour::white());
         let o = Object::test_builder().build();
 
         assert_approx_eq!(
@@ -199,7 +199,7 @@ mod tests {
         let e = Vector::new(0.0, sqrt_2_div_2, -sqrt_2_div_2);
         let n = -Vector::z_axis();
 
-        let l = PointLight::new(Point::new(0.0, 0.0, -10.0), Colour::white());
+        let l = Light::new_point(Point::new(0.0, 0.0, -10.0), Colour::white());
         let o = Object::test_builder().build();
 
         assert_approx_eq!(m.lighting(&o, &l, &p, &e, &n, 1.0), Colour::white());
@@ -214,7 +214,7 @@ mod tests {
         let e = -Vector::z_axis();
         let n = -Vector::z_axis();
 
-        let l = PointLight::new(Point::new(0.0, 10.0, -10.0), Colour::white());
+        let l = Light::new_point(Point::new(0.0, 10.0, -10.0), Colour::white());
         let o = Object::test_builder().build();
 
         assert_approx_eq!(
@@ -234,7 +234,7 @@ mod tests {
         let e = Vector::new(0.0, -sqrt_2_div_2, -sqrt_2_div_2);
         let n = -Vector::z_axis();
 
-        let l = PointLight::new(Point::new(0.0, 10.0, -10.0), Colour::white());
+        let l = Light::new_point(Point::new(0.0, 10.0, -10.0), Colour::white());
         let o = Object::test_builder().build();
 
         assert_approx_eq!(
@@ -253,7 +253,7 @@ mod tests {
         let e = -Vector::z_axis();
         let n = -Vector::z_axis();
 
-        let l = PointLight::new(Point::new(0.0, 0.0, 10.0), Colour::white());
+        let l = Light::new_point(Point::new(0.0, 0.0, 10.0), Colour::white());
         let o = Object::test_builder().build();
 
         assert_approx_eq!(
@@ -271,7 +271,7 @@ mod tests {
         let e = Vector::new(0.0, 0.0, 0.3);
         let n = -Vector::z_axis();
 
-        let l = PointLight::new(Point::new(0.0, 0.0, -10.0), Colour::white());
+        let l = Light::new_point(Point::new(0.0, 0.0, -10.0), Colour::white());
         let o = Object::test_builder().build();
 
         assert_approx_eq!(m.lighting(&o, &l, &p, &e, &n, 1.0), Colour::white());
@@ -296,7 +296,7 @@ mod tests {
         let e = -Vector::z_axis();
         let n = -Vector::z_axis();
 
-        let l = PointLight::new(Point::new(0.0, 0.0, -10.0), Colour::white());
+        let l = Light::new_point(Point::new(0.0, 0.0, -10.0), Colour::white());
         let o = Object::test_builder().build();
 
         assert_approx_eq!(
@@ -316,7 +316,7 @@ mod tests {
         let mut w = test_world();
 
         w.lights[0] =
-            PointLight::new(Point::new(0.0, 0.0, -10.0), Colour::white());
+            Light::new_point(Point::new(0.0, 0.0, -10.0), Colour::white());
         let l = &w.lights[0];
 
         w.objects[0].replace_material(

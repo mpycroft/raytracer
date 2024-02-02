@@ -2,7 +2,7 @@ use std::f64::consts::{FRAC_PI_2, FRAC_PI_3};
 
 use raytracer::{
     math::{Angle, Point, Transformation, Vector},
-    Camera, Colour, Material, Object, Pattern, PointLight, World,
+    Camera, Colour, Light, Material, Object, Pattern, World,
 };
 
 use super::SceneData;
@@ -153,7 +153,7 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
             .build(),
     );
 
-    world.add_light(PointLight::new(
+    world.add_light(Light::new_point(
         Point::new(-10.0, 5.0, -10.0),
         Colour::new(0.8, 0.8, 0.8),
     ));
@@ -269,7 +269,7 @@ pub fn generate_water_scene(arguments: &Arguments) -> SceneData {
             .build(),
     );
 
-    world.add_light(PointLight::new(
+    world.add_light(Light::new_point(
         Point::new(-10.0, 5.0, -10.0),
         Colour::new(0.8, 0.8, 0.8),
     ));

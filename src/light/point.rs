@@ -1,21 +1,21 @@
 use derive_new::new;
 
 use crate::{
-    math::{float::impl_approx_eq, Point},
+    math::{self, float::impl_approx_eq},
     Colour, World,
 };
 
-/// A `PointLight` is a light source that has no size and radiates light in all
+/// A `Point` is a light source that has no size and radiates light in all
 /// directions equally.
 #[derive(Clone, Copy, Debug, new)]
-pub struct PointLight {
-    pub position: Point,
+pub struct Point {
+    pub position: math::Point,
     pub intensity: Colour,
 }
 
-impl PointLight {
+impl Point {
     #[must_use]
-    pub fn intensity_at(&self, point: &Point, world: &World) -> f64 {
+    pub fn intensity_at(&self, point: &math::Point, world: &World) -> f64 {
         if world.is_shadowed(&self.position, point) {
             0.0
         } else {
@@ -24,7 +24,7 @@ impl PointLight {
     }
 }
 
-impl_approx_eq!(PointLight { position, intensity });
+impl_approx_eq!(Point { position, intensity });
 
 #[cfg(test)]
 mod tests {
@@ -33,9 +33,9 @@ mod tests {
 
     #[test]
     fn creating_a_point_light() {
-        let l = PointLight::new(Point::origin(), Colour::green());
+        let l = Point::new(math::Point::origin(), Colour::green());
 
-        assert_approx_eq!(l.position, Point::origin());
+        assert_approx_eq!(l.position, math::Point::origin());
         assert_approx_eq!(l.intensity, Colour::green());
     }
 
@@ -46,44 +46,44 @@ mod tests {
         let l = &w.lights[0];
 
         assert_approx_eq!(
-            l.intensity_at(&Point::new(0.0, 1.000_01, 0.0), &w),
+            l.intensity_at(&math::Point::new(0.0, 1.000_01, 0.0), &w),
             1.0
         );
         assert_approx_eq!(
-            l.intensity_at(&Point::new(-1.000_01, 0.0, 0.0), &w),
+            l.intensity_at(&math::Point::new(-1.000_01, 0.0, 0.0), &w),
             1.0
         );
         assert_approx_eq!(
-            l.intensity_at(&Point::new(0.0, 0.0, -1.000_01), &w),
+            l.intensity_at(&math::Point::new(0.0, 0.0, -1.000_01), &w),
             1.0
         );
         assert_approx_eq!(
-            l.intensity_at(&Point::new(0.0, 0.0, 1.000_01), &w),
+            l.intensity_at(&math::Point::new(0.0, 0.0, 1.000_01), &w),
             0.0
         );
         assert_approx_eq!(
-            l.intensity_at(&Point::new(1.000_01, 0.0, 0.0), &w),
+            l.intensity_at(&math::Point::new(1.000_01, 0.0, 0.0), &w),
             0.0
         );
         assert_approx_eq!(
-            l.intensity_at(&Point::new(0.0, -1.000_01, 0.0), &w),
+            l.intensity_at(&math::Point::new(0.0, -1.000_01, 0.0), &w),
             0.0
         );
-        assert_approx_eq!(l.intensity_at(&Point::origin(), &w), 0.0);
+        assert_approx_eq!(l.intensity_at(&math::Point::origin(), &w), 0.0);
     }
 
     #[test]
     fn comparing_point_lights() {
-        let l1 = PointLight::new(
-            Point::new(0.5, 1.0, 2.0),
+        let l1 = Point::new(
+            math::Point::new(0.5, 1.0, 2.0),
             Colour::new(0.3, 0.6, 0.8),
         );
-        let l2 = PointLight::new(
-            Point::new(0.5, 1.0, 2.0),
+        let l2 = Point::new(
+            math::Point::new(0.5, 1.0, 2.0),
             Colour::new(0.3, 0.6, 0.8),
         );
-        let l3 = PointLight::new(
-            Point::new(0.5, 1.0, 2.000_1),
+        let l3 = Point::new(
+            math::Point::new(0.5, 1.0, 2.000_1),
             Colour::new(0.3, 0.6, 0.8),
         );
 
