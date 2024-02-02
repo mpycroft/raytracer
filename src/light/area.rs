@@ -2,7 +2,7 @@ use float_cmp::{ApproxEq, F64Margin};
 
 use crate::{
     math::{Point, Vector},
-    Colour,
+    Colour, World,
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -53,6 +53,23 @@ impl Area {
             + self.u * (f64::from(u) + 0.5)
             + self.v * (f64::from(v) + 0.5)
     }
+
+    #[must_use]
+    pub fn intensity_at(&self, point: &Point, world: &World) -> f64 {
+        let mut intensity = 0.0;
+
+        for v in 0..self.v_steps {
+            for u in 0..self.u_steps {
+                let position = self.point_on_light(u, v);
+
+                if !world.is_shadowed(&position, point) {
+                    intensity += 1.0;
+                }
+            }
+        }
+
+        intensity / f64::from(self.samples)
+    }
 }
 
 impl ApproxEq for Area {
@@ -73,7 +90,7 @@ impl ApproxEq for Area {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::float::*;
+    use crate::{math::float::*, world::test_world};
 
     #[test]
     fn creating_an_area_light() {
@@ -112,6 +129,32 @@ mod tests {
         assert_approx_eq!(a.point_on_light(0, 1), Point::new(0.25, 0.0, 0.75));
         assert_approx_eq!(a.point_on_light(2, 0), Point::new(1.25, 0.0, 0.25));
         assert_approx_eq!(a.point_on_light(3, 1), Point::new(1.75, 0.0, 0.75));
+    }
+
+    #[test]
+    fn area_light_intensity() {
+        let w = test_world();
+
+        let a = Area::new(
+            Point::new(-0.5, -0.5, -5.0),
+            Vector::x_axis(),
+            2,
+            Vector::y_axis(),
+            2,
+            Colour::white(),
+        );
+
+        assert_approx_eq!(a.intensity_at(&Point::new(0.0, 0.0, 2.0), &w), 0.0);
+        assert_approx_eq!(
+            a.intensity_at(&Point::new(1.0, -1.0, 2.0), &w),
+            0.25
+        );
+        assert_approx_eq!(a.intensity_at(&Point::new(1.5, 0.0, 2.0), &w), 0.5);
+        assert_approx_eq!(
+            a.intensity_at(&Point::new(1.25, 1.25, 3.0), &w),
+            0.75
+        );
+        assert_approx_eq!(a.intensity_at(&Point::new(0.0, 0.0, -2.0), &w), 1.0);
     }
 
     #[test]
