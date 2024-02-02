@@ -1,3 +1,4 @@
+mod area_light;
 mod bounding_box;
 mod chapter10;
 mod chapter11;
@@ -37,6 +38,7 @@ pub enum Scene {
     Chapter15,
     Chapter16,
     BoundingBox,
+    AreaLight,
 }
 
 impl Scene {
@@ -62,6 +64,7 @@ impl Scene {
             Self::Chapter15 => chapter15::generate_scene(arguments),
             Self::Chapter16 => chapter16::generate_scene(arguments),
             Self::BoundingBox => bounding_box::generate_scene(arguments),
+            Self::AreaLight => area_light::generate_scene(arguments),
         }
     }
 }
