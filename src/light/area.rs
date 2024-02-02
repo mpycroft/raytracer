@@ -46,6 +46,13 @@ impl Area {
                 + v * v_steps_float / 2.0,
         }
     }
+
+    #[must_use]
+    fn point_on_light(&self, u: u32, v: u32) -> Point {
+        self.corner
+            + self.u * (f64::from(u) + 0.5)
+            + self.v * (f64::from(v) + 0.5)
+    }
 }
 
 impl ApproxEq for Area {
@@ -87,6 +94,24 @@ mod tests {
         assert_eq!(a.samples, 8);
         assert_approx_eq!(a.intensity, Colour::white());
         assert_approx_eq!(a.position, Point::new(1.0, 0.0, 0.5));
+    }
+
+    #[test]
+    fn finding_a_single_point_on_an_area_light() {
+        let a = Area::new(
+            Point::origin(),
+            Vector::new(2.0, 0.0, 0.0),
+            4,
+            Vector::z_axis(),
+            2,
+            Colour::white(),
+        );
+
+        assert_approx_eq!(a.point_on_light(0, 0), Point::new(0.25, 0.0, 0.25));
+        assert_approx_eq!(a.point_on_light(1, 0), Point::new(0.75, 0.0, 0.25));
+        assert_approx_eq!(a.point_on_light(0, 1), Point::new(0.25, 0.0, 0.75));
+        assert_approx_eq!(a.point_on_light(2, 0), Point::new(1.25, 0.0, 0.25));
+        assert_approx_eq!(a.point_on_light(3, 1), Point::new(1.75, 0.0, 0.75));
     }
 
     #[test]
