@@ -1,5 +1,6 @@
 use float_cmp::{ApproxEq, F64Margin};
 
+use super::Lightable;
 use crate::{
     math::{Point, Vector},
     Colour, World,
@@ -53,9 +54,21 @@ impl Area {
             + self.u * (f64::from(u) + 0.5)
             + self.v * (f64::from(v) + 0.5)
     }
+}
+
+impl Lightable for Area {
+    #[must_use]
+    fn position(&self) -> Point {
+        self.position
+    }
 
     #[must_use]
-    pub fn intensity_at(&self, point: &Point, world: &World) -> f64 {
+    fn intensity(&self) -> Colour {
+        self.intensity
+    }
+
+    #[must_use]
+    fn intensity_at(&self, point: &Point, world: &World) -> f64 {
         let mut intensity = 0.0;
 
         for v in 0..self.v_steps {
@@ -111,6 +124,9 @@ mod tests {
         assert_eq!(a.samples, 8);
         assert_approx_eq!(a.intensity, Colour::white());
         assert_approx_eq!(a.position, Point::new(1.0, 0.0, 0.5));
+
+        assert_approx_eq!(a.intensity(), Colour::white());
+        assert_approx_eq!(a.position(), Point::new(1.0, 0.0, 0.5));
     }
 
     #[test]

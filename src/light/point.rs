@@ -1,5 +1,6 @@
 use derive_new::new;
 
+use super::Lightable;
 use crate::{
     math::{self, float::impl_approx_eq},
     Colour, World,
@@ -9,13 +10,20 @@ use crate::{
 /// directions equally.
 #[derive(Clone, Copy, Debug, new)]
 pub struct Point {
-    pub(super) position: math::Point,
-    pub(super) intensity: Colour,
+    position: math::Point,
+    intensity: Colour,
 }
 
-impl Point {
-    #[must_use]
-    pub fn intensity_at(&self, point: &math::Point, world: &World) -> f64 {
+impl Lightable for Point {
+    fn position(&self) -> math::Point {
+        self.position
+    }
+
+    fn intensity(&self) -> Colour {
+        self.intensity
+    }
+
+    fn intensity_at(&self, point: &math::Point, world: &World) -> f64 {
         if world.is_shadowed(&self.position, point) {
             0.0
         } else {

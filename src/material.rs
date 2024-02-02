@@ -1,6 +1,7 @@
 use typed_builder::TypedBuilder;
 
 use crate::{
+    light::Lightable,
     math::{float::impl_approx_eq, Point, Vector},
     Colour, Light, Object, Pattern,
 };
