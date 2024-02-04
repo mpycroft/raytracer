@@ -33,6 +33,13 @@ impl BoundingBox {
     }
 
     #[must_use]
+    pub fn contains(&self, point: &Point) -> bool {
+        (self.minimum.x..=self.maximum.x).contains(&point.x)
+            && (self.minimum.y..=self.maximum.y).contains(&point.y)
+            && (self.minimum.z..=self.maximum.z).contains(&point.z)
+    }
+
+    #[must_use]
     pub fn is_intersected_by(&self, ray: &Ray) -> bool {
         let (x_min, x_max) = Self::check_axis(
             ray.origin.x,
@@ -181,6 +188,7 @@ mod tests {
     #[test]
     fn adding_points_to_a_bounding_box() {
         let mut b = BoundingBox::default();
+
         b.add_point(Point::new(-5.0, 2.0, 0.0));
         b.add_point(Point::new(7.0, 0.0, -3.0));
 
@@ -191,6 +199,24 @@ mod tests {
                 Point::new(7.0, 2.0, 0.0)
             )
         );
+    }
+
+    #[test]
+    fn checking_to_see_if_a_box_contains_a_given_point() {
+        let b = BoundingBox::new(
+            Point::new(5.0, -2.0, 0.0),
+            Point::new(11.0, 4.0, 7.0),
+        );
+
+        assert!(b.contains(&Point::new(5.0, -2.0, 0.0)));
+        assert!(b.contains(&Point::new(11.0, 4.0, 7.0)));
+        assert!(b.contains(&Point::new(8.0, 1.0, 3.0)));
+        assert!(!b.contains(&Point::new(3.0, 0.0, 3.0)));
+        assert!(!b.contains(&Point::new(8.0, -4.0, 3.0)));
+        assert!(!b.contains(&Point::new(8.0, 1.0, -1.0)));
+        assert!(!b.contains(&Point::new(13.0, 1.0, 3.0)));
+        assert!(!b.contains(&Point::new(8.0, 5.0, 3.0)));
+        assert!(!b.contains(&Point::new(8.0, 1.0, 8.0)));
     }
 
     #[test]
@@ -268,31 +294,31 @@ mod tests {
     #[test]
     fn adding_two_bounding_boxes() {
         let mut b = BoundingBox::new(
-            Point::new(-2.0, -2.0, -2.0),
-            Point::new(2.0, 2.0, 2.0),
+            Point::new(-5.0, -2.0, 0.0),
+            Point::new(7.0, 4.0, 4.0),
         );
 
         assert_approx_eq!(
             b + BoundingBox::new(
-                Point::new(-1.0, -3.0, 0.0),
-                Point::new(0.0, -1.0, 5.0)
+                Point::new(8.0, -7.0, -2.0),
+                Point::new(14.0, 2.0, 8.0)
             ),
             BoundingBox::new(
-                Point::new(-2.0, -3.0, -2.0),
-                Point::new(2.0, 2.0, 5.0)
+                Point::new(-5.0, -7.0, -2.0),
+                Point::new(14.0, 4.0, 8.0)
             )
         );
 
         b += BoundingBox::new(
             Point::new(3.0, 0.0, -5.0),
-            Point::new(4.0, 1.0, 1.0),
+            Point::new(4.0, 5.0, 1.0),
         );
 
         assert_approx_eq!(
             b,
             BoundingBox::new(
-                Point::new(-2.0, -2.0, -5.0),
-                Point::new(4.0, 2.0, 2.0)
+                Point::new(-5.0, -2.0, -5.0),
+                Point::new(7.0, 5.0, 4.0)
             )
         );
     }
