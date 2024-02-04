@@ -121,9 +121,10 @@ impl Intersectable for Cone {
 
 impl Bounded for Cone {
     fn bounding_box(&self) -> BoundingBox {
+        let limit = self.minimum.abs().max(self.maximum.abs());
         BoundingBox::new(
-            Point::new(self.minimum, self.minimum, self.minimum),
-            Point::new(self.maximum, self.maximum, self.maximum),
+            Point::new(-limit, self.minimum, -limit),
+            Point::new(limit, self.maximum, limit),
         )
     }
 }
@@ -267,13 +268,13 @@ mod tests {
 
     #[test]
     fn the_bounding_box_of_a_cone() {
-        let c = Cone::new(-2.0, 1.5, true);
+        let c = Cone::new(-5.0, 3.0, true);
 
         assert_approx_eq!(
             c.bounding_box(),
             BoundingBox::new(
-                Point::new(-2.0, -2.0, -2.0),
-                Point::new(1.5, 1.5, 1.5)
+                Point::new(-5.0, -5.0, -5.0),
+                Point::new(5.0, 3.0, 5.0)
             )
         );
     }

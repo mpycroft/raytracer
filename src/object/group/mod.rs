@@ -334,7 +334,7 @@ mod tests {
         assert_approx_eq!(
             o.bounding_box(),
             BoundingBox::new(
-                Point::new(3.0, 3.0, 2.0),
+                Point::new(-5.0, 3.0, -6.0),
                 Point::new(7.0, 7.0, 6.0)
             )
         );

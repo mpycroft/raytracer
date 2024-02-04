@@ -257,17 +257,17 @@ mod tests {
 
     #[test]
     fn the_bounding_box_of_a_triangle() {
-        let p1 = Point::origin();
-        let p2 = Point::new(-1.0, -1.0, 0.0);
-        let p3 = Point::new(0.0, 1.0, 1.0);
+        let p1 = Point::new(-3.0, 7.0, 2.0);
+        let p2 = Point::new(6.0, 2.0, -4.0);
+        let p3 = Point::new(2.0, -1.0, -1.0);
 
         let t = Triangle::new_flat(p1, p2, p3);
 
         assert_approx_eq!(
             t.bounding_box(),
             BoundingBox::new(
-                Point::new(-1.0, -1.0, 0.0),
-                Point::new(0.0, 1.0, 1.0)
+                Point::new(-3.0, -1.0, -4.0),
+                Point::new(6.0, 7.0, 2.0)
             )
         );
     }
