@@ -22,6 +22,16 @@ pub struct BoundingBox {
 }
 
 impl BoundingBox {
+    pub fn add_point(&mut self, point: Point) {
+        self.minimum.x = self.minimum.x.min(point.x);
+        self.minimum.y = self.minimum.y.min(point.y);
+        self.minimum.z = self.minimum.z.min(point.z);
+
+        self.maximum.x = self.maximum.x.max(point.x);
+        self.maximum.y = self.maximum.y.max(point.y);
+        self.maximum.z = self.maximum.z.max(point.z);
+    }
+
     #[must_use]
     pub fn is_intersected_by(&self, ray: &Ray) -> bool {
         let (x_min, x_max) = Self::check_axis(
@@ -98,44 +108,20 @@ impl Add for BoundingBox {
 
 impl AddAssign for BoundingBox {
     fn add_assign(&mut self, rhs: Self) {
-        self.minimum = Point::new(
-            self.minimum.x.min(rhs.minimum.x),
-            self.minimum.y.min(rhs.minimum.y),
-            self.minimum.z.min(rhs.minimum.z),
-        );
-        self.maximum = Point::new(
-            self.maximum.x.max(rhs.maximum.x),
-            self.maximum.y.max(rhs.maximum.y),
-            self.maximum.z.max(rhs.maximum.z),
-        );
+        self.add_point(rhs.minimum);
+        self.add_point(rhs.maximum);
     }
 }
 
 impl From<Vec<Point>> for BoundingBox {
     fn from(value: Vec<Point>) -> Self {
-        let (minimum, maximum) = {
-            let mut minimum = Point::new(INFINITY, INFINITY, INFINITY);
-            let mut maximum =
-                Point::new(NEG_INFINITY, NEG_INFINITY, NEG_INFINITY);
+        let mut bounding_box = BoundingBox::default();
 
-            for point in value {
-                minimum = Point::new(
-                    minimum.x.min(point.x),
-                    minimum.y.min(point.y),
-                    minimum.z.min(point.z),
-                );
+        for point in value {
+            bounding_box.add_point(point);
+        }
 
-                maximum = Point::new(
-                    maximum.x.max(point.x),
-                    maximum.y.max(point.y),
-                    maximum.z.max(point.z),
-                );
-            }
-
-            (minimum, maximum)
-        };
-
-        Self::new(minimum, maximum)
+        bounding_box
     }
 }
 
@@ -190,6 +176,21 @@ mod tests {
 
         assert_approx_eq!(b.minimum, Point::new(-10.0, NEG_INFINITY, 5.0));
         assert_approx_eq!(b.maximum, Point::new(5.1, INFINITY, 10.6));
+    }
+
+    #[test]
+    fn adding_points_to_a_bounding_box() {
+        let mut b = BoundingBox::default();
+        b.add_point(Point::new(-5.0, 2.0, 0.0));
+        b.add_point(Point::new(7.0, 0.0, -3.0));
+
+        assert_approx_eq!(
+            b,
+            BoundingBox::new(
+                Point::new(-5.0, 0.0, -3.0),
+                Point::new(7.0, 2.0, 0.0)
+            )
+        );
     }
 
     #[test]
