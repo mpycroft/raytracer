@@ -40,6 +40,12 @@ impl BoundingBox {
     }
 
     #[must_use]
+    pub fn contains_box(&self, bounding_box: &BoundingBox) -> bool {
+        self.contains(&bounding_box.minimum)
+            && self.contains(&bounding_box.maximum)
+    }
+
+    #[must_use]
     pub fn is_intersected_by(&self, ray: &Ray) -> bool {
         let (x_min, x_max) = Self::check_axis(
             ray.origin.x,
@@ -167,7 +173,7 @@ impl_approx_eq!(BoundingBox { minimum, maximum });
 #[cfg(test)]
 mod tests {
     use std::f64::{
-        consts::{FRAC_PI_4, SQRT_2},
+        consts::{FRAC_1_SQRT_2, FRAC_PI_4, SQRT_2},
         INFINITY, NEG_INFINITY,
     };
 
@@ -217,6 +223,31 @@ mod tests {
         assert!(!b.contains(&Point::new(13.0, 1.0, 3.0)));
         assert!(!b.contains(&Point::new(8.0, 5.0, 3.0)));
         assert!(!b.contains(&Point::new(8.0, 1.0, 8.0)));
+    }
+
+    #[test]
+    fn checking_to_see_if_a_box_contains_a_given_box() {
+        let b = BoundingBox::new(
+            Point::new(5.0, -2.0, 0.0),
+            Point::new(11.0, 4.0, 7.0),
+        );
+
+        assert!(b.contains_box(&BoundingBox::new(
+            Point::new(5.0, -2.0, 0.0),
+            Point::new(11.0, 4.0, 7.0)
+        )));
+        assert!(b.contains_box(&BoundingBox::new(
+            Point::new(6.0, -1.0, 1.0),
+            Point::new(10.0, 3.0, 6.0)
+        )));
+        assert!(!b.contains_box(&BoundingBox::new(
+            Point::new(4.0, -3.0, -1.0),
+            Point::new(10.0, 3.0, 6.0)
+        )));
+        assert!(!b.contains_box(&BoundingBox::new(
+            Point::new(6.0, -1.0, 1.0),
+            Point::new(12.0, 5.0, 8.0)
+        )));
     }
 
     #[test]
@@ -355,11 +386,24 @@ mod tests {
             Point::new(1.0, 1.0, 1.0),
         );
 
+        let one_plus_1_div_sqrt_2 = 1.0 + FRAC_1_SQRT_2;
         assert_approx_eq!(
-            b.apply(&Transformation::new().translate(1.0, -1.0, 0.0)),
+            b.apply(
+                &Transformation::new()
+                    .rotate_y(Angle(FRAC_PI_4))
+                    .rotate_x(Angle(FRAC_PI_4))
+            ),
             BoundingBox::new(
-                Point::new(0.0, -2.0, -1.0),
-                Point::new(2.0, 0.0, 1.0)
+                Point::new(
+                    -SQRT_2,
+                    -one_plus_1_div_sqrt_2,
+                    -one_plus_1_div_sqrt_2
+                ),
+                Point::new(
+                    SQRT_2,
+                    one_plus_1_div_sqrt_2,
+                    one_plus_1_div_sqrt_2
+                )
             )
         );
 
