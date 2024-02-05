@@ -42,7 +42,10 @@ impl Intersectable for Test {
 
 impl Bounded for Test {
     fn bounding_box(&self) -> BoundingBox {
-        BoundingBox::new(Point::origin(), Point::origin())
+        BoundingBox::new(
+            Point::new(-1.0, -1.0, -1.0),
+            Point::new(1.0, 1.0, 1.0),
+        )
     }
 }
 
@@ -83,7 +86,10 @@ mod tests {
 
         assert_approx_eq!(
             t.bounding_box(),
-            BoundingBox::new(Point::origin(), Point::origin())
+            BoundingBox::new(
+                Point::new(-1.0, -1.0, -1.0),
+                Point::new(1.0, 1.0, 1.0)
+            )
         );
     }
 }

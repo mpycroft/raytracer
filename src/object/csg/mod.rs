@@ -88,6 +88,10 @@ impl Csg {
 
     #[must_use]
     pub fn intersect(&self, ray: &Ray) -> Option<List> {
+        if !self.bounding_box.is_intersected_by(ray) {
+            return None;
+        }
+
         let mut intersections = List::new();
 
         if let Some(left) = &mut self.left.intersect(ray) {
@@ -312,6 +316,36 @@ mod tests {
                 Point::new(3.0, 4.0, 5.0)
             )
         );
+    }
+
+    #[test]
+    fn intersecting_a_csg_does_not_test_children_if_box_is_missed() {
+        let o = Object::new_csg(
+            Operation::Difference,
+            Object::test_builder().build(),
+            Object::test_builder().build(),
+        );
+
+        let Object::Csg(c) = o else { unreachable!() };
+
+        assert!(c
+            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::y_axis()))
+            .is_none());
+    }
+
+    #[test]
+    fn intersecting_a_csg_does_test_children_if_box_is_hit() {
+        let o = Object::new_csg(
+            Operation::Difference,
+            Object::test_builder().build(),
+            Object::test_builder().build(),
+        );
+
+        let Object::Csg(c) = o else { unreachable!() };
+
+        assert!(c
+            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()))
+            .is_some());
     }
 
     #[test]

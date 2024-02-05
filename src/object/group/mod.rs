@@ -367,6 +367,32 @@ mod tests {
     }
 
     #[test]
+    fn intersecting_a_group_does_not_test_children_if_box_is_missed() {
+        let o = Object::group_builder()
+            .add_object(Object::test_builder().build())
+            .build();
+
+        let Object::Group(g) = o else { unreachable!() };
+
+        assert!(g
+            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::y_axis()))
+            .is_none());
+    }
+
+    #[test]
+    fn intersecting_a_group_does_test_children_if_box_is_hit() {
+        let o = Object::group_builder()
+            .add_object(Object::test_builder().build())
+            .build();
+
+        let Object::Group(g) = o else { unreachable!() };
+
+        assert!(g
+            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()))
+            .is_some());
+    }
+
+    #[test]
     fn a_groups_material_overwrites_objects() {
         let m = Material::builder()
             .pattern(Colour::new(0.4, 0.9, 1.0).into())
