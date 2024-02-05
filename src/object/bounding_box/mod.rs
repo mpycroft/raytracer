@@ -43,7 +43,7 @@ impl BoundingBox {
     }
 
     #[must_use]
-    fn contains_box(&self, bounding_box: &BoundingBox) -> bool {
+    pub fn contains_box(&self, bounding_box: &BoundingBox) -> bool {
         self.contains(&bounding_box.minimum)
             && self.contains(&bounding_box.maximum)
     }

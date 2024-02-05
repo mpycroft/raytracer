@@ -45,6 +45,31 @@ impl Group {
 
         Some(list)
     }
+
+    #[must_use]
+    fn partition(mut self) -> (Self, Vec<Object>, Vec<Object>) {
+        let (left_bounding_box, right_bounding_box) = self.bounding_box.split();
+
+        let mut left = Vec::new();
+        let mut right = Vec::new();
+        let mut neither = Vec::new();
+
+        for object in self.objects {
+            let bounding_box = object.bounding_box();
+
+            if left_bounding_box.contains_box(&bounding_box) {
+                left.push(object);
+            } else if right_bounding_box.contains_box(&bounding_box) {
+                right.push(object);
+            } else {
+                neither.push(object);
+            }
+        }
+
+        self.objects = neither;
+
+        (self, left, right)
+    }
 }
 
 impl Updatable for Group {
@@ -439,6 +464,34 @@ mod tests {
 
         assert!(g.includes(&s));
         assert!(!g.includes(&p));
+    }
+
+    #[test]
+    fn partitioning_a_groups_children() {
+        let s1 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(-2.0, 0.0, 0.0))
+            .build();
+        let s2 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(2.0, 0.0, 0.0))
+            .build();
+        let s3 = Object::sphere_builder().build();
+
+        let o = Object::group_builder()
+            .set_objects(vec![s1.clone(), s2.clone(), s3.clone()])
+            .build();
+
+        let Object::Group(g) = o else { unreachable!() };
+
+        let (g, l, r) = g.partition();
+
+        assert_eq!(g.objects.len(), 1);
+        assert_approx_eq!(g.objects[0], &s3);
+
+        assert_eq!(l.len(), 1);
+        assert_approx_eq!(l[0], &s1);
+
+        assert_eq!(r.len(), 1);
+        assert_approx_eq!(r[0], &s2);
     }
 
     #[test]
