@@ -13,21 +13,11 @@ pub struct Cube;
 impl Intersectable for Cube {
     #[must_use]
     fn intersect(&self, ray: &Ray) -> Option<TList> {
-        let (x_min, x_max) =
-            BoundingBox::check_axis(ray.origin.x, ray.direction.x, -1.0, 1.0);
-        let (y_min, y_max) =
-            BoundingBox::check_axis(ray.origin.y, ray.direction.y, -1.0, 1.0);
-        let (z_min, z_max) =
-            BoundingBox::check_axis(ray.origin.z, ray.direction.z, -1.0, 1.0);
-
-        let min = x_min.max(y_min).max(z_min);
-        let max = x_max.min(y_max).min(z_max);
-
-        if min > max || max < 0.0 {
-            return None;
-        }
-
-        Some(TList::from(vec![min, max]))
+        BoundingBox::intersect(
+            ray,
+            &Point::new(-1.0, -1.0, -1.0),
+            &Point::new(1.0, 1.0, 1.0),
+        )
     }
 
     #[must_use]

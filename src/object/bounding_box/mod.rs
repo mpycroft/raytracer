@@ -8,9 +8,12 @@ use std::{
 use derive_new::new;
 
 pub use self::bounded::Bounded;
-use crate::math::{
-    float::{approx_eq, impl_approx_eq},
-    Point, Ray, Transformable, Transformation,
+use crate::{
+    intersection::TList,
+    math::{
+        float::{approx_eq, impl_approx_eq},
+        Point, Ray, Transformable, Transformation,
+    },
 };
 
 /// A `BoundingBox` is an axis aligned box that can be used to cut down the
@@ -47,33 +50,42 @@ impl BoundingBox {
 
     #[must_use]
     pub fn is_intersected_by(&self, ray: &Ray) -> bool {
+        Self::intersect(ray, &self.minimum, &self.maximum).is_some()
+    }
+
+    #[must_use]
+    pub fn intersect(
+        ray: &Ray,
+        minimum: &Point,
+        maximum: &Point,
+    ) -> Option<TList> {
         let (x_min, x_max) = Self::check_axis(
             ray.origin.x,
             ray.direction.x,
-            self.minimum.x,
-            self.maximum.x,
+            minimum.x,
+            maximum.x,
         );
         let (y_min, y_max) = Self::check_axis(
             ray.origin.y,
             ray.direction.y,
-            self.minimum.y,
-            self.maximum.y,
+            minimum.y,
+            maximum.y,
         );
         let (z_min, z_max) = Self::check_axis(
             ray.origin.z,
             ray.direction.z,
-            self.minimum.z,
-            self.maximum.z,
+            minimum.z,
+            maximum.z,
         );
 
         let min = x_min.max(y_min).max(z_min);
         let max = x_max.min(y_max).min(z_max);
 
         if min > max || max < 0.0 {
-            return false;
+            return None;
         }
 
-        true
+        Some(TList::from(vec![min, max]))
     }
 
     #[must_use]
@@ -251,74 +263,126 @@ mod tests {
     }
 
     #[test]
-    fn intersecting_a_bounding_box() {
+    fn intersecting_a_ray_with_a_bounding_box_at_the_origin() {
         let b = BoundingBox::new(
             Point::new(-1.0, -1.0, -1.0),
             Point::new(1.0, 1.0, 1.0),
         );
 
         assert!(b.is_intersected_by(&Ray::new(
-            Point::new(0.0, 0.0, -5.0),
-            Vector::z_axis()
+            Point::new(5.0, 0.5, 0.0),
+            -Vector::x_axis()
         )));
         assert!(b.is_intersected_by(&Ray::new(
-            Point::new(0.0, 5.0, 0.0),
+            Point::new(-5.0, 0.5, 0.0),
+            Vector::x_axis()
+        )));
+        assert!(b.is_intersected_by(&Ray::new(
+            Point::new(0.5, 5.0, 0.0),
             -Vector::y_axis()
         )));
         assert!(b.is_intersected_by(&Ray::new(
-            Point::new(-5.0, 0.0, 0.5),
-            Vector::x_axis()
+            Point::new(0.5, -5.0, 0.0),
+            Vector::y_axis()
+        )));
+        assert!(b.is_intersected_by(&Ray::new(
+            Point::new(0.5, 0.0, 5.0),
+            -Vector::z_axis()
+        )));
+        assert!(b.is_intersected_by(&Ray::new(
+            Point::new(0.5, 0.0, -5.0),
+            Vector::z_axis()
+        )));
+        assert!(b.is_intersected_by(&Ray::new(
+            Point::new(0.0, 0.5, 0.0),
+            Vector::z_axis()
+        )));
+
+        assert!(!b.is_intersected_by(&Ray::new(
+            Point::new(-2.0, 0.0, 0.0),
+            Vector::new(2.0, 4.0, 6.0)
+        )));
+        assert!(!b.is_intersected_by(&Ray::new(
+            Point::new(0.0, -2.0, 0.0),
+            Vector::new(6.0, 2.0, 4.0)
+        )));
+        assert!(!b.is_intersected_by(&Ray::new(
+            Point::new(0.0, 0.0, -2.0),
+            Vector::new(4.0, 6.0, 2.0)
+        )));
+        assert!(!b.is_intersected_by(&Ray::new(
+            Point::new(2.0, 0.0, 2.0),
+            -Vector::z_axis()
+        )));
+        assert!(!b.is_intersected_by(&Ray::new(
+            Point::new(0.0, 2.0, 2.0),
+            -Vector::y_axis()
+        )));
+        assert!(!b.is_intersected_by(&Ray::new(
+            Point::new(2.0, 2.0, 0.0),
+            -Vector::x_axis()
         )));
     }
 
     #[test]
-    fn intersecting_a_non_cuboid_bounding_box() {
+    fn intersecting_a_ray_with_a_non_cubic_bounding_box() {
         let b = BoundingBox::new(
             Point::new(5.0, -2.0, 0.0),
             Point::new(11.0, 4.0, 7.0),
         );
 
         assert!(b.is_intersected_by(&Ray::new(
-            Point::new(14.0, 2.0, 3.0),
+            Point::new(15.0, 1.0, 2.0),
             -Vector::x_axis()
         )));
         assert!(b.is_intersected_by(&Ray::new(
-            Point::new(-2.0, -1.5, 0.0),
+            Point::new(-5.0, -1.0, 4.0),
             Vector::x_axis()
         )));
         assert!(b.is_intersected_by(&Ray::new(
-            Point::new(6.0, 7.8, 7.0),
+            Point::new(7.0, 6.0, 5.0),
             -Vector::y_axis()
         )));
         assert!(b.is_intersected_by(&Ray::new(
-            Point::new(9.0, -4.0, 2.0),
+            Point::new(9.0, -5.0, 6.0),
             Vector::y_axis()
         )));
         assert!(b.is_intersected_by(&Ray::new(
-            Point::new(10.0, 0.0, 12.0),
+            Point::new(8.0, 2.0, 12.0),
             -Vector::z_axis()
         )));
         assert!(b.is_intersected_by(&Ray::new(
-            Point::new(5.0, -1.0, -1.0),
+            Point::new(6.0, 0.0, -5.0),
             Vector::z_axis()
         )));
-
-        assert!(!b.is_intersected_by(&Ray::new(
-            Point::new(4.95, 1.0, 3.0),
-            Vector::y_axis()
-        )));
-        assert!(!b.is_intersected_by(&Ray::new(
-            Point::new(6.0, -3.0, 2.0),
-            Vector::z_axis()
-        )));
-        assert!(!b.is_intersected_by(&Ray::new(
-            Point::new(7.0, 0.0, 14.0),
-            -Vector::x_axis()
-        )));
-
         assert!(b.is_intersected_by(&Ray::new(
-            Point::new(5.0, 1.0, 3.0),
-            Vector::new(1.0, 1.0, 0.0).normalise()
+            Point::new(8.0, 1.0, 3.5),
+            Vector::z_axis()
+        )));
+
+        assert!(!b.is_intersected_by(&Ray::new(
+            Point::new(9.0, -1.0, -8.0),
+            Vector::new(2.0, 4.0, 6.0)
+        )));
+        assert!(!b.is_intersected_by(&Ray::new(
+            Point::new(8.0, 3.0, -4.0),
+            Vector::new(6.0, 2.0, 4.0)
+        )));
+        assert!(!b.is_intersected_by(&Ray::new(
+            Point::new(9.0, -1.0, -2.0),
+            Vector::new(4.0, 6.0, 2.0)
+        )));
+        assert!(!b.is_intersected_by(&Ray::new(
+            Point::new(4.0, 0.0, 9.0),
+            -Vector::z_axis()
+        )));
+        assert!(!b.is_intersected_by(&Ray::new(
+            Point::new(8.0, 6.0, -1.0),
+            -Vector::y_axis()
+        )));
+        assert!(!b.is_intersected_by(&Ray::new(
+            Point::new(12.0, 5.0, 4.0),
+            -Vector::x_axis()
         )));
     }
 
