@@ -43,7 +43,7 @@ impl BoundingBox {
     }
 
     #[must_use]
-    pub fn contains_box(&self, bounding_box: &BoundingBox) -> bool {
+    pub fn contains_box(&self, bounding_box: &Self) -> bool {
         self.contains(&bounding_box.minimum)
             && self.contains(&bounding_box.maximum)
     }
@@ -135,8 +135,8 @@ impl BoundingBox {
         let mid_point_maximum = Point::new(x1, y1, z1);
 
         (
-            BoundingBox::new(self.minimum, mid_point_maximum),
-            BoundingBox::new(mid_point_minimum, self.maximum),
+            Self::new(self.minimum, mid_point_maximum),
+            Self::new(mid_point_minimum, self.maximum),
         )
     }
 }
@@ -169,7 +169,7 @@ impl AddAssign for BoundingBox {
 
 impl From<Vec<Point>> for BoundingBox {
     fn from(value: Vec<Point>) -> Self {
-        let mut bounding_box = BoundingBox::default();
+        let mut bounding_box = Self::default();
 
         for point in value {
             bounding_box.add_point(point);

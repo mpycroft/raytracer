@@ -270,7 +270,6 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
                             )
                             .build(),
                         bounding_box
-                            .clone()
                             .material(
                                 Material::builder()
                                     .ambient(0.0)
@@ -297,11 +296,10 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     world.add_object(
         Object::group_builder()
             .set_objects(vec![
-                pedestal.clone(),
+                pedestal,
                 Object::group_builder()
                     .add_object(
                         dragon
-                            .clone()
                             .material(
                                 Material::builder()
                                     .pattern(Colour::white().into())

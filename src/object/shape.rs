@@ -352,9 +352,13 @@ mod tests {
     fn test_if_a_shape_includes_an_object() {
         let s = Object::sphere_builder().build();
         let p = Object::plane_builder().build();
+        let g = Object::group_builder()
+            .add_object(Object::plane_builder().build())
+            .build();
 
         assert!(s.includes(&s));
         assert!(!s.includes(&p));
+        assert!(!s.includes(&g));
     }
 
     #[test]

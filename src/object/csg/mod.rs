@@ -102,10 +102,6 @@ impl Csg {
             intersections.append(right);
         };
 
-        if intersections.is_empty() {
-            return None;
-        }
-
         intersections.sort();
 
         self.filter_intersections(intersections)
