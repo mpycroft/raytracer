@@ -70,6 +70,39 @@ impl Group {
 
         (self, left, right)
     }
+
+    #[must_use]
+    pub fn divide(self, threshold: u32) -> Self {
+        let mut group = if self.objects.len() >= threshold as usize {
+            let (mut group, left, right) = self.partition();
+
+            if !left.is_empty() {
+                group
+                    .objects
+                    .push(Object::group_builder().set_objects(left).build());
+            }
+
+            if !right.is_empty() {
+                group
+                    .objects
+                    .push(Object::group_builder().set_objects(right).build());
+            }
+
+            group
+        } else {
+            self
+        };
+
+        let mut objects = Vec::new();
+
+        for object in group.objects {
+            objects.push(object.divide(threshold));
+        }
+
+        group.objects = objects;
+
+        group
+    }
 }
 
 impl Updatable for Group {
@@ -492,6 +525,89 @@ mod tests {
 
         assert_eq!(r.len(), 1);
         assert_approx_eq!(r[0], &s2);
+    }
+
+    #[test]
+    fn subdividing_a_group_partitions_its_children() {
+        let s1 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(-2.0, -2.0, 0.0))
+            .build();
+        let s2 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(-2.0, 2.0, 0.0))
+            .build();
+        let s3 = Object::sphere_builder()
+            .transformation(Transformation::new().scale(4.0, 4.0, 4.0))
+            .build();
+
+        let o = Object::group_builder()
+            .set_objects(vec![s1.clone(), s2.clone(), s3.clone()])
+            .build();
+
+        let o = o.divide(1);
+
+        let Object::Group(g) = o else { unreachable!() };
+
+        assert_eq!(g.objects.len(), 2);
+        assert_approx_eq!(g.objects[0], &s3);
+
+        let Object::Group(g) = &g.objects[1] else { unreachable!() };
+
+        assert_eq!(g.objects.len(), 2);
+
+        let Object::Group(g1) = &g.objects[0] else { unreachable!() };
+
+        assert_eq!(g1.objects.len(), 1);
+        assert_approx_eq!(g1.objects[0], &s1);
+
+        let Object::Group(g2) = &g.objects[1] else { unreachable!() };
+
+        assert_eq!(g2.objects.len(), 1);
+        assert_approx_eq!(g2.objects[0], &s2);
+    }
+
+    #[test]
+    fn subdividing_a_group_with_too_few_children() {
+        let s1 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(-2.0, 0.0, 0.0))
+            .build();
+        let s2 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(2.0, 1.0, 0.0))
+            .build();
+        let s3 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(2.0, -1.0, 0.0))
+            .build();
+        let s4 = Object::sphere_builder().build();
+
+        let o = Object::group_builder()
+            .set_objects(vec![
+                Object::group_builder()
+                    .set_objects(vec![s1.clone(), s2.clone(), s3.clone()])
+                    .build(),
+                s4.clone(),
+            ])
+            .build();
+
+        let o = o.divide(3);
+
+        let Object::Group(g) = o else { unreachable!() };
+
+        assert_eq!(g.objects.len(), 2);
+        assert_approx_eq!(g.objects[1], &s4);
+
+        let Object::Group(g) = &g.objects[0] else { unreachable!() };
+
+        assert_eq!(g.objects.len(), 2);
+
+        let Object::Group(g1) = &g.objects[0] else { unreachable!() };
+
+        assert_eq!(g1.objects.len(), 1);
+        assert_approx_eq!(g1.objects[0], &s1);
+
+        let Object::Group(g2) = &g.objects[1] else { unreachable!() };
+
+        assert_eq!(g2.objects.len(), 2);
+        assert_approx_eq!(g2.objects[0], &s2);
+        assert_approx_eq!(g2.objects[1], &s3);
     }
 
     #[test]
