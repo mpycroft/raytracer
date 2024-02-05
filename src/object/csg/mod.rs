@@ -17,12 +17,22 @@ pub struct Csg {
     operation: Operation,
     left: Box<Object>,
     right: Box<Object>,
+    bounding_box: BoundingBox,
 }
 
 impl Csg {
     #[must_use]
     pub fn new(operation: Operation, left: Object, right: Object) -> Self {
-        Self { operation, left: Box::new(left), right: Box::new(right) }
+        let mut csg = Self {
+            operation,
+            left: Box::new(left),
+            right: Box::new(right),
+            bounding_box: BoundingBox::default(),
+        };
+
+        csg.bounding_box = csg.bounding_box();
+
+        csg
     }
 
     #[must_use]
@@ -286,20 +296,20 @@ mod tests {
     }
 
     #[test]
-    fn the_bounding_box_of_a_csg() {
+    fn a_csg_shape_has_a_bounding_box_that_contains_its_children() {
         let o = Object::new_csg(
-            Operation::Intersection,
+            Operation::Difference,
+            Object::sphere_builder().build(),
             Object::sphere_builder()
-                .transformation(Transformation::new().translate(0.5, 0.0, 0.0))
+                .transformation(Transformation::new().translate(2.0, 3.0, 4.0))
                 .build(),
-            Object::cube_builder().build(),
         );
 
         assert_approx_eq!(
             o.bounding_box(),
             BoundingBox::new(
                 Point::new(-1.0, -1.0, -1.0),
-                Point::new(1.5, 1.0, 1.0)
+                Point::new(3.0, 4.0, 5.0)
             )
         );
     }

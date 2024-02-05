@@ -321,46 +321,47 @@ mod tests {
     }
 
     #[test]
-    fn the_bounding_box_of_a_group() {
+    fn a_group_has_a_bounding_box_that_contains_its_children() {
         let o = Object::group_builder()
-            .add_object(
-                Object::cone_builder(1.0, 3.0, true)
-                    .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
+            .set_objects(vec![
+                Object::sphere_builder()
+                    .transformation(
+                        Transformation::new()
+                            .scale(2.0, 2.0, 2.0)
+                            .translate(2.0, 5.0, -3.0),
+                    )
                     .build(),
-            )
-            .transformation(Transformation::new().translate(1.0, 1.0, 0.0))
+                Object::cylinder_builder(-2.0, 2.0, true)
+                    .transformation(
+                        Transformation::new()
+                            .scale(0.5, 1.0, 0.5)
+                            .translate(-4.0, -1.0, 4.0),
+                    )
+                    .build(),
+            ])
             .build();
 
         assert_approx_eq!(
             o.bounding_box(),
             BoundingBox::new(
-                Point::new(-5.0, 3.0, -6.0),
-                Point::new(7.0, 7.0, 6.0)
+                Point::new(-4.5, -3.0, -5.0),
+                Point::new(4.0, 7.0, 4.5)
             )
         );
     }
 
     #[test]
-    fn the_bounding_box_of_multiple_objects() {
+    fn the_bounding_box_on_a_transformed_group() {
         let o = Object::group_builder()
-            .set_objects(vec![
-                Object::sphere_builder()
-                    .transformation(
-                        Transformation::new().translate(3.0, 1.0, 3.0),
-                    )
-                    .build(),
-                Object::cube_builder()
-                    .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
-                    .build(),
-            ])
-            .transformation(Transformation::new().translate(-1.0, 0.0, 0.0))
+            .add_object(Object::sphere_builder().build())
+            .transformation(Transformation::new().translate(1.0, -1.0, 0.0))
             .build();
 
         assert_approx_eq!(
             o.bounding_box(),
             BoundingBox::new(
-                Point::new(-3.0, -2.0, -2.0),
-                Point::new(3.0, 2.0, 4.0)
+                Point::new(0.0, -2.0, -1.0),
+                Point::new(2.0, 0.0, 1.0)
             )
         );
     }
