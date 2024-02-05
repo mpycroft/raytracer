@@ -60,7 +60,8 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
                     .reflective(0.05)
                     .build(),
             )
-            .build(),
+            .build()
+            .divide(50),
     );
 
     world.add_light(PointLight::new(

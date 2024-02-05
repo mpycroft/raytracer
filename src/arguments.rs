@@ -24,7 +24,7 @@ pub struct Arguments {
     pub out: String,
 
     /// Which scene to generate.
-    #[arg(short, long, default_value = "chapter16")]
+    #[arg(short, long, default_value = "bounding-box")]
     pub scene: Scene,
 
     /// Camera width (in pixels)
