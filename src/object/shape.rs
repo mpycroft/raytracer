@@ -315,16 +315,16 @@ mod tests {
         let o = Object::sphere_builder()
             .transformation(
                 Transformation::new()
-                    .translate(1.0, 0.0, -1.0)
-                    .scale(2.0, 2.0, 2.0),
+                    .scale(0.5, 2.0, 4.0)
+                    .translate(1.0, -3.0, 5.0),
             )
             .build();
 
         assert_approx_eq!(
             o.bounding_box(),
             BoundingBox::new(
-                Point::new(0.0, -2.0, -4.0),
-                Point::new(4.0, 2.0, 0.0)
+                Point::new(0.5, -5.0, 1.0),
+                Point::new(1.5, -1.0, 9.0)
             )
         );
     }
@@ -352,9 +352,13 @@ mod tests {
     fn test_if_a_shape_includes_an_object() {
         let s = Object::sphere_builder().build();
         let p = Object::plane_builder().build();
+        let g = Object::group_builder()
+            .add_object(Object::plane_builder().build())
+            .build();
 
         assert!(s.includes(&s));
         assert!(!s.includes(&p));
+        assert!(!s.includes(&g));
     }
 
     #[test]

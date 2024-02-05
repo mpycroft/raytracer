@@ -140,6 +140,15 @@ impl Object {
             Self::Shape(shape) => shape.to_object_space(value),
         }
     }
+
+    #[must_use]
+    pub fn divide(self, threshold: u32) -> Self {
+        match self {
+            Self::Csg(csg) => Self::Csg(csg.divide(threshold)),
+            Self::Group(group) => Self::Group(group.divide(threshold)),
+            Self::Shape(_) => self,
+        }
+    }
 }
 
 impl ApproxEq for &Object {

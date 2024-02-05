@@ -67,3 +67,9 @@ An imported image of a teapot using triangles.
 An image using various CSG objects.
 
 ![CSG objects](chapter16.png)
+
+## Bounding Box
+
+An image using many models using hundred of thousands of triangles.
+
+![Dragons](bounding_box.png)

@@ -45,6 +45,64 @@ impl Group {
 
         Some(list)
     }
+
+    #[must_use]
+    fn partition(mut self) -> (Self, Vec<Object>, Vec<Object>) {
+        let (left_bounding_box, right_bounding_box) = self.bounding_box.split();
+
+        let mut left = Vec::new();
+        let mut right = Vec::new();
+        let mut neither = Vec::new();
+
+        for object in self.objects {
+            let bounding_box = object.bounding_box();
+
+            if left_bounding_box.contains_box(&bounding_box) {
+                left.push(object);
+            } else if right_bounding_box.contains_box(&bounding_box) {
+                right.push(object);
+            } else {
+                neither.push(object);
+            }
+        }
+
+        self.objects = neither;
+
+        (self, left, right)
+    }
+
+    #[must_use]
+    pub fn divide(self, threshold: u32) -> Self {
+        let mut group = if self.objects.len() >= threshold as usize {
+            let (mut group, left, right) = self.partition();
+
+            if !left.is_empty() {
+                group
+                    .objects
+                    .push(Object::group_builder().set_objects(left).build());
+            }
+
+            if !right.is_empty() {
+                group
+                    .objects
+                    .push(Object::group_builder().set_objects(right).build());
+            }
+
+            group
+        } else {
+            self
+        };
+
+        let mut objects = Vec::new();
+
+        for object in group.objects {
+            objects.push(object.divide(threshold));
+        }
+
+        group.objects = objects;
+
+        group
+    }
 }
 
 impl Updatable for Group {
@@ -321,48 +379,75 @@ mod tests {
     }
 
     #[test]
-    fn the_bounding_box_of_a_group() {
+    fn a_group_has_a_bounding_box_that_contains_its_children() {
         let o = Object::group_builder()
-            .add_object(
-                Object::cone_builder(1.0, 3.0, true)
-                    .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
+            .set_objects(vec![
+                Object::sphere_builder()
+                    .transformation(
+                        Transformation::new()
+                            .scale(2.0, 2.0, 2.0)
+                            .translate(2.0, 5.0, -3.0),
+                    )
                     .build(),
-            )
-            .transformation(Transformation::new().translate(1.0, 1.0, 0.0))
+                Object::cylinder_builder(-2.0, 2.0, true)
+                    .transformation(
+                        Transformation::new()
+                            .scale(0.5, 1.0, 0.5)
+                            .translate(-4.0, -1.0, 4.0),
+                    )
+                    .build(),
+            ])
             .build();
 
         assert_approx_eq!(
             o.bounding_box(),
             BoundingBox::new(
-                Point::new(3.0, 3.0, 2.0),
-                Point::new(7.0, 7.0, 6.0)
+                Point::new(-4.5, -3.0, -5.0),
+                Point::new(4.0, 7.0, 4.5)
             )
         );
     }
 
     #[test]
-    fn the_bounding_box_of_multiple_objects() {
+    fn the_bounding_box_on_a_transformed_group() {
         let o = Object::group_builder()
-            .set_objects(vec![
-                Object::sphere_builder()
-                    .transformation(
-                        Transformation::new().translate(3.0, 1.0, 3.0),
-                    )
-                    .build(),
-                Object::cube_builder()
-                    .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
-                    .build(),
-            ])
-            .transformation(Transformation::new().translate(-1.0, 0.0, 0.0))
+            .add_object(Object::sphere_builder().build())
+            .transformation(Transformation::new().translate(1.0, -1.0, 0.0))
             .build();
 
         assert_approx_eq!(
             o.bounding_box(),
             BoundingBox::new(
-                Point::new(-3.0, -2.0, -2.0),
-                Point::new(3.0, 2.0, 4.0)
+                Point::new(0.0, -2.0, -1.0),
+                Point::new(2.0, 0.0, 1.0)
             )
         );
+    }
+
+    #[test]
+    fn intersecting_a_group_does_not_test_children_if_box_is_missed() {
+        let o = Object::group_builder()
+            .add_object(Object::test_builder().build())
+            .build();
+
+        let Object::Group(g) = o else { unreachable!() };
+
+        assert!(g
+            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::y_axis()))
+            .is_none());
+    }
+
+    #[test]
+    fn intersecting_a_group_does_test_children_if_box_is_hit() {
+        let o = Object::group_builder()
+            .add_object(Object::test_builder().build())
+            .build();
+
+        let Object::Group(g) = o else { unreachable!() };
+
+        assert!(g
+            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()))
+            .is_some());
     }
 
     #[test]
@@ -412,6 +497,117 @@ mod tests {
 
         assert!(g.includes(&s));
         assert!(!g.includes(&p));
+    }
+
+    #[test]
+    fn partitioning_a_groups_children() {
+        let s1 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(-2.0, 0.0, 0.0))
+            .build();
+        let s2 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(2.0, 0.0, 0.0))
+            .build();
+        let s3 = Object::sphere_builder().build();
+
+        let o = Object::group_builder()
+            .set_objects(vec![s1.clone(), s2.clone(), s3.clone()])
+            .build();
+
+        let Object::Group(g) = o else { unreachable!() };
+
+        let (g, l, r) = g.partition();
+
+        assert_eq!(g.objects.len(), 1);
+        assert_approx_eq!(g.objects[0], &s3);
+
+        assert_eq!(l.len(), 1);
+        assert_approx_eq!(l[0], &s1);
+
+        assert_eq!(r.len(), 1);
+        assert_approx_eq!(r[0], &s2);
+    }
+
+    #[test]
+    fn subdividing_a_group_partitions_its_children() {
+        let s1 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(-2.0, -2.0, 0.0))
+            .build();
+        let s2 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(-2.0, 2.0, 0.0))
+            .build();
+        let s3 = Object::sphere_builder()
+            .transformation(Transformation::new().scale(4.0, 4.0, 4.0))
+            .build();
+
+        let o = Object::group_builder()
+            .set_objects(vec![s1.clone(), s2.clone(), s3.clone()])
+            .build();
+
+        let o = o.divide(1);
+
+        let Object::Group(g) = o else { unreachable!() };
+
+        assert_eq!(g.objects.len(), 2);
+        assert_approx_eq!(g.objects[0], &s3);
+
+        let Object::Group(g) = &g.objects[1] else { unreachable!() };
+
+        assert_eq!(g.objects.len(), 2);
+
+        let Object::Group(g1) = &g.objects[0] else { unreachable!() };
+
+        assert_eq!(g1.objects.len(), 1);
+        assert_approx_eq!(g1.objects[0], &s1);
+
+        let Object::Group(g2) = &g.objects[1] else { unreachable!() };
+
+        assert_eq!(g2.objects.len(), 1);
+        assert_approx_eq!(g2.objects[0], &s2);
+    }
+
+    #[test]
+    fn subdividing_a_group_with_too_few_children() {
+        let s1 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(-2.0, 0.0, 0.0))
+            .build();
+        let s2 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(2.0, 1.0, 0.0))
+            .build();
+        let s3 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(2.0, -1.0, 0.0))
+            .build();
+        let s4 = Object::sphere_builder().build();
+
+        let o = Object::group_builder()
+            .set_objects(vec![
+                Object::group_builder()
+                    .set_objects(vec![s1.clone(), s2.clone(), s3.clone()])
+                    .build(),
+                s4.clone(),
+            ])
+            .build();
+
+        let o = o.divide(3);
+
+        let Object::Group(g) = o else { unreachable!() };
+
+        assert_eq!(g.objects.len(), 2);
+        assert_approx_eq!(g.objects[1], &s4);
+
+        let Object::Group(g) = &g.objects[0] else { unreachable!() };
+
+        assert_eq!(g.objects.len(), 2);
+
+        let Object::Group(g1) = &g.objects[0] else { unreachable!() };
+
+        assert_eq!(g1.objects.len(), 1);
+        assert_approx_eq!(g1.objects[0], &s1);
+
+        let Object::Group(g2) = &g.objects[1] else { unreachable!() };
+
+        assert_eq!(g2.objects.len(), 2);
+        assert_approx_eq!(g2.objects[0], &s2);
+        assert_approx_eq!(g2.objects[1], &s3);
     }
 
     #[test]

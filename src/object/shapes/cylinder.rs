@@ -323,13 +323,13 @@ mod tests {
 
     #[test]
     fn the_bounding_box_of_a_cylinder() {
-        let c = Cylinder::new(0.0, 2.3, true);
+        let c = Cylinder::new(-5.0, 3.0, true);
 
         assert_approx_eq!(
             c.bounding_box(),
             BoundingBox::new(
-                Point::new(-1.0, 0.0, -1.0),
-                Point::new(1.0, 2.3, 1.0)
+                Point::new(-1.0, -5.0, -1.0),
+                Point::new(1.0, 3.0, 1.0)
             )
         );
     }

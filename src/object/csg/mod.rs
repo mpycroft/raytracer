@@ -17,12 +17,22 @@ pub struct Csg {
     operation: Operation,
     left: Box<Object>,
     right: Box<Object>,
+    bounding_box: BoundingBox,
 }
 
 impl Csg {
     #[must_use]
     pub fn new(operation: Operation, left: Object, right: Object) -> Self {
-        Self { operation, left: Box::new(left), right: Box::new(right) }
+        let mut csg = Self {
+            operation,
+            left: Box::new(left),
+            right: Box::new(right),
+            bounding_box: BoundingBox::default(),
+        };
+
+        csg.bounding_box = csg.bounding_box();
+
+        csg
     }
 
     #[must_use]
@@ -78,6 +88,10 @@ impl Csg {
 
     #[must_use]
     pub fn intersect(&self, ray: &Ray) -> Option<List> {
+        if !self.bounding_box.is_intersected_by(ray) {
+            return None;
+        }
+
         let mut intersections = List::new();
 
         if let Some(left) = &mut self.left.intersect(ray) {
@@ -88,13 +102,17 @@ impl Csg {
             intersections.append(right);
         };
 
-        if intersections.is_empty() {
-            return None;
-        }
-
         intersections.sort();
 
         self.filter_intersections(intersections)
+    }
+
+    #[must_use]
+    pub fn divide(mut self, threshold: u32) -> Self {
+        self.left = Box::new(self.left.divide(threshold));
+        self.right = Box::new(self.right.divide(threshold));
+
+        self
     }
 }
 
@@ -286,22 +304,52 @@ mod tests {
     }
 
     #[test]
-    fn the_bounding_box_of_a_csg() {
+    fn a_csg_shape_has_a_bounding_box_that_contains_its_children() {
         let o = Object::new_csg(
-            Operation::Intersection,
+            Operation::Difference,
+            Object::sphere_builder().build(),
             Object::sphere_builder()
-                .transformation(Transformation::new().translate(0.5, 0.0, 0.0))
+                .transformation(Transformation::new().translate(2.0, 3.0, 4.0))
                 .build(),
-            Object::cube_builder().build(),
         );
 
         assert_approx_eq!(
             o.bounding_box(),
             BoundingBox::new(
                 Point::new(-1.0, -1.0, -1.0),
-                Point::new(1.5, 1.0, 1.0)
+                Point::new(3.0, 4.0, 5.0)
             )
         );
+    }
+
+    #[test]
+    fn intersecting_a_csg_does_not_test_children_if_box_is_missed() {
+        let o = Object::new_csg(
+            Operation::Difference,
+            Object::test_builder().build(),
+            Object::test_builder().build(),
+        );
+
+        let Object::Csg(c) = o else { unreachable!() };
+
+        assert!(c
+            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::y_axis()))
+            .is_none());
+    }
+
+    #[test]
+    fn intersecting_a_csg_does_test_children_if_box_is_hit() {
+        let o = Object::new_csg(
+            Operation::Difference,
+            Object::test_builder().build(),
+            Object::test_builder().build(),
+        );
+
+        let Object::Csg(c) = o else { unreachable!() };
+
+        assert!(c
+            .intersect(&Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis()))
+            .is_some());
     }
 
     #[test]
@@ -346,6 +394,64 @@ mod tests {
         assert!(c.includes(&s));
         assert!(c.includes(&cu));
         assert!(!c.includes(&p));
+    }
+
+    #[test]
+    fn subdividing_a_csg_subdivides_its_children() {
+        let s1 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(-1.5, 0.0, 0.0))
+            .build();
+        let s2 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(1.5, 0.0, 0.0))
+            .build();
+        let s3 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(0.0, 0.0, -1.5))
+            .build();
+        let s4 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(0.0, 0.0, 1.5))
+            .build();
+
+        let o = Object::new_csg(
+            Operation::Difference,
+            Object::group_builder()
+                .set_objects(vec![s1.clone(), s2.clone()])
+                .build(),
+            Object::group_builder()
+                .set_objects(vec![s3.clone(), s4.clone()])
+                .build(),
+        );
+
+        let o = o.divide(1);
+
+        let Object::Csg(c) = o else { unreachable!() };
+
+        let Object::Group(g) = *c.left else { unreachable!() };
+
+        assert_eq!(g.objects.len(), 2);
+
+        let Object::Group(g1) = &g.objects[0] else { unreachable!() };
+
+        assert_eq!(g1.objects.len(), 1);
+        assert_approx_eq!(g1.objects[0], &s1);
+
+        let Object::Group(g2) = &g.objects[1] else { unreachable!() };
+
+        assert_eq!(g2.objects.len(), 1);
+        assert_approx_eq!(g2.objects[0], &s2);
+
+        let Object::Group(g) = *c.right else { unreachable!() };
+
+        assert_eq!(g.objects.len(), 2);
+
+        let Object::Group(g1) = &g.objects[0] else { unreachable!() };
+
+        assert_eq!(g1.objects.len(), 1);
+        assert_approx_eq!(g1.objects[0], &s3);
+
+        let Object::Group(g2) = &g.objects[1] else { unreachable!() };
+
+        assert_eq!(g2.objects.len(), 1);
+        assert_approx_eq!(g2.objects[0], &s4);
     }
 
     #[test]

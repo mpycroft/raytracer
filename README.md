@@ -87,8 +87,8 @@ so far.
   etc. when we have lots of hits.
 * ~~We only store the transformation matrix with each object, we may consider
   precomputing the inverted matrix as well.~~
-* Look at algorithms for splitting the objects in a scene into groups
-  automatically to allow bounding box optimisations.
+* ~~Look at algorithms for splitting the objects in a scene into groups
+  automatically to allow bounding box optimisations.~~
 
 ## Performance
 
@@ -134,3 +134,21 @@ contains a number of different spheres, we see the following:
 
 * Without bounds checking: 20.31s
 * With bounds checking: 6.33s
+
+### Bounding Volume Hierarchies
+
+In addition to the general bounding box improvements, once we implemented
+(naive) splitting of children of groups we see a significant performance
+improvement. For the Chapter15 scene, running single threaded:
+
+* Without dividing: 87.64s
+* Dividing into groups of 50: 9.90s
+
+For the BoundingBox scene running multi threaded:
+
+* Without dividing: 188.23s
+* Dividing into groups of 50: 3.07s
+
+A value of 50 was picked arbitrarily, no significant difference is shown for
+values from 1 to a 100 or so, values 200, 500, etc. do start to show less
+improvement however.
