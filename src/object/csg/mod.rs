@@ -110,6 +110,14 @@ impl Csg {
 
         self.filter_intersections(intersections)
     }
+
+    #[must_use]
+    pub fn divide(mut self, threshold: u32) -> Self {
+        self.left = Box::new(self.left.divide(threshold));
+        self.right = Box::new(self.right.divide(threshold));
+
+        self
+    }
 }
 
 impl Updatable for Csg {
@@ -390,6 +398,64 @@ mod tests {
         assert!(c.includes(&s));
         assert!(c.includes(&cu));
         assert!(!c.includes(&p));
+    }
+
+    #[test]
+    fn subdividing_a_csg_subdivides_its_children() {
+        let s1 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(-1.5, 0.0, 0.0))
+            .build();
+        let s2 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(1.5, 0.0, 0.0))
+            .build();
+        let s3 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(0.0, 0.0, -1.5))
+            .build();
+        let s4 = Object::sphere_builder()
+            .transformation(Transformation::new().translate(0.0, 0.0, 1.5))
+            .build();
+
+        let o = Object::new_csg(
+            Operation::Difference,
+            Object::group_builder()
+                .set_objects(vec![s1.clone(), s2.clone()])
+                .build(),
+            Object::group_builder()
+                .set_objects(vec![s3.clone(), s4.clone()])
+                .build(),
+        );
+
+        let o = o.divide(1);
+
+        let Object::Csg(c) = o else { unreachable!() };
+
+        let Object::Group(g) = *c.left else { unreachable!() };
+
+        assert_eq!(g.objects.len(), 2);
+
+        let Object::Group(g1) = &g.objects[0] else { unreachable!() };
+
+        assert_eq!(g1.objects.len(), 1);
+        assert_approx_eq!(g1.objects[0], &s1);
+
+        let Object::Group(g2) = &g.objects[1] else { unreachable!() };
+
+        assert_eq!(g2.objects.len(), 1);
+        assert_approx_eq!(g2.objects[0], &s2);
+
+        let Object::Group(g) = *c.right else { unreachable!() };
+
+        assert_eq!(g.objects.len(), 2);
+
+        let Object::Group(g1) = &g.objects[0] else { unreachable!() };
+
+        assert_eq!(g1.objects.len(), 1);
+        assert_approx_eq!(g1.objects[0], &s3);
+
+        let Object::Group(g2) = &g.objects[1] else { unreachable!() };
+
+        assert_eq!(g2.objects.len(), 1);
+        assert_approx_eq!(g2.objects[0], &s4);
     }
 
     #[test]

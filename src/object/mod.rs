@@ -144,7 +144,7 @@ impl Object {
     #[must_use]
     pub fn divide(self, threshold: u32) -> Self {
         match self {
-            Self::Csg(_) => todo!(),
+            Self::Csg(csg) => Object::Csg(csg.divide(threshold)),
             Self::Group(group) => Object::Group(group.divide(threshold)),
             Self::Shape(_) => self,
         }
