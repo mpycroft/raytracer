@@ -36,14 +36,14 @@ impl BoundingBox {
     }
 
     #[must_use]
-    pub fn contains(&self, point: &Point) -> bool {
+    fn contains(&self, point: &Point) -> bool {
         (self.minimum.x..=self.maximum.x).contains(&point.x)
             && (self.minimum.y..=self.maximum.y).contains(&point.y)
             && (self.minimum.z..=self.maximum.z).contains(&point.z)
     }
 
     #[must_use]
-    pub fn contains_box(&self, bounding_box: &BoundingBox) -> bool {
+    fn contains_box(&self, bounding_box: &BoundingBox) -> bool {
         self.contains(&bounding_box.minimum)
             && self.contains(&bounding_box.maximum)
     }
@@ -109,6 +109,35 @@ impl BoundingBox {
         }
 
         (min, max)
+    }
+
+    #[must_use]
+    pub fn split(&self) -> (Self, Self) {
+        let dx = (self.maximum.x - self.minimum.x).abs();
+        let dy = (self.maximum.y - self.minimum.y).abs();
+        let dz = (self.maximum.z - self.minimum.z).abs();
+
+        let Point { x: mut x0, y: mut y0, z: mut z0 } = self.minimum;
+        let Point { x: mut x1, y: mut y1, z: mut z1 } = self.maximum;
+
+        if dx >= dy && dx >= dz {
+            x0 += dx / 2.0;
+            x1 = x0;
+        } else if dy >= dz {
+            y0 += dy / 2.0;
+            y1 = y0;
+        } else {
+            z0 += dz / 2.0;
+            z1 = z0;
+        };
+
+        let mid_point_minimum = Point::new(x0, y0, z0);
+        let mid_point_maximum = Point::new(x1, y1, z1);
+
+        (
+            BoundingBox::new(self.minimum, mid_point_maximum),
+            BoundingBox::new(mid_point_minimum, self.maximum),
+        )
     }
 }
 
@@ -487,6 +516,106 @@ mod tests {
                 Point::new(SQRT_2, one_plus_sqrt2_div_2, one_plus_sqrt2_div_2)
             ),
             epsilon = 0.000_01
+        );
+    }
+
+    #[test]
+    fn splitting_a_perfect_cube() {
+        let b = BoundingBox::new(
+            Point::new(-1.0, -4.0, -5.0),
+            Point::new(9.0, 6.0, 5.0),
+        );
+
+        let (b1, b2) = b.split();
+
+        assert_approx_eq!(
+            b1,
+            BoundingBox::new(
+                Point::new(-1.0, -4.0, -5.0),
+                Point::new(4.0, 6.0, 5.0)
+            )
+        );
+        assert_approx_eq!(
+            b2,
+            BoundingBox::new(
+                Point::new(4.0, -4.0, -5.0),
+                Point::new(9.0, 6.0, 5.0)
+            )
+        );
+    }
+
+    #[test]
+    fn splitting_a_x_wide_box() {
+        let b = BoundingBox::new(
+            Point::new(-1.0, -2.0, -3.0),
+            Point::new(9.0, 5.5, 3.0),
+        );
+
+        let (b1, b2) = b.split();
+
+        assert_approx_eq!(
+            b1,
+            BoundingBox::new(
+                Point::new(-1.0, -2.0, -3.0),
+                Point::new(4.0, 5.5, 3.0)
+            )
+        );
+        assert_approx_eq!(
+            b2,
+            BoundingBox::new(
+                Point::new(4.0, -2.0, -3.0),
+                Point::new(9.0, 5.5, 3.0)
+            )
+        );
+    }
+
+    #[test]
+    fn splitting_a_y_wide_box() {
+        let b = BoundingBox::new(
+            Point::new(-1.0, -2.0, -3.0),
+            Point::new(5.0, 8.0, 3.0),
+        );
+
+        let (b1, b2) = b.split();
+
+        assert_approx_eq!(
+            b1,
+            BoundingBox::new(
+                Point::new(-1.0, -2.0, -3.0),
+                Point::new(5.0, 3.0, 3.0)
+            )
+        );
+        assert_approx_eq!(
+            b2,
+            BoundingBox::new(
+                Point::new(-1.0, 3.0, -3.0),
+                Point::new(5.0, 8.0, 3.0)
+            )
+        );
+    }
+
+    #[test]
+    fn splitting_a_z_wide_box() {
+        let b = BoundingBox::new(
+            Point::new(-1.0, -2.0, -3.0),
+            Point::new(5.0, 3.0, 7.0),
+        );
+
+        let (b1, b2) = b.split();
+
+        assert_approx_eq!(
+            b1,
+            BoundingBox::new(
+                Point::new(-1.0, -2.0, -3.0),
+                Point::new(5.0, 3.0, 2.0)
+            )
+        );
+        assert_approx_eq!(
+            b2,
+            BoundingBox::new(
+                Point::new(-1.0, -2.0, 2.0),
+                Point::new(5.0, 3.0, 7.0)
+            )
         );
     }
 }
