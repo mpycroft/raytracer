@@ -72,4 +72,10 @@ An image using various CSG objects.
 
 An image using many models using hundred of thousands of triangles.
 
-![Dragons](bounding_box.png)
+![Dragons](bounding-box.png)
+
+## Area Light
+
+An image using an area light showing soft shadows.
+
+![Area light](area-light.png)
