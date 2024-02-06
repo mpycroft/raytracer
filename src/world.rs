@@ -65,6 +65,7 @@ impl World {
                 &computations.eye,
                 &computations.normal,
                 light.intensity_at(&computations.over_point, self, rng),
+                rng,
             );
         }
 
@@ -626,7 +627,7 @@ mod tests {
             .build();
 
         assert!(!w.is_shadowed(
-            &w.lights[0].position(),
+            &w.lights[0].positions(&mut rng())[0],
             &Point::new(10.0, -10.0, 10.0)
         ));
     }

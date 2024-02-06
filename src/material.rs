@@ -1,3 +1,4 @@
+use rand::prelude::*;
 use typed_builder::TypedBuilder;
 
 use crate::{
@@ -41,7 +42,8 @@ impl Material {
     }
 
     #[must_use]
-    pub fn lighting(
+    #[allow(clippy::too_many_arguments)]
+    pub fn lighting<R: Rng>(
         &self,
         object: &Object,
         light: &Light,
@@ -49,34 +51,38 @@ impl Material {
         eye: &Vector,
         normal: &Vector,
         intensity: f64,
+        rng: &mut R,
     ) -> Colour {
         let colour = self.pattern.pattern_at(object, point) * light.intensity();
 
         let ambient = colour * self.ambient;
 
-        let light_vector = (light.position() - *point).normalise();
-        let light_dot_normal = light_vector.dot(normal);
+        let mut diffuse = Colour::black();
+        let mut specular = Colour::black();
 
-        let (diffuse, specular) = if light_dot_normal < 0.0 {
-            (Colour::black(), Colour::black())
-        } else {
-            let diffuse = colour * self.diffuse * light_dot_normal;
+        let light_positions = light.positions(rng);
+        #[allow(clippy::cast_precision_loss)]
+        let samples = light_positions.len() as f64;
 
-            let reflect_vector = -light_vector.reflect(normal);
-            let reflect_dot_eye = reflect_vector.dot(eye);
+        for light_position in light_positions {
+            let light_vector = (light_position - *point).normalise();
+            let light_dot_normal = light_vector.dot(normal);
 
-            let specular = if reflect_dot_eye <= 0.0 {
-                Colour::black()
-            } else {
-                let factor = reflect_dot_eye.powf(self.shininess);
+            if light_dot_normal >= 0.0 {
+                diffuse += colour * self.diffuse * light_dot_normal;
 
-                light.intensity() * self.specular * factor
+                let reflect_vector = -light_vector.reflect(normal);
+                let reflect_dot_eye = reflect_vector.dot(eye);
+
+                if reflect_dot_eye > 0.0 {
+                    let factor = reflect_dot_eye.powf(self.shininess);
+
+                    specular += light.intensity() * self.specular * factor;
+                };
             };
+        }
 
-            (diffuse, specular)
-        };
-
-        ambient + diffuse * intensity + specular * intensity
+        ambient + (diffuse + specular) / samples * intensity
     }
 }
 
@@ -94,11 +100,17 @@ impl_approx_eq!(
 mod tests {
     use std::f64::consts::SQRT_2;
 
+    use rand_xoshiro::Xoshiro256PlusPlus;
+
     use super::*;
     use crate::{
         math::float::*, object::Updatable, pattern::Pattern, world::test_world,
         Object,
     };
+
+    fn rng() -> impl Rng {
+        Xoshiro256PlusPlus::seed_from_u64(0)
+    }
 
     #[test]
     fn creating_a_material() {
@@ -167,7 +179,7 @@ mod tests {
         let o = Object::test_builder().build();
 
         assert_approx_eq!(
-            m.lighting(&o, &l, &p, &e, &n, 0.0),
+            m.lighting(&o, &l, &p, &e, &n, 0.0, &mut rng()),
             Colour::new(0.1, 0.1, 0.1)
         );
     }
@@ -185,7 +197,7 @@ mod tests {
         let o = Object::test_builder().build();
 
         assert_approx_eq!(
-            m.lighting(&o, &l, &p, &e, &n, 1.0),
+            m.lighting(&o, &l, &p, &e, &n, 1.0, &mut rng()),
             Colour::new(1.9, 1.9, 1.9)
         );
     }
@@ -203,7 +215,10 @@ mod tests {
         let l = Light::new_point(Point::new(0.0, 0.0, -10.0), Colour::white());
         let o = Object::test_builder().build();
 
-        assert_approx_eq!(m.lighting(&o, &l, &p, &e, &n, 1.0), Colour::white());
+        assert_approx_eq!(
+            m.lighting(&o, &l, &p, &e, &n, 1.0, &mut rng()),
+            Colour::white()
+        );
     }
 
     #[test]
@@ -219,7 +234,7 @@ mod tests {
         let o = Object::test_builder().build();
 
         assert_approx_eq!(
-            m.lighting(&o, &l, &p, &e, &n, 1.0),
+            m.lighting(&o, &l, &p, &e, &n, 1.0, &mut rng()),
             Colour::new(0.736_4, 0.736_4, 0.736_4),
             epsilon = 0.000_1
         );
@@ -239,7 +254,7 @@ mod tests {
         let o = Object::test_builder().build();
 
         assert_approx_eq!(
-            m.lighting(&o, &l, &p, &e, &n, 1.0),
+            m.lighting(&o, &l, &p, &e, &n, 1.0, &mut rng()),
             Colour::new(1.636_4, 1.636_4, 1.636_4),
             epsilon = 0.000_1
         );
@@ -258,7 +273,7 @@ mod tests {
         let o = Object::test_builder().build();
 
         assert_approx_eq!(
-            m.lighting(&o, &l, &p, &e, &n, 1.0),
+            m.lighting(&o, &l, &p, &e, &n, 1.0, &mut rng()),
             Colour::new(0.1, 0.1, 0.1)
         );
     }
@@ -275,7 +290,10 @@ mod tests {
         let l = Light::new_point(Point::new(0.0, 0.0, -10.0), Colour::white());
         let o = Object::test_builder().build();
 
-        assert_approx_eq!(m.lighting(&o, &l, &p, &e, &n, 1.0), Colour::white());
+        assert_approx_eq!(
+            m.lighting(&o, &l, &p, &e, &n, 1.0, &mut rng()),
+            Colour::white()
+        );
     }
 
     #[test]
@@ -301,12 +319,28 @@ mod tests {
         let o = Object::test_builder().build();
 
         assert_approx_eq!(
-            m.lighting(&o, &l, &Point::new(0.9, 0.0, 0.0), &e, &n, 1.0),
+            m.lighting(
+                &o,
+                &l,
+                &Point::new(0.9, 0.0, 0.0),
+                &e,
+                &n,
+                1.0,
+                &mut rng()
+            ),
             Colour::white()
         );
 
         assert_approx_eq!(
-            m.lighting(&o, &l, &Point::new(1.1, 0.0, 0.0), &e, &n, 1.0),
+            m.lighting(
+                &o,
+                &l,
+                &Point::new(1.1, 0.0, 0.0),
+                &e,
+                &n,
+                1.0,
+                &mut rng()
+            ),
             Colour::black()
         );
     }
@@ -334,14 +368,60 @@ mod tests {
         let e = -Vector::z_axis();
         let n = -Vector::z_axis();
 
-        assert_approx_eq!(m.lighting(o, l, &p, &e, &n, 1.0), Colour::white());
         assert_approx_eq!(
-            m.lighting(o, l, &p, &e, &n, 0.5),
+            m.lighting(o, l, &p, &e, &n, 1.0, &mut rng()),
+            Colour::white()
+        );
+        assert_approx_eq!(
+            m.lighting(o, l, &p, &e, &n, 0.5, &mut rng()),
             Colour::new(0.55, 0.55, 0.55)
         );
         assert_approx_eq!(
-            m.lighting(o, l, &p, &e, &n, 0.0),
+            m.lighting(o, l, &p, &e, &n, 0.0, &mut rng()),
             Colour::new(0.1, 0.1, 0.1)
+        );
+    }
+
+    #[test]
+    fn lighting_samples_the_area_light() {
+        let l = Light::new_area(
+            Point::new(-0.5, -0.5, -5.0),
+            Vector::x_axis(),
+            2,
+            Vector::y_axis(),
+            2,
+            Colour::white(),
+        );
+
+        let o = Object::sphere_builder()
+            .material(
+                Material::builder()
+                    .pattern(Colour::white().into())
+                    .ambient(0.1)
+                    .diffuse(0.9)
+                    .specular(0.0)
+                    .build(),
+            )
+            .build();
+
+        let e = Point::new(0.0, 0.0, -5.0);
+
+        let test = |p: Point| {
+            let e = (e - p).normalise();
+            let n = Vector::new(p.x, p.y, p.z);
+
+            o.material().lighting(&o, &l, &p, &e, &n, 1.0, &mut rng())
+        };
+
+        assert_approx_eq!(
+            test(Point::new(0.0, 0.0, -1.0)),
+            Colour::new(0.993_67, 0.993_67, 0.993_67),
+            epsilon = 0.000_01
+        );
+        assert_approx_eq!(
+            test(Point::new(0.0, SQRT_2, -SQRT_2)),
+            Colour::new(0.780_05, 0.780_05, 0.780_05),
+            epsilon = 0.000_01
         );
     }
 

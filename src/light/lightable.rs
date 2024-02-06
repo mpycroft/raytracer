@@ -7,7 +7,7 @@ use crate::{math::Point, Colour, World};
 #[enum_dispatch(Light)]
 pub trait Lightable {
     #[must_use]
-    fn position(&self) -> Point;
+    fn positions<R: Rng>(&self, rng: &mut R) -> Vec<Point>;
 
     #[must_use]
     fn intensity(&self) -> Colour;

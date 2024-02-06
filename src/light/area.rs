@@ -16,7 +16,6 @@ pub struct Area {
     v_steps: u32,
     samples: u32,
     intensity: Colour,
-    position: Point,
 }
 
 impl Area {
@@ -43,9 +42,6 @@ impl Area {
             v_steps,
             samples: u_steps * v_steps,
             intensity,
-            position: corner
-                + u * u_steps_float / 2.0
-                + v * v_steps_float / 2.0,
         }
     }
 
@@ -59,8 +55,16 @@ impl Area {
 
 impl Lightable for Area {
     #[must_use]
-    fn position(&self) -> Point {
-        self.position
+    fn positions<R: Rng>(&self, rng: &mut R) -> Vec<Point> {
+        let mut positions = Vec::new();
+
+        for v in 0..self.v_steps {
+            for u in 0..self.u_steps {
+                positions.push(self.point_on_light(u, v, rng));
+            }
+        }
+
+        positions
     }
 
     #[must_use]
@@ -77,13 +81,9 @@ impl Lightable for Area {
     ) -> f64 {
         let mut intensity = 0.0;
 
-        for v in 0..self.v_steps {
-            for u in 0..self.u_steps {
-                let position = self.point_on_light(u, v, rng);
-
-                if !world.is_shadowed(&position, point) {
-                    intensity += 1.0;
-                }
+        for position in self.positions(rng) {
+            if !world.is_shadowed(&position, point) {
+                intensity += 1.0;
             }
         }
 
@@ -131,10 +131,7 @@ mod tests {
         assert_eq!(a.v_steps, 2);
         assert_eq!(a.samples, 8);
         assert_approx_eq!(a.intensity, Colour::white());
-        assert_approx_eq!(a.position, Point::new(1.0, 0.0, 0.5));
-
         assert_approx_eq!(a.intensity(), Colour::white());
-        assert_approx_eq!(a.position(), Point::new(1.0, 0.0, 0.5));
     }
 
     #[test]

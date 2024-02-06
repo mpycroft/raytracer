@@ -16,8 +16,8 @@ pub struct Point {
 }
 
 impl Lightable for Point {
-    fn position(&self) -> math::Point {
-        self.position
+    fn positions<R: Rng>(&self, _rng: &mut R) -> Vec<math::Point> {
+        vec![self.position]
     }
 
     fn intensity(&self) -> Colour {
