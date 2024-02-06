@@ -80,12 +80,13 @@ pub struct SceneData {
 }
 
 impl SceneData {
-    pub fn render<O: Write>(
+    pub fn render<O: Write, R: Rng>(
         &self,
         depth: u32,
         single_threaded: bool,
         output: &mut Output<O>,
+        rng: &mut R,
     ) -> Result<Canvas> {
-        self.camera.render(&self.world, depth, single_threaded, output)
+        self.camera.render(&self.world, depth, single_threaded, output, rng)
     }
 }

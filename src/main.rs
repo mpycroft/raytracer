@@ -10,8 +10,8 @@ use std::{
 use anyhow::Result;
 use clap::Parser;
 use image::{ImageBuffer, Rgb};
-use rand::{random, SeedableRng};
-use rand_xoshiro::Xoroshiro128PlusPlus;
+use rand::prelude::*;
+use rand_xoshiro::Xoshiro256PlusPlus;
 use raytracer::Output;
 
 use crate::arguments::Arguments;
@@ -29,7 +29,7 @@ fn main() -> Result<()> {
 
     writeln!(output, "Using RNG seed {seed}")?;
 
-    let mut rng = Xoroshiro128PlusPlus::seed_from_u64(seed);
+    let mut rng = Xoshiro256PlusPlus::seed_from_u64(seed);
 
     let scene_text = format!("Generating scene '{}'...", arguments.scene);
     writeln!(output, "{scene_text}")?;
@@ -37,12 +37,14 @@ fn main() -> Result<()> {
     let scene = arguments.scene.generate(&arguments, &mut rng);
 
     output.clear_last_line()?;
+
     writeln!(output, "{scene_text}done")?;
 
     let canvas = scene.render(
         arguments.depth,
         arguments.single_threaded,
         &mut output,
+        &mut rng,
     )?;
 
     writeln!(output, "Writing to file {}", arguments.out)?;

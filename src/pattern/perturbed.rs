@@ -1,5 +1,5 @@
 use libnoise::{Generator, Simplex, Source};
-use rand::Rng;
+use rand::prelude::*;
 
 use super::{Pattern, PatternAt};
 use crate::{
@@ -44,7 +44,6 @@ impl_approx_eq!(&Perturbed { scale, ref pattern });
 
 #[cfg(test)]
 mod tests {
-    use rand::SeedableRng;
     use rand_xoshiro::Xoroshiro128PlusPlus;
 
     use super::*;

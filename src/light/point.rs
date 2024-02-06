@@ -1,4 +1,5 @@
 use derive_new::new;
+use rand::prelude::*;
 
 use super::Lightable;
 use crate::{
@@ -23,7 +24,12 @@ impl Lightable for Point {
         self.intensity
     }
 
-    fn intensity_at(&self, point: &math::Point, world: &World) -> f64 {
+    fn intensity_at<R: Rng>(
+        &self,
+        point: &math::Point,
+        world: &World,
+        _rng: &mut R,
+    ) -> f64 {
         if world.is_shadowed(&self.position, point) {
             0.0
         } else {
@@ -36,6 +42,8 @@ impl_approx_eq!(Point { position, intensity });
 
 #[cfg(test)]
 mod tests {
+    use rand_xoshiro::Xoshiro256PlusPlus;
+
     use super::*;
     use crate::{math::float::*, world::test_world};
 
@@ -53,31 +61,36 @@ mod tests {
 
         let l = &w.lights[0];
 
+        let mut r = Xoshiro256PlusPlus::seed_from_u64(0);
+
         assert_approx_eq!(
-            l.intensity_at(&math::Point::new(0.0, 1.000_01, 0.0), &w),
+            l.intensity_at(&math::Point::new(0.0, 1.000_01, 0.0), &w, &mut r),
             1.0
         );
         assert_approx_eq!(
-            l.intensity_at(&math::Point::new(-1.000_01, 0.0, 0.0), &w),
+            l.intensity_at(&math::Point::new(-1.000_01, 0.0, 0.0), &w, &mut r),
             1.0
         );
         assert_approx_eq!(
-            l.intensity_at(&math::Point::new(0.0, 0.0, -1.000_01), &w),
+            l.intensity_at(&math::Point::new(0.0, 0.0, -1.000_01), &w, &mut r),
             1.0
         );
         assert_approx_eq!(
-            l.intensity_at(&math::Point::new(0.0, 0.0, 1.000_01), &w),
+            l.intensity_at(&math::Point::new(0.0, 0.0, 1.000_01), &w, &mut r),
             0.0
         );
         assert_approx_eq!(
-            l.intensity_at(&math::Point::new(1.000_01, 0.0, 0.0), &w),
+            l.intensity_at(&math::Point::new(1.000_01, 0.0, 0.0), &w, &mut r),
             0.0
         );
         assert_approx_eq!(
-            l.intensity_at(&math::Point::new(0.0, -1.000_01, 0.0), &w),
+            l.intensity_at(&math::Point::new(0.0, -1.000_01, 0.0), &w, &mut r),
             0.0
         );
-        assert_approx_eq!(l.intensity_at(&math::Point::origin(), &w), 0.0);
+        assert_approx_eq!(
+            l.intensity_at(&math::Point::origin(), &w, &mut r),
+            0.0
+        );
     }
 
     #[test]

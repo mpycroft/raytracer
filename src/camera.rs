@@ -1,11 +1,13 @@
-use std::{io::Write, time::Instant};
+use std::{io::Write, iter::from_fn, time::Instant};
 
 use anyhow::Result;
 use indicatif::{
     HumanCount, HumanDuration, ParallelProgressIterator, ProgressBar,
     ProgressDrawTarget, ProgressFinish, ProgressIterator, ProgressStyle,
 };
-use rayon::iter::{IntoParallelIterator, ParallelIterator};
+use rand::prelude::*;
+use rand_xoshiro::Xoshiro256PlusPlus;
+use rayon::prelude::*;
 
 use crate::{
     math::{Angle, Point, Ray, Transformable, Transformation},
@@ -71,12 +73,13 @@ impl Camera {
     ///
     /// This function will return an error if it can't convert values or there
     /// is an error writing output.
-    pub fn render<O: Write>(
+    pub fn render<O: Write, R: Rng>(
         &self,
         world: &World,
         depth: u32,
         single_threaded: bool,
         output: &mut Output<O>,
+        rng: &mut R,
     ) -> Result<Canvas> {
         writeln!(
             output,
@@ -108,30 +111,39 @@ Elapsed: {elapsed}, remaining: {eta}, rows/sec: {per_sec}",
 
         let started = Instant::now();
 
-        let iterator_fn = |y| {
+        let iterator_fn = |(y, seed)| {
+            let mut rng = Xoshiro256PlusPlus::seed_from_u64(seed);
+
             let mut colours = Vec::with_capacity(self.vertical_size as usize);
 
             for x in 0..self.horizontal_size {
                 let ray = self.ray_for_pixel(x, y);
 
-                let colour = world.colour_at(&ray, depth);
+                let colour = world.colour_at(&ray, depth, &mut rng);
 
                 colours.push(colour);
             }
+
             colours
         };
+
+        let seeds: Vec<u64> = from_fn(|| Some(rng.gen()))
+            .take(self.vertical_size as usize)
+            .collect();
 
         // Either does not appear to play nicely with rayon / std iterators so
         // there appears no nice way to simplify this check despite it looking
         // like it should be trivial to do so.
         let pixels: Vec<Colour> = if single_threaded {
             (0..self.vertical_size)
+                .zip(seeds)
                 .progress_with(bar)
                 .flat_map(iterator_fn)
                 .collect()
         } else {
             (0..self.vertical_size)
                 .into_par_iter()
+                .zip(seeds)
                 .progress_with(bar)
                 .flat_map(iterator_fn)
                 .collect()

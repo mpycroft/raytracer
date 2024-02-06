@@ -1,3 +1,5 @@
+use rand::prelude::*;
+
 use crate::{
     intersection::{Computations, List},
     light::Lightable,
@@ -28,13 +30,18 @@ impl World {
     }
 
     #[must_use]
-    pub fn colour_at(&self, ray: &Ray, depth: u32) -> Colour {
+    pub fn colour_at<R: Rng>(
+        &self,
+        ray: &Ray,
+        depth: u32,
+        rng: &mut R,
+    ) -> Colour {
         if let Some(intersections) = self.intersect(ray) {
             if let Some(hit) = intersections.hit() {
                 let computations =
                     hit.prepare_computations(ray, &intersections);
 
-                return self.shade_hit(&computations, depth);
+                return self.shade_hit(&computations, depth, rng);
             }
         }
 
@@ -42,7 +49,12 @@ impl World {
     }
 
     #[must_use]
-    pub fn shade_hit(&self, computations: &Computations, depth: u32) -> Colour {
+    pub fn shade_hit<R: Rng>(
+        &self,
+        computations: &Computations,
+        depth: u32,
+        rng: &mut R,
+    ) -> Colour {
         let mut surface = Colour::black();
 
         for light in &self.lights {
@@ -52,13 +64,13 @@ impl World {
                 &computations.over_point,
                 &computations.eye,
                 &computations.normal,
-                light.intensity_at(&computations.over_point, self),
+                light.intensity_at(&computations.over_point, self, rng),
             );
         }
 
-        let reflected = self.reflected_colour(computations, depth);
+        let reflected = self.reflected_colour(computations, depth, rng);
 
-        let refracted = self.refracted_colour(computations, depth);
+        let refracted = self.refracted_colour(computations, depth, rng);
 
         if computations.object.material().reflective > 0.0
             && computations.object.material().transparency > 0.0
@@ -113,10 +125,11 @@ impl World {
     }
 
     #[must_use]
-    pub fn reflected_colour(
+    pub fn reflected_colour<R: Rng>(
         &self,
         computations: &Computations,
         depth: u32,
+        rng: &mut R,
     ) -> Colour {
         if depth == 0 || computations.object.material().reflective <= 0.0 {
             return Colour::black();
@@ -125,16 +138,17 @@ impl World {
         let reflect_ray =
             Ray::new(computations.over_point, computations.reflect);
 
-        let colour = self.colour_at(&reflect_ray, depth - 1);
+        let colour = self.colour_at(&reflect_ray, depth - 1, rng);
 
         colour * computations.object.material().reflective
     }
 
     #[must_use]
-    pub fn refracted_colour(
+    pub fn refracted_colour<R: Rng>(
         &self,
         computations: &Computations,
         depth: u32,
+        rng: &mut R,
     ) -> Colour {
         if depth == 0
             || approx_eq!(computations.object.material().transparency, 0.0)
@@ -157,7 +171,7 @@ impl World {
 
         let refracted_ray = Ray::new(computations.under_point, direction);
 
-        self.colour_at(&refracted_ray, depth - 1)
+        self.colour_at(&refracted_ray, depth - 1, rng)
             * computations.object.material().transparency
     }
 }
@@ -204,6 +218,8 @@ pub fn test_world() -> World {
 mod tests {
     use std::f64::consts::{FRAC_PI_2, SQRT_2};
 
+    use rand_xoshiro::Xoshiro256PlusPlus;
+
     use super::*;
     use crate::{
         intersection::Intersection,
@@ -211,6 +227,10 @@ mod tests {
         object::Updatable,
         Camera, Material, Output, Pattern,
     };
+
+    fn rng() -> impl Rng {
+        Xoshiro256PlusPlus::seed_from_u64(0)
+    }
 
     #[test]
     fn creating_a_world() {
@@ -256,7 +276,7 @@ mod tests {
 
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::y_axis());
 
-        assert_approx_eq!(w.colour_at(&r, 5), Colour::black());
+        assert_approx_eq!(w.colour_at(&r, 5, &mut rng()), Colour::black());
     }
 
     #[test]
@@ -266,7 +286,7 @@ mod tests {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
 
         assert_approx_eq!(
-            w.colour_at(&r, 2),
+            w.colour_at(&r, 2, &mut rng()),
             Colour::new(0.380_66, 0.475_83, 0.285_5),
             epsilon = 0.000_01
         );
@@ -289,7 +309,7 @@ mod tests {
 
         let r = Ray::new(Point::new(0.0, 0.0, 0.75), -Vector::z_axis());
 
-        assert_approx_eq!(w.colour_at(&r, 1), Colour::white());
+        assert_approx_eq!(w.colour_at(&r, 1, &mut rng()), Colour::white());
     }
 
     #[test]
@@ -313,7 +333,7 @@ mod tests {
 
         let r = Ray::new(Point::origin(), Vector::y_axis());
 
-        let _ = w.colour_at(&r, 5);
+        let _ = w.colour_at(&r, 5, &mut rng());
     }
 
     #[test]
@@ -327,7 +347,7 @@ mod tests {
         let c = i.prepare_computations(&r, &List::from(i));
 
         assert_approx_eq!(
-            w.shade_hit(&c, 5),
+            w.shade_hit(&c, 5, &mut rng()),
             Colour::new(0.380_66, 0.475_83, 0.285_5),
             epsilon = 0.000_01
         );
@@ -350,7 +370,7 @@ mod tests {
         let c = i.prepare_computations(&r, &List::from(i));
 
         assert_approx_eq!(
-            w.shade_hit(&c, 5),
+            w.shade_hit(&c, 5, &mut rng()),
             Colour::new(0.904_98, 0.904_98, 0.904_98),
             epsilon = 0.000_01
         );
@@ -379,7 +399,10 @@ mod tests {
 
         let c = i.prepare_computations(&r, &List::from(i));
 
-        assert_approx_eq!(w.shade_hit(&c, 3), Colour::new(0.1, 0.1, 0.1));
+        assert_approx_eq!(
+            w.shade_hit(&c, 3, &mut rng()),
+            Colour::new(0.1, 0.1, 0.1)
+        );
     }
 
     #[test]
@@ -405,7 +428,7 @@ mod tests {
         let c = i.prepare_computations(&r, &List::from(i));
 
         assert_approx_eq!(
-            w.shade_hit(&c, 5),
+            w.shade_hit(&c, 5, &mut rng()),
             Colour::new(0.876_76, 0.924_34, 0.829_17),
             epsilon = 0.000_01
         );
@@ -455,7 +478,7 @@ mod tests {
         let c = l[0].prepare_computations(&r, &l);
 
         assert_approx_eq!(
-            w.shade_hit(&c, 5),
+            w.shade_hit(&c, 5, &mut rng()),
             Colour::new(0.936_43, 0.686_43, 0.686_43),
             epsilon = 0.000_01
         );
@@ -506,7 +529,7 @@ mod tests {
         let c = l[0].prepare_computations(&r, &l);
 
         assert_approx_eq!(
-            w.shade_hit(&c, 5),
+            w.shade_hit(&c, 5, &mut rng()),
             Colour::new(0.933_92, 0.696_43, 0.692_43),
             epsilon = 0.000_01
         );
@@ -542,7 +565,7 @@ mod tests {
         );
 
         let mut o = Output::<Vec<_>>::new_sink();
-        let i = c.render(&w, 5, true, &mut o).unwrap();
+        let i = c.render(&w, 5, true, &mut o, &mut rng()).unwrap();
 
         assert_approx_eq!(
             i.get_pixel(5, 5),
@@ -566,7 +589,7 @@ mod tests {
         );
 
         let mut o = Output::<Vec<_>>::new_sink();
-        let i = c.render(&w, 5, false, &mut o).unwrap();
+        let i = c.render(&w, 5, false, &mut o, &mut rng()).unwrap();
 
         assert_approx_eq!(
             i.get_pixel(5, 5),
@@ -631,7 +654,10 @@ mod tests {
 
         let c = i.prepare_computations(&r, &List::from(i));
 
-        assert_approx_eq!(w.reflected_colour(&c, 3), Colour::black());
+        assert_approx_eq!(
+            w.reflected_colour(&c, 3, &mut rng()),
+            Colour::black()
+        );
     }
 
     #[test]
@@ -657,7 +683,7 @@ mod tests {
         let c = i.prepare_computations(&r, &List::from(i));
 
         assert_approx_eq!(
-            w.reflected_colour(&c, 4),
+            w.reflected_colour(&c, 4, &mut rng()),
             Colour::new(0.190_33, 0.237_91, 0.142_74),
             epsilon = 0.000_01
         );
@@ -685,7 +711,10 @@ mod tests {
 
         let c = i.prepare_computations(&r, &List::from(i));
 
-        assert_approx_eq!(w.reflected_colour(&c, 0), Colour::black());
+        assert_approx_eq!(
+            w.reflected_colour(&c, 0, &mut rng()),
+            Colour::black()
+        );
     }
 
     #[test]
@@ -704,7 +733,10 @@ mod tests {
 
         let c = l[0].prepare_computations(&r, &l);
 
-        assert_approx_eq!(w.refracted_colour(&c, 5), Colour::black());
+        assert_approx_eq!(
+            w.refracted_colour(&c, 5, &mut rng()),
+            Colour::black()
+        );
     }
 
     #[test]
@@ -733,7 +765,10 @@ mod tests {
 
         let c = l[0].prepare_computations(&r, &l);
 
-        assert_approx_eq!(w.refracted_colour(&c, 0), Colour::black());
+        assert_approx_eq!(
+            w.refracted_colour(&c, 0, &mut rng()),
+            Colour::black()
+        );
     }
 
     #[test]
@@ -764,7 +799,10 @@ mod tests {
 
         let c = l[1].prepare_computations(&r, &l);
 
-        assert_approx_eq!(w.refracted_colour(&c, 5), Colour::black());
+        assert_approx_eq!(
+            w.refracted_colour(&c, 5, &mut rng()),
+            Colour::black()
+        );
     }
 
     #[test]
@@ -799,7 +837,7 @@ mod tests {
         let c = l[2].prepare_computations(&r, &l);
 
         assert_approx_eq!(
-            w.refracted_colour(&c, 5),
+            w.refracted_colour(&c, 5, &mut rng()),
             Colour::new(0.0, 0.998_88, 0.047_22),
             epsilon = 0.000_01
         );

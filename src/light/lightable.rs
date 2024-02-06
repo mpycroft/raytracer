@@ -1,4 +1,5 @@
 use enum_dispatch::enum_dispatch;
+use rand::Rng;
 
 use crate::{math::Point, Colour, World};
 
@@ -12,5 +13,10 @@ pub trait Lightable {
     fn intensity(&self) -> Colour;
 
     #[must_use]
-    fn intensity_at(&self, point: &Point, world: &World) -> f64;
+    fn intensity_at<R: Rng>(
+        &self,
+        point: &Point,
+        world: &World,
+        rng: &mut R,
+    ) -> f64;
 }

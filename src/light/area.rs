@@ -1,4 +1,5 @@
 use float_cmp::{ApproxEq, F64Margin};
+use rand::prelude::*;
 
 use super::Lightable;
 use crate::{
@@ -68,7 +69,12 @@ impl Lightable for Area {
     }
 
     #[must_use]
-    fn intensity_at(&self, point: &Point, world: &World) -> f64 {
+    fn intensity_at<R: Rng>(
+        &self,
+        point: &Point,
+        world: &World,
+        _rng: &mut R,
+    ) -> f64 {
         let mut intensity = 0.0;
 
         for v in 0..self.v_steps {
@@ -102,6 +108,8 @@ impl ApproxEq for Area {
 
 #[cfg(test)]
 mod tests {
+    use rand_xoshiro::Xoshiro256PlusPlus;
+
     use super::*;
     use crate::{math::float::*, world::test_world};
 
@@ -160,17 +168,28 @@ mod tests {
             Colour::white(),
         );
 
-        assert_approx_eq!(a.intensity_at(&Point::new(0.0, 0.0, 2.0), &w), 0.0);
+        let mut r = Xoshiro256PlusPlus::seed_from_u64(0);
+
         assert_approx_eq!(
-            a.intensity_at(&Point::new(1.0, -1.0, 2.0), &w),
+            a.intensity_at(&Point::new(0.0, 0.0, 2.0), &w, &mut r),
+            0.0
+        );
+        assert_approx_eq!(
+            a.intensity_at(&Point::new(1.0, -1.0, 2.0), &w, &mut r),
             0.25
         );
-        assert_approx_eq!(a.intensity_at(&Point::new(1.5, 0.0, 2.0), &w), 0.5);
         assert_approx_eq!(
-            a.intensity_at(&Point::new(1.25, 1.25, 3.0), &w),
+            a.intensity_at(&Point::new(1.5, 0.0, 2.0), &w, &mut r),
+            0.5
+        );
+        assert_approx_eq!(
+            a.intensity_at(&Point::new(1.25, 1.25, 3.0), &w, &mut r),
             0.75
         );
-        assert_approx_eq!(a.intensity_at(&Point::new(0.0, 0.0, -2.0), &w), 1.0);
+        assert_approx_eq!(
+            a.intensity_at(&Point::new(0.0, 0.0, -2.0), &w, &mut r),
+            1.0
+        );
     }
 
     #[test]
