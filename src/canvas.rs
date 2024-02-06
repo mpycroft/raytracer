@@ -5,15 +5,19 @@ use super::Colour;
 /// on if we want to use parallel rendering or different image formats.
 #[derive(Clone, Debug)]
 pub struct Canvas {
-    width: usize,
-    height: usize,
+    width: u32,
+    height: u32,
     pixels: Vec<Colour>,
 }
 
 impl Canvas {
     #[must_use]
-    pub fn new(width: usize, height: usize) -> Self {
-        Self { width, height, pixels: vec![Colour::black(); width * height] }
+    pub fn new(width: u32, height: u32) -> Self {
+        Self {
+            width,
+            height,
+            pixels: vec![Colour::black(); (width * height) as usize],
+        }
     }
 
     /// Create a `Canvas` from an existing Vec<Colour>.
@@ -23,10 +27,10 @@ impl Canvas {
     /// Function will panic if passed a vector that contains less values than
     /// is required by the width and height.
     #[must_use]
-    pub fn with_vec(width: usize, height: usize, pixels: Vec<Colour>) -> Self {
+    pub fn with_vec(width: u32, height: u32, pixels: Vec<Colour>) -> Self {
         assert_eq!(
             pixels.len(),
-            width * height,
+            (width * height) as usize,
             "Pixels must contain width * height values."
         );
 
@@ -34,12 +38,12 @@ impl Canvas {
     }
 
     pub fn write_pixel(&mut self, x: usize, y: usize, colour: &Colour) {
-        self.pixels[y * self.width + x] = *colour;
+        self.pixels[y * self.width as usize + x] = *colour;
     }
 
     #[must_use]
     pub fn get_pixel(&self, x: usize, y: usize) -> Colour {
-        self.pixels[y * self.width + x]
+        self.pixels[y * self.width as usize + x]
     }
 
     #[must_use]
@@ -177,7 +181,11 @@ P3
 
         for x in 0..w {
             for y in 0..h {
-                c.write_pixel(x, y, &Colour::new(1.0, 0.8, 0.6));
+                c.write_pixel(
+                    x as usize,
+                    y as usize,
+                    &Colour::new(1.0, 0.8, 0.6),
+                );
             }
         }
 

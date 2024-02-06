@@ -13,7 +13,7 @@ mod test;
 mod util;
 
 use paste::paste;
-use rand::Rng;
+use rand::prelude::*;
 use typed_builder::{Optional, TypedBuilder};
 
 #[cfg(test)]
@@ -118,7 +118,6 @@ impl<T: Optional<Transformation>> PatternBuilder<(T, (Kind,))> {
 
 #[cfg(test)]
 mod tests {
-    use rand::SeedableRng;
     use rand_xoshiro::Xoroshiro128PlusPlus;
 
     use super::*;

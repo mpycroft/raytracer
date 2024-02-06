@@ -15,7 +15,7 @@ pub struct ObjParser {
     pub vertices: Vec<Point>,
     pub normals: Vec<Vector>,
     pub groups: Vec<Object>,
-    pub ignored: usize,
+    pub ignored: u32,
 }
 
 impl ObjParser {
@@ -157,14 +157,14 @@ Found {} items.",
         let get_vertex_normal = |item: &str| -> Result<(usize, Option<usize>)> {
             let values = Self::split_face(item)?;
 
-            let vertex = values[0].parse::<usize>()? - 1;
+            let vertex = values[0].parse::<u32>()? - 1;
             let normal = if values.len() == 1 {
                 None
             } else {
-                Some(values[2].parse::<usize>()? - 1)
+                Some((values[2].parse::<u32>()? - 1) as usize)
             };
 
-            Ok((vertex, normal))
+            Ok((vertex as usize, normal))
         };
 
         let (vertex1, normal1) = get_vertex_normal(items[1])?;

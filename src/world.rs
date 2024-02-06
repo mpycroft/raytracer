@@ -1,15 +1,18 @@
+use rand::prelude::*;
+
 use crate::{
     intersection::{Computations, List},
+    light::Lightable,
     math::{float::approx_eq, Point, Ray},
-    Colour, Object, PointLight,
+    Colour, Light, Object,
 };
 
 /// A `World` represents all the objects and light sources in a given scene that
 /// we are rendering.
 #[derive(Clone, Debug)]
 pub struct World {
-    objects: Vec<Object>,
-    lights: Vec<PointLight>,
+    pub(super) objects: Vec<Object>,
+    pub(super) lights: Vec<Light>,
 }
 
 impl World {
@@ -22,18 +25,23 @@ impl World {
         self.objects.push(object);
     }
 
-    pub fn add_light(&mut self, light: PointLight) {
+    pub fn add_light(&mut self, light: Light) {
         self.lights.push(light);
     }
 
     #[must_use]
-    pub fn colour_at(&self, ray: &Ray, depth: u32) -> Colour {
+    pub fn colour_at<R: Rng>(
+        &self,
+        ray: &Ray,
+        depth: u32,
+        rng: &mut R,
+    ) -> Colour {
         if let Some(intersections) = self.intersect(ray) {
             if let Some(hit) = intersections.hit() {
                 let computations =
                     hit.prepare_computations(ray, &intersections);
 
-                return self.shade_hit(&computations, depth);
+                return self.shade_hit(&computations, depth, rng);
             }
         }
 
@@ -41,7 +49,12 @@ impl World {
     }
 
     #[must_use]
-    pub fn shade_hit(&self, computations: &Computations, depth: u32) -> Colour {
+    pub fn shade_hit<R: Rng>(
+        &self,
+        computations: &Computations,
+        depth: u32,
+        rng: &mut R,
+    ) -> Colour {
         let mut surface = Colour::black();
 
         for light in &self.lights {
@@ -51,13 +64,14 @@ impl World {
                 &computations.over_point,
                 &computations.eye,
                 &computations.normal,
-                self.is_shadowed(light, &computations.over_point),
+                light.intensity_at(&computations.over_point, self, rng),
+                rng,
             );
         }
 
-        let reflected = self.reflected_colour(computations, depth);
+        let reflected = self.reflected_colour(computations, depth, rng);
 
-        let refracted = self.refracted_colour(computations, depth);
+        let refracted = self.refracted_colour(computations, depth, rng);
 
         if computations.object.material().reflective > 0.0
             && computations.object.material().transparency > 0.0
@@ -92,8 +106,8 @@ impl World {
     }
 
     #[must_use]
-    pub fn is_shadowed(&self, light: &PointLight, point: &Point) -> bool {
-        let vector = light.position - *point;
+    pub fn is_shadowed(&self, light_position: &Point, point: &Point) -> bool {
+        let vector = *light_position - *point;
 
         let distance = vector.magnitude();
         let direction = vector.normalise();
@@ -112,10 +126,11 @@ impl World {
     }
 
     #[must_use]
-    pub fn reflected_colour(
+    pub fn reflected_colour<R: Rng>(
         &self,
         computations: &Computations,
         depth: u32,
+        rng: &mut R,
     ) -> Colour {
         if depth == 0 || computations.object.material().reflective <= 0.0 {
             return Colour::black();
@@ -124,16 +139,17 @@ impl World {
         let reflect_ray =
             Ray::new(computations.over_point, computations.reflect);
 
-        let colour = self.colour_at(&reflect_ray, depth - 1);
+        let colour = self.colour_at(&reflect_ray, depth - 1, rng);
 
         colour * computations.object.material().reflective
     }
 
     #[must_use]
-    pub fn refracted_colour(
+    pub fn refracted_colour<R: Rng>(
         &self,
         computations: &Computations,
         depth: u32,
+        rng: &mut R,
     ) -> Colour {
         if depth == 0
             || approx_eq!(computations.object.material().transparency, 0.0)
@@ -156,7 +172,7 @@ impl World {
 
         let refracted_ray = Ray::new(computations.under_point, direction);
 
-        self.colour_at(&refracted_ray, depth - 1)
+        self.colour_at(&refracted_ray, depth - 1, rng)
             * computations.object.material().transparency
     }
 }
@@ -168,8 +184,42 @@ impl Default for World {
 }
 
 #[cfg(test)]
+#[allow(clippy::module_name_repetitions)]
+pub fn test_world() -> World {
+    use crate::{math::Transformation, Material};
+
+    let mut w = World::new();
+
+    w.add_object(
+        Object::sphere_builder()
+            .material(
+                Material::builder()
+                    .pattern(Colour::new(0.8, 1.0, 0.6).into())
+                    .diffuse(0.7)
+                    .specular(0.2)
+                    .build(),
+            )
+            .build(),
+    );
+    w.add_object(
+        Object::sphere_builder()
+            .transformation(Transformation::new().scale(0.5, 0.5, 0.5))
+            .build(),
+    );
+
+    w.add_light(Light::new_point(
+        Point::new(-10.0, 10.0, -10.0),
+        Colour::white(),
+    ));
+
+    w
+}
+
+#[cfg(test)]
 mod tests {
     use std::f64::consts::{FRAC_PI_2, SQRT_2};
+
+    use rand_xoshiro::Xoshiro256PlusPlus;
 
     use super::*;
     use crate::{
@@ -179,32 +229,8 @@ mod tests {
         Camera, Material, Output, Pattern,
     };
 
-    fn test_world() -> World {
-        let mut w = World::new();
-
-        w.add_object(
-            Object::sphere_builder()
-                .material(
-                    Material::builder()
-                        .pattern(Colour::new(0.8, 1.0, 0.6).into())
-                        .diffuse(0.7)
-                        .specular(0.2)
-                        .build(),
-                )
-                .build(),
-        );
-        w.add_object(
-            Object::sphere_builder()
-                .transformation(Transformation::new().scale(0.5, 0.5, 0.5))
-                .build(),
-        );
-
-        w.add_light(PointLight::new(
-            Point::new(-10.0, 10.0, -10.0),
-            Colour::white(),
-        ));
-
-        w
+    fn rng() -> impl Rng {
+        Xoshiro256PlusPlus::seed_from_u64(0)
     }
 
     #[test]
@@ -234,8 +260,8 @@ mod tests {
         assert_approx_eq!(w.objects[0], &o1);
         assert_approx_eq!(w.objects[1], &o2);
 
-        let l1 = PointLight::new(Point::origin(), Colour::blue());
-        let l2 = PointLight::new(Point::new(1.0, 2.0, 3.0), Colour::green());
+        let l1 = Light::new_point(Point::origin(), Colour::blue());
+        let l2 = Light::new_point(Point::new(1.0, 2.0, 3.0), Colour::green());
 
         w.add_light(l1);
         w.add_light(l2);
@@ -251,7 +277,7 @@ mod tests {
 
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::y_axis());
 
-        assert_approx_eq!(w.colour_at(&r, 5), Colour::black());
+        assert_approx_eq!(w.colour_at(&r, 5, &mut rng()), Colour::black());
     }
 
     #[test]
@@ -261,7 +287,7 @@ mod tests {
         let r = Ray::new(Point::new(0.0, 0.0, -5.0), Vector::z_axis());
 
         assert_approx_eq!(
-            w.colour_at(&r, 2),
+            w.colour_at(&r, 2, &mut rng()),
             Colour::new(0.380_66, 0.475_83, 0.285_5),
             epsilon = 0.000_01
         );
@@ -284,14 +310,14 @@ mod tests {
 
         let r = Ray::new(Point::new(0.0, 0.0, 0.75), -Vector::z_axis());
 
-        assert_approx_eq!(w.colour_at(&r, 1), Colour::white());
+        assert_approx_eq!(w.colour_at(&r, 1, &mut rng()), Colour::white());
     }
 
     #[test]
     fn colour_at_with_mutually_reflective_surfaces() {
         let mut w = World::new();
 
-        w.add_light(PointLight::new(Point::origin(), Colour::white()));
+        w.add_light(Light::new_point(Point::origin(), Colour::white()));
 
         w.add_object(
             Object::plane_builder()
@@ -308,7 +334,7 @@ mod tests {
 
         let r = Ray::new(Point::origin(), Vector::y_axis());
 
-        let _ = w.colour_at(&r, 5);
+        let _ = w.colour_at(&r, 5, &mut rng());
     }
 
     #[test]
@@ -322,7 +348,7 @@ mod tests {
         let c = i.prepare_computations(&r, &List::from(i));
 
         assert_approx_eq!(
-            w.shade_hit(&c, 5),
+            w.shade_hit(&c, 5, &mut rng()),
             Colour::new(0.380_66, 0.475_83, 0.285_5),
             epsilon = 0.000_01
         );
@@ -333,7 +359,7 @@ mod tests {
         let mut w = test_world();
 
         w.lights.clear();
-        w.add_light(PointLight::new(
+        w.add_light(Light::new_point(
             Point::new(0.0, 0.25, 0.0),
             Colour::white(),
         ));
@@ -345,7 +371,7 @@ mod tests {
         let c = i.prepare_computations(&r, &List::from(i));
 
         assert_approx_eq!(
-            w.shade_hit(&c, 5),
+            w.shade_hit(&c, 5, &mut rng()),
             Colour::new(0.904_98, 0.904_98, 0.904_98),
             epsilon = 0.000_01
         );
@@ -356,7 +382,7 @@ mod tests {
     fn colour_when_intersection_is_in_shadow() {
         let mut w = World::new();
 
-        w.add_light(PointLight::new(
+        w.add_light(Light::new_point(
             Point::new(0.0, 0.0, -10.0),
             Colour::white(),
         ));
@@ -374,7 +400,10 @@ mod tests {
 
         let c = i.prepare_computations(&r, &List::from(i));
 
-        assert_approx_eq!(w.shade_hit(&c, 3), Colour::new(0.1, 0.1, 0.1));
+        assert_approx_eq!(
+            w.shade_hit(&c, 3, &mut rng()),
+            Colour::new(0.1, 0.1, 0.1)
+        );
     }
 
     #[test]
@@ -400,7 +429,7 @@ mod tests {
         let c = i.prepare_computations(&r, &List::from(i));
 
         assert_approx_eq!(
-            w.shade_hit(&c, 5),
+            w.shade_hit(&c, 5, &mut rng()),
             Colour::new(0.876_76, 0.924_34, 0.829_17),
             epsilon = 0.000_01
         );
@@ -450,7 +479,7 @@ mod tests {
         let c = l[0].prepare_computations(&r, &l);
 
         assert_approx_eq!(
-            w.shade_hit(&c, 5),
+            w.shade_hit(&c, 5, &mut rng()),
             Colour::new(0.936_43, 0.686_43, 0.686_43),
             epsilon = 0.000_01
         );
@@ -501,7 +530,7 @@ mod tests {
         let c = l[0].prepare_computations(&r, &l);
 
         assert_approx_eq!(
-            w.shade_hit(&c, 5),
+            w.shade_hit(&c, 5, &mut rng()),
             Colour::new(0.933_92, 0.696_43, 0.692_43),
             epsilon = 0.000_01
         );
@@ -537,7 +566,7 @@ mod tests {
         );
 
         let mut o = Output::<Vec<_>>::new_sink();
-        let i = c.render(&w, 5, true, &mut o).unwrap();
+        let i = c.render(&w, 5, true, &mut o, &mut rng()).unwrap();
 
         assert_approx_eq!(
             i.get_pixel(5, 5),
@@ -561,7 +590,7 @@ mod tests {
         );
 
         let mut o = Output::<Vec<_>>::new_sink();
-        let i = c.render(&w, 5, false, &mut o).unwrap();
+        let i = c.render(&w, 5, false, &mut o, &mut rng()).unwrap();
 
         assert_approx_eq!(
             i.get_pixel(5, 5),
@@ -571,17 +600,15 @@ mod tests {
     }
 
     #[test]
-    fn no_shadow_when_nothing_is_collinear_with_point_and_light() {
+    fn is_shadow_tests_for_occlusion_between_two_point() {
         let w = test_world();
 
-        assert!(!w.is_shadowed(&w.lights[0], &Point::new(0.0, 10.0, 0.0)));
-    }
+        let l = Point::new(-10.0, -10.0, -10.0);
 
-    #[test]
-    fn shadow_when_an_object_is_between_point_and_light() {
-        let w = test_world();
-
-        assert!(w.is_shadowed(&w.lights[0], &Point::new(10.0, -10.0, 10.0)));
+        assert!(!w.is_shadowed(&l, &Point::new(-10.0, -10.0, 10.0)));
+        assert!(w.is_shadowed(&l, &Point::new(10.0, 10.0, 10.0)));
+        assert!(!w.is_shadowed(&l, &Point::new(-20.0, -20.0, -20.0)));
+        assert!(!w.is_shadowed(&l, &Point::new(-5.0, -5.0, 5.0)));
     }
 
     #[test]
@@ -599,21 +626,10 @@ mod tests {
             .casts_shadow(false)
             .build();
 
-        assert!(!w.is_shadowed(&w.lights[0], &Point::new(10.0, -10.0, 10.0)));
-    }
-
-    #[test]
-    fn no_shadow_when_an_object_is_behind_the_light() {
-        let w = test_world();
-
-        assert!(!w.is_shadowed(&w.lights[0], &Point::new(-20.0, 20.0, -20.0)));
-    }
-
-    #[test]
-    fn no_shadow_when_an_object_is_behind_the_point() {
-        let w = test_world();
-
-        assert!(!w.is_shadowed(&w.lights[0], &Point::new(-2.0, 2.0, -2.0)));
+        assert!(!w.is_shadowed(
+            &w.lights[0].positions(&mut rng())[0],
+            &Point::new(10.0, -10.0, 10.0)
+        ));
     }
 
     #[test]
@@ -639,7 +655,10 @@ mod tests {
 
         let c = i.prepare_computations(&r, &List::from(i));
 
-        assert_approx_eq!(w.reflected_colour(&c, 3), Colour::black());
+        assert_approx_eq!(
+            w.reflected_colour(&c, 3, &mut rng()),
+            Colour::black()
+        );
     }
 
     #[test]
@@ -665,7 +684,7 @@ mod tests {
         let c = i.prepare_computations(&r, &List::from(i));
 
         assert_approx_eq!(
-            w.reflected_colour(&c, 4),
+            w.reflected_colour(&c, 4, &mut rng()),
             Colour::new(0.190_33, 0.237_91, 0.142_74),
             epsilon = 0.000_01
         );
@@ -693,7 +712,10 @@ mod tests {
 
         let c = i.prepare_computations(&r, &List::from(i));
 
-        assert_approx_eq!(w.reflected_colour(&c, 0), Colour::black());
+        assert_approx_eq!(
+            w.reflected_colour(&c, 0, &mut rng()),
+            Colour::black()
+        );
     }
 
     #[test]
@@ -712,7 +734,10 @@ mod tests {
 
         let c = l[0].prepare_computations(&r, &l);
 
-        assert_approx_eq!(w.refracted_colour(&c, 5), Colour::black());
+        assert_approx_eq!(
+            w.refracted_colour(&c, 5, &mut rng()),
+            Colour::black()
+        );
     }
 
     #[test]
@@ -741,7 +766,10 @@ mod tests {
 
         let c = l[0].prepare_computations(&r, &l);
 
-        assert_approx_eq!(w.refracted_colour(&c, 0), Colour::black());
+        assert_approx_eq!(
+            w.refracted_colour(&c, 0, &mut rng()),
+            Colour::black()
+        );
     }
 
     #[test]
@@ -772,7 +800,10 @@ mod tests {
 
         let c = l[1].prepare_computations(&r, &l);
 
-        assert_approx_eq!(w.refracted_colour(&c, 5), Colour::black());
+        assert_approx_eq!(
+            w.refracted_colour(&c, 5, &mut rng()),
+            Colour::black()
+        );
     }
 
     #[test]
@@ -807,7 +838,7 @@ mod tests {
         let c = l[2].prepare_computations(&r, &l);
 
         assert_approx_eq!(
-            w.refracted_colour(&c, 5),
+            w.refracted_colour(&c, 5, &mut rng()),
             Colour::new(0.0, 0.998_88, 0.047_22),
             epsilon = 0.000_01
         );

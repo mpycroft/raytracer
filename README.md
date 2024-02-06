@@ -71,8 +71,8 @@ so far.
 
 ## For the future
 
-* Consider making things generic over other float types (f32, arbitrary precision
-  floats, fixed decimals, etc.) and examine performance.
+* ~~Consider making things generic over other float types (f32, arbitrary precision
+  floats, fixed decimals, etc.) and examine performance.~~
 * We may need to revisit our use of 3 element points and vectors if we ever look
   into SIMD style operations where we would actually want x, y, z, w elements
   for speed.
@@ -152,3 +152,10 @@ For the BoundingBox scene running multi threaded:
 A value of 50 was picked arbitrarily, no significant difference is shown for
 values from 1 to a 100 or so, values 200, 500, etc. do start to show less
 improvement however.
+
+### F32 vs F64
+
+There doesn't appear to be any significant difference between using 32 and 64
+bit floats for our use case. Under half a second (for a 15s run) which is well
+within the noise level. This would probably change if we want to look at SIMD
+instructions since generally we pack 4 f32s into a single instruction.

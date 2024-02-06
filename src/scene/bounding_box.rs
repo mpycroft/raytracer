@@ -2,7 +2,7 @@ use std::f64::consts::PI;
 
 use raytracer::{
     math::{Angle, Point, Transformation, Vector},
-    Camera, Colour, Material, Object, PointLight, World,
+    Camera, Colour, Light, Material, Object, World,
 };
 
 use super::SceneData;
@@ -28,19 +28,19 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
 
     let mut world = World::new();
 
-    world.add_light(PointLight::new(
+    world.add_light(Light::new_point(
         Point::new(-10.0, 100.0, -100.0),
         Colour::white(),
     ));
-    world.add_light(PointLight::new(
+    world.add_light(Light::new_point(
         Point::new(0.0, 100.0, 0.0),
         Colour::new(0.1, 0.1, 0.1),
     ));
-    world.add_light(PointLight::new(
+    world.add_light(Light::new_point(
         Point::new(100.0, 10.0, -25.0),
         Colour::new(0.2, 0.2, 0.2),
     ));
-    world.add_light(PointLight::new(
+    world.add_light(Light::new_point(
         Point::new(-100.0, 10.0, -25.0),
         Colour::new(0.2, 0.2, 0.2),
     ));

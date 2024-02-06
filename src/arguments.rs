@@ -24,16 +24,16 @@ pub struct Arguments {
     pub out: String,
 
     /// Which scene to generate.
-    #[arg(short, long, default_value = "bounding-box")]
+    #[arg(short, long, default_value = "area-light")]
     pub scene: Scene,
 
     /// Camera width (in pixels)
     #[arg(long)]
-    pub width: Option<usize>,
+    pub width: Option<u32>,
 
     /// Camera height (in pixels)
     #[arg(long)]
-    pub height: Option<usize>,
+    pub height: Option<u32>,
 
     /// Field of view (in radians)
     #[arg(long, value_parser = parse_fov)]
