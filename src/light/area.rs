@@ -50,10 +50,10 @@ impl Area {
     }
 
     #[must_use]
-    fn point_on_light(&self, u: u32, v: u32) -> Point {
+    fn point_on_light<R: Rng>(&self, u: u32, v: u32, rng: &mut R) -> Point {
         self.corner
-            + self.u * (f64::from(u) + 0.5)
-            + self.v * (f64::from(v) + 0.5)
+            + self.u * (f64::from(u) + rng.gen_range(0.0..=1.0))
+            + self.v * (f64::from(v) + rng.gen_range(0.0..=1.0))
     }
 }
 
@@ -73,13 +73,13 @@ impl Lightable for Area {
         &self,
         point: &Point,
         world: &World,
-        _rng: &mut R,
+        rng: &mut R,
     ) -> f64 {
         let mut intensity = 0.0;
 
         for v in 0..self.v_steps {
             for u in 0..self.u_steps {
-                let position = self.point_on_light(u, v);
+                let position = self.point_on_light(u, v, rng);
 
                 if !world.is_shadowed(&position, point) {
                     intensity += 1.0;
@@ -148,11 +148,33 @@ mod tests {
             Colour::white(),
         );
 
-        assert_approx_eq!(a.point_on_light(0, 0), Point::new(0.25, 0.0, 0.25));
-        assert_approx_eq!(a.point_on_light(1, 0), Point::new(0.75, 0.0, 0.25));
-        assert_approx_eq!(a.point_on_light(0, 1), Point::new(0.25, 0.0, 0.75));
-        assert_approx_eq!(a.point_on_light(2, 0), Point::new(1.25, 0.0, 0.25));
-        assert_approx_eq!(a.point_on_light(3, 1), Point::new(1.75, 0.0, 0.75));
+        let mut r = Xoshiro256PlusPlus::seed_from_u64(0);
+
+        assert_approx_eq!(
+            a.point_on_light(0, 0, &mut r),
+            Point::new(0.162_29, 0.0, 0.191_12),
+            epsilon = 0.000_01
+        );
+        assert_approx_eq!(
+            a.point_on_light(1, 0, &mut r),
+            Point::new(0.679_81, 0.0, 0.005_73),
+            epsilon = 0.000_01
+        );
+        assert_approx_eq!(
+            a.point_on_light(0, 1, &mut r),
+            Point::new(0.247_64, 0.0, 0.510_28),
+            epsilon = 0.000_01
+        );
+        assert_approx_eq!(
+            a.point_on_light(2, 0, &mut r),
+            Point::new(1.428_62, 0.0, 0.42275),
+            epsilon = 0.000_01
+        );
+        assert_approx_eq!(
+            a.point_on_light(3, 1, &mut r),
+            Point::new(1.647_44, 0.0, 0.537_12),
+            epsilon = 0.000_01
+        );
     }
 
     #[test]
@@ -176,7 +198,7 @@ mod tests {
         );
         assert_approx_eq!(
             a.intensity_at(&Point::new(1.0, -1.0, 2.0), &w, &mut r),
-            0.25
+            0.5
         );
         assert_approx_eq!(
             a.intensity_at(&Point::new(1.5, 0.0, 2.0), &w, &mut r),

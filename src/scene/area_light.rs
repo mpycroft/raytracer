@@ -60,9 +60,9 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
     world.add_light(Light::new_area(
         Point::new(-10.0, 5.0, -7.0),
         Vector::new(0.0, 4.0, 0.0),
-        4,
-        Vector::new(0.0, 0.0, 2.0),
-        2,
+        8,
+        Vector::new(0.0, 0.0, 4.0),
+        8,
         Colour::white(),
     ));
 
