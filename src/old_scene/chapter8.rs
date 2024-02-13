@@ -32,7 +32,8 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
         .specular(0.0)
         .build();
 
-    let floor_transformation = Transformation::new().scale(10.0, 0.01, 10.0);
+    let mut floor_transformation =
+        Transformation::new().scale(10.0, 0.01, 10.0);
 
     world.add_object(
         Object::sphere_builder()

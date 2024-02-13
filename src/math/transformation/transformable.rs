@@ -2,10 +2,11 @@ use std::ops::Mul;
 
 use super::{Matrix, Transformation};
 
-/// The `Transformable` trait describes how to apply a `Transformation` to any given
-/// object, implementing this allows us to .apply() a `Transformation` to an object
-/// via this trait. This is really just some syntactic sugar so we always apply
-/// Transform's to objects rather than transform objects with a given Transform.
+/// The `Transformable` trait describes how to apply a `Transformation` to any
+/// given object, implementing this allows us to `.apply()` a `Transformation`
+/// to an object via this trait. This is really just some syntactic sugar so we
+/// always apply Transform's to objects rather than transform objects with a
+/// given Transform.
 pub trait Transformable {
     #[must_use]
     fn apply(&self, transformation: &Transformation) -> Self;

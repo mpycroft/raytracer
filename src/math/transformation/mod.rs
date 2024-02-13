@@ -21,11 +21,11 @@ macro_rules! add_transformation_fn {
     ($name:ident($($arg:ident: $type:ty),+)) => {
         // We don't need to actually use the return value all the time for these
         // functions as they mutate as well.
-        #[must_use]
-        pub fn $name(mut self, $($arg: $type),+) -> Self {
+        #[allow(clippy::return_self_not_must_use)]
+        pub fn $name(&mut self, $($arg: $type),+) -> Self {
             self.0 = Matrix::$name($($arg),+) * self.0;
 
-            self
+            *self
         }
 
     };
@@ -162,11 +162,11 @@ mod tests {
     fn applying_a_transformation() {
         let p = Point::new(1.5, 2.5, 3.5);
 
-        let t = Transformation::new();
+        let mut t = Transformation::new();
         assert_approx_eq!(t.apply(&p), p);
         assert_approx_eq!(p.apply(&t), p);
 
-        let t = t.scale(2.0, 2.0, 2.0);
+        t.scale(2.0, 2.0, 2.0);
 
         assert_approx_eq!(t.apply(&p), Point::new(3.0, 5.0, 7.0));
 

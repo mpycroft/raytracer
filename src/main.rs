@@ -1,5 +1,5 @@
 mod arguments;
-mod scene;
+mod old_scene;
 
 use std::{
     fs::write,

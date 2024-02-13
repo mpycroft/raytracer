@@ -10,6 +10,7 @@ pub mod math;
 mod object;
 mod output;
 mod pattern;
+mod scene;
 mod world;
 
 pub use camera::Camera;

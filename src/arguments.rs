@@ -6,7 +6,7 @@ use clap::{
 use exmex::eval_str;
 use raytracer::math::Angle;
 
-use crate::scene::Scene;
+use crate::old_scene::Scene;
 
 const fn styles() -> Styles {
     Styles::styled()
