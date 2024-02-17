@@ -11,6 +11,7 @@ mod object;
 mod output;
 mod pattern;
 mod scene;
+mod util;
 mod world;
 
 pub use camera::Camera;

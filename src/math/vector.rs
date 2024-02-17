@@ -6,6 +6,7 @@ use derive_more::{
 use derive_new::new;
 
 use super::float::{approx_eq, impl_approx_eq};
+use crate::util::impl_deserialize_tuple;
 
 /// A Vector is a representation of a geometric vector, pointing in a given
 /// direction and with a magnitude.
@@ -80,9 +81,13 @@ impl Mul<Vector> for f64 {
 
 impl_approx_eq!(Vector { x, y, z });
 
+impl_deserialize_tuple!(Vector);
+
 #[cfg(test)]
 mod tests {
     use std::f64::consts::SQRT_2;
+
+    use serde_yaml::from_str;
 
     use super::*;
     use crate::math::float::*;
@@ -257,5 +262,12 @@ mod tests {
         assert_approx_eq!(v1, v2);
 
         assert_approx_ne!(v1, v3);
+    }
+
+    #[test]
+    fn deserialize_vector() {
+        let v: Vector = from_str("[1, -2, 3.7]").unwrap();
+
+        assert_approx_eq!(v, Vector::new(1.0, -2.0, 3.7));
     }
 }

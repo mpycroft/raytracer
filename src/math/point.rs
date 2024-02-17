@@ -3,6 +3,7 @@ use std::ops::{Add, AddAssign, Sub, SubAssign};
 use derive_new::new;
 
 use super::{float::impl_approx_eq, Vector};
+use crate::util::impl_deserialize_tuple;
 
 /// A Point is a representation of a geometric position within the 3 dimensional
 /// scene we are working on.
@@ -70,8 +71,12 @@ impl SubAssign<Vector> for Point {
 
 impl_approx_eq!(Point { x, y, z });
 
+impl_deserialize_tuple!(Point);
+
 #[cfg(test)]
 mod tests {
+    use serde_yaml::from_str;
+
     use super::*;
     use crate::math::float::*;
 
@@ -134,5 +139,12 @@ mod tests {
         assert_approx_eq!(p1, p2);
 
         assert_approx_ne!(p1, p3);
+    }
+
+    #[test]
+    fn deserialize_point() {
+        let p: Point = from_str("[1.0, 0.5, 2]").unwrap();
+
+        assert_approx_eq!(p, Point::new(1.0, 0.5, 2.0));
     }
 }
