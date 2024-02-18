@@ -5,6 +5,7 @@ mod point;
 use enum_dispatch::enum_dispatch;
 use float_cmp::{ApproxEq, F64Margin};
 use rand::Rng;
+use serde::{Deserialize, Deserializer};
 
 use self::area::Area;
 pub use self::lightable::Lightable;
@@ -54,8 +55,49 @@ impl ApproxEq for Light {
     }
 }
 
+impl<'de> Deserialize<'de> for Light {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        pub enum Light {
+            PointLight {
+                at: Point,
+                intensity: Colour,
+            },
+            AreaLight {
+                corner: Point,
+                #[serde(rename = "uvec")]
+                u: Vector,
+                #[serde(rename = "usteps")]
+                u_steps: u32,
+                #[serde(rename = "vvec")]
+                v: Vector,
+                #[serde(rename = "vsteps")]
+                v_steps: u32,
+                intensity: Colour,
+            },
+        }
+
+        let light = Light::deserialize(deserializer)?;
+
+        match light {
+            Light::PointLight { at, intensity } => {
+                Ok(Self::new_point(at, intensity))
+            }
+            Light::AreaLight { corner, u, u_steps, v, v_steps, intensity } => {
+                Ok(Self::new_area(corner, u, u_steps, v, v_steps, intensity))
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use serde_yaml::from_str;
+
     use super::*;
     use crate::math::float::*;
 
@@ -88,5 +130,49 @@ mod tests {
         assert_approx_eq!(l4, l5);
 
         assert_approx_ne!(l4, l1);
+    }
+
+    #[test]
+    fn deserialize_point_light() {
+        let l: Light = from_str(
+            "\
+at: [1, 2, 3]
+intensity: [1, 0.5, 0]",
+        )
+        .unwrap();
+
+        assert_approx_eq!(
+            l,
+            Light::new_point(
+                Point::new(1.0, 2.0, 3.0),
+                Colour::new(1.0, 0.5, 0.0)
+            )
+        );
+    }
+
+    #[test]
+    fn deserialize_area_light() {
+        let l: Light = from_str(
+            "\
+corner: [1, 2, 3]
+uvec: [4, 0, 0]
+usteps: 4
+vvec: [0, 2, 0]
+vsteps: 2
+intensity: [0.5, 0.5, 0.8]",
+        )
+        .unwrap();
+
+        assert_approx_eq!(
+            l,
+            Light::new_area(
+                Point::new(1.0, 2.0, 3.0),
+                Vector::new(4.0, 0.0, 0.0),
+                4,
+                Vector::new(0.0, 2.0, 0.0),
+                2,
+                Colour::new(0.5, 0.5, 0.8)
+            )
+        );
     }
 }

@@ -17,6 +17,7 @@ impl Add {
     pub fn parse(self, data: &mut Data) -> Result<()> {
         match &*self.add {
             "camera" => data.camera = Some(from_value(self.value)?),
+            "light" => data.lights.push(from_value(self.value)?),
             _ => bail!("Unknown add '{self:?}'"),
         }
 
@@ -33,7 +34,7 @@ mod tests {
     use super::*;
     use crate::{
         math::{float::assert_approx_eq, Angle, Point, Transformation, Vector},
-        Camera,
+        Camera, Colour, Light,
     };
 
     #[test]
@@ -66,6 +67,26 @@ up: [0, 1, 0]",
                     &Vector::y_axis()
                 )
             )
+        );
+    }
+
+    #[test]
+    fn parse_light() {
+        let a: Add = from_str(
+            "\
+add: light
+at: [1, 1, 1]
+intensity: [0, 0, 1]",
+        )
+        .unwrap();
+
+        let mut d = Data::new();
+
+        a.parse(&mut d).unwrap();
+
+        assert_approx_eq!(
+            d.lights[0],
+            Light::new_point(Point::new(1.0, 1.0, 1.0), Colour::blue())
         );
     }
 }
