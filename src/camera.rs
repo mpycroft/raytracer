@@ -8,10 +8,12 @@ use indicatif::{
 use rand::prelude::*;
 use rand_xoshiro::Xoshiro256PlusPlus;
 use rayon::prelude::*;
+use serde::{Deserialize, Deserializer};
 
 use crate::{
     math::{
-        float::impl_approx_eq, Angle, Point, Ray, Transformable, Transformation,
+        float::impl_approx_eq, Angle, Point, Ray, Transformable,
+        Transformation, Vector,
     },
     Canvas, Colour, Output, World,
 };
@@ -191,9 +193,44 @@ impl_approx_eq!(Camera {
     pixel_size
 });
 
+impl<'de> Deserialize<'de> for Camera {
+    fn deserialize<D>(
+        deserializer: D,
+    ) -> std::prelude::v1::Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(rename_all = "kebab-case")]
+        pub struct Camera {
+            pub width: u32,
+            pub height: u32,
+            pub field_of_view: Angle,
+            pub from: Point,
+            pub to: Point,
+            pub up: Vector,
+        }
+
+        let camera = Camera::deserialize(deserializer)?;
+
+        Ok(Self::new(
+            camera.width,
+            camera.height,
+            camera.field_of_view,
+            Transformation::view_transformation(
+                &camera.from,
+                &camera.to,
+                &camera.up,
+            ),
+        ))
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::{FRAC_PI_2, FRAC_PI_4, PI, SQRT_2};
+    use std::f64::consts::{FRAC_PI_2, FRAC_PI_3, FRAC_PI_4, PI, SQRT_2};
+
+    use serde_yaml::from_str;
 
     use super::*;
     use crate::math::{float::*, Vector};
@@ -309,5 +346,33 @@ mod tests {
         assert_approx_eq!(c1, c2);
 
         assert_approx_ne!(c1, c3);
+    }
+
+    #[test]
+    fn deserialize_camera() {
+        let c: Camera = from_str(
+            "\
+width: 200
+height: 150
+field-of-view: \"PI / 3\"
+from: [1, 2, 3]
+to: [0, 1.5, 0.0]
+up: [0, 1, 0]",
+        )
+        .unwrap();
+
+        assert_approx_eq!(
+            c,
+            Camera::new(
+                200,
+                150,
+                Angle(FRAC_PI_3),
+                Transformation::view_transformation(
+                    &Point::new(1.0, 2.0, 3.0),
+                    &Point::new(0.0, 1.5, 0.0),
+                    &Vector::y_axis()
+                )
+            )
+        );
     }
 }
