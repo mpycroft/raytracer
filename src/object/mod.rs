@@ -177,8 +177,9 @@ mod tests {
 
     #[test]
     fn create_from_obj_file() {
-        let _ =
-            Object::from_obj_file("obj/test/triangles.obj").unwrap().build();
+        let _ = Object::from_obj_file("src/object/tests/triangles.obj")
+            .unwrap()
+            .build();
     }
 
     #[test]

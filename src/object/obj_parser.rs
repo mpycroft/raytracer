@@ -239,14 +239,14 @@ mod tests {
 
     #[test]
     fn ignoring_unrecognised_lines() {
-        let p = ObjParser::parse("obj/test/gibberish.obj").unwrap();
+        let p = ObjParser::parse("src/object/tests/gibberish.obj").unwrap();
 
         assert_eq!(p.ignored, 4);
     }
 
     #[test]
     fn parsing_vertices() {
-        let p = ObjParser::parse("obj/test/vertices.obj").unwrap();
+        let p = ObjParser::parse("src/object/tests/vertices.obj").unwrap();
 
         assert_eq!(p.vertices.len(), 4);
 
@@ -258,7 +258,7 @@ mod tests {
 
     #[test]
     fn parsing_invalid_vertices() {
-        let p = ObjParser::parse("obj/test/too_many_vertices.obj");
+        let p = ObjParser::parse("src/object/tests/too_many_vertices.obj");
 
         let e = p.unwrap_err();
 
@@ -269,7 +269,7 @@ Expected 'v' followed by 3 space separated numbers for a vertex.
 Found 5 items."
         );
 
-        let p = ObjParser::parse("obj/test/invalid_vertices.obj");
+        let p = ObjParser::parse("src/object/tests/invalid_vertices.obj");
 
         assert!(p.is_err());
 
@@ -280,7 +280,7 @@ Found 5 items."
 
     #[test]
     fn parsing_faces() {
-        let p = ObjParser::parse("obj/test/faces.obj").unwrap();
+        let p = ObjParser::parse("src/object/tests/faces.obj").unwrap();
 
         let Object::Group(g) = &p.groups[0] else { unreachable!() };
         let c = &g.objects;
@@ -312,7 +312,7 @@ Found 5 items."
         expected = "index out of bounds: the len is 2 but the index is 2"
     )]
     fn parsing_invalid_faces() {
-        let p = ObjParser::parse("obj/test/not_enough_faces.obj");
+        let p = ObjParser::parse("src/object/tests/not_enough_faces.obj");
 
         let e = p.unwrap_err();
 
@@ -323,12 +323,12 @@ Expected 'f' followed by at least 3 space separated numbers for a face.
 Found 3 items."
         );
 
-        let _ = ObjParser::parse("obj/test/invalid_faces.obj");
+        let _ = ObjParser::parse("src/object/tests/invalid_faces.obj");
     }
 
     #[test]
     fn triangulating_polygons() {
-        let p = ObjParser::parse("obj/test/triangulating.obj").unwrap();
+        let p = ObjParser::parse("src/object/tests/triangulating.obj").unwrap();
 
         let Object::Group(g) = &p.groups[0] else { unreachable!() };
         let c = &g.objects;
@@ -366,7 +366,7 @@ Found 3 items."
 
     #[test]
     fn triangles_in_groups() {
-        let o = ObjParser::parse("obj/test/triangles.obj")
+        let o = ObjParser::parse("src/object/tests/triangles.obj")
             .unwrap()
             .into_group()
             .build();
@@ -409,7 +409,7 @@ Found 3 items."
 
     #[test]
     fn invalid_groups() {
-        let p = ObjParser::parse("obj/test/invalid_groups.obj");
+        let p = ObjParser::parse("src/object/tests/invalid_groups.obj");
 
         let e = p.unwrap_err();
 
@@ -418,7 +418,7 @@ Found 3 items."
 
     #[test]
     fn parse_vertex_normal() {
-        let p = ObjParser::parse("obj/test/normals.obj").unwrap();
+        let p = ObjParser::parse("src/object/tests/normals.obj").unwrap();
 
         assert_eq!(p.normals.len(), 3);
 
@@ -429,7 +429,7 @@ Found 3 items."
 
     #[test]
     fn parsing_invalid_normals() {
-        let p = ObjParser::parse("obj/test/too_many_normals.obj");
+        let p = ObjParser::parse("src/object/tests/too_many_normals.obj");
 
         let e = p.unwrap_err();
 
@@ -440,7 +440,7 @@ Expected 'vn' followed by 3 space separated numbers for a normal.
 Found 6 items."
         );
 
-        let p = ObjParser::parse("obj/test/invalid_normals.obj");
+        let p = ObjParser::parse("src/object/tests/invalid_normals.obj");
 
         assert!(p.is_err());
 
@@ -452,7 +452,7 @@ Found 6 items."
     #[test]
     #[allow(clippy::many_single_char_names)]
     fn parsing_face_normals() {
-        let p = ObjParser::parse("obj/test/face_normals.obj").unwrap();
+        let p = ObjParser::parse("src/object/tests/face_normals.obj").unwrap();
 
         let Object::Group(g) = &p.groups[0] else { unreachable!() };
         let c = &g.objects;
@@ -478,7 +478,8 @@ Found 6 items."
         expected = "index out of bounds: the len is 2 but the index is 2"
     )]
     fn parsing_invalid_face_normals() {
-        let p = ObjParser::parse("obj/test/inconsistent_face_normals.obj");
+        let p =
+            ObjParser::parse("src/object/tests/inconsistent_face_normals.obj");
 
         let e = p.unwrap_err();
 
@@ -488,7 +489,7 @@ Found 6 items."
 If one vertex normal is specified, all faces must also provide vertex normals."
         );
 
-        let p = ObjParser::parse("obj/test/invalid_face_normals.obj");
+        let p = ObjParser::parse("src/object/tests/invalid_face_normals.obj");
 
         let e = p.unwrap_err();
 
@@ -499,6 +500,7 @@ Expected face values to be either 'num' or 'num//num' or 'num/num/num'
 Found 2///3."
         );
 
-        let _ = ObjParser::parse("obj/test/invalid_index_face_normals.obj");
+        let _ =
+            ObjParser::parse("src/object/tests/invalid_index_face_normals.obj");
     }
 }
