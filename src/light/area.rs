@@ -1,9 +1,8 @@
-use float_cmp::{ApproxEq, F64Margin};
 use rand::prelude::*;
 
 use super::Lightable;
 use crate::{
-    math::{Point, Vector},
+    math::{float::impl_approx_eq, Point, Vector},
     Colour, World,
 };
 
@@ -91,20 +90,7 @@ impl Lightable for Area {
     }
 }
 
-impl ApproxEq for Area {
-    type Margin = F64Margin;
-
-    fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
-        let margin = margin.into();
-
-        self.corner.approx_eq(other.corner, margin)
-            && self.u.approx_eq(other.u, margin)
-            && self.u_steps == other.u_steps
-            && self.v.approx_eq(other.v, margin)
-            && self.v_steps == other.v_steps
-            && self.intensity.approx_eq(other.intensity, margin)
-    }
-}
+impl_approx_eq!(Area { corner, u, eq u_steps, v, eq v_steps, intensity });
 
 #[cfg(test)]
 mod tests {

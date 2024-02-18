@@ -1,12 +1,10 @@
 mod operation;
 
-use float_cmp::{ApproxEq, F64Margin};
-
 pub use self::operation::Operation;
 use super::{Bounded, BoundingBox, Includes, Updatable};
 use crate::{
     intersection::List,
-    math::{Ray, Transformation},
+    math::{float::impl_approx_eq, Ray, Transformation},
     Material, Object,
 };
 
@@ -146,17 +144,7 @@ impl Includes for Csg {
     }
 }
 
-impl ApproxEq for &Csg {
-    type Margin = F64Margin;
-
-    fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
-        let margin = margin.into();
-
-        self.operation == other.operation
-            && self.left.approx_eq(&other.left, margin)
-            && self.right.approx_eq(&other.right, margin)
-    }
-}
+impl_approx_eq!(&Csg { eq operation, ref left, ref right });
 
 #[cfg(test)]
 mod tests {

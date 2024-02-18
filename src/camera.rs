@@ -10,7 +10,9 @@ use rand_xoshiro::Xoshiro256PlusPlus;
 use rayon::prelude::*;
 
 use crate::{
-    math::{Angle, Point, Ray, Transformable, Transformation},
+    math::{
+        float::impl_approx_eq, Angle, Point, Ray, Transformable, Transformation,
+    },
     Canvas, Colour, Output, World,
 };
 
@@ -180,6 +182,15 @@ Elapsed: {elapsed}, remaining: {eta}, rows/sec: {per_sec}",
     }
 }
 
+impl_approx_eq!(Camera {
+    eq horizontal_size,
+    eq vertical_size,
+    field_of_view,
+    half_width,
+    half_height,
+    pixel_size
+});
+
 #[cfg(test)]
 mod tests {
     use std::f64::consts::{FRAC_PI_2, FRAC_PI_4, PI, SQRT_2};
@@ -260,5 +271,43 @@ mod tests {
                 Vector::new(sqrt_2_div_2, 0.0, -sqrt_2_div_2)
             )
         );
+    }
+
+    #[test]
+    fn comparing_cameras() {
+        let c1 = Camera::new(
+            100,
+            80,
+            Angle(FRAC_PI_2),
+            Transformation::view_transformation(
+                &Point::new(1.0, 2.0, 3.0),
+                &Point::origin(),
+                &Vector::y_axis(),
+            ),
+        );
+        let c2 = Camera::new(
+            100,
+            80,
+            Angle(FRAC_PI_2),
+            Transformation::view_transformation(
+                &Point::new(1.0, 2.0, 3.0),
+                &Point::origin(),
+                &Vector::y_axis(),
+            ),
+        );
+        let c3 = Camera::new(
+            100,
+            80,
+            Angle(FRAC_PI_4),
+            Transformation::view_transformation(
+                &Point::new(1.0, 2.0, 3.0),
+                &Point::origin(),
+                &Vector::y_axis(),
+            ),
+        );
+
+        assert_approx_eq!(c1, c2);
+
+        assert_approx_ne!(c1, c3);
     }
 }

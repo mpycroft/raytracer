@@ -1,11 +1,9 @@
 mod matrix;
 mod transformable;
 
-use float_cmp::{ApproxEq, F64Margin};
-
 use self::matrix::Matrix;
 pub use self::transformable::Transformable;
-use super::{Angle, Point, Vector};
+use super::{float::impl_approx_eq, Angle, Point, Vector};
 
 /// A `Transformation` is a wrapper around a 4 dimensional matrix allowing a
 /// more ergonomic use of transformations. Transformations can be chained in an
@@ -90,15 +88,7 @@ impl Default for Transformation {
     }
 }
 
-impl ApproxEq for Transformation {
-    type Margin = F64Margin;
-
-    fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
-        let margin = margin.into();
-
-        self.0.approx_eq(other.0, margin)
-    }
-}
+impl_approx_eq!(Transformation { newtype });
 
 #[cfg(test)]
 mod tests {

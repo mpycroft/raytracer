@@ -3,8 +3,9 @@ use std::ops::Mul;
 use derive_more::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign,
 };
-use float_cmp::{ApproxEq, F64Margin};
 use paste::paste;
+
+use super::float::impl_approx_eq;
 
 /// An `Angle` represents a geometric angle, it is simply a wrapper around a
 /// value in radians but by using it rather than raw f64's we get type safety
@@ -66,15 +67,7 @@ impl Mul<Angle> for f64 {
     }
 }
 
-impl ApproxEq for Angle {
-    type Margin = F64Margin;
-
-    fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
-        let margin = margin.into();
-
-        self.0.approx_eq(other.0, margin)
-    }
-}
+impl_approx_eq!(Angle { newtype });
 
 #[cfg(test)]
 mod tests {

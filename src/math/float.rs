@@ -79,9 +79,10 @@ pub(crate) use assert_approx_ne;
 /// This macro helps build up the comparison expression needed for implementing
 /// the `ApproxEq` trait. It ends up overly complicated because we want to
 /// handle cases where some elements of a struct need to be handled as
-/// references i.e. only have `ApproxEq` implemented for &<struct>.
+/// references i.e. only have `ApproxEq` implemented for &<struct>, or for items
+/// that must be directly compared with ==, or for newtypes.
 ///
-/// We use a TT muncher and accumulator pattern to do this since this gets
+/// We use a tt muncher and accumulator pattern to do this since this gets
 /// tricky to do otherwise since every return from a macro needs to be a valid
 /// expression / statement / etc. We also need to pass in self, other and margin
 /// each time. In addition we must duplicate the first and general case to
@@ -91,48 +92,46 @@ macro_rules! _impl_approx_eq_helper {
     ($self:ident, $other:ident, $margin:ident; ($cmp:expr); ()) => {
         $cmp
     };
-    // The first case; we have an empty expression and at least one identifier.
+    // We only have a newtype to deal with.
     (
         $self:ident, $other:ident, $margin:ident;
-        (); ($id:ident $(,$($rest:tt)*)?)
+        (); (newtype)
     ) => {
-        crate::math::float::_impl_approx_eq_helper!(
-            $self, $other, $margin;
-            ($self.$id.approx_eq($other.$id, $margin)); ($($($rest)*)?)
-        )
+        $self.0.approx_eq($other.0, $margin)
     };
-    // The first case; we have an empty expression and at least one identifier
-    // which needs to be treated as a reference (&).
+    // The general case; we possibly have part of an expression and at least one
+    // identifier left.
     (
         $self:ident, $other:ident, $margin:ident;
-        (); (ref $id:ident $(,$($rest:tt)*)?)
+        ($($cmp:expr)?); ($id:ident $(,$($rest:tt)*)?)
     ) => {
         crate::math::float::_impl_approx_eq_helper!(
             $self, $other, $margin;
-            ($self.$id.approx_eq(&$other.$id, $margin)); ($($($rest)*)?)
-        )
-    };
-    // The general case; we have part of an expression and at least one
-    // identifier.
-    (
-        $self:ident, $other:ident, $margin:ident;
-        ($cmp:expr); ($id:ident $(,$($rest:tt)*)?)
-    ) => {
-        crate::math::float::_impl_approx_eq_helper!(
-            $self, $other, $margin;
-            ($cmp && $self.$id.approx_eq($other.$id, $margin));
+            ($($cmp &&)? $self.$id.approx_eq($other.$id, $margin));
             ($($($rest)*)?)
         )
     };
-    // The general case; we have part of an expression and at least one
-    // identifier which needs to be treated as a reference (&).
+    // The general case; we possibly have part of an expression and at least one
+    // identifier left which needs to be treated as a reference (&).
     (
         $self:ident, $other:ident, $margin:ident;
-        ($cmp:expr); (ref $id:ident $(,$($rest:tt)*)?)
+        ($($cmp:expr)?); (ref $id:ident $(,$($rest:tt)*)?)
     ) => {
         crate::math::float::_impl_approx_eq_helper!(
             $self, $other, $margin;
-            ($cmp && $self.$id.approx_eq(&$other.$id, $margin));
+            ($($cmp &&)? $self.$id.approx_eq(&$other.$id, $margin));
+            ($($($rest)*)?)
+        )
+    };
+    // The general case; we possibly have part of an expression and at least one
+    // identifier left which needs to be treated as a direct comparison.
+    (
+        $self:ident, $other:ident, $margin:ident;
+        ($($cmp:expr)?); (eq $id:ident $(,$($rest:tt)*)?)
+    ) => {
+        crate::math::float::_impl_approx_eq_helper!(
+            $self, $other, $margin;
+            ($($cmp &&)? $self.$id == $other.$id);
             ($($($rest)*)?)
         )
     };
