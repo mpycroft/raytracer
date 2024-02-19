@@ -1,0 +1,10 @@
+- add: camera
+  width: 200
+  height: 200
+  field-of-view: "PI / 3"
+  from: [2, 3, -5]
+  to: [2, 1.5, 0]
+  up: [0, 1, 0]
+- add: light
+  at: [-10, 10, -10]
+  intensity: [1, 1, 1]

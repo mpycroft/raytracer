@@ -22,4 +22,5 @@ pub use material::Material;
 pub use object::{Object, Operation};
 pub use output::Output;
 pub use pattern::Pattern;
+pub use scene::Scene;
 pub use world::World;
