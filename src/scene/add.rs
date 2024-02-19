@@ -16,7 +16,13 @@ pub struct Add {
 impl Add {
     pub fn parse(self, data: &mut Data) -> Result<()> {
         match &*self.add {
-            "camera" => data.camera = Some(from_value(self.value)?),
+            "camera" => {
+                if data.camera.is_some() {
+                    bail!("Only one camera can be added")
+                }
+
+                data.camera = Some(from_value(self.value)?);
+            }
             "light" => data.lights.push(from_value(self.value)?),
             _ => bail!("Unknown add '{self:?}'"),
         }
@@ -53,7 +59,7 @@ up: [0, 1, 0]",
 
         let mut d = Data::new();
 
-        a.parse(&mut d).unwrap();
+        a.clone().parse(&mut d).unwrap();
 
         assert_approx_eq!(
             d.camera.unwrap(),
@@ -67,6 +73,11 @@ up: [0, 1, 0]",
                     &Vector::y_axis()
                 )
             )
+        );
+
+        assert_eq!(
+            a.parse(&mut d).unwrap_err().to_string(),
+            "Only one camera can be added"
         );
     }
 

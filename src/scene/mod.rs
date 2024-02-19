@@ -1,10 +1,12 @@
 mod add;
 mod define;
+mod list;
 
 use std::collections::HashMap;
 
 use serde_yaml::Value;
 
+use self::{add::Add, define::Define};
 use crate::{Camera, Light};
 
 /// The `Data` struct holds the information for the scene as we parse it.
