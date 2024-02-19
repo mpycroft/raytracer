@@ -34,6 +34,16 @@ impl TransformationList {
 
         Ok(TransformationList(final_transformations))
     }
+
+    pub fn combine(lhs: Value, rhs: Value) -> Result<Value> {
+        let mut transformations: Self = from_value(lhs)?;
+
+        let rhs: Self = from_value(rhs)?;
+
+        transformations.0.extend(rhs.0);
+
+        Ok(to_value(transformations)?)
+    }
 }
 
 #[cfg(test)]

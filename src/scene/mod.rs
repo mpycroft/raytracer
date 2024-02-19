@@ -9,7 +9,7 @@ use std::{collections::HashMap, fs::File, path::Path};
 
 use anyhow::Result;
 use derive_new::new;
-use serde_yaml::{from_reader, Value};
+use serde_yaml::from_reader;
 
 use self::{
     add::Add, define::Define, list::List, material::Material,
@@ -20,7 +20,7 @@ use crate::{Camera, Light, Object, World};
 /// The `Data` struct holds the information for the scene as we parse it.
 #[derive(Clone, Debug)]
 struct Data {
-    shapes: HashMap<String, Value>,
+    shapes: HashMap<String, Add>,
     materials: HashMap<String, Material>,
     transformations: HashMap<String, TransformationList>,
     camera: Option<Camera>,

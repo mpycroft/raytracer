@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use anyhow::{bail, Result};
 use serde::Deserialize;
-use serde_yaml::{from_value, to_value, Value};
+use serde_yaml::{from_value, Value};
 
-use super::{Data, Material, TransformationList};
+use super::{Add, Data, Material, TransformationList};
 
 /// The `Define` struct holds the deserialized data of a definition that can be
 /// referenced later on.
@@ -32,44 +32,28 @@ impl Define {
             {
                 bail!(err("Transformations"));
             }
-        } else if let Ok(hash_map) =
-            from_value::<HashMap<String, Value>>(self.value.clone())
+        } else if let Ok(add) = from_value::<Add>(self.value.clone()) {
+            if data.shapes.insert(self.define, add).is_some() {
+                bail!(err("Shape"));
+            };
+        } else if from_value::<HashMap<String, Value>>(self.value.clone())
+            .is_ok()
         {
-            if hash_map.contains_key("add") {
-                if data.shapes.insert(self.define, self.value).is_some() {
-                    bail!(err("Shape"));
-                };
-            } else {
-                let material = if let Some(extend) = self.extend {
-                    if let Some(define) = data.materials.get(&extend) {
-                        let material =
-                            from_value::<HashMap<String, Value>>(self.value)?;
-
-                        let value = match define {
-                            Material::Name(_) => unreachable!(),
-                            Material::Data(data) => data,
-                        };
-                        let mut define = from_value::<HashMap<String, Value>>(
-                            value.clone(),
-                        )?;
-
-                        define.extend(material);
-
-                        to_value(define)?
-                    } else {
-                        bail!("Attempt to extend material '{extend}' which was not defined")
-                    }
+            let material = if let Some(extend) = self.extend {
+                if let Some(define) = data.materials.get(&extend) {
+                    define.clone().update(self.value)?
                 } else {
-                    self.value
-                };
-
-                if data
-                    .materials
-                    .insert(self.define, Material::Data(material))
-                    .is_some()
-                {
-                    bail!(err("Material"));
+                    bail!(
+                        "\
+Attempt to extend material '{extend}' which was not defined"
+                    )
                 }
+            } else {
+                Material::Data(self.value)
+            };
+
+            if data.materials.insert(self.define, material).is_some() {
+                bail!(err("Material"));
             }
         } else {
             bail!("Unable to parse define '{}'", self.define)

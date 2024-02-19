@@ -127,7 +127,7 @@ impl<'de> Deserialize<'de> for Material {
         let default = Self::default();
 
         Ok(Self::builder()
-            .pattern(material.colour.unwrap_or(Colour::white()).into())
+            .pattern(material.colour.unwrap_or_else(Colour::white).into())
             .ambient(material.ambient.unwrap_or(default.ambient))
             .diffuse(material.diffuse.unwrap_or(default.diffuse))
             .specular(material.specular.unwrap_or(default.specular))

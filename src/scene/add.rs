@@ -1,36 +1,20 @@
 use anyhow::{bail, Result};
-use paste::paste;
 use serde::Deserialize;
 use serde_yaml::{from_value, Value};
 
-use super::{
-    shapes::{Cone, Cube, Cylinder, Plane, Sphere},
-    Data,
-};
+use super::{shapes::parse_shape, Data};
 
 /// The `Add` struct holds the deserialized data from an element in the Yaml
 /// scene file.
 #[derive(Clone, Debug, Deserialize)]
 pub struct Add {
-    add: String,
+    pub add: String,
     #[serde(flatten)]
-    value: Value,
+    pub value: Value,
 }
 
 impl Add {
     pub fn parse(self, data: &mut Data) -> Result<()> {
-        macro_rules! map_to_object {
-            ($name:literal) => {{
-                paste! {
-                    let object = from_value::<[<$name:camel>]>(
-                        self.value
-                    )?.parse(data)?;
-
-                    data.objects.push(object);
-                }
-            }};
-        }
-
         match &*self.add {
             "camera" => {
                 if data.camera.is_some() {
@@ -40,12 +24,7 @@ impl Add {
                 data.camera = Some(from_value(self.value)?);
             }
             "light" => data.lights.push(from_value(self.value)?),
-            "cone" => map_to_object!("cone"),
-            "cube" => map_to_object!("cube"),
-            "cylinder" => map_to_object!("cylinder"),
-            "plane" => map_to_object!("plane"),
-            "sphere" => map_to_object!("sphere"),
-            _ => bail!("Unknown add '{self:?}'"),
+            _ => data.objects.push(parse_shape(&self.add, self.value, data)?),
         }
 
         Ok(())
@@ -127,7 +106,7 @@ intensity: [0, 0, 1]",
     #[test]
     fn parse_cone() {
         let a: Add = from_str(
-            "
+            "\
 add: cone
 max: 1.0
 min: -1",
@@ -149,7 +128,7 @@ min: -1",
     #[test]
     fn parse_cube() {
         let a: Add = from_str(
-            "
+            "\
 add: cube
 material:
     reflective: 0.8",
@@ -202,7 +181,7 @@ material:
     #[test]
     fn parse_sphere() {
         let a: Add = from_str(
-            "
+            "\
 add: sphere
 transform:
     - [scale, 2, 2, 2]",
@@ -220,6 +199,55 @@ transform:
             &Object::sphere_builder()
                 .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
                 .build()
+        );
+    }
+
+    #[test]
+    fn parse_defined_shape() {
+        let a: Add = from_str(
+            "\
+add: foo
+transform:
+    - [scale, 2, 2, 2]
+material: bar",
+        )
+        .unwrap();
+
+        let mut d = Data::new();
+        d.shapes.insert(
+            String::from("foo"),
+            from_str(
+                "\
+add: sphere
+transform:
+    - [translate, 1, 1, 1]",
+            )
+            .unwrap(),
+        );
+        d.materials
+            .insert(String::from("bar"), from_str("diffuse: 0.3").unwrap());
+
+        a.parse(&mut d).unwrap();
+
+        assert_eq!(d.objects.len(), 1);
+
+        assert_approx_eq!(
+            d.objects[0],
+            &Object::sphere_builder()
+                .transformation(
+                    Transformation::new()
+                        .translate(1.0, 1.0, 1.0)
+                        .scale(2.0, 2.0, 2.0)
+                )
+                .material(Material::builder().diffuse(0.3).build())
+                .build()
+        );
+
+        let a: Add = from_str("add: bar").unwrap();
+
+        assert_eq!(
+            a.parse(&mut d).unwrap_err().to_string(),
+            "Reference to shape 'bar' that was not defined"
         );
     }
 }

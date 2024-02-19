@@ -1,6 +1,8 @@
+use std::collections::HashMap;
+
 use anyhow::{bail, Result};
 use serde::Deserialize;
-use serde_yaml::{from_value, Value};
+use serde_yaml::{from_value, to_value, Value};
 
 use super::Data;
 
@@ -26,6 +28,19 @@ impl Material {
             }
             Material::Data(data) => Ok(from_value(data)?),
         }
+    }
+
+    pub fn update(self, other: Value) -> Result<Self> {
+        let mut material = match self {
+            Material::Name(_) => unreachable!(),
+            Material::Data(data) => from_value::<HashMap<String, Value>>(data)?,
+        };
+
+        let other = from_value::<HashMap<String, Value>>(other)?;
+
+        material.extend(other);
+
+        Ok(Material::Data(to_value(material)?))
     }
 }
 
@@ -92,6 +107,41 @@ diffuse: 0.0",
         assert_eq!(
             m.parse(&d).unwrap_err().to_string(),
             "Reference to material 'bar' that was not defined"
+        );
+    }
+
+    #[test]
+    fn update_material() {
+        let m = Material::Data(
+            from_str(
+                "\
+color: [1, 0, 1]
+ambient: 0.4",
+            )
+            .unwrap(),
+        );
+
+        let m = m
+            .update(
+                from_str(
+                    "\
+ambient: 0.2
+diffuse: 0.6",
+                )
+                .unwrap(),
+            )
+            .unwrap();
+
+        let d = Data::new();
+
+        let m = m.parse(&d).unwrap();
+        assert_approx_eq!(
+            m,
+            &crate::Material::builder()
+                .pattern(Colour::purple().into())
+                .ambient(0.2)
+                .diffuse(0.6)
+                .build()
         );
     }
 }
