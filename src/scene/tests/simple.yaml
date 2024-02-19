@@ -8,3 +8,4 @@
 - add: light
   at: [-10, 10, -10]
   intensity: [1, 1, 1]
+- add: cube

@@ -112,7 +112,7 @@ impl<'de> Deserialize<'de> for Material {
         #[derive(Deserialize)]
         struct Material {
             #[serde(rename = "color")]
-            colour: Colour,
+            colour: Option<Colour>,
             ambient: Option<f64>,
             diffuse: Option<f64>,
             specular: Option<f64>,
@@ -127,7 +127,7 @@ impl<'de> Deserialize<'de> for Material {
         let default = Self::default();
 
         Ok(Self::builder()
-            .pattern(material.colour.into())
+            .pattern(material.colour.unwrap_or(Colour::white()).into())
             .ambient(material.ambient.unwrap_or(default.ambient))
             .diffuse(material.diffuse.unwrap_or(default.diffuse))
             .specular(material.specular.unwrap_or(default.specular))

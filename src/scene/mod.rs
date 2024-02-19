@@ -2,6 +2,7 @@ mod add;
 mod define;
 mod list;
 mod material;
+mod shapes;
 mod transformations;
 
 use std::{collections::HashMap, fs::File, path::Path};
@@ -14,7 +15,7 @@ use self::{
     add::Add, define::Define, list::List, material::Material,
     transformations::TransformationList,
 };
-use crate::{Camera, Light, World};
+use crate::{Camera, Light, Object, World};
 
 /// The `Data` struct holds the information for the scene as we parse it.
 #[derive(Clone, Debug)]
@@ -24,6 +25,7 @@ struct Data {
     transformations: HashMap<String, TransformationList>,
     camera: Option<Camera>,
     lights: Vec<Light>,
+    objects: Vec<Object>,
 }
 
 impl Data {
@@ -34,6 +36,7 @@ impl Data {
             transformations: HashMap::new(),
             camera: None,
             lights: Vec::new(),
+            objects: Vec::new(),
         }
     }
 }

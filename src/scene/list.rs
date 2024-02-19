@@ -28,6 +28,8 @@ impl List {
             bail!("A camera must be defined")
         } else if data.lights.is_empty() {
             bail!("No lights were defined")
+        } else if data.objects.is_empty() {
+            bail!("No objects were defined")
         }
 
         Ok(())
@@ -63,7 +65,8 @@ mod tests {
   usteps: 4
   vvec: [0, 2, 0]
   vsteps: 2
-  intensity: [0, 1, 0]",
+  intensity: [0, 1, 0]
+- add: sphere",
         )
         .unwrap();
 
@@ -125,6 +128,41 @@ mod tests {
         assert_eq!(
             l.parse(&mut d).unwrap_err().to_string(),
             "No lights were defined"
+        );
+    }
+
+    #[test]
+    fn parse_no_objects() {
+        let l: List = from_str(
+            "\
+- define: foo
+  value:
+      add: cube
+- add: light
+  at: [-10, 10, -10]
+  intensity: [1, 1, 1]
+- add: camera
+  width: 100
+  height: 100
+  field-of-view: 1.0
+  from: [0, 0, 0]
+  to: [0, 0, 5]
+  up: [1, 0, 0]
+- add: light
+  corner: [10, -10, 10]
+  uvec: [4, 0, 0]
+  usteps: 4
+  vvec: [0, 2, 0]
+  vsteps: 2
+  intensity: [0, 1, 0]",
+        )
+        .unwrap();
+
+        let mut d = Data::new();
+
+        assert_eq!(
+            l.parse(&mut d).unwrap_err().to_string(),
+            "No objects were defined"
         );
     }
 }
