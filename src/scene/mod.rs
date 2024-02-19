@@ -1,6 +1,7 @@
 mod add;
 mod define;
 mod list;
+mod material;
 mod transformations;
 
 use std::{collections::HashMap, fs::File, path::Path};
@@ -10,7 +11,8 @@ use derive_new::new;
 use serde_yaml::{from_reader, Value};
 
 use self::{
-    add::Add, define::Define, list::List, transformations::TransformationList,
+    add::Add, define::Define, list::List, material::Material,
+    transformations::TransformationList,
 };
 use crate::{Camera, Light, World};
 
@@ -18,7 +20,7 @@ use crate::{Camera, Light, World};
 #[derive(Clone, Debug)]
 struct Data {
     shapes: HashMap<String, Value>,
-    materials: HashMap<String, Value>,
+    materials: HashMap<String, Material>,
     transformations: HashMap<String, TransformationList>,
     camera: Option<Camera>,
     lights: Vec<Light>,
