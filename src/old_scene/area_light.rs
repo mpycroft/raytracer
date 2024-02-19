@@ -20,9 +20,9 @@ pub fn generate_scene(arguments: &Arguments) -> SceneData {
         vertical_size,
         field_of_view,
         Transformation::view_transformation(
-            &Point::new(-3.0, 1.0, 2.5),
-            &Point::new(0.0, 0.5, 0.0),
-            &Vector::y_axis(),
+            Point::new(-3.0, 1.0, 2.5),
+            Point::new(0.0, 0.5, 0.0),
+            Vector::y_axis(),
         ),
     );
 

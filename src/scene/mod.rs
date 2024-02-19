@@ -1,6 +1,7 @@
 mod add;
 mod define;
 mod list;
+mod transformations;
 
 use std::{collections::HashMap, fs::File, path::Path};
 
@@ -8,7 +9,9 @@ use anyhow::Result;
 use derive_new::new;
 use serde_yaml::{from_reader, Value};
 
-use self::{add::Add, define::Define, list::List};
+use self::{
+    add::Add, define::Define, list::List, transformations::TransformationList,
+};
 use crate::{Camera, Light, World};
 
 /// The `Data` struct holds the information for the scene as we parse it.
@@ -16,7 +19,7 @@ use crate::{Camera, Light, World};
 struct Data {
     shapes: HashMap<String, Value>,
     materials: HashMap<String, Value>,
-    transformations: HashMap<String, Vec<Value>>,
+    transformations: HashMap<String, TransformationList>,
     camera: Option<Camera>,
     lights: Vec<Light>,
 }
@@ -86,9 +89,9 @@ mod tests {
                 200,
                 Angle(FRAC_PI_3),
                 Transformation::view_transformation(
-                    &Point::new(2.0, 3.0, -5.0),
-                    &Point::new(2.0, 1.5, 0.0),
-                    &Vector::y_axis()
+                    Point::new(2.0, 3.0, -5.0),
+                    Point::new(2.0, 1.5, 0.0),
+                    Vector::y_axis()
                 )
             )
         );

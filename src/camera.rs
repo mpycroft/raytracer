@@ -218,9 +218,9 @@ impl<'de> Deserialize<'de> for Camera {
             camera.height,
             camera.field_of_view,
             Transformation::view_transformation(
-                &camera.from,
-                &camera.to,
-                &camera.up,
+                camera.from,
+                camera.to,
+                camera.up,
             ),
         ))
     }
@@ -317,9 +317,9 @@ mod tests {
             80,
             Angle(FRAC_PI_2),
             Transformation::view_transformation(
-                &Point::new(1.0, 2.0, 3.0),
-                &Point::origin(),
-                &Vector::y_axis(),
+                Point::new(1.0, 2.0, 3.0),
+                Point::origin(),
+                Vector::y_axis(),
             ),
         );
         let c2 = Camera::new(
@@ -327,9 +327,9 @@ mod tests {
             80,
             Angle(FRAC_PI_2),
             Transformation::view_transformation(
-                &Point::new(1.0, 2.0, 3.0),
-                &Point::origin(),
-                &Vector::y_axis(),
+                Point::new(1.0, 2.0, 3.0),
+                Point::origin(),
+                Vector::y_axis(),
             ),
         );
         let c3 = Camera::new(
@@ -337,9 +337,9 @@ mod tests {
             80,
             Angle(FRAC_PI_4),
             Transformation::view_transformation(
-                &Point::new(1.0, 2.0, 3.0),
-                &Point::origin(),
-                &Vector::y_axis(),
+                Point::new(1.0, 2.0, 3.0),
+                Point::origin(),
+                Vector::y_axis(),
             ),
         );
 
@@ -368,9 +368,9 @@ up: [0, 1, 0]",
                 150,
                 Angle(FRAC_PI_3),
                 Transformation::view_transformation(
-                    &Point::new(1.0, 2.0, 3.0),
-                    &Point::new(0.0, 1.5, 0.0),
-                    &Vector::y_axis()
+                    Point::new(1.0, 2.0, 3.0),
+                    Point::new(0.0, 1.5, 0.0),
+                    Vector::y_axis()
                 )
             )
         );

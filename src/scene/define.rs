@@ -4,7 +4,7 @@ use anyhow::{bail, Result};
 use serde::Deserialize;
 use serde_yaml::{from_value, Value};
 
-use super::Data;
+use super::{Data, TransformationList};
 
 /// The `Define` struct holds the deserialized data of a definition that can be
 /// referenced later on.
@@ -21,7 +21,7 @@ impl Define {
         let err = |name| format!("{name} '{self_name}' already defined");
 
         if let Ok(transformations) =
-            from_value::<Vec<Value>>(self.value.clone())
+            from_value::<TransformationList>(self.value.clone())
         {
             if data
                 .transformations
