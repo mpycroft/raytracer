@@ -3,7 +3,7 @@ use typed_builder::{Optional, TypedBuilder};
 use super::{BoundingBox, Group, Object, Updatable};
 use crate::{math::Transformation, Material};
 
-pub type GroupBuilder = HelperBuilder<((), (), (Vec<Object>,))>;
+pub type GroupBuilder = HelperBuilder<((), (), (), (Vec<Object>,))>;
 
 /// This is a helper struct for constructing `Groups`, since we don't actually
 /// store the transformation or material for a group but do use them to "push
@@ -17,6 +17,8 @@ pub struct Helper {
     transformation: Transformation,
     #[builder(default = None, setter(strip_option))]
     material: Option<Material>,
+    #[builder(default = true)]
+    casts_shadow: bool,
     #[builder(mutators(
         pub fn add_object(self, object: Object) {
             self.objects.push(object);
@@ -30,10 +32,11 @@ pub struct Helper {
     objects: Vec<Object>,
 }
 
-impl<T, M> HelperBuilder<(T, M, (Vec<Object>,))>
+impl<T, M, S> HelperBuilder<(T, M, S, (Vec<Object>,))>
 where
     T: Optional<Transformation>,
     M: Optional<Option<Material>>,
+    S: Optional<bool>,
 {
     #[must_use]
     pub fn build(self) -> Object {
@@ -41,6 +44,7 @@ where
 
         let transformation = group_helper.transformation;
         let material = group_helper.material;
+        let casts_shadow = group_helper.casts_shadow;
 
         let mut group = Group {
             objects: group_helper.objects,
@@ -52,6 +56,8 @@ where
         if let Some(material) = material {
             group.replace_material(&material);
         }
+
+        group.update_casts_shadow(casts_shadow);
 
         group.into()
     }

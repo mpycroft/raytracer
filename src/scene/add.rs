@@ -166,6 +166,58 @@ material:
     }
 
     #[test]
+    fn parse_group() {
+        let a: Add = from_str(
+            "\
+add: group
+children:
+    - add: cube
+      material:
+          color: [0, 1, 0]
+    - add: sphere
+      transform:
+          - [translate, 2, 2, 2]
+material:
+    color: [1, 0, 0]
+transform:
+    - [scale, 0.5, 0.5, 0.5]
+shadow: false",
+        )
+        .unwrap();
+
+        let mut d = Data::new();
+
+        a.parse(&mut d).unwrap();
+
+        assert_eq!(d.objects.len(), 1);
+
+        assert_approx_eq!(
+            d.objects[0],
+            &Object::group_builder()
+                .set_objects(vec![
+                    Object::cube_builder()
+                        .material(
+                            Material::builder()
+                                .pattern(Colour::blue().into())
+                                .build()
+                        )
+                        .build(),
+                    Object::sphere_builder()
+                        .transformation(
+                            Transformation::new().translate(2.0, 2.0, 2.0)
+                        )
+                        .build()
+                ])
+                .material(
+                    Material::builder().pattern(Colour::red().into()).build()
+                )
+                .transformation(Transformation::new().scale(0.5, 0.5, 0.5))
+                .casts_shadow(false)
+                .build()
+        );
+    }
+
+    #[test]
     fn parse_plane() {
         let a: Add = from_str("add: plane").unwrap();
 

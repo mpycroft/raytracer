@@ -8,6 +8,6 @@ use crate::{math::Transformation, Material};
 #[enum_dispatch(Object)]
 pub trait Updatable {
     fn update_transformation(&mut self, transformation: &Transformation);
-
     fn replace_material(&mut self, material: &Material);
+    fn update_casts_shadow(&mut self, casts_shadow: bool);
 }

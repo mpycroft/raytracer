@@ -79,6 +79,10 @@ impl Updatable for Shape {
     fn replace_material(&mut self, material: &Material) {
         self.material = material.clone();
     }
+
+    fn update_casts_shadow(&mut self, casts_shadow: bool) {
+        self.casts_shadow = casts_shadow;
+    }
 }
 
 impl Bounded for Shape {
@@ -341,11 +345,15 @@ mod tests {
 
         o.replace_material(&m);
 
+        o.update_casts_shadow(false);
+
         let Object::Shape(s) = o else { unreachable!() };
 
         assert_approx_eq!(s.transformation, t);
 
         assert_approx_eq!(s.material, &m);
+
+        assert!(!s.casts_shadow);
     }
 
     #[test]

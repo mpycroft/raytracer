@@ -124,6 +124,11 @@ impl Updatable for Csg {
         self.left.replace_material(material);
         self.right.replace_material(material);
     }
+
+    fn update_casts_shadow(&mut self, casts_shadow: bool) {
+        self.left.update_casts_shadow(casts_shadow);
+        self.right.update_casts_shadow(casts_shadow);
+    }
 }
 
 impl Bounded for Csg {
@@ -344,8 +349,8 @@ mod tests {
     fn test_updating_a_csg() {
         let mut o = Object::new_csg(
             Operation::Difference,
-            Object::sphere_builder().build(),
-            Object::test_builder().build(),
+            Object::sphere_builder().casts_shadow(false).build(),
+            Object::test_builder().casts_shadow(false).build(),
         );
 
         let t = Transformation::new().scale(2.0, 2.0, 2.0);
@@ -360,6 +365,8 @@ mod tests {
 
         o.replace_material(&m);
 
+        o.update_casts_shadow(true);
+
         let Object::Csg(c) = o else { unreachable!() };
         let Object::Shape(s1) = *c.left else { unreachable!() };
         let Object::Shape(s2) = *c.right else { unreachable!() };
@@ -369,6 +376,9 @@ mod tests {
 
         assert_approx_eq!(s1.material, &m);
         assert_approx_eq!(s2.material, &m);
+
+        assert!(s1.casts_shadow);
+        assert!(s2.casts_shadow);
     }
 
     #[test]

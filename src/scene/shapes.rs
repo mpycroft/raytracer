@@ -8,7 +8,7 @@ use paste::paste;
 use serde::Deserialize;
 use serde_yaml::{from_value, to_value, Value};
 
-use super::{Data, Material, TransformationList};
+use super::{Add, Data, Material, TransformationList};
 use crate::{math::Transformation, Object};
 
 macro_rules! create_shape {
@@ -34,22 +34,35 @@ create_shape!(Cylinder {
     max: Option<f64>,
     closed: Option<bool>
 });
+create_shape!(Group { children: Vec<Add>, divide: Option<u32> });
 create_shape!(Plane {});
 create_shape!(Sphere {});
+
+fn get_transform_material(
+    transformations: Option<TransformationList>,
+    material: Option<Material>,
+    data: &Data,
+) -> Result<(crate::math::Transformation, crate::Material)> {
+    Ok((
+        transformations.map_or_else(
+            || Ok(Transformation::new()),
+            |list| list.parse(data),
+        )?,
+        material.map_or_else(
+            || Ok(crate::Material::default()),
+            |material| material.parse(data),
+        )?,
+    ))
+}
 
 macro_rules! impl_parse {
     ($name:ident { $($arg:ident: $default:expr $(,)?)* }) => {
         impl $name {
             pub fn parse(self, data: &Data) -> Result<Object> {
-                let transformation = self.transform.map_or_else(
-                    || Ok(Transformation::new()),
-                    |list| list.parse(data),
-                )?;
-
-                let material = self.material.map_or_else(
-                    || Ok(crate::Material::default()),
-                    |material| material.parse(data),
-                )?;
+                let (transformation, material) =
+                    get_transform_material(
+                        self.transform, self.material, data
+                    )?;
 
                 paste! {
                     Ok(Object::[<$name:lower _builder>](
@@ -71,6 +84,69 @@ impl_parse!(Cylinder { min: NEG_INFINITY, max: INFINITY, closed: false });
 impl_parse!(Plane {});
 impl_parse!(Sphere {});
 
+impl Group {
+    pub fn parse(self, data: &Data) -> Result<Object> {
+        let update_transform = self.transform.is_some();
+        let update_material = self.material.is_some();
+
+        let (transformation, material) =
+            get_transform_material(self.transform, self.material, data)?;
+
+        let mut objects = Vec::new();
+
+        for object in self.children {
+            objects.push(parse_shape(&object.add, object.value, data)?);
+        }
+
+        /// Due to the typed nature of `TypedBuilder` we cannot easily
+        /// conditionally set values e.g. .transformation but not .material
+        /// because the return types from an if will be different. This is ugly
+        /// but we only need to do it for groups.
+        macro_rules! group_builder {
+            (@shadow $self:ident; ($expr:expr)) => {
+                if let Some(shadow) = $self.shadow {
+                    $expr.casts_shadow(shadow).build()
+                } else {
+                    $expr.build()
+                }
+            };
+            (@material $self:ident; ($expr:expr)) => {
+                if update_material {
+                    group_builder!(
+                        @shadow $self; ($expr.material(material))
+                    )
+                } else {
+                    group_builder!(@shadow $self; ($expr))
+                }
+            };
+            (@transform $self:ident; ($expr:expr)) => {
+                if update_transform {
+                    group_builder!(
+                        @material $self; ($expr.transformation(transformation))
+                    )
+                } else {
+                    group_builder!(@material $self; ($expr))
+                }
+            };
+            ($group:ident, $self:ident) => {
+                group_builder!(@transform $self; ($group))
+            };
+        }
+
+        let group = Object::group_builder().set_objects(objects);
+
+        let group = group_builder!(group, self);
+
+        let group = if let Some(divide) = self.divide {
+            group.divide(divide)
+        } else {
+            group
+        };
+
+        Ok(group)
+    }
+}
+
 pub fn parse_shape(tag: &str, value: Value, data: &Data) -> Result<Object> {
     macro_rules! map_to_object {
         ($name:literal) => {{
@@ -84,6 +160,7 @@ pub fn parse_shape(tag: &str, value: Value, data: &Data) -> Result<Object> {
         "cone" => map_to_object!("cone"),
         "cube" => map_to_object!("cube"),
         "cylinder" => map_to_object!("cylinder"),
+        "group" => map_to_object!("group"),
         "plane" => map_to_object!("plane"),
         "sphere" => map_to_object!("sphere"),
         _ => {
@@ -231,5 +308,63 @@ transform:
 
         let c = c.parse(&d).unwrap();
         assert_approx_eq!(c, &Object::sphere_builder().build());
+    }
+
+    #[test]
+    fn parse_group() {
+        let c: Group = from_str(
+            "\
+children:
+    - add: sphere
+      transform:
+          - [translate, -2, -2, 0]
+      shadow: false
+    - add: sphere
+      transform:
+          - [translate, -2, 2, 0]
+      shadow: true
+    - add: sphere
+      transform:
+          - [scale, 4, 4, 4]
+      material:
+          diffuse: 0
+      shadow: false
+divide: 1",
+        )
+        .unwrap();
+
+        let d = Data::new();
+
+        let c = c.parse(&d).unwrap();
+
+        assert_approx_eq!(
+            c,
+            &Object::group_builder()
+                .set_objects(vec![
+                    Object::sphere_builder()
+                        .transformation(
+                            Transformation::new().translate(-2.0, -2.0, 0.0)
+                        )
+                        .casts_shadow(false)
+                        .build(),
+                    Object::sphere_builder()
+                        .transformation(
+                            Transformation::new().translate(-2.0, 2.0, 0.0)
+                        )
+                        .casts_shadow(true)
+                        .build(),
+                    Object::sphere_builder()
+                        .transformation(
+                            Transformation::new().scale(4.0, 4.0, 4.0)
+                        )
+                        .material(
+                            crate::Material::builder().diffuse(0.0).build()
+                        )
+                        .casts_shadow(false)
+                        .build(),
+                ])
+                .build()
+                .divide(1)
+        );
     }
 }
