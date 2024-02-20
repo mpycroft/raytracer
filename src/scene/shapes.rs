@@ -9,7 +9,7 @@ use serde::Deserialize;
 use serde_yaml::{from_value, to_value, Value};
 
 use super::{Add, Data, Material, TransformationList};
-use crate::{math::Transformation, Object};
+use crate::{math::Transformation, Object, Operation};
 
 macro_rules! create_shape {
     ($name:ident { $($arg:ident: $ty:ty $(,)?)* }) => {
@@ -37,6 +37,20 @@ create_shape!(Cylinder {
 create_shape!(Group { children: Vec<Add>, divide: Option<u32> });
 create_shape!(Plane {});
 create_shape!(Sphere {});
+
+#[derive(Clone, Debug, Deserialize)]
+struct CsgShape {
+    #[serde(rename = "type")]
+    tag: String,
+    #[serde(flatten)]
+    value: Value,
+}
+#[derive(Clone, Debug, Deserialize)]
+struct Csg {
+    operation: Operation,
+    left: CsgShape,
+    right: CsgShape,
+}
 
 fn get_transform_material(
     transformations: Option<TransformationList>,
@@ -147,6 +161,16 @@ impl Group {
     }
 }
 
+impl Csg {
+    pub fn parse(self, data: &Data) -> Result<Object> {
+        Ok(Object::new_csg(
+            self.operation,
+            parse_shape(&self.left.tag, self.left.value, data)?,
+            parse_shape(&self.right.tag, self.right.value, data)?,
+        ))
+    }
+}
+
 pub fn parse_shape(tag: &str, value: Value, data: &Data) -> Result<Object> {
     macro_rules! map_to_object {
         ($name:literal) => {{
@@ -158,6 +182,7 @@ pub fn parse_shape(tag: &str, value: Value, data: &Data) -> Result<Object> {
 
     match tag {
         "cone" => map_to_object!("cone"),
+        "csg" => map_to_object!("csg"),
         "cube" => map_to_object!("cube"),
         "cylinder" => map_to_object!("cylinder"),
         "group" => map_to_object!("group"),
@@ -222,9 +247,9 @@ transform:
 
         let d = Data::new();
 
-        let c = c.parse(&d).unwrap();
+        let o = c.parse(&d).unwrap();
         assert_approx_eq!(
-            c,
+            o,
             &Object::cone_builder(0.0, INFINITY, true)
                 .material(
                     crate::Material::builder()
@@ -242,8 +267,8 @@ transform:
 
         let d = Data::new();
 
-        let c = c.parse(&d).unwrap();
-        assert_approx_eq!(c, &Object::cube_builder().build());
+        let o = c.parse(&d).unwrap();
+        assert_approx_eq!(o, &Object::cube_builder().build());
     }
 
     #[test]
@@ -260,9 +285,9 @@ material: foo",
         d.materials
             .insert(String::from("foo"), from_str("color: [1, 0, 0]").unwrap());
 
-        let c = c.parse(&d).unwrap();
+        let o = c.parse(&d).unwrap();
         assert_approx_eq!(
-            c,
+            o,
             &Object::cylinder_builder(-1.0, 5.0, false)
                 .material(
                     crate::Material::builder()
@@ -274,45 +299,8 @@ material: foo",
     }
 
     #[test]
-    fn parse_plane() {
-        let c: Plane = from_str(
-            "\
-material:
-    ambient: 1.0
-transform:
-    - foo",
-        )
-        .unwrap();
-
-        let mut d = Data::new();
-        d.transformations.insert(
-            String::from("foo"),
-            from_str("- [translate, 1, 1, 1]").unwrap(),
-        );
-
-        let c = c.parse(&d).unwrap();
-        assert_approx_eq!(
-            c,
-            &Object::plane_builder()
-                .material(crate::Material::builder().ambient(1.0).build())
-                .transformation(Transformation::new().translate(1.0, 1.0, 1.0))
-                .build()
-        );
-    }
-
-    #[test]
-    fn parse_sphere() {
-        let c: Sphere = from_str("").unwrap();
-
-        let d = Data::new();
-
-        let c = c.parse(&d).unwrap();
-        assert_approx_eq!(c, &Object::sphere_builder().build());
-    }
-
-    #[test]
     fn parse_group() {
-        let c: Group = from_str(
+        let g: Group = from_str(
             "\
 children:
     - add: sphere
@@ -335,10 +323,10 @@ divide: 1",
 
         let d = Data::new();
 
-        let c = c.parse(&d).unwrap();
+        let o = g.parse(&d).unwrap();
 
         assert_approx_eq!(
-            c,
+            o,
             &Object::group_builder()
                 .set_objects(vec![
                     Object::sphere_builder()
@@ -365,6 +353,81 @@ divide: 1",
                 ])
                 .build()
                 .divide(1)
+        );
+    }
+
+    #[test]
+    fn parse_plane() {
+        let p: Plane = from_str(
+            "\
+material:
+    ambient: 1.0
+transform:
+    - foo",
+        )
+        .unwrap();
+
+        let mut d = Data::new();
+        d.transformations.insert(
+            String::from("foo"),
+            from_str("- [translate, 1, 1, 1]").unwrap(),
+        );
+
+        let o = p.parse(&d).unwrap();
+        assert_approx_eq!(
+            o,
+            &Object::plane_builder()
+                .material(crate::Material::builder().ambient(1.0).build())
+                .transformation(Transformation::new().translate(1.0, 1.0, 1.0))
+                .build()
+        );
+    }
+
+    #[test]
+    fn parse_sphere() {
+        let s: Sphere = from_str("").unwrap();
+
+        let d = Data::new();
+
+        let o = s.parse(&d).unwrap();
+        assert_approx_eq!(o, &Object::sphere_builder().build());
+    }
+
+    #[test]
+    fn parse_csg() {
+        let c: Csg = from_str(
+            "\
+operation: difference
+left:
+    type: cube
+    transform:
+        - [scale, 2, 2, 2]
+right:
+    type: sphere
+    material:
+        color: [1, 0, 1]",
+        )
+        .unwrap();
+
+        let d = Data::new();
+
+        let o = c.parse(&d).unwrap();
+
+        assert_approx_eq!(
+            o,
+            &Object::new_csg(
+                Operation::Difference,
+                Object::cube_builder()
+                    .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
+                    .build(),
+                Object::sphere_builder()
+                    .material(
+                        crate::Material::builder()
+                            .pattern(Colour::purple().into())
+                            .build()
+                    )
+                    .build()
+            )
         );
     }
 }

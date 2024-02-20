@@ -302,4 +302,37 @@ transform:
             "Reference to shape 'bar' that was not defined"
         );
     }
+
+    #[test]
+    fn parse_csg() {
+        let a: Add = from_str(
+            "\
+add: csg
+operation: union
+left:
+    type: sphere
+right:
+    type: cube
+    transform:
+        - [scale, 1.5, 1.5, 1.5]",
+        )
+        .unwrap();
+
+        let mut d = Data::new();
+
+        a.parse(&mut d).unwrap();
+
+        assert_eq!(d.objects.len(), 1);
+
+        assert_approx_eq!(
+            d.objects[0],
+            &Object::new_csg(
+                crate::Operation::Union,
+                Object::sphere_builder().build(),
+                Object::cube_builder()
+                    .transformation(Transformation::new().scale(1.5, 1.5, 1.5))
+                    .build()
+            )
+        );
+    }
 }
