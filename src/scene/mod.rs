@@ -5,17 +5,18 @@ mod material;
 mod shapes;
 mod transformations;
 
-use std::{collections::HashMap, fs::File, path::Path};
+use std::{collections::HashMap, fs::File, io::Write, path::Path};
 
 use anyhow::Result;
 use derive_new::new;
+use rand::Rng;
 use serde_yaml::from_reader;
 
 use self::{
     add::Add, define::Define, list::List, material::Material,
     transformations::TransformationList,
 };
-use crate::{Camera, Light, Object, World};
+use crate::{Camera, Canvas, Light, Object, Output, World};
 
 /// The `Data` struct holds the information for the scene as we parse it.
 #[derive(Clone, Debug)]
@@ -57,25 +58,55 @@ impl Scene {
     ///
     /// Will return error if there are problems reading the file or parsing the
     /// data.
-    pub fn from_file<P: AsRef<Path>>(filename: P) -> Result<Self> {
+    pub fn from_file<P: AsRef<Path>>(filename: P, scale: f64) -> Result<Self> {
         let list: List = from_reader(File::open(filename)?)?;
 
         let mut data = Data::new();
         list.parse(&mut data)?;
 
         // We have already checked that camera is Some when parsing list.
-        let Some(camera) = data.camera else { unreachable!() };
+        let Some(mut camera) = data.camera else { unreachable!() };
+        camera.scale(scale);
 
         let mut world = World::new();
         world.lights = data.lights;
+        world.objects = data.objects;
 
         Ok(Self { camera, world })
+    }
+
+    /// Render a scene to a `Canvas`.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if there are problems writing status messages.
+    pub fn render<O: Write, R: Rng>(
+        &self,
+        depth: u32,
+        single_threaded: bool,
+        output: &mut Output<O>,
+        rng: &mut R,
+    ) -> Result<Canvas> {
+        self.camera.render(&self.world, depth, single_threaded, output, rng)
+    }
+
+    #[must_use]
+    pub fn horizontal_size(&self) -> u32 {
+        self.camera.horizontal_size()
+    }
+
+    #[must_use]
+    pub fn vertical_size(&self) -> u32 {
+        self.camera.vertical_size()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use std::f64::consts::FRAC_PI_3;
+
+    use rand::SeedableRng;
+    use rand_xoshiro::Xoshiro256PlusPlus;
 
     use super::*;
     use crate::{
@@ -85,7 +116,7 @@ mod tests {
 
     #[test]
     fn from_simple_yaml() {
-        let s = Scene::from_file("src/scene/tests/simple.yaml").unwrap();
+        let s = Scene::from_file("src/scene/tests/simple.yaml", 1.0).unwrap();
 
         assert_approx_eq!(
             s.camera,
@@ -106,5 +137,13 @@ mod tests {
             s.world.lights[0],
             Light::new_point(Point::new(-10.0, 10.0, -10.0), Colour::white())
         );
+
+        s.render(
+            5,
+            true,
+            &mut Output::<Vec<_>>::new_sink(),
+            &mut Xoshiro256PlusPlus::seed_from_u64(0),
+        )
+        .unwrap();
     }
 }

@@ -1,5 +1,4 @@
 mod arguments;
-mod old_scene;
 
 use std::{
     fs::write,
@@ -12,7 +11,7 @@ use clap::Parser;
 use image::{ImageBuffer, Rgb};
 use rand::prelude::*;
 use rand_xoshiro::Xoshiro256PlusPlus;
-use raytracer::Output;
+use raytracer::{Output, Scene};
 
 use crate::arguments::Arguments;
 
@@ -34,7 +33,7 @@ fn main() -> Result<()> {
     let scene_text = format!("Generating scene '{}'...", arguments.scene);
     writeln!(output, "{scene_text}")?;
 
-    let scene = arguments.scene.generate(&arguments, &mut rng);
+    let scene = Scene::from_file(arguments.scene, arguments.scale)?;
 
     output.clear_last_line()?;
 
@@ -56,8 +55,8 @@ fn main() -> Result<()> {
     } else {
         #[allow(clippy::cast_possible_truncation)]
         let image = ImageBuffer::from_fn(
-            scene.camera.horizontal_size(),
-            scene.camera.vertical_size(),
+            scene.horizontal_size(),
+            scene.vertical_size(),
             |x, y| Rgb(canvas.get_pixel(x as usize, y as usize).to_u8()),
         );
 

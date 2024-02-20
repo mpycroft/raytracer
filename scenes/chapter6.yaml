@@ -1,0 +1,13 @@
+- add: camera
+  width: 500
+  height: 500
+  field-of-view: 0.5
+  from: [0, 0, -5]
+  to: [0, 0, 0]
+  up: [0, 1, 0]
+- add: sphere
+  material:
+      color: [1.0, 0.2, 1.0]
+- add: light
+  at: [-10, 10, -10]
+  intensity: [1, 1, 1]

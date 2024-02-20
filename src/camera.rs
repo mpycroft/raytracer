@@ -38,6 +38,25 @@ impl Camera {
         field_of_view: Angle,
         transformation: Transformation,
     ) -> Self {
+        let (half_width, half_height, pixel_size) =
+            Self::calculate(horizontal_size, vertical_size, field_of_view);
+
+        Self {
+            horizontal_size,
+            vertical_size,
+            field_of_view,
+            inverse_transformation: transformation.invert(),
+            half_width,
+            half_height,
+            pixel_size,
+        }
+    }
+
+    fn calculate(
+        horizontal_size: u32,
+        vertical_size: u32,
+        field_of_view: Angle,
+    ) -> (f64, f64, f64) {
         let half_view = (field_of_view / 2.0).tan();
         #[allow(clippy::cast_precision_loss)]
         let horizontal_float = f64::from(horizontal_size);
@@ -50,15 +69,21 @@ impl Camera {
             (half_view * aspect, half_view)
         };
 
-        Self {
-            horizontal_size,
-            vertical_size,
-            field_of_view,
-            inverse_transformation: transformation.invert(),
-            half_width,
-            half_height,
-            pixel_size: half_width * 2.0 / horizontal_float,
-        }
+        (half_width, half_height, half_width * 2.0 / horizontal_float)
+    }
+
+    #[allow(clippy::cast_possible_truncation)]
+    #[allow(clippy::cast_sign_loss)]
+    #[allow(clippy::cast_lossless)]
+    pub fn scale(&mut self, scale: f64) {
+        self.horizontal_size = ((self.horizontal_size as f64) * scale) as u32;
+        self.vertical_size = ((self.vertical_size as f64) * scale) as u32;
+
+        (self.half_width, self.half_height, self.pixel_size) = Self::calculate(
+            self.horizontal_size,
+            self.vertical_size,
+            self.field_of_view,
+        );
     }
 
     #[must_use]
@@ -261,6 +286,36 @@ mod tests {
         assert_approx_eq!(c.half_width, 0.625);
         assert_approx_eq!(c.half_height, 1.0);
         assert_approx_eq!(c.pixel_size, 0.01);
+    }
+
+    #[test]
+    fn scaling_a_camera() {
+        let mut c = Camera::new(
+            100,
+            100,
+            Angle(FRAC_PI_2),
+            Transformation::view_transformation(
+                Point::origin(),
+                Point::new(0.0, -2.0, -5.0),
+                Vector::y_axis(),
+            ),
+        );
+
+        c.scale(2.5);
+
+        assert_approx_eq!(
+            c,
+            Camera::new(
+                250,
+                250,
+                Angle(FRAC_PI_2),
+                Transformation::view_transformation(
+                    Point::origin(),
+                    Point::new(0.0, -2.0, -5.0),
+                    Vector::y_axis(),
+                )
+            )
+        );
     }
 
     #[test]
