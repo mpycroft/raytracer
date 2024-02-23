@@ -2,6 +2,7 @@ use std::f64::{INFINITY, NEG_INFINITY};
 
 use anyhow::{bail, Result};
 use paste::paste;
+use rand::prelude::*;
 use serde::Deserialize;
 use serde_yaml::{from_value, to_value, Value};
 
@@ -65,22 +66,27 @@ fn get_transform(
         .map_or_else(|| Ok(Transformation::new()), |list| list.parse(data))
 }
 
-fn get_material(
+fn get_material<R: Rng>(
     material: Option<Material>,
     data: &Data,
+    rng: &mut R,
 ) -> Result<crate::Material> {
     material.map_or_else(
         || Ok(crate::Material::default()),
-        |material| material.parse(data),
+        |material| material.parse(data, rng),
     )
 }
 
 macro_rules! impl_parse {
     ($name:ident { $($arg:ident: $default:expr $(,)?)* }) => {
         impl $name {
-            pub fn parse(self, data: &Data) -> Result<Object> {
+            pub fn parse<R: Rng>(
+                self,
+                data: &Data,
+                rng: &mut R
+            ) -> Result<Object> {
                 let transformation = get_transform(self.transform, data)?;
-                let material = get_material(self.material, data)?;
+                let material = get_material(self.material, data, rng)?;
 
                 paste! {
                     Ok(Object::[<$name:lower _builder>](
@@ -103,11 +109,11 @@ impl_parse!(Plane {});
 impl_parse!(Sphere {});
 
 impl Group {
-    pub fn parse(self, data: &Data) -> Result<Object> {
+    pub fn parse<R: Rng>(self, data: &Data, rng: &mut R) -> Result<Object> {
         let mut objects = Vec::new();
 
         for object in self.children {
-            objects.push(parse_shape(&object.add, object.value, data)?);
+            objects.push(parse_shape(&object.add, object.value, data, rng)?);
         }
 
         /// Due to the typed nature of `TypedBuilder` we cannot easily
@@ -124,7 +130,7 @@ impl Group {
             };
             (@material $self:ident; ($expr:expr)) => {
                 if $self.material.is_some() {
-                    let material = get_material($self.material, data)?;
+                    let material = get_material($self.material, data, rng)?;
 
                     group_builder!(
                         @shadow $self; ($expr.material(material))
@@ -163,20 +169,25 @@ impl Group {
 }
 
 impl Csg {
-    pub fn parse(self, data: &Data) -> Result<Object> {
+    pub fn parse<R: Rng>(self, data: &Data, rng: &mut R) -> Result<Object> {
         Ok(Object::new_csg(
             self.operation,
-            parse_shape(&self.left.tag, self.left.value, data)?,
-            parse_shape(&self.right.tag, self.right.value, data)?,
+            parse_shape(&self.left.tag, self.left.value, data, rng)?,
+            parse_shape(&self.right.tag, self.right.value, data, rng)?,
         ))
     }
 }
 
-pub fn parse_shape(tag: &str, value: Value, data: &Data) -> Result<Object> {
+pub fn parse_shape<R: Rng>(
+    tag: &str,
+    value: Value,
+    data: &Data,
+    rng: &mut R,
+) -> Result<Object> {
     macro_rules! map_to_object {
         ($name:literal) => {{
             paste! {
-                from_value::<[<$name:camel>]>(value)?.parse(data)
+                from_value::<[<$name:camel>]>(value)?.parse(data, rng)
             }
         }};
     }
@@ -217,7 +228,12 @@ pub fn parse_shape(tag: &str, value: Value, data: &Data) -> Result<Object> {
                     define_values.insert(String::from("shadow"), shadow);
                 }
 
-                Ok(parse_shape(&define.add, to_value(define_values)?, data)?)
+                Ok(parse_shape(
+                    &define.add,
+                    to_value(define_values)?,
+                    data,
+                    rng,
+                )?)
             } else {
                 bail!("Reference to shape '{tag}' that was not defined")
             }
@@ -227,6 +243,7 @@ pub fn parse_shape(tag: &str, value: Value, data: &Data) -> Result<Object> {
 
 #[cfg(test)]
 mod tests {
+    use rand_xoshiro::Xoshiro256PlusPlus;
     use serde_yaml::from_str;
 
     use super::*;
@@ -250,7 +267,7 @@ transform:
 
         let d = Data::new();
 
-        let o = c.parse(&d).unwrap();
+        let o = c.parse(&d, &mut Xoshiro256PlusPlus::seed_from_u64(0)).unwrap();
         assert_approx_eq!(
             o,
             &Object::cone_builder(0.0, INFINITY, true)
@@ -270,7 +287,7 @@ transform:
 
         let d = Data::new();
 
-        let o = c.parse(&d).unwrap();
+        let o = c.parse(&d, &mut Xoshiro256PlusPlus::seed_from_u64(0)).unwrap();
         assert_approx_eq!(o, &Object::cube_builder().build());
     }
 
@@ -288,7 +305,7 @@ material: foo",
         d.materials
             .insert(String::from("foo"), from_str("color: [1, 0, 0]").unwrap());
 
-        let o = c.parse(&d).unwrap();
+        let o = c.parse(&d, &mut Xoshiro256PlusPlus::seed_from_u64(0)).unwrap();
         assert_approx_eq!(
             o,
             &Object::cylinder_builder(-1.0, 5.0, false)
@@ -326,7 +343,7 @@ divide: 1",
 
         let d = Data::new();
 
-        let o = g.parse(&d).unwrap();
+        let o = g.parse(&d, &mut Xoshiro256PlusPlus::seed_from_u64(0)).unwrap();
 
         assert_approx_eq!(
             o,
@@ -376,7 +393,7 @@ transform:
             from_str("- [translate, 1, 1, 1]").unwrap(),
         );
 
-        let o = p.parse(&d).unwrap();
+        let o = p.parse(&d, &mut Xoshiro256PlusPlus::seed_from_u64(0)).unwrap();
         assert_approx_eq!(
             o,
             &Object::plane_builder()
@@ -392,7 +409,7 @@ transform:
 
         let d = Data::new();
 
-        let o = s.parse(&d).unwrap();
+        let o = s.parse(&d, &mut Xoshiro256PlusPlus::seed_from_u64(0)).unwrap();
         assert_approx_eq!(o, &Object::sphere_builder().build());
     }
 
@@ -414,7 +431,7 @@ right:
 
         let d = Data::new();
 
-        let o = c.parse(&d).unwrap();
+        let o = c.parse(&d, &mut Xoshiro256PlusPlus::seed_from_u64(0)).unwrap();
 
         assert_approx_eq!(
             o,

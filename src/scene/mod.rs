@@ -9,7 +9,7 @@ use std::{collections::HashMap, fs::File, io::Write, path::Path};
 
 use anyhow::Result;
 use derive_new::new;
-use rand::Rng;
+use rand::prelude::*;
 use serde_yaml::{from_reader, Value};
 
 use self::{
@@ -60,11 +60,15 @@ impl Scene {
     ///
     /// Will return error if there are problems reading the file or parsing the
     /// data.
-    pub fn from_file<P: AsRef<Path>>(filename: P, scale: f64) -> Result<Self> {
+    pub fn from_file<P, R>(filename: P, scale: f64, rng: &mut R) -> Result<Self>
+    where
+        P: AsRef<Path>,
+        R: Rng,
+    {
         let list: List = from_reader(File::open(filename)?)?;
 
         let mut data = Data::new();
-        list.parse(&mut data)?;
+        list.parse(&mut data, rng)?;
 
         // We have already checked that camera is Some when parsing list.
         let Some(mut camera) = data.camera else { unreachable!() };
@@ -107,7 +111,6 @@ impl Scene {
 mod tests {
     use std::f64::consts::FRAC_PI_3;
 
-    use rand::SeedableRng;
     use rand_xoshiro::Xoshiro256PlusPlus;
 
     use super::*;
@@ -118,7 +121,10 @@ mod tests {
 
     #[test]
     fn from_simple_yaml() {
-        let s = Scene::from_file("src/scene/tests/simple.yaml", 1.0).unwrap();
+        let mut r = Xoshiro256PlusPlus::seed_from_u64(0);
+
+        let s = Scene::from_file("src/scene/tests/simple.yaml", 1.0, &mut r)
+            .unwrap();
 
         assert_approx_eq!(
             s.camera,
@@ -140,18 +146,15 @@ mod tests {
             Light::new_point(Point::new(-10.0, 10.0, -10.0), Colour::white())
         );
 
-        s.render(
-            5,
-            true,
-            &mut Output::<Vec<_>>::new_sink(),
-            &mut Xoshiro256PlusPlus::seed_from_u64(0),
-        )
-        .unwrap();
+        s.render(5, true, &mut Output::<Vec<_>>::new_sink(), &mut r).unwrap();
     }
 
     #[test]
     fn test_scale() {
-        let s = Scene::from_file("src/scene/tests/simple.yaml", 2.5).unwrap();
+        let mut r = Xoshiro256PlusPlus::seed_from_u64(0);
+
+        let s = Scene::from_file("src/scene/tests/simple.yaml", 2.5, &mut r)
+            .unwrap();
 
         assert_eq!(s.horizontal_size(), 500);
         assert_eq!(s.vertical_size(), 500);

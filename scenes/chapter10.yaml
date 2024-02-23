@@ -1,0 +1,82 @@
+- add: camera
+  width: 1000
+  height: 500
+  field-of-view: "PI / 3"
+  from: [0, 1.5, -5]
+  to: [0, 1, 0]
+  up: [0, 1, 0]
+- add: plane
+  material:
+      pattern:
+          kind: perturbed
+          scale: 0.15
+          pattern:
+              kind: blend
+              a:
+                  kind: stripe
+                  a: [0, 1, 0]
+                  b: [1, 1, 1]
+                  transform:
+                      - [scale, 0.5, 0.5, 0.5]
+              b:
+                  kind: stripe
+                  a: [0, 1, 0]
+                  b: [1, 1, 1]
+                  transform:
+                      - [rotate-y, "PI / 2"]
+                      - [scale, 0.5, 0.5, 0.5]
+- add: plane
+  transform:
+      - [rotate-x, "PI / 2"]
+      - [translate, 0, 0, 10]
+  material:
+      pattern:
+          kind: gradient
+          a: [1, 0, 1]
+          b: [1, 1, 0]
+- add: sphere
+  transform:
+      - [translate, -0.5, 1.0, 0.5]
+  material:
+      pattern:
+          kind: ring
+          a: [0, 0, 1]
+          b: [0, 1, 1]
+          transform:
+              - [rotate-x, degrees: 70]
+              - [rotate-z, degrees: -40]
+              - [scale, 0.2, 0.2, 0.2]
+      diffuse: 0.7
+      specular: 0.3
+- add: sphere
+  transform:
+      - [scale, 0.5, 0.5, 0.5]
+      - [translate, 1.5, 0.5, -0.5]
+  material:
+      pattern:
+          kind: checker
+          a: [0, 1, 0]
+          b: [0, 1, 1]
+          transform:
+              - [scale, 0.3, 0.3, 0.3]
+      diffuse: 0.7
+      specular: 0.3
+- add: sphere
+  transform:
+      - [scale, 0.33, 0.33, 0.33]
+      - [translate, -1.5, 0.33, -0.75]
+  material:
+      pattern:
+          kind: radial-gradient
+          a: [1, 1, 1]
+          b: [0, 0, 0]
+          transform:
+              - [scale, 0.2, 0.2, 0.2]
+      diffuse: 0.7
+      specular: 0.3
+- add: light
+  at: [-10, 10, -10]
+  intensity: [0.8, 0.8, 0.8]
+- add: light
+  at: [10, 10, -10]
+  intensity: [0.1, 0.1, 0.5]

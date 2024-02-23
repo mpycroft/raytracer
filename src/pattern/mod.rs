@@ -14,6 +14,7 @@ mod util;
 
 use paste::paste;
 use rand::prelude::*;
+use rand_xoshiro::Xoshiro256PlusPlus;
 use serde::{de::Error, Deserialize, Deserializer};
 use typed_builder::{Optional, TypedBuilder};
 
@@ -123,43 +124,85 @@ impl<'de> Deserialize<'de> for Pattern {
         D: Deserializer<'de>,
     {
         #[derive(Deserialize)]
-        pub struct Pattern {
-            kind: String,
-            transform: Option<Transformation>,
-            a: Colour,
-            b: Colour,
+        #[serde(untagged)]
+        enum ColourPattern {
+            Colour(Colour),
+            Pattern(Pattern),
         }
 
-        let pattern = Pattern::deserialize(deserializer)?;
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        enum PatternData {
+            Pattern {
+                kind: String,
+                a: ColourPattern,
+                b: ColourPattern,
+                transform: Option<Transformation>,
+            },
+            Perturbed {
+                scale: f64,
+                pattern: Pattern,
+                seed: u64,
+                transform: Option<Transformation>,
+            },
+        }
 
-        let final_pattern = match &*pattern.kind {
-            "blend" => Self::blend_builder(pattern.a.into(), pattern.b.into()),
-            "checker" => {
-                Self::checker_builder(pattern.a.into(), pattern.b.into())
-            }
-            "gradient" => {
-                Self::gradient_builder(pattern.a.into(), pattern.b.into())
-            }
-            "radial_gradient" => Self::radial_gradient_builder(
-                pattern.a.into(),
-                pattern.b.into(),
-            ),
-            "ring" => Self::ring_builder(pattern.a.into(), pattern.b.into()),
-            "stripe" => {
-                Self::stripe_builder(pattern.a.into(), pattern.b.into())
-            }
-            _ => {
-                return Err(Error::custom(format!(
-                    "Unknown pattern '{}'",
-                    pattern.kind
-                )))
+        let pattern = PatternData::deserialize(deserializer)?;
+
+        let build = |pattern: PatternBuilder<((), (Kind,))>, transform| {
+            if let Some(transformation) = transform {
+                Ok(pattern.transformation(transformation).build())
+            } else {
+                Ok(pattern.build())
             }
         };
 
-        if let Some(transformation) = pattern.transform {
-            Ok(final_pattern.transformation(transformation).build())
-        } else {
-            Ok(final_pattern.build())
+        let get_pattern = |pattern| match pattern {
+            ColourPattern::Colour(colour) => colour.into(),
+            ColourPattern::Pattern(pattern) => pattern,
+        };
+
+        match pattern {
+            PatternData::Pattern { kind, a, b, transform } => match &*kind {
+                "blend" => build(
+                    Self::blend_builder(get_pattern(a), get_pattern(b)),
+                    transform,
+                ),
+                "checker" => build(
+                    Self::checker_builder(get_pattern(a), get_pattern(b)),
+                    transform,
+                ),
+                "gradient" => build(
+                    Self::gradient_builder(get_pattern(a), get_pattern(b)),
+                    transform,
+                ),
+                "radial-gradient" => build(
+                    Self::radial_gradient_builder(
+                        get_pattern(a),
+                        get_pattern(b),
+                    ),
+                    transform,
+                ),
+                "ring" => build(
+                    Self::ring_builder(get_pattern(a), get_pattern(b)),
+                    transform,
+                ),
+                "stripe" => build(
+                    Self::stripe_builder(get_pattern(a), get_pattern(b)),
+                    transform,
+                ),
+                _ => Err(Error::custom(format!("Unknown pattern '{kind}'"))),
+            },
+            PatternData::Perturbed { scale, pattern, seed, transform } => {
+                build(
+                    Self::perturbed_builder(
+                        scale,
+                        pattern,
+                        &mut Xoshiro256PlusPlus::seed_from_u64(seed),
+                    ),
+                    transform,
+                )
+            }
         }
     }
 }
@@ -347,7 +390,10 @@ mod tests {
         let p: Pattern = from_str(
             "\
 kind: blend
-a: [1, 0, 0]
+a:
+    kind: checker
+    a: [1, 1, 1]
+    b: [1, 1, 0]
 b: [0, 1, 0]
 transform:
     - [scale, 2, 2, 2]
@@ -358,7 +404,11 @@ transform:
         assert_approx_eq!(
             p,
             &crate::Pattern::blend_builder(
-                Colour::red().into(),
+                crate::Pattern::checker_builder(
+                    Colour::white().into(),
+                    Colour::yellow().into()
+                )
+                .build(),
                 Colour::green().into()
             )
             .transformation(
@@ -415,7 +465,7 @@ b: [0, 1, 0]",
     fn parse_radial_gradient_pattern() {
         let p: Pattern = from_str(
             "\
-kind: radial_gradient
+kind: radial-gradient
 a: [1, 0, 0]
 b: [0, 1, 0]",
         )
@@ -466,6 +516,45 @@ b: [0, 0, 1]",
             &crate::Pattern::stripe_builder(
                 Colour::green().into(),
                 Colour::blue().into()
+            )
+            .build()
+        );
+    }
+
+    #[test]
+    fn deserialize_perturbed_pattern() {
+        let p: Pattern = from_str(
+            "\
+scale: 1.2
+pattern:
+    kind: checker
+    a: [0, 1, 0]
+    b: [0, 0, 1]
+    transform:
+        - [rotate-x, 0.8]
+seed: 515
+transform:
+    - [translate, 0, 2, 2]
+    - [scale, 1.5, 1.5, 1.5]",
+        )
+        .unwrap();
+
+        assert_approx_eq!(
+            p,
+            &crate::Pattern::perturbed_builder(
+                1.2,
+                crate::Pattern::checker_builder(
+                    Colour::green().into(),
+                    Colour::blue().into()
+                )
+                .transformation(Transformation::new().rotate_x(Angle(0.8)))
+                .build(),
+                &mut Xoshiro256PlusPlus::seed_from_u64(515)
+            )
+            .transformation(
+                Transformation::new()
+                    .translate(0.0, 2.0, 2.0)
+                    .scale(1.5, 1.5, 1.5)
             )
             .build()
         );

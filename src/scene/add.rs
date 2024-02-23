@@ -1,4 +1,5 @@
 use anyhow::{bail, Result};
+use rand::prelude::*;
 use serde::Deserialize;
 use serde_yaml::{from_value, Value};
 
@@ -14,7 +15,7 @@ pub struct Add {
 }
 
 impl Add {
-    pub fn parse(self, data: &mut Data) -> Result<()> {
+    pub fn parse<R: Rng>(self, data: &mut Data, rng: &mut R) -> Result<()> {
         match &*self.add {
             "camera" => {
                 if data.camera.is_some() {
@@ -24,7 +25,9 @@ impl Add {
                 data.camera = Some(from_value(self.value)?);
             }
             "light" => data.lights.push(from_value(self.value)?),
-            _ => data.objects.push(parse_shape(&self.add, self.value, data)?),
+            _ => data
+                .objects
+                .push(parse_shape(&self.add, self.value, data, rng)?),
         }
 
         Ok(())
@@ -35,6 +38,7 @@ impl Add {
 mod tests {
     use std::f64::{consts::FRAC_PI_2, INFINITY, NEG_INFINITY};
 
+    use rand_xoshiro::Xoshiro256PlusPlus;
     use serde_yaml::from_str;
 
     use super::*;
@@ -59,7 +63,8 @@ up: [0, 1, 0]",
 
         let mut d = Data::new();
 
-        a.clone().parse(&mut d).unwrap();
+        let mut r = Xoshiro256PlusPlus::seed_from_u64(0);
+        a.clone().parse(&mut d, &mut r).unwrap();
 
         assert_approx_eq!(
             d.camera.unwrap(),
@@ -76,7 +81,7 @@ up: [0, 1, 0]",
         );
 
         assert_eq!(
-            a.parse(&mut d).unwrap_err().to_string(),
+            a.parse(&mut d, &mut r).unwrap_err().to_string(),
             "Only one camera can be added"
         );
     }
@@ -93,7 +98,7 @@ intensity: [0, 0, 1]",
 
         let mut d = Data::new();
 
-        a.parse(&mut d).unwrap();
+        a.parse(&mut d, &mut Xoshiro256PlusPlus::seed_from_u64(0)).unwrap();
 
         assert_eq!(d.lights.len(), 1);
 
@@ -115,7 +120,7 @@ min: -1",
 
         let mut d = Data::new();
 
-        a.parse(&mut d).unwrap();
+        a.parse(&mut d, &mut Xoshiro256PlusPlus::seed_from_u64(0)).unwrap();
 
         assert_eq!(d.objects.len(), 1);
 
@@ -137,7 +142,7 @@ material:
 
         let mut d = Data::new();
 
-        a.parse(&mut d).unwrap();
+        a.parse(&mut d, &mut Xoshiro256PlusPlus::seed_from_u64(0)).unwrap();
 
         assert_eq!(d.objects.len(), 1);
 
@@ -155,7 +160,7 @@ material:
 
         let mut d = Data::new();
 
-        a.parse(&mut d).unwrap();
+        a.parse(&mut d, &mut Xoshiro256PlusPlus::seed_from_u64(0)).unwrap();
 
         assert_eq!(d.objects.len(), 1);
 
@@ -187,7 +192,7 @@ shadow: false",
 
         let mut d = Data::new();
 
-        a.parse(&mut d).unwrap();
+        a.parse(&mut d, &mut Xoshiro256PlusPlus::seed_from_u64(0)).unwrap();
 
         assert_eq!(d.objects.len(), 1);
 
@@ -223,7 +228,7 @@ shadow: false",
 
         let mut d = Data::new();
 
-        a.parse(&mut d).unwrap();
+        a.parse(&mut d, &mut Xoshiro256PlusPlus::seed_from_u64(0)).unwrap();
 
         assert_eq!(d.objects.len(), 1);
 
@@ -242,7 +247,7 @@ transform:
 
         let mut d = Data::new();
 
-        a.parse(&mut d).unwrap();
+        a.parse(&mut d, &mut Xoshiro256PlusPlus::seed_from_u64(0)).unwrap();
 
         assert_eq!(d.objects.len(), 1);
 
@@ -279,7 +284,8 @@ transform:
         d.materials
             .insert(String::from("bar"), from_str("diffuse: 0.3").unwrap());
 
-        a.parse(&mut d).unwrap();
+        let mut r = Xoshiro256PlusPlus::seed_from_u64(0);
+        a.parse(&mut d, &mut r).unwrap();
 
         assert_eq!(d.objects.len(), 1);
 
@@ -298,7 +304,7 @@ transform:
         let a: Add = from_str("add: bar").unwrap();
 
         assert_eq!(
-            a.parse(&mut d).unwrap_err().to_string(),
+            a.parse(&mut d, &mut r).unwrap_err().to_string(),
             "Reference to shape 'bar' that was not defined"
         );
     }
@@ -320,7 +326,7 @@ right:
 
         let mut d = Data::new();
 
-        a.parse(&mut d).unwrap();
+        a.parse(&mut d, &mut Xoshiro256PlusPlus::seed_from_u64(0)).unwrap();
 
         assert_eq!(d.objects.len(), 1);
 

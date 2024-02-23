@@ -33,7 +33,7 @@ fn main() -> Result<()> {
     let scene_text = format!("Generating scene '{}'...", arguments.scene);
     writeln!(output, "{scene_text}")?;
 
-    let scene = Scene::from_file(arguments.scene, arguments.scale)?;
+    let scene = Scene::from_file(arguments.scene, arguments.scale, &mut rng)?;
 
     output.clear_last_line()?;
 

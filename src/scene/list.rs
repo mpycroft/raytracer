@@ -1,4 +1,5 @@
 use anyhow::{bail, Result};
+use rand::prelude::*;
 use serde::Deserialize;
 
 use super::{Add, Data, Define};
@@ -16,10 +17,10 @@ pub enum Element {
 pub struct List(Vec<Element>);
 
 impl List {
-    pub fn parse(self, data: &mut Data) -> Result<()> {
+    pub fn parse<R: Rng>(self, data: &mut Data, rng: &mut R) -> Result<()> {
         for element in self.0 {
             match element {
-                Element::Add(add) => add.parse(data)?,
+                Element::Add(add) => add.parse(data, rng)?,
                 Element::Define(define) => define.parse(data)?,
             }
         }
@@ -38,6 +39,7 @@ impl List {
 
 #[cfg(test)]
 mod tests {
+    use rand_xoshiro::Xoshiro256PlusPlus;
     use serde_yaml::from_str;
 
     use super::*;
@@ -72,7 +74,7 @@ mod tests {
 
         let mut d = Data::new();
 
-        l.parse(&mut d).unwrap();
+        l.parse(&mut d, &mut Xoshiro256PlusPlus::seed_from_u64(0)).unwrap();
 
         assert!(d.camera.is_some());
         assert_eq!(d.lights.len(), 2);
@@ -101,7 +103,9 @@ mod tests {
         let mut d = Data::new();
 
         assert_eq!(
-            l.parse(&mut d).unwrap_err().to_string(),
+            l.parse(&mut d, &mut Xoshiro256PlusPlus::seed_from_u64(0))
+                .unwrap_err()
+                .to_string(),
             "A camera must be defined"
         );
     }
@@ -126,7 +130,9 @@ mod tests {
         let mut d = Data::new();
 
         assert_eq!(
-            l.parse(&mut d).unwrap_err().to_string(),
+            l.parse(&mut d, &mut Xoshiro256PlusPlus::seed_from_u64(0))
+                .unwrap_err()
+                .to_string(),
             "No lights were defined"
         );
     }
@@ -161,7 +167,9 @@ mod tests {
         let mut d = Data::new();
 
         assert_eq!(
-            l.parse(&mut d).unwrap_err().to_string(),
+            l.parse(&mut d, &mut Xoshiro256PlusPlus::seed_from_u64(0))
+                .unwrap_err()
+                .to_string(),
             "No objects were defined"
         );
     }
