@@ -1,10 +1,8 @@
-use std::collections::HashMap;
-
 use anyhow::{bail, Result};
 use serde::Deserialize;
 use serde_yaml::{from_value, to_value, Value};
 
-use super::Data;
+use super::{Data, HashValue};
 
 /// A `Material` holds the deserialized material data.
 #[derive(Clone, Debug, Deserialize)]
@@ -17,7 +15,7 @@ pub enum Material {
 impl Material {
     pub fn parse(self, data: &Data) -> Result<crate::Material> {
         match self {
-            Material::Name(name) => {
+            Self::Name(name) => {
                 if let Some(material) = data.materials.get(&name) {
                     material.clone().parse(data)
                 } else {
@@ -26,21 +24,21 @@ impl Material {
                     );
                 }
             }
-            Material::Data(data) => Ok(from_value(data)?),
+            Self::Data(data) => Ok(from_value(data)?),
         }
     }
 
     pub fn update(self, other: Value) -> Result<Self> {
-        let mut material = match self {
-            Material::Name(_) => unreachable!(),
-            Material::Data(data) => from_value::<HashMap<String, Value>>(data)?,
+        let mut material: HashValue = match self {
+            Self::Name(_) => unreachable!(),
+            Self::Data(data) => from_value(data)?,
         };
 
-        let other = from_value::<HashMap<String, Value>>(other)?;
+        let other: HashValue = from_value(other)?;
 
         material.extend(other);
 
-        Ok(Material::Data(to_value(material)?))
+        Ok(Self::Data(to_value(material)?))
     }
 }
 
@@ -49,7 +47,7 @@ mod tests {
     use serde_yaml::from_str;
 
     use super::*;
-    use crate::{math::float::assert_approx_eq, Colour};
+    use crate::{math::float::*, Colour};
 
     #[test]
     fn parse_material() {

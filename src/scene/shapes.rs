@@ -1,24 +1,24 @@
-use std::{
-    collections::HashMap,
-    f64::{INFINITY, NEG_INFINITY},
-};
+use std::f64::{INFINITY, NEG_INFINITY};
 
 use anyhow::{bail, Result};
 use paste::paste;
 use serde::Deserialize;
 use serde_yaml::{from_value, to_value, Value};
 
-use super::{Add, Data, Material, TransformationList};
+use super::{Add, Data, HashValue, Material, TransformationList};
 use crate::{math::Transformation, Object, Operation};
 
 macro_rules! create_shape {
     ($name:ident { $($arg:ident: $ty:ty $(,)?)* }) => {
-        #[derive(Clone, Debug, Deserialize)]
-        pub struct $name {
-            $($arg: $ty,)*
-            transform: Option<TransformationList>,
-            material: Option<Material>,
-            shadow: Option<bool>,
+        paste! {
+            #[doc = "A `" $name "` holds deserialized object data"]
+            #[derive(Clone, Debug, Deserialize)]
+            pub struct $name {
+                $($arg: $ty,)*
+                transform: Option<TransformationList>,
+                material: Option<Material>,
+                shadow: Option<bool>,
+            }
         }
     };
 }
@@ -38,6 +38,9 @@ create_shape!(Group { children: Vec<Add>, divide: Option<u32> });
 create_shape!(Plane {});
 create_shape!(Sphere {});
 
+/// `CsgShape` is a helper type since the Yaml definition uses a different tag
+/// than when adding objects, and this saves us converting to from a `HashMap`
+/// just to access the tag.
 #[derive(Clone, Debug, Deserialize)]
 struct CsgShape {
     #[serde(rename = "type")]
@@ -45,6 +48,8 @@ struct CsgShape {
     #[serde(flatten)]
     value: Value,
 }
+
+/// A `Csg` holds deserialized object data.
 #[derive(Clone, Debug, Deserialize)]
 struct Csg {
     operation: Operation,
@@ -52,31 +57,30 @@ struct Csg {
     right: CsgShape,
 }
 
-fn get_transform_material(
+fn get_transform(
     transformations: Option<TransformationList>,
+    data: &Data,
+) -> Result<crate::math::Transformation> {
+    transformations
+        .map_or_else(|| Ok(Transformation::new()), |list| list.parse(data))
+}
+
+fn get_material(
     material: Option<Material>,
     data: &Data,
-) -> Result<(crate::math::Transformation, crate::Material)> {
-    Ok((
-        transformations.map_or_else(
-            || Ok(Transformation::new()),
-            |list| list.parse(data),
-        )?,
-        material.map_or_else(
-            || Ok(crate::Material::default()),
-            |material| material.parse(data),
-        )?,
-    ))
+) -> Result<crate::Material> {
+    material.map_or_else(
+        || Ok(crate::Material::default()),
+        |material| material.parse(data),
+    )
 }
 
 macro_rules! impl_parse {
     ($name:ident { $($arg:ident: $default:expr $(,)?)* }) => {
         impl $name {
             pub fn parse(self, data: &Data) -> Result<Object> {
-                let (transformation, material) =
-                    get_transform_material(
-                        self.transform, self.material, data
-                    )?;
+                let transformation = get_transform(self.transform, data)?;
+                let material = get_material(self.material, data)?;
 
                 paste! {
                     Ok(Object::[<$name:lower _builder>](
@@ -100,12 +104,6 @@ impl_parse!(Sphere {});
 
 impl Group {
     pub fn parse(self, data: &Data) -> Result<Object> {
-        let update_transform = self.transform.is_some();
-        let update_material = self.material.is_some();
-
-        let (transformation, material) =
-            get_transform_material(self.transform, self.material, data)?;
-
         let mut objects = Vec::new();
 
         for object in self.children {
@@ -125,7 +123,9 @@ impl Group {
                 }
             };
             (@material $self:ident; ($expr:expr)) => {
-                if update_material {
+                if $self.material.is_some() {
+                    let material = get_material($self.material, data)?;
+
                     group_builder!(
                         @shadow $self; ($expr.material(material))
                     )
@@ -134,7 +134,8 @@ impl Group {
                 }
             };
             (@transform $self:ident; ($expr:expr)) => {
-                if update_transform {
+                if self.transform.is_some() {
+                    let transformation = get_transform($self.transform, data)?;
                     group_builder!(
                         @material $self; ($expr.transformation(transformation))
                     )
@@ -190,11 +191,10 @@ pub fn parse_shape(tag: &str, value: Value, data: &Data) -> Result<Object> {
         "sphere" => map_to_object!("sphere"),
         _ => {
             if let Some(define) = data.shapes.get(tag) {
-                let mut shape: HashMap<String, Value> = from_value(value)?;
+                let mut shape: HashValue = from_value(value)?;
 
                 let define = define.clone();
-                let mut define_values: HashMap<String, Value> =
-                    from_value(define.value)?;
+                let mut define_values: HashValue = from_value(define.value)?;
 
                 if let Some(mut transform) = shape.remove("transform") {
                     if let Some(define_transform) =
@@ -230,7 +230,10 @@ mod tests {
     use serde_yaml::from_str;
 
     use super::*;
-    use crate::{math::float::assert_approx_eq, Colour};
+    use crate::{
+        math::{float::*, Transformation},
+        Colour,
+    };
 
     #[test]
     fn parse_cone() {

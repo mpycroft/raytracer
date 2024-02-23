@@ -15,7 +15,7 @@ impl TransformationList {
         Ok(from_value(to_value(transformations)?)?)
     }
 
-    fn collect(self, data: &Data) -> Result<Self> {
+    pub fn collect(self, data: &Data) -> Result<Self> {
         let mut final_transformations = Vec::new();
 
         for transformation in self.0 {
@@ -32,7 +32,7 @@ impl TransformationList {
             }
         }
 
-        Ok(TransformationList(final_transformations))
+        Ok(Self(final_transformations))
     }
 
     pub fn combine(lhs: Value, rhs: Value) -> Result<Value> {
@@ -53,7 +53,7 @@ mod tests {
     use serde_yaml::from_str;
 
     use super::*;
-    use crate::math::{float::assert_approx_eq, Angle};
+    use crate::math::{float::*, Angle};
 
     #[test]
     fn parse_simple_transformations() {

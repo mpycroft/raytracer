@@ -10,13 +10,15 @@ use std::{collections::HashMap, fs::File, io::Write, path::Path};
 use anyhow::Result;
 use derive_new::new;
 use rand::Rng;
-use serde_yaml::from_reader;
+use serde_yaml::{from_reader, Value};
 
 use self::{
     add::Add, define::Define, list::List, material::Material,
     transformations::TransformationList,
 };
 use crate::{Camera, Canvas, Light, Object, Output, World};
+
+type HashValue = HashMap<String, Value>;
 
 /// The `Data` struct holds the information for the scene as we parse it.
 #[derive(Clone, Debug)]
@@ -91,12 +93,12 @@ impl Scene {
     }
 
     #[must_use]
-    pub fn horizontal_size(&self) -> u32 {
+    pub const fn horizontal_size(&self) -> u32 {
         self.camera.horizontal_size()
     }
 
     #[must_use]
-    pub fn vertical_size(&self) -> u32 {
+    pub const fn vertical_size(&self) -> u32 {
         self.camera.vertical_size()
     }
 }
@@ -110,7 +112,7 @@ mod tests {
 
     use super::*;
     use crate::{
-        math::{float::assert_approx_eq, Angle, Point, Transformation, Vector},
+        math::{float::*, Angle, Point, Transformation, Vector},
         Colour,
     };
 
@@ -145,5 +147,13 @@ mod tests {
             &mut Xoshiro256PlusPlus::seed_from_u64(0),
         )
         .unwrap();
+    }
+
+    #[test]
+    fn test_scale() {
+        let s = Scene::from_file("src/scene/tests/simple.yaml", 2.5).unwrap();
+
+        assert_eq!(s.horizontal_size(), 500);
+        assert_eq!(s.vertical_size(), 500);
     }
 }

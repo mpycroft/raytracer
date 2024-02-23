@@ -1,10 +1,8 @@
-use std::collections::HashMap;
-
 use anyhow::{bail, Result};
 use serde::Deserialize;
 use serde_yaml::{from_value, Value};
 
-use super::{Add, Data, Material, TransformationList};
+use super::{Add, Data, HashValue, Material, TransformationList};
 
 /// The `Define` struct holds the deserialized data of a definition that can be
 /// referenced later on.
@@ -36,9 +34,7 @@ impl Define {
             if data.shapes.insert(self.define, add).is_some() {
                 bail!(err("Shape"));
             };
-        } else if from_value::<HashMap<String, Value>>(self.value.clone())
-            .is_ok()
-        {
+        } else if from_value::<HashValue>(self.value.clone()).is_ok() {
             let material = if let Some(extend) = self.extend {
                 if let Some(define) = data.materials.get(&extend) {
                     define.clone().update(self.value)?
@@ -68,7 +64,7 @@ mod tests {
     use serde_yaml::from_str;
 
     use super::*;
-    use crate::math::float::assert_approx_eq;
+    use crate::math::float::*;
 
     #[test]
     fn parse_define_shape() {

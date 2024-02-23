@@ -39,7 +39,7 @@ mod tests {
 
     use super::*;
     use crate::{
-        math::{float::assert_approx_eq, Angle, Point, Transformation, Vector},
+        math::{float::*, Angle, Point, Transformation, Vector},
         Camera, Colour, Light, Material, Object,
     };
 

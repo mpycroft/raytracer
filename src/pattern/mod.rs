@@ -14,6 +14,7 @@ mod util;
 
 use paste::paste;
 use rand::prelude::*;
+use serde::{de::Error, Deserialize, Deserializer};
 use typed_builder::{Optional, TypedBuilder};
 
 #[cfg(test)]
@@ -116,12 +117,63 @@ impl<T: Optional<Transformation>> PatternBuilder<(T, (Kind,))> {
     }
 }
 
+impl<'de> Deserialize<'de> for Pattern {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        pub struct Pattern {
+            kind: String,
+            transform: Option<Transformation>,
+            a: Colour,
+            b: Colour,
+        }
+
+        let pattern = Pattern::deserialize(deserializer)?;
+
+        let final_pattern = match &*pattern.kind {
+            "blend" => Self::blend_builder(pattern.a.into(), pattern.b.into()),
+            "checker" => {
+                Self::checker_builder(pattern.a.into(), pattern.b.into())
+            }
+            "gradient" => {
+                Self::gradient_builder(pattern.a.into(), pattern.b.into())
+            }
+            "radial_gradient" => Self::radial_gradient_builder(
+                pattern.a.into(),
+                pattern.b.into(),
+            ),
+            "ring" => Self::ring_builder(pattern.a.into(), pattern.b.into()),
+            "stripe" => {
+                Self::stripe_builder(pattern.a.into(), pattern.b.into())
+            }
+            _ => {
+                return Err(Error::custom(format!(
+                    "Unknown pattern '{}'",
+                    pattern.kind
+                )))
+            }
+        };
+
+        if let Some(transformation) = pattern.transform {
+            Ok(final_pattern.transformation(transformation).build())
+        } else {
+            Ok(final_pattern.build())
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use rand_xoshiro::Xoroshiro128PlusPlus;
+    use serde_yaml::from_str;
 
     use super::*;
-    use crate::{math::float::*, Object};
+    use crate::{
+        math::{float::*, Angle},
+        Object,
+    };
 
     #[test]
     #[allow(clippy::many_single_char_names)]
@@ -288,5 +340,149 @@ mod tests {
         assert_approx_eq!(p1, &p2);
 
         assert_approx_ne!(p1, &p3);
+    }
+
+    #[test]
+    fn parse_blend_pattern() {
+        let p: Pattern = from_str(
+            "\
+kind: blend
+a: [1, 0, 0]
+b: [0, 1, 0]
+transform:
+    - [scale, 2, 2, 2]
+    - [rotate-x, 0.5]",
+        )
+        .unwrap();
+
+        assert_approx_eq!(
+            p,
+            &crate::Pattern::blend_builder(
+                Colour::red().into(),
+                Colour::green().into()
+            )
+            .transformation(
+                Transformation::new().scale(2.0, 2.0, 2.0).rotate_x(Angle(0.5))
+            )
+            .build()
+        );
+    }
+
+    #[test]
+    fn parse_checker_pattern() {
+        let p: Pattern = from_str(
+            "\
+kind: checker
+a: [0, 0, 1]
+b: [0, 0, 0]
+transform:
+    - [translate, 0, 1, 0]",
+        )
+        .unwrap();
+
+        assert_approx_eq!(
+            p,
+            &crate::Pattern::checker_builder(
+                Colour::blue().into(),
+                Colour::black().into()
+            )
+            .transformation(Transformation::new().translate(0.0, 1.0, 0.0))
+            .build()
+        );
+    }
+
+    #[test]
+    fn parse_gradient_pattern() {
+        let p: Pattern = from_str(
+            "\
+kind: gradient
+a: [1, 0, 0]
+b: [0, 1, 0]",
+        )
+        .unwrap();
+
+        assert_approx_eq!(
+            p,
+            &crate::Pattern::gradient_builder(
+                Colour::red().into(),
+                Colour::green().into()
+            )
+            .build()
+        );
+    }
+
+    #[test]
+    fn parse_radial_gradient_pattern() {
+        let p: Pattern = from_str(
+            "\
+kind: radial_gradient
+a: [1, 0, 0]
+b: [0, 1, 0]",
+        )
+        .unwrap();
+
+        assert_approx_eq!(
+            p,
+            &crate::Pattern::radial_gradient_builder(
+                Colour::red().into(),
+                Colour::green().into()
+            )
+            .build()
+        );
+    }
+
+    #[test]
+    fn parse_ring_pattern() {
+        let p: Pattern = from_str(
+            "\
+kind: ring
+a: [1, 0, 0]
+b: [0, 1, 0]",
+        )
+        .unwrap();
+
+        assert_approx_eq!(
+            p,
+            &crate::Pattern::ring_builder(
+                Colour::red().into(),
+                Colour::green().into()
+            )
+            .build()
+        );
+    }
+
+    #[test]
+    fn parse_stripe_pattern() {
+        let p: Pattern = from_str(
+            "\
+kind: stripe
+a: [0, 1, 0]
+b: [0, 0, 1]",
+        )
+        .unwrap();
+
+        assert_approx_eq!(
+            p,
+            &crate::Pattern::stripe_builder(
+                Colour::green().into(),
+                Colour::blue().into()
+            )
+            .build()
+        );
+    }
+
+    #[test]
+    fn deserialize_invalid_pattern() {
+        assert_eq!(
+            from_str::<Pattern>(
+                "\
+kind: foo
+a: [1, 0, 0]
+b: [0, 1, 0]",
+            )
+            .unwrap_err()
+            .to_string(),
+            "Unknown pattern 'foo'"
+        );
     }
 }

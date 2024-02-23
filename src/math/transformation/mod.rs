@@ -100,7 +100,7 @@ impl<'de> Deserialize<'de> for Transformation {
     {
         let list = Vec::<Vec<Value>>::deserialize(deserializer)?;
 
-        let mut final_transformation = Transformation::new();
+        let mut final_transformation = Self::new();
 
         for transformation in list {
             let op = transformation[0].as_str().ok_or_else(|| {
