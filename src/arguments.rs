@@ -19,7 +19,7 @@ pub struct Arguments {
     pub out: String,
 
     /// Input Yaml file to read from
-    #[arg(short, long, default_value = "scenes/area-light.yaml")]
+    #[arg(short, long, default_value = "scenes/bounding-box.yaml")]
     pub scene: String,
 
     /// Scale the width and height of the image by this value

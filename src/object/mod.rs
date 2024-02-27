@@ -92,7 +92,7 @@ impl Object {
     /// # Errors
     ///
     /// Will return errors if unable to read or parse the file.
-    pub fn from_obj_file<P: AsRef<Path>>(filename: P) -> Result<GroupBuilder> {
+    pub fn from_file<P: AsRef<Path>>(filename: P) -> Result<GroupBuilder> {
         Ok(ObjParser::parse(filename)?.into_group())
     }
 
@@ -176,8 +176,8 @@ mod tests {
     use crate::math::float::*;
 
     #[test]
-    fn create_from_obj_file() {
-        let _ = Object::from_obj_file("src/object/tests/triangles.obj")
+    fn create_from_file() {
+        let _ = Object::from_file("src/object/tests/triangles.obj")
             .unwrap()
             .build();
     }

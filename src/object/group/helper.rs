@@ -17,8 +17,8 @@ pub struct Helper {
     transformation: Transformation,
     #[builder(default = None, setter(strip_option))]
     material: Option<Material>,
-    #[builder(default = true)]
-    casts_shadow: bool,
+    #[builder(default = None, setter(strip_option))]
+    casts_shadow: Option<bool>,
     #[builder(mutators(
         pub fn add_object(self, object: Object) {
             self.objects.push(object);
@@ -36,7 +36,7 @@ impl<T, M, S> HelperBuilder<(T, M, S, (Vec<Object>,))>
 where
     T: Optional<Transformation>,
     M: Optional<Option<Material>>,
-    S: Optional<bool>,
+    S: Optional<Option<bool>>,
 {
     #[must_use]
     pub fn build(self) -> Object {
@@ -57,7 +57,9 @@ where
             group.replace_material(&material);
         }
 
-        group.update_casts_shadow(casts_shadow);
+        if let Some(casts_shadow) = casts_shadow {
+            group.update_casts_shadow(casts_shadow);
+        }
 
         group.into()
     }

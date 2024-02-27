@@ -7,7 +7,7 @@ use serde::Deserialize;
 use serde_yaml::{from_value, to_value, Value};
 
 use super::{Add, Data, HashValue, Material, TransformationList};
-use crate::{math::Transformation, Object, Operation};
+use crate::{Object, Operation};
 
 macro_rules! create_shape {
     ($name:ident { $($arg:ident: $ty:ty $(,)?)* }) => {
@@ -36,6 +36,7 @@ create_shape!(Cylinder {
     closed: Option<bool>
 });
 create_shape!(Group { children: Vec<Add>, divide: Option<u32> });
+create_shape!(Obj { file: String, divide: Option<u32>});
 create_shape!(Plane {});
 create_shape!(Sphere {});
 
@@ -58,23 +59,41 @@ struct Csg {
     right: CsgShape,
 }
 
-fn get_transform(
-    transformations: Option<TransformationList>,
-    data: &Data,
-) -> Result<crate::math::Transformation> {
-    transformations
-        .map_or_else(|| Ok(Transformation::new()), |list| list.parse(data))
-}
+/// Due to the typed nature of `TypedBuilder` we cannot easily conditionally set
+/// values e.g. .transformation but not .material because the return types from
+/// an if will be different. This is ugly but short of repeating ourselves with
+/// nested if's there does not appear to be a nice way to handle this.
+macro_rules! build_object {
+    (@shadow $self:ident; ($expr:expr)) => {
+        if let Some(shadow) = $self.shadow {
+            $expr.casts_shadow(shadow).build()
+        } else {
+            $expr.build()
+        }
+    };
+    (@transform $self:ident, $data:ident; ($expr:expr)) => {
+        if let Some(transform) = $self.transform {
+            let transformation = transform.parse($data)?;
 
-fn get_material<R: Rng>(
-    material: Option<Material>,
-    data: &Data,
-    rng: &mut R,
-) -> Result<crate::Material> {
-    material.map_or_else(
-        || Ok(crate::Material::default()),
-        |material| material.parse(data, rng),
-    )
+            build_object!(
+                @shadow $self; ($expr.transformation(transformation))
+            )
+        } else {
+            build_object!(@shadow $self; ($expr))
+        }
+    };
+    (@material $self:ident, $data:ident, $rng:ident; ($expr:expr)) => {
+        if let Some(material) = $self.material {
+            let material = material.parse($data, $rng)?;
+
+            build_object!(@transform $self, $data; ($expr.material(material)))
+        } else {
+            build_object!(@transform $self, $data; ($expr))
+        }
+    };
+    ($object:ident, $self:ident, $data:ident, $rng:ident) => {{
+        build_object!(@material $self, $data, $rng; ($object))
+    }};
 }
 
 macro_rules! impl_parse {
@@ -85,17 +104,12 @@ macro_rules! impl_parse {
                 data: &Data,
                 rng: &mut R
             ) -> Result<Object> {
-                let transformation = get_transform(self.transform, data)?;
-                let material = get_material(self.material, data, rng)?;
-
                 paste! {
-                    Ok(Object::[<$name:lower _builder>](
+                    let object = Object::[<$name:lower _builder>](
                         $(self.$arg.unwrap_or($default),)*
-                    )
-                    .transformation(transformation)
-                    .material(material)
-                    .casts_shadow(self.shadow.unwrap_or(true))
-                    .build())
+                    );
+
+                    Ok(build_object!(object, self, data, rng))
                 }
             }
         }
@@ -116,55 +130,29 @@ impl Group {
             objects.push(parse_shape(&object.add, object.value, data, rng)?);
         }
 
-        /// Due to the typed nature of `TypedBuilder` we cannot easily
-        /// conditionally set values e.g. .transformation but not .material
-        /// because the return types from an if will be different. This is ugly
-        /// but we only need to do it for groups.
-        macro_rules! group_builder {
-            (@shadow $self:ident; ($expr:expr)) => {
-                if let Some(shadow) = $self.shadow {
-                    $expr.casts_shadow(shadow).build()
-                } else {
-                    $expr.build()
-                }
-            };
-            (@material $self:ident; ($expr:expr)) => {
-                if $self.material.is_some() {
-                    let material = get_material($self.material, data, rng)?;
-
-                    group_builder!(
-                        @shadow $self; ($expr.material(material))
-                    )
-                } else {
-                    group_builder!(@shadow $self; ($expr))
-                }
-            };
-            (@transform $self:ident; ($expr:expr)) => {
-                if self.transform.is_some() {
-                    let transformation = get_transform($self.transform, data)?;
-                    group_builder!(
-                        @material $self; ($expr.transformation(transformation))
-                    )
-                } else {
-                    group_builder!(@material $self; ($expr))
-                }
-            };
-            ($group:ident, $self:ident) => {
-                group_builder!(@transform $self; ($group))
-            };
-        }
-
         let group = Object::group_builder().set_objects(objects);
 
-        let group = group_builder!(group, self);
+        let mut object = build_object!(group, self, data, rng);
 
-        let group = if let Some(divide) = self.divide {
-            group.divide(divide)
-        } else {
-            group
+        if let Some(divide) = self.divide {
+            object = object.divide(divide);
         };
 
-        Ok(group)
+        Ok(object)
+    }
+}
+
+impl Obj {
+    pub fn parse<R: Rng>(self, data: &Data, rng: &mut R) -> Result<Object> {
+        let group = Object::from_file(self.file)?;
+
+        let mut object = build_object!(group, self, data, rng);
+
+        if let Some(divide) = self.divide {
+            object = object.divide(divide);
+        };
+
+        Ok(object)
     }
 }
 
@@ -198,6 +186,7 @@ pub fn parse_shape<R: Rng>(
         "cube" => map_to_object!("cube"),
         "cylinder" => map_to_object!("cylinder"),
         "group" => map_to_object!("group"),
+        "obj" => map_to_object!("obj"),
         "plane" => map_to_object!("plane"),
         "sphere" => map_to_object!("sphere"),
         _ => {
@@ -377,6 +366,41 @@ divide: 1",
     }
 
     #[test]
+    fn parse_obj() {
+        let o: Obj = from_str(
+            "\
+add: obj
+file: src/scene/tests/dodecahedron.obj
+transform:
+    - [scale, 2, 2, 2]
+material:
+    color: [0, 1, 0]
+shadow: false
+divide: 1",
+        )
+        .unwrap();
+
+        let d = Data::new();
+
+        let o = o.parse(&d, &mut Xoshiro256PlusPlus::seed_from_u64(0)).unwrap();
+
+        assert_approx_eq!(
+            o,
+            &Object::from_file("src/scene/tests/dodecahedron.obj")
+                .unwrap()
+                .transformation(Transformation::new().scale(2.0, 2.0, 2.0))
+                .material(
+                    crate::Material::builder()
+                        .pattern(Colour::green().into())
+                        .build()
+                )
+                .casts_shadow(false)
+                .build()
+                .divide(1)
+        );
+    }
+
+    #[test]
     fn parse_plane() {
         let p: Plane = from_str(
             "\
@@ -448,6 +472,59 @@ right:
                     )
                     .build()
             )
+        );
+    }
+
+    #[test]
+    fn parse_defined_shape() {
+        let v: Value = from_str(
+            "\
+transform:
+    - [scale, 2, 2, 2]
+material:
+    color: [0, 0, 1]
+shadow: false",
+        )
+        .unwrap();
+
+        let mut d = Data::new();
+        d.shapes.insert(
+            String::from("foo"),
+            from_str::<Add>(
+                "\
+add: sphere
+transform:
+    - [translate, 1, 2, 3]
+material:
+    color: [1, 0, 0]
+shadow: true",
+            )
+            .unwrap(),
+        );
+
+        let o = parse_shape(
+            "foo",
+            v,
+            &d,
+            &mut Xoshiro256PlusPlus::seed_from_u64(0),
+        )
+        .unwrap();
+
+        assert_approx_eq!(
+            o,
+            &Object::sphere_builder()
+                .transformation(
+                    Transformation::new()
+                        .translate(1.0, 2.0, 3.0)
+                        .scale(2.0, 2.0, 2.0)
+                )
+                .material(
+                    crate::Material::builder()
+                        .pattern(Colour::blue().into())
+                        .build()
+                )
+                .casts_shadow(false)
+                .build()
         );
     }
 }

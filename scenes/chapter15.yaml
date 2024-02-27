@@ -1,0 +1,27 @@
+- add: camera
+  width: 1000
+  height: 1000
+  field-of-view: "PI / 3"
+  from: [0, 6, -1]
+  to: [0, 5.5, 0]
+  up: [0, 1, 0]
+- add: plane
+  material:
+      pattern:
+          kind: checker
+          a: [1, 1, 1]
+          b: [0, 0, 0]
+- add: obj
+  file: obj/teapot.obj
+  transform:
+      - [rotate-x, "-PI / 2"]
+      - [scale, 0.3, 0.3, 0.3]
+      - [translate, -0.4, 0, 7]
+  material:
+      color: [0, 0.4, 0.6]
+      shininess: 100
+      reflective: 0.05
+  divide: 50
+- add: light
+  at: [-100, 50, -50]
+  intensity: [1, 1, 1]

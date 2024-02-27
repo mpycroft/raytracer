@@ -223,6 +223,27 @@ shadow: false",
     }
 
     #[test]
+    fn parse_obj() {
+        let a: Add = from_str(
+            "\
+add: obj
+file: src/scene/tests/simple.obj",
+        )
+        .unwrap();
+
+        let mut d = Data::new();
+
+        a.parse(&mut d, &mut Xoshiro256PlusPlus::seed_from_u64(0)).unwrap();
+
+        assert_eq!(d.objects.len(), 1);
+
+        assert_approx_eq!(
+            d.objects[0],
+            &Object::from_file("src/scene/tests/simple.obj").unwrap().build()
+        );
+    }
+
+    #[test]
     fn parse_plane() {
         let a: Add = from_str("add: plane").unwrap();
 
