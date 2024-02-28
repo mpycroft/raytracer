@@ -8,7 +8,7 @@ repository = "https://github.com/mpycroft/raytracer"
 license = "MIT"
 
 [dependencies]
-anyhow = "1.0.79"
+anyhow = "1.0.80"
 clap = { version = "4.5.1", features = ["derive"] }
 console = "0.15.8"
 derive-new = "0.6.0"
@@ -17,15 +17,15 @@ either = "1.10.0"
 enum_dispatch = "0.3.12"
 exmex = "0.19.0"
 float-cmp = "0.9.0"
-image = "0.24.8"
+image = "0.24.9"
 indicatif = { version = "0.17.8", features = ["rayon"] }
 libnoise = "1.1.1"
 paste = "1.0.14"
 rand = "0.8.5"
 rand_xoshiro = "0.6.0"
-rayon = "1.8.1"
-serde = { version = "1.0.196", features = ["derive"] }
-serde_yaml = "0.9.31"
+rayon = "1.9.0"
+serde = { version = "1.0.197", features = ["derive"] }
+serde_yaml = "0.9.32"
 typed-builder = "0.18.1"
 
 [lints.clippy]
