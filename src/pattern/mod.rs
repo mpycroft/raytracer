@@ -10,6 +10,7 @@ mod solid;
 mod stripe;
 #[cfg(test)]
 mod test;
+mod texture_map;
 mod util;
 
 use paste::paste;
