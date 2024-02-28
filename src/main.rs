@@ -30,10 +30,18 @@ fn main() -> Result<()> {
 
     let mut rng = Xoshiro256PlusPlus::seed_from_u64(seed);
 
-    let scene_text = format!("Generating scene '{}'...", arguments.scene);
+    let scene_text = if arguments.sphere_scene {
+        String::from("Generating scene 'random spheres'...")
+    } else {
+        format!("Generating scene '{}'...", arguments.scene)
+    };
     writeln!(output, "{scene_text}")?;
 
-    let scene = Scene::from_file(arguments.scene, arguments.scale, &mut rng)?;
+    let scene = if arguments.sphere_scene {
+        Scene::generate_random_spheres(arguments.scale, &mut rng)
+    } else {
+        Scene::from_file(arguments.scene, arguments.scale, &mut rng)?
+    };
 
     output.clear_last_line()?;
 

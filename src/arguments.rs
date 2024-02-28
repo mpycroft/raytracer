@@ -22,6 +22,10 @@ pub struct Arguments {
     #[arg(short, long, default_value = "scenes/bounding-box.yaml")]
     pub scene: String,
 
+    /// Generate random spheres scene
+    #[arg(long, default_value = "false")]
+    pub sphere_scene: bool,
+
     /// Scale the width and height of the image by this value
     #[arg(long, default_value = "1.0")]
     pub scale: f64,

@@ -72,8 +72,8 @@ jobs:
               run: cargo binstall cargo-tarpaulin --no-confirm --force
 
             - name: Run cargo tarpaulin
-              run: cargo tarpaulin --lib -o lcov --exclude-files src/scene/*
-                  --exclude-files src/main.rs --exclude-files src/arguments.rs
+              run: cargo tarpaulin --lib -o lcov --exclude-files src/main.rs
+                  --exclude-files src/arguments.rs
 
             - name: Upload code coverage
               uses: codecov/codecov-action@v3
