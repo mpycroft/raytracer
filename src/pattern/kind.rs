@@ -4,7 +4,7 @@ use enum_dispatch::enum_dispatch;
 use super::Test;
 use super::{
     util::impl_approx_eq_patterns, Blend, Checker, Gradient, Perturbed,
-    RadialGradient, Ring, Solid, Stripe,
+    RadialGradient, Ring, Solid, Stripe, TextureMap,
 };
 
 /// The set of all patterns we know how to render.
@@ -21,6 +21,7 @@ pub enum Kind {
     Solid(Solid),
     #[cfg(test)]
     Test(Test),
+    TextureMap(TextureMap),
 }
 
 impl_approx_eq_patterns! {
@@ -33,7 +34,8 @@ impl_approx_eq_patterns! {
     Stripe,
     Solid,
     #[cfg(test)]
-    Test
+    Test,
+    TextureMap
 }
 
 #[cfg(test)]

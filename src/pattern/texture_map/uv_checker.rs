@@ -1,6 +1,7 @@
 use derive_new::new;
 
-use crate::Colour;
+use super::uv_pattern_at::UvPatternAt;
+use crate::{math::float::impl_approx_eq, Colour};
 
 #[derive(Clone, Copy, Debug, new)]
 pub struct UvChecker {
@@ -10,8 +11,8 @@ pub struct UvChecker {
     b: Colour,
 }
 
-impl UvChecker {
-    pub fn uv_pattern_at(&self, u: f64, v: f64) -> Colour {
+impl UvPatternAt for UvChecker {
+    fn uv_pattern_at(&self, u: f64, v: f64) -> Colour {
         #[allow(clippy::cast_lossless)]
         #[allow(clippy::cast_possible_truncation)]
         #[allow(clippy::cast_sign_loss)]
@@ -28,6 +29,8 @@ impl UvChecker {
         }
     }
 }
+
+impl_approx_eq!(UvChecker { eq width, eq height, a, b });
 
 #[cfg(test)]
 mod tests {

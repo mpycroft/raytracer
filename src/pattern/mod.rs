@@ -22,9 +22,17 @@ use typed_builder::{Optional, TypedBuilder};
 #[cfg(test)]
 use self::test::Test;
 use self::{
-    blend::Blend, checker::Checker, gradient::Gradient, kind::Kind,
-    pattern_at::PatternAt, perturbed::Perturbed,
-    radial_gradient::RadialGradient, ring::Ring, solid::Solid, stripe::Stripe,
+    blend::Blend,
+    checker::Checker,
+    gradient::Gradient,
+    kind::Kind,
+    pattern_at::PatternAt,
+    perturbed::Perturbed,
+    radial_gradient::RadialGradient,
+    ring::Ring,
+    solid::Solid,
+    stripe::Stripe,
+    texture_map::{TextureMap, UvMapping},
 };
 use crate::{
     math::{float::impl_approx_eq, Point, Transformable, Transformation},
@@ -78,6 +86,18 @@ impl Pattern {
     ) -> PatternBuilder<((), (Kind,))> {
         Self::_builder()
             .kind(Kind::Perturbed(Perturbed::new(scale, pattern, rng)))
+    }
+
+    pub fn uv_checker_builder(
+        width: u32,
+        height: u32,
+        a: Colour,
+        b: Colour,
+        mapping: UvMapping,
+    ) -> PatternBuilder<((), (Kind,))> {
+        Self::_builder().kind(Kind::TextureMap(TextureMap::new_checker(
+            width, height, a, b, mapping,
+        )))
     }
 
     #[must_use]

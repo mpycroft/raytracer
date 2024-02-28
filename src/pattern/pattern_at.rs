@@ -4,7 +4,7 @@ use enum_dispatch::enum_dispatch;
 use super::Test;
 use super::{
     Blend, Checker, Gradient, Kind, Perturbed, RadialGradient, Ring, Solid,
-    Stripe,
+    Stripe, TextureMap,
 };
 use crate::{math::Point, Colour};
 

@@ -2,7 +2,7 @@ use std::f64::consts::PI;
 
 use crate::math::{Point, Vector};
 
-pub fn spherical_map(point: &Point) -> (f64, f64) {
+pub fn spherical_mapping(point: &Point) -> (f64, f64) {
     let theta = point.x.atan2(point.z);
 
     let radius = Vector::new(point.x, point.y, point.z).magnitude();
@@ -28,7 +28,7 @@ mod tests {
     #[test]
     fn using_a_spherical_mapping_on_a_3d_point() {
         let test = |p, cu, cv| {
-            let (u, v) = spherical_map(&p);
+            let (u, v) = spherical_mapping(&p);
 
             assert_approx_eq!(u, cu);
             assert_approx_eq!(v, cv);
