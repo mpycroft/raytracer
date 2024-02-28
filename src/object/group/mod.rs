@@ -119,6 +119,12 @@ impl Updatable for Group {
             object.replace_material(material);
         }
     }
+
+    fn update_casts_shadow(&mut self, casts_shadow: bool) {
+        for object in &mut self.objects {
+            object.update_casts_shadow(casts_shadow);
+        }
+    }
 }
 
 impl Bounded for Group {
@@ -484,6 +490,75 @@ mod tests {
         let Object::Shape(s) = &g.objects[1] else { unreachable!() };
 
         assert_approx_eq!(s.material, &m);
+
+        let g = Object::group_builder()
+            .add_object(
+                Object::group_builder()
+                    .set_objects(vec![
+                        Object::sphere_builder()
+                            .material(Material::glass())
+                            .build(),
+                        Object::sphere_builder().build(),
+                    ])
+                    .build(),
+            )
+            .build();
+
+        let Object::Group(g) = g else { unreachable!() };
+        let Object::Group(g) = &g.objects[0] else { unreachable!() };
+        let Object::Shape(s) = &g.objects[0] else { unreachable!() };
+
+        assert_approx_eq!(s.material, &Material::glass());
+
+        let Object::Shape(s) = &g.objects[1] else { unreachable!() };
+
+        assert_approx_eq!(s.material, &Material::default());
+    }
+
+    #[test]
+    fn a_groups_casts_shadow_overwrites_objects() {
+        let g = Object::group_builder()
+            .add_object(
+                Object::group_builder()
+                    .set_objects(vec![
+                        Object::sphere_builder().build(),
+                        Object::plane_builder().build(),
+                    ])
+                    .build(),
+            )
+            .casts_shadow(false)
+            .build();
+
+        let Object::Group(g) = g else { unreachable!() };
+        let Object::Group(g) = &g.objects[0] else { unreachable!() };
+        let Object::Shape(s) = &g.objects[0] else { unreachable!() };
+
+        assert!(!s.casts_shadow);
+
+        let Object::Shape(s) = &g.objects[1] else { unreachable!() };
+
+        assert!(!s.casts_shadow);
+
+        let g = Object::group_builder()
+            .add_object(
+                Object::group_builder()
+                    .set_objects(vec![
+                        Object::sphere_builder().casts_shadow(false).build(),
+                        Object::plane_builder().build(),
+                    ])
+                    .build(),
+            )
+            .build();
+
+        let Object::Group(g) = g else { unreachable!() };
+        let Object::Group(g) = &g.objects[0] else { unreachable!() };
+        let Object::Shape(s) = &g.objects[0] else { unreachable!() };
+
+        assert!(!s.casts_shadow);
+
+        let Object::Shape(s) = &g.objects[1] else { unreachable!() };
+
+        assert!(s.casts_shadow);
     }
 
     #[test]

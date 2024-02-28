@@ -3,8 +3,12 @@ use std::ops::Mul;
 use derive_more::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign,
 };
-use float_cmp::{ApproxEq, F64Margin};
+use exmex::eval_str;
 use paste::paste;
+use serde::{de::Error, Deserialize, Deserializer};
+use serde_yaml::Value;
+
+use super::float::impl_approx_eq;
 
 /// An `Angle` represents a geometric angle, it is simply a wrapper around a
 /// value in radians but by using it rather than raw f64's we get type safety
@@ -66,19 +70,46 @@ impl Mul<Angle> for f64 {
     }
 }
 
-impl ApproxEq for Angle {
-    type Margin = F64Margin;
+impl_approx_eq!(Angle { newtype });
 
-    fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
-        let margin = margin.into();
+impl<'de> Deserialize<'de> for Angle {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Debug, Deserialize)]
+        #[serde(untagged)]
+        enum Angle {
+            Degrees { degrees: Value },
+            Radians(Value),
+        }
 
-        self.0.approx_eq(other.0, margin)
+        let parse = |value| match value {
+            Value::Number(number) => {
+                number.as_f64().map_or_else(|| unreachable!(), Ok)
+            }
+            Value::String(string) => {
+                eval_str::<f64>(&string).map_err(Error::custom)
+            }
+            _ => Err(Error::custom(format!(
+                "Unable to parse '{value:?}' as a float"
+            ))),
+        };
+
+        match Angle::deserialize(deserializer)? {
+            Angle::Radians(radians) => Ok(Self(parse(radians)?)),
+            Angle::Degrees { degrees } => {
+                Ok(Self::from_degrees(parse(degrees)?))
+            }
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use std::f64::consts::{FRAC_PI_2, FRAC_PI_3, FRAC_PI_4, FRAC_PI_6, PI};
+
+    use serde_yaml::from_str;
 
     use super::*;
     use crate::math::float::*;
@@ -188,5 +219,33 @@ mod tests {
         assert_approx_eq!(a1, a2);
 
         assert_approx_ne!(a1, a3);
+    }
+
+    #[test]
+    fn deserialize_angle() {
+        let a: Angle = from_str("0.5").unwrap();
+
+        assert_approx_eq!(a, Angle(0.5));
+
+        let a: Angle = from_str("-1").unwrap();
+
+        assert_approx_eq!(a, Angle(-1.0));
+
+        let a: Angle = from_str("degrees: 45.0").unwrap();
+
+        assert_approx_eq!(a, Angle::from_degrees(45.0));
+
+        let a: Angle = from_str("-PI / 3").unwrap();
+
+        assert_approx_eq!(a, Angle(-FRAC_PI_3));
+
+        let a: Angle = from_str("degrees: 3 * 10.5").unwrap();
+
+        assert_approx_eq!(a, Angle::from_degrees(31.5));
+
+        assert_eq!(
+            from_str::<Angle>("true").unwrap_err().to_string(),
+            "Unable to parse 'Bool(true)' as a float"
+        );
     }
 }

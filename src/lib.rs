@@ -10,6 +10,8 @@ pub mod math;
 mod object;
 mod output;
 mod pattern;
+mod scene;
+mod util;
 mod world;
 
 pub use camera::Camera;
@@ -20,4 +22,5 @@ pub use material::Material;
 pub use object::{Object, Operation};
 pub use output::Output;
 pub use pattern::Pattern;
+pub use scene::Scene;
 pub use world::World;

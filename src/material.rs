@@ -1,4 +1,5 @@
 use rand::prelude::*;
+use serde::{de::Error, Deserialize, Deserializer};
 use typed_builder::TypedBuilder;
 
 use crate::{
@@ -92,15 +93,75 @@ impl Default for Material {
     }
 }
 
-impl_approx_eq!(
-    &Material { ref pattern, ambient, diffuse, specular, shininess, reflective }
-);
+impl_approx_eq!(&Material {
+    ref pattern,
+    ambient,
+    diffuse,
+    specular,
+    shininess,
+    reflective,
+    transparency,
+    refractive_index
+});
+
+impl<'de> Deserialize<'de> for Material {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct Material {
+            pattern: Option<Pattern>,
+            #[serde(rename = "color")]
+            colour: Option<Colour>,
+            ambient: Option<f64>,
+            diffuse: Option<f64>,
+            specular: Option<f64>,
+            shininess: Option<f64>,
+            reflective: Option<f64>,
+            transparency: Option<f64>,
+            refractive_index: Option<f64>,
+        }
+
+        let material = Material::deserialize(deserializer)?;
+
+        if material.pattern.is_some() && material.colour.is_some() {
+            return Err(Error::custom(
+                "Only one of pattern or colour can be set on a material",
+            ));
+        };
+
+        let default = Self::default();
+
+        let pattern = if let Some(pattern) = material.pattern {
+            pattern
+        } else if let Some(colour) = material.colour {
+            colour.into()
+        } else {
+            default.pattern
+        };
+
+        Ok(Self::builder()
+            .pattern(pattern)
+            .ambient(material.ambient.unwrap_or(default.ambient))
+            .diffuse(material.diffuse.unwrap_or(default.diffuse))
+            .specular(material.specular.unwrap_or(default.specular))
+            .shininess(material.shininess.unwrap_or(default.shininess))
+            .reflective(material.reflective.unwrap_or(default.reflective))
+            .transparency(material.transparency.unwrap_or(default.transparency))
+            .refractive_index(
+                material.refractive_index.unwrap_or(default.refractive_index),
+            )
+            .build())
+    }
+}
 
 #[cfg(test)]
 mod tests {
     use std::f64::consts::SQRT_2;
 
     use rand_xoshiro::Xoshiro256PlusPlus;
+    use serde_yaml::from_str;
 
     use super::*;
     use crate::{
@@ -461,5 +522,85 @@ mod tests {
         assert_approx_eq!(m1, &m2);
 
         assert_approx_ne!(m1, &m3);
+    }
+
+    #[test]
+    fn deserialize_material() {
+        let m: Material = from_str(
+            "\
+color: [1, 0, 0]
+ambient: 0.6
+reflective: 0.5",
+        )
+        .unwrap();
+
+        assert_approx_eq!(
+            m,
+            &Material::builder()
+                .pattern(Colour::red().into())
+                .ambient(0.6)
+                .reflective(0.5)
+                .build()
+        );
+
+        let m: Material = from_str(
+            "\
+pattern:
+    kind: checker
+    a: [1, 1, 1]
+    b: [0, 0, 0]
+diffuse: 0.3
+specular: 0.5",
+        )
+        .unwrap();
+
+        assert_approx_eq!(
+            m,
+            &Material::builder()
+                .pattern(
+                    Pattern::checker_builder(
+                        Colour::white().into(),
+                        Colour::black().into()
+                    )
+                    .build()
+                )
+                .diffuse(0.3)
+                .specular(0.5)
+                .build()
+        );
+
+        let m: Material = from_str(
+            "\
+shininess: 125.0
+transparency: 0.4
+refractive_index: 1.2",
+        )
+        .unwrap();
+
+        assert_approx_eq!(
+            m,
+            &Material::builder()
+                .shininess(125.0)
+                .transparency(0.4)
+                .refractive_index(1.2)
+                .build()
+        );
+    }
+
+    #[test]
+    fn deserialize_invalid_material() {
+        assert_eq!(
+            from_str::<Material>(
+                "
+color: [1, 0, 0]
+pattern:
+    kind: checker
+    a: [0, 1, 0]
+    b: [0, 0, 1]"
+            )
+            .unwrap_err()
+            .to_string(),
+            "Only one of pattern or colour can be set on a material"
+        );
     }
 }

@@ -1,13 +1,12 @@
 use std::f64::EPSILON;
 
 use derive_new::new;
-use float_cmp::{ApproxEq, F64Margin};
 
 use super::{Bounded, BoundingBox, Intersectable};
 use crate::{
     intersection::{Intersection, TList, TValues},
     math::{
-        float::{approx_eq, approx_ne},
+        float::{approx_eq, approx_ne, impl_approx_eq},
         Point, Ray, Vector,
     },
 };
@@ -118,22 +117,7 @@ impl Bounded for Cylinder {
     }
 }
 
-impl ApproxEq for &Cylinder {
-    type Margin = F64Margin;
-
-    fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
-        let margin = margin.into();
-
-        if self.closed == other.closed
-            && self.minimum.approx_eq(other.minimum, margin)
-            && self.maximum.approx_eq(other.maximum, margin)
-        {
-            return true;
-        }
-
-        false
-    }
-}
+impl_approx_eq!(&Cylinder { eq closed, minimum, maximum });
 
 #[cfg(test)]
 mod tests {

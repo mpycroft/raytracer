@@ -5,7 +5,7 @@ use derive_more::{
 };
 use derive_new::new;
 
-use crate::math::float::impl_approx_eq;
+use crate::{math::float::impl_approx_eq, util::impl_deserialize_tuple};
 
 /// A Colour represents an RGB colour in the image, values generally range from
 /// 0.0..1.0 but can go outside this range before final processing.
@@ -102,8 +102,12 @@ impl MulAssign for Colour {
 
 impl_approx_eq!(Colour { red, green, blue });
 
+impl_deserialize_tuple!(Colour);
+
 #[cfg(test)]
 mod tests {
+    use serde_yaml::from_str;
+
     use super::*;
     use crate::math::float::*;
 
@@ -213,5 +217,12 @@ mod tests {
         assert_approx_eq!(c1, c2);
 
         assert_approx_ne!(c1, c3);
+    }
+
+    #[test]
+    fn deserialize_colour() {
+        let c: Colour = from_str("[0.5, 0.3, 0.8]").unwrap();
+
+        assert_approx_eq!(c, Colour::new(0.5, 0.3, 0.8));
     }
 }

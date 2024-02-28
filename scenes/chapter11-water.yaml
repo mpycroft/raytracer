@@ -1,0 +1,54 @@
+- add: camera
+  width: 1000
+  height: 500
+  field-of-view: "PI / 3"
+  from: [0, 0.5, -5]
+  to: [0, 0, 0]
+  up: [0, 1, 0]
+- add: plane
+  transform:
+      - [translate, 0, -5, 0]
+  material:
+      pattern:
+          kind: checker
+          a: [0, 1, 0]
+          b: [1, 1, 1]
+      specular: 0.0
+- add: plane
+  transform:
+      - [rotate-x, "PI / 2"]
+      - [translate, 0, 0, 100]
+  material:
+      pattern:
+          kind: checker
+          a: [1, 1, 1]
+          b: [0, 0, 0]
+- add: sphere
+  transform:
+      - [scale, 0.5, 0.5, 0.5]
+      - [translate, 0, -4.5, 20]
+  material:
+      color: [0, 0, 1]
+- add: sphere
+  transform:
+      - [scale, 0.5, 0.5, 0.5]
+      - [translate, 5, -4.5, 15]
+  material:
+      color: [0, 1, 0]
+- add: sphere
+  transform:
+      - [scale, 0.5, 0.5, 0.5]
+      - [translate, -4, -4.5, 10]
+  material:
+      color: [1, 0, 0]
+- add: plane
+  transform:
+      - [translate, 0, -2, 0]
+  material:
+      reflective: 0.1
+      transparency: 1
+      refractive_index: 1.5
+  shadow: false
+- add: light
+  at: [-10, 5, -10]
+  intensity: [0.8, 0.8, 0.8]

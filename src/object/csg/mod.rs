@@ -1,12 +1,10 @@
 mod operation;
 
-use float_cmp::{ApproxEq, F64Margin};
-
 pub use self::operation::Operation;
 use super::{Bounded, BoundingBox, Includes, Updatable};
 use crate::{
     intersection::List,
-    math::{Ray, Transformation},
+    math::{float::impl_approx_eq, Ray, Transformation},
     Material, Object,
 };
 
@@ -126,6 +124,11 @@ impl Updatable for Csg {
         self.left.replace_material(material);
         self.right.replace_material(material);
     }
+
+    fn update_casts_shadow(&mut self, casts_shadow: bool) {
+        self.left.update_casts_shadow(casts_shadow);
+        self.right.update_casts_shadow(casts_shadow);
+    }
 }
 
 impl Bounded for Csg {
@@ -146,17 +149,7 @@ impl Includes for Csg {
     }
 }
 
-impl ApproxEq for &Csg {
-    type Margin = F64Margin;
-
-    fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
-        let margin = margin.into();
-
-        self.operation == other.operation
-            && self.left.approx_eq(&other.left, margin)
-            && self.right.approx_eq(&other.right, margin)
-    }
-}
+impl_approx_eq!(&Csg { eq operation, ref left, ref right });
 
 #[cfg(test)]
 mod tests {
@@ -356,8 +349,8 @@ mod tests {
     fn test_updating_a_csg() {
         let mut o = Object::new_csg(
             Operation::Difference,
-            Object::sphere_builder().build(),
-            Object::test_builder().build(),
+            Object::sphere_builder().casts_shadow(false).build(),
+            Object::test_builder().casts_shadow(false).build(),
         );
 
         let t = Transformation::new().scale(2.0, 2.0, 2.0);
@@ -372,6 +365,8 @@ mod tests {
 
         o.replace_material(&m);
 
+        o.update_casts_shadow(true);
+
         let Object::Csg(c) = o else { unreachable!() };
         let Object::Shape(s1) = *c.left else { unreachable!() };
         let Object::Shape(s2) = *c.right else { unreachable!() };
@@ -381,6 +376,9 @@ mod tests {
 
         assert_approx_eq!(s1.material, &m);
         assert_approx_eq!(s2.material, &m);
+
+        assert!(s1.casts_shadow);
+        assert!(s2.casts_shadow);
     }
 
     #[test]

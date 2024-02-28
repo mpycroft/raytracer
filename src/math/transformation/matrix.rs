@@ -203,8 +203,8 @@ impl Matrix<4> {
     }
 
     #[must_use]
-    pub fn view_transformation(from: &Point, to: &Point, up: &Vector) -> Self {
-        let forward = (*to - *from).normalise();
+    pub fn view_transformation(from: Point, to: Point, up: Vector) -> Self {
+        let forward = (to - from).normalise();
         let up = up.normalise();
         let left = forward.cross(&up);
         let true_up = left.cross(&forward);
@@ -663,9 +663,9 @@ mod tests {
     fn the_transformation_matrix_for_the_default_orientation() {
         assert_approx_eq!(
             Matrix::view_transformation(
-                &Point::origin(),
-                &Point::new(0.0, 0.0, -1.0),
-                &Vector::y_axis()
+                Point::origin(),
+                Point::new(0.0, 0.0, -1.0),
+                Vector::y_axis()
             ),
             Matrix::<4>::identity()
         );
@@ -675,9 +675,9 @@ mod tests {
     fn a_view_transformation_matrix_looking_in_positive_z() {
         assert_approx_eq!(
             Matrix::view_transformation(
-                &Point::origin(),
-                &Point::new(0.0, 0.0, 1.0),
-                &Vector::y_axis()
+                Point::origin(),
+                Point::new(0.0, 0.0, 1.0),
+                Vector::y_axis()
             ),
             Matrix::scale(-1.0, 1.0, -1.0)
         );
@@ -687,9 +687,9 @@ mod tests {
     fn the_view_transformation_moves_the_world() {
         assert_approx_eq!(
             Matrix::view_transformation(
-                &Point::new(0.0, 0.0, 8.0),
-                &Point::origin(),
-                &Vector::y_axis()
+                Point::new(0.0, 0.0, 8.0),
+                Point::origin(),
+                Vector::y_axis()
             ),
             Matrix::translate(0.0, 0.0, -8.0)
         );
@@ -699,9 +699,9 @@ mod tests {
     fn an_arbitrary_view_transformation() {
         assert_approx_eq!(
             Matrix::view_transformation(
-                &Point::new(1.0, 3.0, 2.0),
-                &Point::new(4.0, -2.0, 8.0),
-                &Vector::new(1.0, 1.0, 0.0)
+                Point::new(1.0, 3.0, 2.0),
+                Point::new(4.0, -2.0, 8.0),
+                Vector::new(1.0, 1.0, 0.0)
             ),
             Matrix([
                 [-0.507_09, 0.507_09, 0.676_12, -2.366_43],

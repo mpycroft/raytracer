@@ -1,5 +1,4 @@
 mod arguments;
-mod scene;
 
 use std::{
     fs::write,
@@ -12,7 +11,7 @@ use clap::Parser;
 use image::{ImageBuffer, Rgb};
 use rand::prelude::*;
 use rand_xoshiro::Xoshiro256PlusPlus;
-use raytracer::Output;
+use raytracer::{Output, Scene};
 
 use crate::arguments::Arguments;
 
@@ -31,10 +30,18 @@ fn main() -> Result<()> {
 
     let mut rng = Xoshiro256PlusPlus::seed_from_u64(seed);
 
-    let scene_text = format!("Generating scene '{}'...", arguments.scene);
+    let scene_text = if arguments.sphere_scene {
+        String::from("Generating scene 'random-spheres'...")
+    } else {
+        format!("Generating scene '{}'...", arguments.scene)
+    };
     writeln!(output, "{scene_text}")?;
 
-    let scene = arguments.scene.generate(&arguments, &mut rng);
+    let scene = if arguments.sphere_scene {
+        Scene::generate_random_spheres(arguments.scale, &mut rng)
+    } else {
+        Scene::from_file(arguments.scene, arguments.scale, &mut rng)?
+    };
 
     output.clear_last_line()?;
 
@@ -56,8 +63,8 @@ fn main() -> Result<()> {
     } else {
         #[allow(clippy::cast_possible_truncation)]
         let image = ImageBuffer::from_fn(
-            scene.camera.horizontal_size(),
-            scene.camera.vertical_size(),
+            scene.horizontal_size(),
+            scene.vertical_size(),
             |x, y| Rgb(canvas.get_pixel(x as usize, y as usize).to_u8()),
         );
 

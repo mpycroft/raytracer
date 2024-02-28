@@ -1,0 +1,52 @@
+- add: camera
+  width: 1000
+  height: 1000
+  field-of-view: "PI / 2"
+  from: [0, 0, 0]
+  to: [0.5, -0.2, 1.0]
+  up: [0, 1, 0]
+- add: cube
+  transform:
+      - [scale, 5, 5, 5]
+  material:
+      color: [0.4, 0.4, 0.1]
+- add: cube
+  transform:
+      - [scale, 5, 0.1, 2]
+      - [translate, 0, -2, 4]
+  material:
+      color: [1, 0, 0]
+- add: cube
+  transform:
+      - [scale, 0.2, 0.7, 0.2]
+      - [translate, 0, -2, 3]
+  material:
+      color: [0, 1, 0]
+- add: cube
+  transform:
+      - [rotate-y, "PI / 6"]
+      - [scale, 0.2, 0.7, 0.2]
+      - [translate, 2, -2, 3]
+  material:
+      color: [0, 0, 1]
+- add: sphere
+  transform:
+      - [scale, 0.5, 0.5, 0.5]
+      - [translate, 1.0, -1.5, 4.0]
+  material:
+      ambient: 0.01
+      diffuse: 0.01
+      transparency: 1.0
+      refractive_index: 1.5
+- add: cube
+  transform:
+      - [scale, 0.1, 1.5, 3]
+      - [translate, 5, 0, 3]
+  material:
+      ambient: 0
+      diffuse: 0
+      specular: 0.3
+      reflective: 1
+- add: light
+  at: [-4, 4, -4]
+  intensity: [1, 1, 1]

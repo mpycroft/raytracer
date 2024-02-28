@@ -8,9 +8,13 @@ use indicatif::{
 use rand::prelude::*;
 use rand_xoshiro::Xoshiro256PlusPlus;
 use rayon::prelude::*;
+use serde::{Deserialize, Deserializer};
 
 use crate::{
-    math::{Angle, Point, Ray, Transformable, Transformation},
+    math::{
+        float::impl_approx_eq, Angle, Point, Ray, Transformable,
+        Transformation, Vector,
+    },
     Canvas, Colour, Output, World,
 };
 
@@ -34,6 +38,25 @@ impl Camera {
         field_of_view: Angle,
         transformation: Transformation,
     ) -> Self {
+        let (half_width, half_height, pixel_size) =
+            Self::calculate(horizontal_size, vertical_size, field_of_view);
+
+        Self {
+            horizontal_size,
+            vertical_size,
+            field_of_view,
+            inverse_transformation: transformation.invert(),
+            half_width,
+            half_height,
+            pixel_size,
+        }
+    }
+
+    fn calculate(
+        horizontal_size: u32,
+        vertical_size: u32,
+        field_of_view: Angle,
+    ) -> (f64, f64, f64) {
         let half_view = (field_of_view / 2.0).tan();
         #[allow(clippy::cast_precision_loss)]
         let horizontal_float = f64::from(horizontal_size);
@@ -46,15 +69,21 @@ impl Camera {
             (half_view * aspect, half_view)
         };
 
-        Self {
-            horizontal_size,
-            vertical_size,
-            field_of_view,
-            inverse_transformation: transformation.invert(),
-            half_width,
-            half_height,
-            pixel_size: half_width * 2.0 / horizontal_float,
-        }
+        (half_width, half_height, half_width * 2.0 / horizontal_float)
+    }
+
+    #[allow(clippy::cast_possible_truncation)]
+    #[allow(clippy::cast_sign_loss)]
+    #[allow(clippy::cast_lossless)]
+    pub fn scale(&mut self, scale: f64) {
+        self.horizontal_size = ((self.horizontal_size as f64) * scale) as u32;
+        self.vertical_size = ((self.vertical_size as f64) * scale) as u32;
+
+        (self.half_width, self.half_height, self.pixel_size) = Self::calculate(
+            self.horizontal_size,
+            self.vertical_size,
+            self.field_of_view,
+        );
     }
 
     #[must_use]
@@ -180,9 +209,53 @@ Elapsed: {elapsed}, remaining: {eta}, rows/sec: {per_sec}",
     }
 }
 
+impl_approx_eq!(Camera {
+    eq horizontal_size,
+    eq vertical_size,
+    field_of_view,
+    half_width,
+    half_height,
+    pixel_size
+});
+
+impl<'de> Deserialize<'de> for Camera {
+    fn deserialize<D>(
+        deserializer: D,
+    ) -> std::prelude::v1::Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(rename_all = "kebab-case")]
+        pub struct Camera {
+            pub width: u32,
+            pub height: u32,
+            pub field_of_view: Angle,
+            pub from: Point,
+            pub to: Point,
+            pub up: Vector,
+        }
+
+        let camera = Camera::deserialize(deserializer)?;
+
+        Ok(Self::new(
+            camera.width,
+            camera.height,
+            camera.field_of_view,
+            Transformation::view_transformation(
+                camera.from,
+                camera.to,
+                camera.up,
+            ),
+        ))
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::{FRAC_PI_2, FRAC_PI_4, PI, SQRT_2};
+    use std::f64::consts::{FRAC_PI_2, FRAC_PI_3, FRAC_PI_4, PI, SQRT_2};
+
+    use serde_yaml::from_str;
 
     use super::*;
     use crate::math::{float::*, Vector};
@@ -213,6 +286,36 @@ mod tests {
         assert_approx_eq!(c.half_width, 0.625);
         assert_approx_eq!(c.half_height, 1.0);
         assert_approx_eq!(c.pixel_size, 0.01);
+    }
+
+    #[test]
+    fn scaling_a_camera() {
+        let mut c = Camera::new(
+            100,
+            100,
+            Angle(FRAC_PI_2),
+            Transformation::view_transformation(
+                Point::origin(),
+                Point::new(0.0, -2.0, -5.0),
+                Vector::y_axis(),
+            ),
+        );
+
+        c.scale(2.5);
+
+        assert_approx_eq!(
+            c,
+            Camera::new(
+                250,
+                250,
+                Angle(FRAC_PI_2),
+                Transformation::view_transformation(
+                    Point::origin(),
+                    Point::new(0.0, -2.0, -5.0),
+                    Vector::y_axis(),
+                )
+            )
+        );
     }
 
     #[test]
@@ -258,6 +361,72 @@ mod tests {
             Ray::new(
                 Point::new(0.0, 2.0, -5.0),
                 Vector::new(sqrt_2_div_2, 0.0, -sqrt_2_div_2)
+            )
+        );
+    }
+
+    #[test]
+    fn comparing_cameras() {
+        let c1 = Camera::new(
+            100,
+            80,
+            Angle(FRAC_PI_2),
+            Transformation::view_transformation(
+                Point::new(1.0, 2.0, 3.0),
+                Point::origin(),
+                Vector::y_axis(),
+            ),
+        );
+        let c2 = Camera::new(
+            100,
+            80,
+            Angle(FRAC_PI_2),
+            Transformation::view_transformation(
+                Point::new(1.0, 2.0, 3.0),
+                Point::origin(),
+                Vector::y_axis(),
+            ),
+        );
+        let c3 = Camera::new(
+            100,
+            80,
+            Angle(FRAC_PI_4),
+            Transformation::view_transformation(
+                Point::new(1.0, 2.0, 3.0),
+                Point::origin(),
+                Vector::y_axis(),
+            ),
+        );
+
+        assert_approx_eq!(c1, c2);
+
+        assert_approx_ne!(c1, c3);
+    }
+
+    #[test]
+    fn deserialize_camera() {
+        let c: Camera = from_str(
+            "\
+width: 200
+height: 150
+field-of-view: \"PI / 3\"
+from: [1, 2, 3]
+to: [0, 1.5, 0.0]
+up: [0, 1, 0]",
+        )
+        .unwrap();
+
+        assert_approx_eq!(
+            c,
+            Camera::new(
+                200,
+                150,
+                Angle(FRAC_PI_3),
+                Transformation::view_transformation(
+                    Point::new(1.0, 2.0, 3.0),
+                    Point::new(0.0, 1.5, 0.0),
+                    Vector::y_axis()
+                )
             )
         );
     }

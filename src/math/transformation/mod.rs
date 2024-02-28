@@ -1,11 +1,12 @@
 mod matrix;
 mod transformable;
 
-use float_cmp::{ApproxEq, F64Margin};
+use serde::{de::Error, Deserialize, Deserializer};
+use serde_yaml::{from_value, Value};
 
 use self::matrix::Matrix;
 pub use self::transformable::Transformable;
-use super::{Angle, Point, Vector};
+use super::{float::impl_approx_eq, Angle, Point, Vector};
 
 /// A `Transformation` is a wrapper around a 4 dimensional matrix allowing a
 /// more ergonomic use of transformations. Transformations can be chained in an
@@ -21,11 +22,11 @@ macro_rules! add_transformation_fn {
     ($name:ident($($arg:ident: $type:ty),+)) => {
         // We don't need to actually use the return value all the time for these
         // functions as they mutate as well.
-        #[must_use]
-        pub fn $name(mut self, $($arg: $type),+) -> Self {
+        #[allow(clippy::return_self_not_must_use)]
+        pub fn $name(&mut self, $($arg: $type),+) -> Self {
             self.0 = Matrix::$name($($arg),+) * self.0;
 
-            self
+            *self
         }
 
     };
@@ -38,7 +39,7 @@ impl Transformation {
     }
 
     #[must_use]
-    pub fn view_transformation(from: &Point, to: &Point, up: &Vector) -> Self {
+    pub fn view_transformation(from: Point, to: Point, up: Vector) -> Self {
         Self(Matrix::view_transformation(from, to, up))
     }
 
@@ -67,11 +68,11 @@ impl Transformation {
         Self(self.0.transpose())
     }
 
-    #[must_use]
-    pub fn extend(mut self, transformation: &Self) -> Self {
+    #[allow(clippy::return_self_not_must_use)]
+    pub fn extend(&mut self, transformation: &Self) -> Self {
         self.0 = transformation.0 * self.0;
 
-        self
+        *self
     }
 
     add_transformation_fn!(translate(x: f64, y: f64, z:f64));
@@ -90,19 +91,116 @@ impl Default for Transformation {
     }
 }
 
-impl ApproxEq for Transformation {
-    type Margin = F64Margin;
+impl_approx_eq!(Transformation { newtype });
 
-    fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
-        let margin = margin.into();
+impl<'de> Deserialize<'de> for Transformation {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let list = Vec::<Vec<Value>>::deserialize(deserializer)?;
 
-        self.0.approx_eq(other.0, margin)
+        let mut final_transformation = Self::new();
+
+        for transformation in list {
+            let op = transformation[0].as_str().ok_or_else(|| {
+                Error::custom(format!(
+                    "Unable to parse operator '{:?}'",
+                    transformation[0]
+                ))
+            })?;
+
+            let values = &transformation[1..];
+
+            let vec_len = values.len();
+            let check_len = |op, len| {
+                if vec_len != len {
+                    return Err(Error::custom(format!(
+                        "\
+Transformation '{op}' requires {len} arguments, found {vec_len}"
+                    )));
+                }
+
+                Ok(())
+            };
+
+            let parse = |value: &Value| {
+                value.as_f64().ok_or_else(|| {
+                    Error::custom(format!(
+                        "Failed to parse '{value:?}' as an f64"
+                    ))
+                })
+            };
+
+            match op {
+                "rotate-x" => {
+                    check_len(op, 1)?;
+
+                    final_transformation.rotate_x(
+                        from_value(values[0].clone()).map_err(Error::custom)?,
+                    )
+                }
+                "rotate-y" => {
+                    check_len(op, 1)?;
+
+                    final_transformation.rotate_y(
+                        from_value(values[0].clone()).map_err(Error::custom)?,
+                    )
+                }
+                "rotate-z" => {
+                    check_len(op, 1)?;
+
+                    final_transformation.rotate_z(
+                        from_value(values[0].clone()).map_err(Error::custom)?,
+                    )
+                }
+                "scale" => {
+                    check_len(op, 3)?;
+
+                    final_transformation.scale(
+                        parse(&values[0])?,
+                        parse(&values[1])?,
+                        parse(&values[2])?,
+                    )
+                }
+                "shear" => {
+                    check_len(op, 6)?;
+
+                    final_transformation.shear(
+                        parse(&values[0])?,
+                        parse(&values[1])?,
+                        parse(&values[2])?,
+                        parse(&values[3])?,
+                        parse(&values[4])?,
+                        parse(&values[5])?,
+                    )
+                }
+                "translate" => {
+                    check_len(op, 3)?;
+
+                    final_transformation.translate(
+                        parse(&values[0])?,
+                        parse(&values[1])?,
+                        parse(&values[2])?,
+                    )
+                }
+                _ => {
+                    return Err(Error::custom(format!(
+                        "Unknown operator '{op}'"
+                    )))
+                }
+            };
+        }
+
+        Ok(final_transformation)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::{FRAC_PI_2, FRAC_PI_6};
+    use std::f64::consts::{FRAC_PI_2, FRAC_PI_3, FRAC_PI_6};
+
+    use serde_yaml::from_str;
 
     use super::*;
     use crate::math::float::*;
@@ -153,8 +251,8 @@ mod tests {
         let up = Vector::new(1.5, 0.0, 0.8);
 
         assert_approx_eq!(
-            Transformation::view_transformation(&from, &to, &up).0,
-            Matrix::view_transformation(&from, &to, &up)
+            Transformation::view_transformation(from, to, up).0,
+            Matrix::view_transformation(from, to, up)
         );
     }
 
@@ -162,11 +260,11 @@ mod tests {
     fn applying_a_transformation() {
         let p = Point::new(1.5, 2.5, 3.5);
 
-        let t = Transformation::new();
+        let mut t = Transformation::new();
         assert_approx_eq!(t.apply(&p), p);
         assert_approx_eq!(p.apply(&t), p);
 
-        let t = t.scale(2.0, 2.0, 2.0);
+        t.scale(2.0, 2.0, 2.0);
 
         assert_approx_eq!(t.apply(&p), Point::new(3.0, 5.0, 7.0));
 
@@ -304,5 +402,91 @@ Tried to invert a Matrix that cannot be inverted - Matrix<4>([
         assert_approx_eq!(t1, t2);
 
         assert_approx_ne!(t1, t3);
+    }
+
+    #[test]
+    fn deserialize_single_transformation() {
+        assert_approx_eq!(
+            from_str::<Transformation>("- [rotate-x, -0.5]").unwrap(),
+            Transformation::new().rotate_x(Angle(-0.5))
+        );
+
+        assert_approx_eq!(
+            from_str::<Transformation>("- [rotate-y, \"PI / 3\"]").unwrap(),
+            Transformation::new().rotate_y(Angle(FRAC_PI_3))
+        );
+
+        assert_approx_eq!(
+            from_str::<Transformation>("- [rotate-z, degrees: 32.6]").unwrap(),
+            Transformation::new().rotate_z(Angle::from_degrees(32.6))
+        );
+
+        assert_approx_eq!(
+            from_str::<Transformation>("- [scale, 2.0, 0, 1]").unwrap(),
+            Transformation::new().scale(2.0, 0.0, 1.0)
+        );
+
+        assert_approx_eq!(
+            from_str::<Transformation>(
+                "- [shear, 0.5, 0.5, 1.0, 1.5, 2.0, 0.0]"
+            )
+            .unwrap(),
+            Transformation::new().shear(0.5, 0.5, 1.0, 1.5, 2.0, 0.0)
+        );
+
+        assert_approx_eq!(
+            from_str::<Transformation>("- [translate, 1, 2, 3]").unwrap(),
+            Transformation::new().translate(1.0, 2.0, 3.0)
+        );
+    }
+
+    #[test]
+    fn deserialize_multiple_transformations() {
+        assert_approx_eq!(
+            from_str::<Transformation>(
+                "\
+- [translate, 1, 2, 3]
+- [rotate-z, 1.2]
+- [scale, 2, 2, 2]
+- [rotate-x, 0.9]"
+            )
+            .unwrap(),
+            Transformation::new()
+                .translate(1.0, 2.0, 3.0)
+                .rotate_z(Angle(1.2))
+                .scale(2.0, 2.0, 2.0)
+                .rotate_x(Angle(0.9))
+        );
+    }
+
+    #[test]
+    fn deserialize_invalid_transformation() {
+        assert_eq!(
+            from_str::<Transformation>("- [5, 1, 2, 3]")
+                .unwrap_err()
+                .to_string(),
+            "Unable to parse operator 'Number(5)'"
+        );
+
+        assert_eq!(
+            from_str::<Transformation>("- [foo, 1, 2, 3]")
+                .unwrap_err()
+                .to_string(),
+            "Unknown operator 'foo'"
+        );
+
+        assert_eq!(
+            from_str::<Transformation>("- [translate, foo, 2, 3]")
+                .unwrap_err()
+                .to_string(),
+            "Failed to parse 'String(\"foo\")' as an f64"
+        );
+
+        assert_eq!(
+            from_str::<Transformation>("- [scale, 1, 2, 3, 5]")
+                .unwrap_err()
+                .to_string(),
+            "Transformation 'scale' requires 3 arguments, found 4"
+        );
     }
 }

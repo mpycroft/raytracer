@@ -1,12 +1,7 @@
-use anyhow::Result;
 use clap::{
     builder::{styling::AnsiColor, Styles},
     Parser,
 };
-use exmex::eval_str;
-use raytracer::math::Angle;
-
-use crate::scene::Scene;
 
 const fn styles() -> Styles {
     Styles::styled()
@@ -19,45 +14,35 @@ const fn styles() -> Styles {
 #[derive(Clone, Debug, Parser)]
 #[command(author, version, about, styles = styles())]
 pub struct Arguments {
-    /// Output FILE to write to
-    #[arg(short, long, id = "FILE", default_value = "image.ppm")]
+    /// Output file to write to
+    #[arg(short, long, default_value = "image.ppm")]
     pub out: String,
 
-    /// Which scene to generate.
-    #[arg(short, long, default_value = "area-light")]
-    pub scene: Scene,
+    /// Input Yaml file to read from
+    #[arg(short, long, default_value = "scenes/bounding-box.yaml")]
+    pub scene: String,
 
-    /// Camera width (in pixels)
-    #[arg(long)]
-    pub width: Option<u32>,
+    /// Generate random spheres scene
+    #[arg(long, default_value = "false")]
+    pub sphere_scene: bool,
 
-    /// Camera height (in pixels)
-    #[arg(long)]
-    pub height: Option<u32>,
+    /// Scale the width and height of the image by this value
+    #[arg(long, default_value = "1.0")]
+    pub scale: f64,
 
-    /// Field of view (in radians)
-    #[arg(long, value_parser = parse_fov)]
-    pub fov: Option<Angle>,
-
-    /// The number of reflection rays to produce.
+    /// The number of reflection rays to produce
     #[arg(long, default_value = "5")]
     pub depth: u32,
 
-    /// The seed to use when using random numbers.
+    /// The seed to use when using random numbers
     #[arg[long]]
     pub seed: Option<u64>,
 
-    /// Run the rendering process with a single thread.
+    /// Run the rendering process with a single thread
     #[arg(long)]
     pub single_threaded: bool,
 
     /// Suppress program output
     #[arg(short, long)]
     pub quiet: bool,
-}
-
-fn parse_fov(string: &str) -> Result<Angle> {
-    let result = eval_str::<f64>(string)?;
-
-    Ok(Angle(result))
 }

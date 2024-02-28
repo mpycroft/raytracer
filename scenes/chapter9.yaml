@@ -1,0 +1,44 @@
+- add: camera
+  width: 1000
+  height: 500
+  field-of-view: "PI / 3"
+  from: [0, 1.5, -5]
+  to: [0, 1, 0]
+  up: [0, 1, 0]
+- define: floor
+  value:
+      color: [1.0, 0.9, 0.9]
+      specular: 0
+- add: plane
+  material: floor
+- add: plane
+  transform:
+      - [rotate-x, "PI / 2"]
+      - [translate, 0, 0, 10]
+  material: floor
+- add: sphere
+  transform:
+      - [translate, -0.5, 1.0, 0.5]
+  material:
+      color: [0.1, 1, 0.5]
+      diffuse: 0.7
+      specular: 0.3
+- add: sphere
+  transform:
+      - [scale, 0.5, 0.5, 0.5]
+      - [translate, 1.5, 0.5, -0.5]
+  material:
+      color: [0.5, 1, 0.1]
+      diffuse: 0.7
+      specular: 0.3
+- add: sphere
+  transform:
+      - [scale, 0.33, 0.33, 0.33]
+      - [translate, -1.5, 0.33, -0.75]
+  material:
+      color: [1, 0.8, 0.1]
+      diffuse: 0.7
+      specular: 0.3
+- add: light
+  at: [-10, 10, -10]
+  intensity: [0.8, 0.8, 0.8]

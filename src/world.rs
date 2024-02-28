@@ -559,9 +559,9 @@ mod tests {
             11,
             Angle(FRAC_PI_2),
             Transformation::view_transformation(
-                &Point::new(0.0, 0.0, -5.0),
-                &Point::origin(),
-                &Vector::y_axis(),
+                Point::new(0.0, 0.0, -5.0),
+                Point::origin(),
+                Vector::y_axis(),
             ),
         );
 
@@ -583,9 +583,9 @@ mod tests {
             11,
             Angle(FRAC_PI_2),
             Transformation::view_transformation(
-                &Point::new(0.0, 0.0, -5.0),
-                &Point::origin(),
-                &Vector::y_axis(),
+                Point::new(0.0, 0.0, -5.0),
+                Point::origin(),
+                Vector::y_axis(),
             ),
         );
 
