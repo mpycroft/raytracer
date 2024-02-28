@@ -3,7 +3,7 @@ use derive_new::new;
 use super::{Bounded, BoundingBox, Intersectable};
 use crate::{
     intersection::{Intersection, List, TList},
-    math::{Point, Ray, Vector},
+    math::{float::impl_approx_eq, Point, Ray, Vector},
 };
 /// A `Test` is a shape intended purely for testing functions on `Object`.
 #[derive(Clone, Copy, Debug, new)]
@@ -48,6 +48,8 @@ impl Bounded for Test {
         )
     }
 }
+
+impl_approx_eq!(&Test { true });
 
 #[cfg(test)]
 mod tests {

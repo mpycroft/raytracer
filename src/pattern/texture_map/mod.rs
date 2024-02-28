@@ -128,4 +128,33 @@ mod tests {
             Colour::black()
         );
     }
+
+    #[test]
+    fn comparing_texture_maps() {
+        let t1 = TextureMap::new_checker(
+            3,
+            3,
+            Colour::red(),
+            Colour::black(),
+            UvMapping::Spherical,
+        );
+        let t2 = TextureMap::new_checker(
+            3,
+            3,
+            Colour::red(),
+            Colour::black(),
+            UvMapping::Spherical,
+        );
+        let t3 = TextureMap::new_checker(
+            3,
+            3,
+            Colour::red(),
+            Colour::green(),
+            UvMapping::Spherical,
+        );
+
+        assert_approx_eq!(t1, &t2);
+
+        assert_approx_ne!(t1, &t3);
+    }
 }

@@ -47,4 +47,15 @@ mod tests {
         assert_approx_eq!(c.uv_pattern_at(0.5, 0.5), Colour::black());
         assert_approx_eq!(c.uv_pattern_at(1.0, 1.0), Colour::black());
     }
+
+    #[test]
+    fn comparing_uv_checkers() {
+        let u1 = UvChecker::new(4, 5, Colour::blue(), Colour::green());
+        let u2 = UvChecker::new(4, 5, Colour::blue(), Colour::green());
+        let u3 = UvChecker::new(5, 5, Colour::blue(), Colour::green());
+
+        assert_approx_eq!(u1, u2);
+
+        assert_approx_ne!(u1, u3);
+    }
 }

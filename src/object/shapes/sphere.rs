@@ -3,7 +3,7 @@ use derive_new::new;
 use super::{Bounded, BoundingBox, Intersectable};
 use crate::{
     intersection::{Intersection, TList},
-    math::{Point, Ray, Vector},
+    math::{float::impl_approx_eq, Point, Ray, Vector},
 };
 
 /// A `Sphere` is a unit sphere centred at the origin (0, 0, 0).
@@ -48,6 +48,8 @@ impl Bounded for Sphere {
         )
     }
 }
+
+impl_approx_eq!(&Sphere { true });
 
 #[cfg(test)]
 mod tests {

@@ -11,7 +11,6 @@ use std::path::Path;
 
 use anyhow::Result;
 use enum_dispatch::enum_dispatch;
-use float_cmp::{ApproxEq, F64Margin};
 use paste::paste;
 
 use self::{
@@ -26,7 +25,10 @@ use self::{
 pub use self::{csg::Operation, updatable::Updatable};
 use crate::{
     intersection::{Intersection, List},
-    math::{Point, Ray, Transformable, Transformation, Vector},
+    math::{
+        float::impl_approx_eq, Point, Ray, Transformable, Transformation,
+        Vector,
+    },
     Material,
 };
 
@@ -151,24 +153,13 @@ impl Object {
     }
 }
 
-impl ApproxEq for &Object {
-    type Margin = F64Margin;
-
-    fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
-        let margin = margin.into();
-
-        match (self, other) {
-            (Object::Csg(lhs), Object::Csg(rhs)) => lhs.approx_eq(rhs, margin),
-            (Object::Group(lhs), Object::Group(rhs)) => {
-                lhs.approx_eq(rhs, margin)
-            }
-            (Object::Shape(lhs), Object::Shape(rhs)) => {
-                lhs.approx_eq(rhs, margin)
-            }
-            (_, _) => false,
-        }
+impl_approx_eq!(
+    enum Object {
+        Csg,
+        Group,
+        Shape,
     }
-}
+);
 
 #[cfg(test)]
 mod tests {

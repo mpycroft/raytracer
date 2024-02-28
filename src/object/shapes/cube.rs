@@ -3,7 +3,7 @@ use derive_new::new;
 use super::{Bounded, BoundingBox, Intersectable};
 use crate::{
     intersection::{Intersection, TList},
-    math::{Point, Ray, Vector},
+    math::{float::impl_approx_eq, Point, Ray, Vector},
 };
 
 /// A `Cube` is an axis aligned cube of size 2 (-1.0..1.0) on each axis.
@@ -48,6 +48,8 @@ impl Bounded for Cube {
         )
     }
 }
+
+impl_approx_eq!(&Cube { true });
 
 #[cfg(test)]
 mod tests {

@@ -9,7 +9,6 @@ pub(super) mod test;
 mod triangle;
 
 use enum_dispatch::enum_dispatch;
-use float_cmp::{ApproxEq, F64Margin};
 use paste::paste;
 
 pub use self::intersectable::Intersectable;
@@ -22,7 +21,7 @@ use self::{
 use super::{Bounded, BoundingBox};
 use crate::{
     intersection::{Intersection, TList},
-    math::{Point, Ray, Vector},
+    math::{float::impl_approx_eq, Point, Ray, Vector},
 };
 
 /// `Shapes` is the list of the various geometries that can be rendered.
@@ -77,31 +76,18 @@ impl Shapes {
     }
 }
 
-impl ApproxEq for &Shapes {
-    type Margin = F64Margin;
-
-    fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
-        let margin = margin.into();
-
-        match (self, other) {
-            (Shapes::Cone(lhs), Shapes::Cone(rhs)) => {
-                lhs.approx_eq(rhs, margin)
-            }
-            (Shapes::Cube(_), Shapes::Cube(_)) => true,
-            (Shapes::Cylinder(lhs), Shapes::Cylinder(rhs)) => {
-                lhs.approx_eq(rhs, margin)
-            }
-            (Shapes::Sphere(_), Shapes::Sphere(_)) => true,
-            (Shapes::Plane(_), Shapes::Plane(_)) => true,
-            #[cfg(test)]
-            (Shapes::Test(_), Shapes::Test(_)) => true,
-            (Shapes::Triangle(lhs), Shapes::Triangle(rhs)) => {
-                lhs.approx_eq(rhs, margin)
-            }
-            (_, _) => false,
-        }
+impl_approx_eq!(
+    enum Shapes {
+        Cone,
+        Cube,
+        Cylinder,
+        Sphere,
+        Plane,
+        #[cfg(test)]
+        Test,
+        Triangle,
     }
-}
+);
 
 #[cfg(test)]
 mod tests {

@@ -5,7 +5,10 @@ use derive_new::new;
 use super::{Bounded, BoundingBox, Intersectable};
 use crate::{
     intersection::{Intersection, TList},
-    math::{float::approx_eq, Point, Ray, Vector},
+    math::{
+        float::{approx_eq, impl_approx_eq},
+        Point, Ray, Vector,
+    },
 };
 
 /// A `Plane` is an infinitely large plane situated along the x and z axes.
@@ -40,6 +43,8 @@ impl Bounded for Plane {
         )
     }
 }
+
+impl_approx_eq!(&Plane { true });
 
 #[cfg(test)]
 mod tests {

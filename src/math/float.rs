@@ -140,6 +140,17 @@ pub(crate) use _impl_approx_eq_helper;
 
 /// Implement the `ApproxEq` trait for a struct.
 macro_rules! impl_approx_eq {
+    ($ty:ty { true }) => {
+        impl float_cmp::ApproxEq for $ty {
+            type Margin = float_cmp::F64Margin;
+
+            fn approx_eq<M: Into<Self::Margin>>(
+                self, _other: Self, _margin: M
+            ) -> bool {
+                true
+            }
+        }
+    };
     ($ty:ty { $($rest:tt)+ }) => {
         impl float_cmp::ApproxEq for $ty {
             type Margin = float_cmp::F64Margin;
@@ -152,6 +163,30 @@ macro_rules! impl_approx_eq {
                 crate::math::float::_impl_approx_eq_helper!(
                     self, other, margin; (); ($($rest)+)
                 )
+            }
+        }
+    };
+    (enum $ty:ty { $($(#[$outer:meta])* $element:ident $(,)?)+ }) => {
+        impl float_cmp::ApproxEq for &$ty {
+            type Margin = float_cmp::F64Margin;
+
+            fn approx_eq<M: Into<Self::Margin>>(
+                self, other: Self, margin: M
+            ) -> bool {
+                let margin = margin.into();
+
+                paste::paste! {
+                    match (self, other) {
+                        $(
+                            $(#[$outer])*
+                            ($ty::$element(lhs), $ty::$element(rhs)) => {
+                                lhs.approx_eq(rhs, margin)
+                            }
+
+                        )+
+                        (_, _) => false,
+                    }
+                }
             }
         }
     };
