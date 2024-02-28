@@ -31,7 +31,7 @@ fn main() -> Result<()> {
     let mut rng = Xoshiro256PlusPlus::seed_from_u64(seed);
 
     let scene_text = if arguments.sphere_scene {
-        String::from("Generating scene 'random spheres'...")
+        String::from("Generating scene 'random-spheres'...")
     } else {
         format!("Generating scene '{}'...", arguments.scene)
     };
