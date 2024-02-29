@@ -224,7 +224,7 @@ impl<'de> Deserialize<'de> for Pattern {
             "stripe" => build_simple(Self::stripe_builder, &mut pattern.data),
             "perturbed" => {
                 let scale: f64 = get_value(&mut pattern.data, "scale")?;
-                let pattern_data: Pattern =
+                let pattern_data: Self =
                     get_value(&mut pattern.data, "pattern")?;
                 let seed: u64 = get_value(&mut pattern.data, "seed")?;
 
@@ -235,6 +235,29 @@ impl<'de> Deserialize<'de> for Pattern {
                 );
 
                 build(builder, &mut pattern.data)
+            }
+            "map" => {
+                let mapping: UvMapping =
+                    get_value(&mut pattern.data, "mapping")?;
+                let mut uv_pattern: PatternData =
+                    get_value(&mut pattern.data, "uv_pattern")?;
+
+                match &*uv_pattern.kind {
+                    "checkers" => {
+                        let width: u32 =
+                            get_value(&mut uv_pattern.data, "width")?;
+                        let height: u32 =
+                            get_value(&mut uv_pattern.data, "height")?;
+                        let [a, b] = get_value(&mut uv_pattern.data, "colors")?;
+
+                        let builder = Self::uv_checker_builder(
+                            width, height, a, b, mapping,
+                        );
+
+                        build(builder, &mut pattern.data)
+                    }
+                    _ => err(format!("Unknown pattern '{}'", uv_pattern.kind,)),
+                }
             }
             _ => err(format!("Unknown pattern '{}'", pattern.kind,)),
         }
@@ -603,6 +626,38 @@ transform:
     }
 
     #[test]
+    fn deserialize_uv_checkers_pattern() {
+        let p: Pattern = from_str(
+            "\
+type: map
+mapping: spherical
+uv_pattern:
+    type: checkers
+    width: 4
+    height: 5
+    colors:
+        - [1, 1, 1]
+        - [0, 0, 0]
+transform:
+    - [translate, 1, 2, 3]",
+        )
+        .unwrap();
+
+        assert_approx_eq!(
+            p,
+            &crate::Pattern::uv_checker_builder(
+                4,
+                5,
+                Colour::white(),
+                Colour::black(),
+                UvMapping::Spherical
+            )
+            .transformation(Transformation::new().translate(1.0, 2.0, 3.0))
+            .build()
+        );
+    }
+
+    #[test]
     fn deserialize_invalid_pattern() {
         assert_eq!(
             from_str::<Pattern>(
@@ -628,6 +683,24 @@ bar:
             .unwrap_err()
             .to_string(),
             "Unable to find value 'colors'"
+        );
+
+        assert_eq!(
+            from_str::<Pattern>(
+                "\
+type: map
+mapping: spherical
+uv_pattern:
+    type: foo
+    width: 2
+    height: 2
+    colors:
+        - [1, 1, 1]
+        - [0, 0, 0]",
+            )
+            .unwrap_err()
+            .to_string(),
+            "Unknown pattern 'foo'"
         );
     }
 }

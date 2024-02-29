@@ -4,6 +4,7 @@ mod uv_pattern_at;
 
 use enum_dispatch::enum_dispatch;
 use float_cmp::{ApproxEq, F64Margin};
+use serde::Deserialize;
 
 pub use self::spherical_mapping::spherical_mapping;
 use self::{uv_checker::UvChecker, uv_pattern_at::UvPatternAt};
@@ -19,7 +20,8 @@ enum UvPattern {
     UvChecker(UvChecker),
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub enum UvMapping {
     Spherical,
 }
@@ -63,7 +65,7 @@ impl ApproxEq for UvPattern {
         let margin = margin.into();
 
         match (self, other) {
-            (UvPattern::UvChecker(lhs), UvPattern::UvChecker(rhs)) => {
+            (Self::UvChecker(lhs), Self::UvChecker(rhs)) => {
                 lhs.approx_eq(rhs, margin)
             }
         }
@@ -74,6 +76,8 @@ impl_approx_eq!(&TextureMap { pattern, eq mapping });
 
 #[cfg(test)]
 mod tests {
+    use serde_yaml::from_str;
+
     use super::*;
     use crate::math::float::*;
 
@@ -156,5 +160,12 @@ mod tests {
         assert_approx_eq!(t1, &t2);
 
         assert_approx_ne!(t1, &t3);
+    }
+
+    #[test]
+    fn deserialize_mapping() {
+        let m: UvMapping = from_str("spherical").unwrap();
+
+        assert!(matches!(m, UvMapping::Spherical));
     }
 }
