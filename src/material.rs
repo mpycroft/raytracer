@@ -546,9 +546,10 @@ reflective: 0.5",
         let m: Material = from_str(
             "\
 pattern:
-    kind: checker
-    a: [1, 1, 1]
-    b: [0, 0, 0]
+    type: checker
+    colors:
+        - [1, 1, 1]
+        - [0, 0, 0]
 diffuse: 0.3
 specular: 0.5",
         )
@@ -594,9 +595,10 @@ refractive_index: 1.2",
                 "
 color: [1, 0, 0]
 pattern:
-    kind: checker
-    a: [0, 1, 0]
-    b: [0, 0, 1]"
+    type: checker
+    colors:
+        - [0, 1, 0]
+        - [0, 0, 1]"
             )
             .unwrap_err()
             .to_string(),

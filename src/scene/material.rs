@@ -151,9 +151,10 @@ diffuse: 0.0",
         let m: Material = from_str(
             "\
 pattern:
-    kind: checker
-    a: [1, 1, 1]
-    b: [0, 0, 0]
+    type: checker
+    colors:
+        - [1, 1, 1]
+        - [0, 0, 0]
     transform:
          - [translate, 1, 2, 3]
          - foo

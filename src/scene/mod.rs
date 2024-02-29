@@ -21,7 +21,7 @@ use self::{
 };
 use crate::{Camera, Canvas, Light, Object, Output, World};
 
-type HashValue = HashMap<String, Value>;
+pub type HashValue = HashMap<String, Value>;
 
 /// The `Data` struct holds the information for the scene as we parse it.
 #[derive(Clone, Debug)]

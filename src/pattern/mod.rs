@@ -13,10 +13,16 @@ mod test;
 mod texture_map;
 mod util;
 
+use std::fmt::Display;
+
 use paste::paste;
 use rand::prelude::*;
 use rand_xoshiro::Xoshiro256PlusPlus;
-use serde::{de::Error, Deserialize, Deserializer};
+use serde::{
+    de::{DeserializeOwned, Error},
+    Deserialize, Deserializer,
+};
+use serde_yaml::from_value;
 use typed_builder::{Optional, TypedBuilder};
 
 #[cfg(test)]
@@ -36,6 +42,7 @@ use self::{
 };
 use crate::{
     math::{float::impl_approx_eq, Point, Transformable, Transformation},
+    scene::HashValue,
     Colour, Object,
 };
 
@@ -144,6 +151,23 @@ impl<'de> Deserialize<'de> for Pattern {
     where
         D: Deserializer<'de>,
     {
+        type Builder = fn(Pattern, Pattern) -> PatternBuilder<((), (Kind,))>;
+
+        fn err<T, E: Display, R: Error>(err: E) -> Result<T, R> {
+            Err(Error::custom(err))
+        }
+
+        fn get_value<T: DeserializeOwned, E: Error>(
+            hashmap: &mut HashValue,
+            key: &str,
+        ) -> Result<T, E> {
+            let value = hashmap.remove(key).ok_or_else(|| {
+                Error::custom(format!("Unable to find value '{key}'"))
+            })?;
+
+            from_value(value).map_or_else(err, Ok)
+        }
+
         #[derive(Deserialize)]
         #[serde(untagged)]
         enum ColourPattern {
@@ -152,78 +176,67 @@ impl<'de> Deserialize<'de> for Pattern {
         }
 
         #[derive(Deserialize)]
-        #[serde(untagged)]
-        enum PatternData {
-            Pattern {
-                kind: String,
-                a: ColourPattern,
-                b: ColourPattern,
-                transform: Option<Transformation>,
-            },
-            Perturbed {
-                scale: f64,
-                pattern: Pattern,
-                seed: u64,
-                transform: Option<Transformation>,
-            },
+        struct PatternData {
+            #[serde(rename = "type")]
+            kind: String,
+            #[serde(flatten)]
+            data: HashValue,
         }
 
-        let pattern = PatternData::deserialize(deserializer)?;
-
-        let build = |pattern: PatternBuilder<((), (Kind,))>, transform| {
-            if let Some(transformation) = transform {
-                Ok(pattern.transformation(transformation).build())
-            } else {
-                Ok(pattern.build())
-            }
-        };
+        let mut pattern = PatternData::deserialize(deserializer)?;
 
         let get_pattern = |pattern| match pattern {
             ColourPattern::Colour(colour) => colour.into(),
             ColourPattern::Pattern(pattern) => pattern,
         };
 
-        match pattern {
-            PatternData::Pattern { kind, a, b, transform } => match &*kind {
-                "blend" => build(
-                    Self::blend_builder(get_pattern(a), get_pattern(b)),
-                    transform,
-                ),
-                "checker" => build(
-                    Self::checker_builder(get_pattern(a), get_pattern(b)),
-                    transform,
-                ),
-                "gradient" => build(
-                    Self::gradient_builder(get_pattern(a), get_pattern(b)),
-                    transform,
-                ),
-                "radial-gradient" => build(
-                    Self::radial_gradient_builder(
-                        get_pattern(a),
-                        get_pattern(b),
-                    ),
-                    transform,
-                ),
-                "ring" => build(
-                    Self::ring_builder(get_pattern(a), get_pattern(b)),
-                    transform,
-                ),
-                "stripe" => build(
-                    Self::stripe_builder(get_pattern(a), get_pattern(b)),
-                    transform,
-                ),
-                _ => Err(Error::custom(format!("Unknown pattern '{kind}'"))),
-            },
-            PatternData::Perturbed { scale, pattern, seed, transform } => {
-                build(
-                    Self::perturbed_builder(
-                        scale,
-                        pattern,
-                        &mut Xoshiro256PlusPlus::seed_from_u64(seed),
-                    ),
-                    transform,
-                )
+        let build = |pattern: PatternBuilder<((), (Kind,))>,
+                     data: &mut HashValue| {
+            if let Some(transformation) = data.remove("transform") {
+                Ok(pattern
+                    .transformation(
+                        from_value(transformation).map_or_else(err, Ok)?,
+                    )
+                    .build())
+            } else {
+                Ok(pattern.build())
             }
+        };
+
+        let build_simple = |builder: Builder, data: &mut HashValue| {
+            let [a, b] = get_value(data, "colors")?;
+
+            let pattern = builder(get_pattern(a), get_pattern(b));
+
+            build(pattern, data)
+        };
+
+        match &*pattern.kind {
+            "blend" => build_simple(Self::blend_builder, &mut pattern.data),
+            "checker" => build_simple(Self::checker_builder, &mut pattern.data),
+            "gradient" => {
+                build_simple(Self::gradient_builder, &mut pattern.data)
+            }
+            "radial-gradient" => {
+                build_simple(Self::radial_gradient_builder, &mut pattern.data)
+            }
+            "ring" => build_simple(Self::ring_builder, &mut pattern.data),
+            "stripe" => build_simple(Self::stripe_builder, &mut pattern.data),
+            "perturbed" => {
+                let scale: f64 = get_value(&mut pattern.data, "scale")?;
+                let pattern_data: Pattern =
+                    get_value(&mut pattern.data, "pattern")?;
+                let seed: u64 = get_value(&mut pattern.data, "seed")?;
+
+                let builder = Self::perturbed_builder(
+                    scale,
+                    pattern_data,
+                    &mut Xoshiro256PlusPlus::seed_from_u64(seed),
+                );
+
+                build(builder, &mut pattern.data)
+            }
+            _ => err(format!("Unknown pattern '{}'", pattern.kind,)),
         }
     }
 }
@@ -410,12 +423,13 @@ mod tests {
     fn parse_blend_pattern() {
         let p: Pattern = from_str(
             "\
-kind: blend
-a:
-    kind: checker
-    a: [1, 1, 1]
-    b: [1, 1, 0]
-b: [0, 1, 0]
+type: blend
+colors:
+    - type: checker
+      colors:
+          - [1, 1, 1]
+          - [1, 1, 0]
+    - [0, 1, 0]
 transform:
     - [scale, 2, 2, 2]
     - [rotate-x, 0.5]",
@@ -443,9 +457,10 @@ transform:
     fn parse_checker_pattern() {
         let p: Pattern = from_str(
             "\
-kind: checker
-a: [0, 0, 1]
-b: [0, 0, 0]
+type: checker
+colors:
+    - [0, 0, 1]
+    - [0, 0, 0]
 transform:
     - [translate, 0, 1, 0]",
         )
@@ -466,9 +481,10 @@ transform:
     fn parse_gradient_pattern() {
         let p: Pattern = from_str(
             "\
-kind: gradient
-a: [1, 0, 0]
-b: [0, 1, 0]",
+type: gradient
+colors:
+    - [1, 0, 0]
+    - [0, 1, 0]",
         )
         .unwrap();
 
@@ -486,9 +502,10 @@ b: [0, 1, 0]",
     fn parse_radial_gradient_pattern() {
         let p: Pattern = from_str(
             "\
-kind: radial-gradient
-a: [1, 0, 0]
-b: [0, 1, 0]",
+type: radial-gradient
+colors:
+    - [1, 0, 0]
+    - [0, 1, 0]",
         )
         .unwrap();
 
@@ -506,9 +523,10 @@ b: [0, 1, 0]",
     fn parse_ring_pattern() {
         let p: Pattern = from_str(
             "\
-kind: ring
-a: [1, 0, 0]
-b: [0, 1, 0]",
+type: ring
+colors:
+    - [1, 0, 0]
+    - [0, 1, 0]",
         )
         .unwrap();
 
@@ -526,9 +544,10 @@ b: [0, 1, 0]",
     fn parse_stripe_pattern() {
         let p: Pattern = from_str(
             "\
-kind: stripe
-a: [0, 1, 0]
-b: [0, 0, 1]",
+type: stripe
+colors:
+    - [0, 1, 0]
+    - [0, 0, 1]",
         )
         .unwrap();
 
@@ -546,11 +565,13 @@ b: [0, 0, 1]",
     fn deserialize_perturbed_pattern() {
         let p: Pattern = from_str(
             "\
+type: perturbed
 scale: 1.2
 pattern:
-    kind: checker
-    a: [0, 1, 0]
-    b: [0, 0, 1]
+    type: checker
+    colors:
+        - [0, 1, 0]
+        - [0, 0, 1]
     transform:
         - [rotate-x, 0.8]
 seed: 515
@@ -586,13 +607,27 @@ transform:
         assert_eq!(
             from_str::<Pattern>(
                 "\
-kind: foo
-a: [1, 0, 0]
-b: [0, 1, 0]",
+type: foo
+colors:
+    - [1, 0, 0]
+    - [0, 1, 0]",
             )
             .unwrap_err()
             .to_string(),
             "Unknown pattern 'foo'"
+        );
+
+        assert_eq!(
+            from_str::<Pattern>(
+                "\
+type: stripe
+bar:
+    - [1, 0, 0]
+    - [0, 1, 0]",
+            )
+            .unwrap_err()
+            .to_string(),
+            "Unable to find value 'colors'"
         );
     }
 }
