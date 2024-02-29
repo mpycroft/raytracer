@@ -1,12 +1,11 @@
-mod spherical_mapping;
 mod uv_checker;
+mod uv_mapping;
 mod uv_pattern_at;
 
 use enum_dispatch::enum_dispatch;
 use float_cmp::{ApproxEq, F64Margin};
-use serde::Deserialize;
 
-pub use self::spherical_mapping::spherical_mapping;
+pub use self::uv_mapping::UvMapping;
 use self::{uv_checker::UvChecker, uv_pattern_at::UvPatternAt};
 use super::PatternAt;
 use crate::{
@@ -18,12 +17,6 @@ use crate::{
 #[enum_dispatch(UvPatternAt)]
 enum UvPattern {
     UvChecker(UvChecker),
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum UvMapping {
-    Spherical,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -50,9 +43,7 @@ impl TextureMap {
 
 impl PatternAt for TextureMap {
     fn pattern_at(&self, point: &Point) -> Colour {
-        let (u, v) = match self.mapping {
-            UvMapping::Spherical => spherical_mapping(point),
-        };
+        let (u, v) = self.mapping.get_u_v(point);
 
         self.pattern.uv_pattern_at(u, v)
     }
@@ -76,8 +67,6 @@ impl_approx_eq!(&TextureMap { pattern, eq mapping });
 
 #[cfg(test)]
 mod tests {
-    use serde_yaml::from_str;
-
     use super::*;
     use crate::math::float::*;
 
@@ -160,12 +149,5 @@ mod tests {
         assert_approx_eq!(t1, &t2);
 
         assert_approx_ne!(t1, &t3);
-    }
-
-    #[test]
-    fn deserialize_mapping() {
-        let m: UvMapping = from_str("spherical").unwrap();
-
-        assert!(matches!(m, UvMapping::Spherical));
     }
 }

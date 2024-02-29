@@ -10,7 +10,7 @@ impl_pattern!(
 impl PatternAt for Ring {
     #[must_use]
     fn pattern_at(&self, point: &Point) -> Colour {
-        if point.x.hypot(point.z).floor() % 2.0 == 0.0 {
+        if point.x.hypot(point.z).floor().rem_euclid(2.0) == 0.0 {
             return self.a.sub_pattern_at(point);
         }
 

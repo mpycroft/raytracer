@@ -9,7 +9,7 @@ impl_pattern!(
 
 impl PatternAt for Stripe {
     fn pattern_at(&self, point: &Point) -> Colour {
-        if point.x.floor() % 2.0 == 0.0 {
+        if point.x.floor().rem_euclid(2.0) == 0.0 {
             return self.a.sub_pattern_at(point);
         }
 

@@ -10,7 +10,9 @@ impl_pattern!(
 impl PatternAt for Checker {
     #[must_use]
     fn pattern_at(&self, point: &Point) -> Colour {
-        if (point.x.floor() + point.y.floor() + point.z.floor()) % 2.0 == 0.0 {
+        if (point.x.floor() + point.y.floor() + point.z.floor()).rem_euclid(2.0)
+            == 0.0
+        {
             return self.a.sub_pattern_at(point);
         }
 
