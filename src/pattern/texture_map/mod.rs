@@ -1,3 +1,4 @@
+mod uv_align_check;
 mod uv_checker;
 mod uv_mapping;
 mod uv_pattern_at;
@@ -6,7 +7,10 @@ use enum_dispatch::enum_dispatch;
 use float_cmp::{ApproxEq, F64Margin};
 
 pub use self::uv_mapping::UvMapping;
-use self::{uv_checker::UvChecker, uv_pattern_at::UvPatternAt};
+use self::{
+    uv_align_check::UvAlignCheck, uv_checker::UvChecker,
+    uv_pattern_at::UvPatternAt,
+};
 use super::PatternAt;
 use crate::{
     math::{float::impl_approx_eq, Point},
@@ -15,14 +19,14 @@ use crate::{
 
 #[derive(Clone, Copy, Debug)]
 #[enum_dispatch(UvPatternAt)]
-enum UvPattern {
+pub enum UvPattern {
     UvChecker(UvChecker),
+    UvAlignCheck(UvAlignCheck),
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct TextureMap {
-    pattern: UvPattern,
-    mapping: UvMapping,
+pub enum TextureMap {
+    SingleMapping { pattern: UvPattern, mapping: UvMapping },
 }
 
 impl TextureMap {
@@ -34,8 +38,29 @@ impl TextureMap {
         b: Colour,
         mapping: UvMapping,
     ) -> Self {
-        Self {
+        Self::SingleMapping {
             pattern: UvPattern::UvChecker(UvChecker::new(width, height, a, b)),
+            mapping,
+        }
+    }
+
+    #[must_use]
+    pub fn new_align_check(
+        main: Colour,
+        upper_left: Colour,
+        upper_right: Colour,
+        bottom_left: Colour,
+        bottom_right: Colour,
+        mapping: UvMapping,
+    ) -> Self {
+        Self::SingleMapping {
+            pattern: UvPattern::UvAlignCheck(UvAlignCheck::new(
+                main,
+                upper_left,
+                upper_right,
+                bottom_left,
+                bottom_right,
+            )),
             mapping,
         }
     }
@@ -43,27 +68,46 @@ impl TextureMap {
 
 impl PatternAt for TextureMap {
     fn pattern_at(&self, point: &Point) -> Colour {
-        let (u, v) = self.mapping.get_u_v(point);
+        match self {
+            Self::SingleMapping { pattern, mapping } => {
+                let (u, v) = mapping.get_u_v(point);
 
-        self.pattern.uv_pattern_at(u, v)
+                pattern.uv_pattern_at(u, v)
+            }
+        }
     }
 }
 
-impl ApproxEq for UvPattern {
+impl ApproxEq for &TextureMap {
     type Margin = F64Margin;
 
     fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
         let margin = margin.into();
 
         match (self, other) {
-            (Self::UvChecker(lhs), Self::UvChecker(rhs)) => {
-                lhs.approx_eq(rhs, margin)
+            (
+                TextureMap::SingleMapping {
+                    pattern: lhs_pattern,
+                    mapping: lhs_mapping,
+                },
+                TextureMap::SingleMapping {
+                    pattern: rhs_pattern,
+                    mapping: rhs_mapping,
+                },
+            ) => {
+                lhs_pattern.approx_eq(rhs_pattern, margin)
+                    && lhs_mapping == rhs_mapping
             }
         }
     }
 }
 
-impl_approx_eq!(&TextureMap { pattern, eq mapping });
+impl_approx_eq!(
+    enum UvPattern {
+        UvChecker,
+        UvAlignCheck,
+    }
+);
 
 #[cfg(test)]
 mod tests {

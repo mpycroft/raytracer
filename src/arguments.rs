@@ -19,7 +19,7 @@ pub struct Arguments {
     pub out: String,
 
     /// Input Yaml file to read from
-    #[arg(short, long, default_value = "scenes/checkered-cylinder.yaml")]
+    #[arg(short, long, default_value = "scenes/align-check-plane.yaml")]
     pub scene: String,
 
     /// Generate random spheres scene

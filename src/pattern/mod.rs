@@ -107,6 +107,24 @@ impl Pattern {
         )))
     }
 
+    pub fn uv_align_check_builder(
+        main: Colour,
+        upper_left: Colour,
+        upper_right: Colour,
+        bottom_left: Colour,
+        bottom_right: Colour,
+        mapping: UvMapping,
+    ) -> PatternBuilder<((), (Kind,))> {
+        Self::_builder().kind(Kind::TextureMap(TextureMap::new_align_check(
+            main,
+            upper_left,
+            upper_right,
+            bottom_left,
+            bottom_right,
+            mapping,
+        )))
+    }
+
     #[must_use]
     pub fn pattern_at(&self, object: &Object, point: &Point) -> Colour {
         let object_point = object.to_object_space(point);
@@ -146,6 +164,7 @@ impl<T: Optional<Transformation>> PatternBuilder<(T, (Kind,))> {
     }
 }
 
+#[allow(clippy::too_many_lines)]
 impl<'de> Deserialize<'de> for Pattern {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -252,6 +271,30 @@ impl<'de> Deserialize<'de> for Pattern {
 
                         let builder = Self::uv_checker_builder(
                             width, height, a, b, mapping,
+                        );
+
+                        build(builder, &mut pattern.data)
+                    }
+                    "align_check" => {
+                        let mut colours: HashValue =
+                            get_value(&mut uv_pattern.data, "colors")?;
+
+                        let main: Colour = get_value(&mut colours, "main")?;
+                        let upper_left: Colour = get_value(&mut colours, "ul")?;
+                        let upper_right: Colour =
+                            get_value(&mut colours, "ur")?;
+                        let bottom_left: Colour =
+                            get_value(&mut colours, "bl")?;
+                        let bottom_right: Colour =
+                            get_value(&mut colours, "br")?;
+
+                        let builder = Self::uv_align_check_builder(
+                            main,
+                            upper_left,
+                            upper_right,
+                            bottom_left,
+                            bottom_right,
+                            mapping,
                         );
 
                         build(builder, &mut pattern.data)

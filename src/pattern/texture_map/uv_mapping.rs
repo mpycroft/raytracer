@@ -49,9 +49,9 @@ fn spherical_mapping(point: &Point) -> (f64, f64) {
 impl UvMapping {
     pub fn get_u_v(self, point: &Point) -> (f64, f64) {
         match self {
-            UvMapping::Cylindrical => cylindrical_mapping(point),
-            UvMapping::Planar => planar_mapping(point),
-            UvMapping::Spherical => spherical_mapping(point),
+            Self::Cylindrical => cylindrical_mapping(point),
+            Self::Planar => planar_mapping(point),
+            Self::Spherical => spherical_mapping(point),
         }
     }
 }

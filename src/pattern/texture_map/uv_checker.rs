@@ -30,7 +30,7 @@ impl UvPatternAt for UvChecker {
     }
 }
 
-impl_approx_eq!(UvChecker { eq width, eq height, a, b });
+impl_approx_eq!(&UvChecker { eq width, eq height, a, b });
 
 #[cfg(test)]
 mod tests {
@@ -54,8 +54,8 @@ mod tests {
         let u2 = UvChecker::new(4, 5, Colour::blue(), Colour::green());
         let u3 = UvChecker::new(5, 5, Colour::blue(), Colour::green());
 
-        assert_approx_eq!(u1, u2);
+        assert_approx_eq!(u1, &u2);
 
-        assert_approx_ne!(u1, u3);
+        assert_approx_ne!(u1, &u3);
     }
 }
