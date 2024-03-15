@@ -25,6 +25,35 @@ pub enum UvPattern {
     UvAlignCheck(UvAlignCheck),
 }
 
+impl UvPattern {
+    #[must_use]
+    pub fn new_uv_checker(
+        width: u32,
+        height: u32,
+        a: Colour,
+        b: Colour,
+    ) -> Self {
+        UvPattern::UvChecker(UvChecker::new(width, height, a, b))
+    }
+
+    #[must_use]
+    pub fn new_align_check(
+        main: Colour,
+        upper_left: Colour,
+        upper_right: Colour,
+        bottom_left: Colour,
+        bottom_right: Colour,
+    ) -> Self {
+        UvPattern::UvAlignCheck(UvAlignCheck::new(
+            main,
+            upper_left,
+            upper_right,
+            bottom_left,
+            bottom_right,
+        ))
+    }
+}
+
 #[derive(Clone, Copy, Debug)]
 pub enum TextureMap {
     SingleMapping { pattern: UvPattern, mapping: UvMapping },
@@ -40,7 +69,7 @@ impl TextureMap {
         mapping: UvMapping,
     ) -> Self {
         Self::SingleMapping {
-            pattern: UvPattern::UvChecker(UvChecker::new(width, height, a, b)),
+            pattern: UvPattern::new_uv_checker(width, height, a, b),
             mapping,
         }
     }
@@ -55,13 +84,13 @@ impl TextureMap {
         mapping: UvMapping,
     ) -> Self {
         Self::SingleMapping {
-            pattern: UvPattern::UvAlignCheck(UvAlignCheck::new(
+            pattern: UvPattern::new_align_check(
                 main,
                 upper_left,
                 upper_right,
                 bottom_left,
                 bottom_right,
-            )),
+            ),
             mapping,
         }
     }
