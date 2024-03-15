@@ -1,3 +1,4 @@
+mod cubic_mapping;
 mod uv_align_check;
 mod uv_checker;
 mod uv_mapping;
