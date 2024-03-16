@@ -7,6 +7,5 @@ use super::BoundingBox;
 #[enum_dispatch(Shapes)]
 #[enum_dispatch(Object)]
 pub trait Bounded {
-    #[must_use]
     fn bounding_box(&self) -> BoundingBox;
 }

@@ -5,6 +5,5 @@ use crate::Object;
 /// A trait that determines if a given `Object` is part of another `Object`.
 #[enum_dispatch(Object)]
 pub trait Includes {
-    #[must_use]
     fn includes(&self, object: &Object) -> bool;
 }

@@ -1,23 +1,35 @@
+use enum_map::{enum_map, Enum, EnumMap};
+use float_cmp::{ApproxEq, F64Margin};
+
 use super::UvPattern;
-use crate::math::{
-    float::{approx_eq, impl_approx_eq},
-    Point,
-};
+use crate::math::{float::approx_eq, Point};
 
 #[derive(Clone, Copy, Debug)]
-pub struct CubicMapping {
-    left: UvPattern,
-    right: UvPattern,
-    front: UvPattern,
-    back: UvPattern,
-    up: UvPattern,
-    down: UvPattern,
-}
+pub struct CubicMapping(EnumMap<Face, UvPattern>);
 
 impl CubicMapping {
     #[must_use]
-    pub fn cube_uv(point: Point) -> (f64, f64) {
-        match Face::from(point) {
+    pub fn new(
+        left: UvPattern,
+        right: UvPattern,
+        front: UvPattern,
+        back: UvPattern,
+        up: UvPattern,
+        down: UvPattern,
+    ) -> Self {
+        CubicMapping(enum_map! {
+            Face::Left => left,
+            Face::Right => right,
+            Face::Front => front,
+            Face::Back => back,
+            Face::Up => up,
+            Face::Down => down,
+        })
+    }
+
+    #[must_use]
+    fn cube_uv(point: &Point) -> (f64, f64) {
+        match Face::from(*point) {
             Face::Left => {
                 let u = (point.z + 1.0).rem_euclid(2.0) / 2.0;
                 let v = (point.y + 1.0).rem_euclid(2.0) / 2.0;
@@ -59,7 +71,7 @@ impl CubicMapping {
 }
 
 /// A representation of the faces of a cube.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Enum)]
 enum Face {
     Left,
     Right,
@@ -93,19 +105,49 @@ impl From<Point> for Face {
     }
 }
 
-impl_approx_eq!(&CubicMapping {
-    ref left,
-    ref right,
-    ref front,
-    ref back,
-    ref up,
-    ref down
-});
+impl ApproxEq for &CubicMapping {
+    type Margin = F64Margin;
+
+    fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
+        let margin = margin.into();
+
+        for (lhs, rhs) in self.0.values().zip(other.0.values()) {
+            if !lhs.approx_eq(rhs, margin) {
+                return false;
+            }
+        }
+
+        true
+    }
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::{math::float::*, Colour};
+
+    #[test]
+    #[allow(clippy::many_single_char_names)]
+    fn creating_a_cubic_mapping() {
+        let l = UvPattern::new_uv_checker(2, 2, Colour::red(), Colour::green());
+        let r =
+            UvPattern::new_uv_checker(2, 2, Colour::blue(), Colour::green());
+        let f =
+            UvPattern::new_uv_checker(2, 2, Colour::red(), Colour::purple());
+        let b =
+            UvPattern::new_uv_checker(2, 2, Colour::white(), Colour::green());
+        let u = UvPattern::new_uv_checker(2, 2, Colour::red(), Colour::black());
+        let d = UvPattern::new_uv_checker(2, 2, Colour::red(), Colour::blue());
+
+        let c = CubicMapping::new(l, r, f, b, u, d);
+
+        assert_approx_eq!(c.0[Face::Left], &l);
+        assert_approx_eq!(c.0[Face::Right], &r);
+        assert_approx_eq!(c.0[Face::Front], &f);
+        assert_approx_eq!(c.0[Face::Back], &b);
+        assert_approx_eq!(c.0[Face::Up], &u);
+        assert_approx_eq!(c.0[Face::Down], &d);
+    }
 
     #[test]
     fn identifying_the_face_of_a_cube_from_a_point() {
@@ -120,7 +162,7 @@ mod tests {
     #[test]
     fn uv_mapping_a_cube() {
         let test = |point, cu, cv| {
-            let (u, v) = CubicMapping::cube_uv(point);
+            let (u, v) = CubicMapping::cube_uv(&point);
 
             assert_approx_eq!(u, cu);
             assert_approx_eq!(v, cv);
@@ -148,105 +190,30 @@ mod tests {
     #[test]
     #[allow(clippy::too_many_lines)]
     fn comparing_cubes() {
-        let c1 = CubicMapping {
-            left: UvPattern::new_uv_checker(
-                2,
-                2,
-                Colour::red(),
-                Colour::green(),
-            ),
-            right: UvPattern::new_uv_checker(
-                2,
-                2,
-                Colour::blue(),
-                Colour::green(),
-            ),
-            front: UvPattern::new_uv_checker(
-                2,
-                2,
-                Colour::red(),
-                Colour::purple(),
-            ),
-            back: UvPattern::new_uv_checker(
-                2,
-                2,
-                Colour::white(),
-                Colour::green(),
-            ),
-            up: UvPattern::new_uv_checker(2, 2, Colour::red(), Colour::black()),
-            down: UvPattern::new_uv_checker(
-                2,
-                2,
-                Colour::red(),
-                Colour::blue(),
-            ),
-        };
-        let c2 = CubicMapping {
-            left: UvPattern::new_uv_checker(
-                2,
-                2,
-                Colour::red(),
-                Colour::green(),
-            ),
-            right: UvPattern::new_uv_checker(
-                2,
-                2,
-                Colour::blue(),
-                Colour::green(),
-            ),
-            front: UvPattern::new_uv_checker(
-                2,
-                2,
-                Colour::red(),
-                Colour::purple(),
-            ),
-            back: UvPattern::new_uv_checker(
-                2,
-                2,
-                Colour::white(),
-                Colour::green(),
-            ),
-            up: UvPattern::new_uv_checker(2, 2, Colour::red(), Colour::black()),
-            down: UvPattern::new_uv_checker(
-                2,
-                2,
-                Colour::red(),
-                Colour::blue(),
-            ),
-        };
-        let c3 = CubicMapping {
-            left: UvPattern::new_uv_checker(
-                2,
-                2,
-                Colour::yellow(),
-                Colour::green(),
-            ),
-            right: UvPattern::new_uv_checker(
-                2,
-                2,
-                Colour::blue(),
-                Colour::green(),
-            ),
-            front: UvPattern::new_uv_checker(
-                2,
-                2,
-                Colour::red(),
-                Colour::purple(),
-            ),
-            back: UvPattern::new_uv_checker(
-                2,
-                2,
-                Colour::white(),
-                Colour::green(),
-            ),
-            up: UvPattern::new_uv_checker(2, 2, Colour::red(), Colour::black()),
-            down: UvPattern::new_uv_checker(
-                2,
-                2,
-                Colour::red(),
-                Colour::blue(),
-            ),
-        };
+        let c1 = CubicMapping::new(
+            UvPattern::new_uv_checker(2, 2, Colour::red(), Colour::green()),
+            UvPattern::new_uv_checker(2, 2, Colour::blue(), Colour::green()),
+            UvPattern::new_uv_checker(2, 2, Colour::red(), Colour::purple()),
+            UvPattern::new_uv_checker(2, 2, Colour::white(), Colour::green()),
+            UvPattern::new_uv_checker(2, 2, Colour::red(), Colour::black()),
+            UvPattern::new_uv_checker(2, 2, Colour::red(), Colour::blue()),
+        );
+        let c2 = CubicMapping::new(
+            UvPattern::new_uv_checker(2, 2, Colour::red(), Colour::green()),
+            UvPattern::new_uv_checker(2, 2, Colour::blue(), Colour::green()),
+            UvPattern::new_uv_checker(2, 2, Colour::red(), Colour::purple()),
+            UvPattern::new_uv_checker(2, 2, Colour::white(), Colour::green()),
+            UvPattern::new_uv_checker(2, 2, Colour::red(), Colour::black()),
+            UvPattern::new_uv_checker(2, 2, Colour::red(), Colour::blue()),
+        );
+        let c3 = CubicMapping::new(
+            UvPattern::new_uv_checker(2, 2, Colour::yellow(), Colour::green()),
+            UvPattern::new_uv_checker(2, 2, Colour::blue(), Colour::green()),
+            UvPattern::new_uv_checker(2, 2, Colour::red(), Colour::purple()),
+            UvPattern::new_uv_checker(2, 2, Colour::white(), Colour::green()),
+            UvPattern::new_uv_checker(2, 2, Colour::red(), Colour::black()),
+            UvPattern::new_uv_checker(2, 2, Colour::red(), Colour::blue()),
+        );
 
         assert_approx_eq!(c1, &c2);
         assert_approx_ne!(c1, &c3);

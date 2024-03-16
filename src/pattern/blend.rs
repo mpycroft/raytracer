@@ -7,7 +7,6 @@ impl_pattern!(
 );
 
 impl PatternAt for Blend {
-    #[must_use]
     fn pattern_at(&self, point: &Point) -> Colour {
         (self.a.sub_pattern_at(point) + self.b.sub_pattern_at(point)) / 2.0
     }

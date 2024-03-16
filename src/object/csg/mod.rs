@@ -132,14 +132,12 @@ impl Updatable for Csg {
 }
 
 impl Bounded for Csg {
-    #[must_use]
     fn bounding_box(&self) -> BoundingBox {
         self.left.bounding_box() + self.right.bounding_box()
     }
 }
 
 impl Includes for Csg {
-    #[must_use]
     fn includes(&self, object: &Object) -> bool {
         if self.left.includes(object) || self.right.includes(object) {
             return true;

@@ -22,7 +22,6 @@ impl Test {
 }
 
 impl Intersectable for Test {
-    #[must_use]
     fn intersect(&self, ray: &Ray) -> Option<TList> {
         Some(TList::from(vec![
             ray.origin.x,
@@ -34,7 +33,6 @@ impl Intersectable for Test {
         ]))
     }
 
-    #[must_use]
     fn normal_at(&self, point: &Point, _intersection: &Intersection) -> Vector {
         *point - Point::origin()
     }

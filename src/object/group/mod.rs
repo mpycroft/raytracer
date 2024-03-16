@@ -140,7 +140,6 @@ impl Bounded for Group {
 }
 
 impl Includes for Group {
-    #[must_use]
     fn includes(&self, object: &Object) -> bool {
         for child_object in &self.objects {
             if child_object.includes(object) {

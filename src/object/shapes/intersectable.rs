@@ -9,9 +9,7 @@ use crate::{
 /// scene, returns an optional `TList`.
 #[enum_dispatch(Shapes)]
 pub trait Intersectable {
-    #[must_use]
     fn intersect(&self, ray: &Ray) -> Option<TList>;
 
-    #[must_use]
     fn normal_at(&self, point: &Point, intersection: &Intersection) -> Vector;
 }

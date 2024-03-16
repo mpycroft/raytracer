@@ -54,7 +54,6 @@ impl Cone {
 }
 
 impl Intersectable for Cone {
-    #[must_use]
     fn intersect(&self, ray: &Ray) -> Option<TList> {
         let a = ray.direction.x.powi(2) - ray.direction.y.powi(2)
             + ray.direction.z.powi(2);
@@ -99,7 +98,6 @@ impl Intersectable for Cone {
         self.intersect_caps(ray, list)
     }
 
-    #[must_use]
     fn normal_at(&self, point: &Point, _intersection: &Intersection) -> Vector {
         let distance = point.x.powi(2) + point.z.powi(2);
 
@@ -121,6 +119,7 @@ impl Intersectable for Cone {
 impl Bounded for Cone {
     fn bounding_box(&self) -> BoundingBox {
         let limit = self.minimum.abs().max(self.maximum.abs());
+
         BoundingBox::new(
             Point::new(-limit, self.minimum, -limit),
             Point::new(limit, self.maximum, limit),

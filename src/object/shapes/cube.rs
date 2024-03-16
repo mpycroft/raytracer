@@ -11,7 +11,6 @@ use crate::{
 pub struct Cube;
 
 impl Intersectable for Cube {
-    #[must_use]
     fn intersect(&self, ray: &Ray) -> Option<TList> {
         BoundingBox::intersect(
             ray,
@@ -20,7 +19,6 @@ impl Intersectable for Cube {
         )
     }
 
-    #[must_use]
     fn normal_at(&self, point: &Point, _intersection: &Intersection) -> Vector {
         let abs_x = point.x.abs();
         let abs_y = point.y.abs();

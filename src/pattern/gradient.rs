@@ -8,7 +8,6 @@ impl_pattern!(
 );
 
 impl PatternAt for Gradient {
-    #[must_use]
     fn pattern_at(&self, point: &Point) -> Colour {
         let distance =
             self.b.sub_pattern_at(point) - self.a.sub_pattern_at(point);

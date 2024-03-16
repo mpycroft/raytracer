@@ -15,7 +15,6 @@ pub struct Solid {
 }
 
 impl PatternAt for Solid {
-    #[must_use]
     fn pattern_at(&self, _point: &Point) -> Colour {
         self.colour
     }

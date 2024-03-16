@@ -64,7 +64,6 @@ impl Triangle {
 }
 
 impl Intersectable for Triangle {
-    #[must_use]
     fn intersect(&self, ray: &Ray) -> Option<TList> {
         let dir_cross_e2 = ray.direction.cross(&self.edge2);
         let det = self.edge1.dot(&dir_cross_e2);
@@ -95,7 +94,6 @@ impl Intersectable for Triangle {
         Some(TList::from(TValues::new_with_u_v(t, u, v)))
     }
 
-    #[must_use]
     fn normal_at(&self, _point: &Point, intersection: &Intersection) -> Vector {
         // The u and v values will always be set for triangles.
         let Some((u, v)) = intersection.u_v else { unreachable!() };

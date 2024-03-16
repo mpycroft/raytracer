@@ -19,14 +19,13 @@ pub struct Perturbed {
 impl Perturbed {
     #[must_use]
     pub fn new<R: Rng>(scale: f64, pattern: Pattern, rng: &mut R) -> Self {
-        let noise = Source::simplex(rng.gen());
+        let noise = Source::simplex(rng.gen::<u64>());
 
         Self { noise: Box::new(noise), scale, pattern: Box::new(pattern) }
     }
 }
 
 impl PatternAt for Perturbed {
-    #[must_use]
     fn pattern_at(&self, point: &Point) -> Colour {
         let value = self.noise.sample([point.x, point.z]) * self.scale;
 

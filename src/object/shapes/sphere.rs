@@ -11,7 +11,6 @@ use crate::{
 pub struct Sphere;
 
 impl Intersectable for Sphere {
-    #[must_use]
     fn intersect(&self, ray: &Ray) -> Option<TList> {
         let sphere_to_ray = ray.origin - Point::origin();
 
@@ -34,7 +33,6 @@ impl Intersectable for Sphere {
         Some(TList::from(vec![t1, t2]))
     }
 
-    #[must_use]
     fn normal_at(&self, point: &Point, _intersection: &Intersection) -> Vector {
         *point - Point::origin()
     }

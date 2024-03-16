@@ -86,7 +86,6 @@ impl Updatable for Shape {
 }
 
 impl Bounded for Shape {
-    #[must_use]
     fn bounding_box(&self) -> BoundingBox {
         let bounding_box = self.shape.bounding_box();
 
@@ -95,7 +94,6 @@ impl Bounded for Shape {
 }
 
 impl Includes for Shape {
-    #[must_use]
     fn includes(&self, object: &Object) -> bool {
         if let Object::Shape(shape) = object {
             return approx_eq!(self, shape);

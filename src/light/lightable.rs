@@ -6,13 +6,10 @@ use crate::{math::Point, Colour, World};
 /// A helper trait that represents the functions that can be called on `Light`s.
 #[enum_dispatch(Light)]
 pub trait Lightable {
-    #[must_use]
     fn positions<R: Rng>(&self, rng: &mut R) -> Vec<Point>;
 
-    #[must_use]
     fn intensity(&self) -> Colour;
 
-    #[must_use]
     fn intensity_at<R: Rng>(
         &self,
         point: &Point,

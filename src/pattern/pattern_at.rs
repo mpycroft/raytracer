@@ -13,6 +13,5 @@ use crate::{math::Point, Colour};
 #[enum_dispatch]
 #[allow(clippy::module_name_repetitions)]
 pub trait PatternAt {
-    #[must_use]
     fn pattern_at(&self, point: &Point) -> Colour;
 }

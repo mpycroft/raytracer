@@ -2,57 +2,18 @@ mod cubic_mapping;
 mod uv_align_check;
 mod uv_checker;
 mod uv_mapping;
+mod uv_pattern;
 mod uv_pattern_at;
 
-use enum_dispatch::enum_dispatch;
 use float_cmp::{ApproxEq, F64Margin};
 
 pub use self::uv_mapping::UvMapping;
 use self::{
-    uv_align_check::UvAlignCheck, uv_checker::UvChecker,
+    uv_align_check::UvAlignCheck, uv_checker::UvChecker, uv_pattern::UvPattern,
     uv_pattern_at::UvPatternAt,
 };
 use super::PatternAt;
-use crate::{
-    math::{float::impl_approx_eq, Point},
-    Colour,
-};
-
-#[derive(Clone, Copy, Debug)]
-#[enum_dispatch(UvPatternAt)]
-pub enum UvPattern {
-    UvChecker(UvChecker),
-    UvAlignCheck(UvAlignCheck),
-}
-
-impl UvPattern {
-    #[must_use]
-    pub fn new_uv_checker(
-        width: u32,
-        height: u32,
-        a: Colour,
-        b: Colour,
-    ) -> Self {
-        UvPattern::UvChecker(UvChecker::new(width, height, a, b))
-    }
-
-    #[must_use]
-    pub fn new_align_check(
-        main: Colour,
-        upper_left: Colour,
-        upper_right: Colour,
-        bottom_left: Colour,
-        bottom_right: Colour,
-    ) -> Self {
-        UvPattern::UvAlignCheck(UvAlignCheck::new(
-            main,
-            upper_left,
-            upper_right,
-            bottom_left,
-            bottom_right,
-        ))
-    }
-}
+use crate::{math::Point, Colour};
 
 #[derive(Clone, Copy, Debug)]
 pub enum TextureMap {
@@ -131,13 +92,6 @@ impl ApproxEq for &TextureMap {
         }
     }
 }
-
-impl_approx_eq!(
-    enum UvPattern {
-        UvChecker,
-        UvAlignCheck,
-    }
-);
 
 #[cfg(test)]
 mod tests {
@@ -219,9 +173,29 @@ mod tests {
             Colour::green(),
             UvMapping::Spherical,
         );
+        let t4 = TextureMap::new_align_check(
+            Colour::red(),
+            Colour::green(),
+            Colour::blue(),
+            Colour::white(),
+            Colour::black(),
+            UvMapping::Planar,
+        );
+        let t5 = TextureMap::new_align_check(
+            Colour::red(),
+            Colour::green(),
+            Colour::blue(),
+            Colour::white(),
+            Colour::black(),
+            UvMapping::Planar,
+        );
 
         assert_approx_eq!(t1, &t2);
 
         assert_approx_ne!(t1, &t3);
+
+        assert_approx_eq!(t4, &t5);
+
+        assert_approx_ne!(t1, &t4);
     }
 }

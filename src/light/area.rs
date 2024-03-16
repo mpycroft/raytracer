@@ -53,7 +53,6 @@ impl Area {
 }
 
 impl Lightable for Area {
-    #[must_use]
     fn positions<R: Rng>(&self, rng: &mut R) -> Vec<Point> {
         let mut positions = Vec::new();
 
@@ -66,12 +65,10 @@ impl Lightable for Area {
         positions
     }
 
-    #[must_use]
     fn intensity(&self) -> Colour {
         self.intensity
     }
 
-    #[must_use]
     fn intensity_at<R: Rng>(
         &self,
         point: &Point,

@@ -16,7 +16,6 @@ use crate::{
 pub struct Plane;
 
 impl Intersectable for Plane {
-    #[must_use]
     fn intersect(&self, ray: &Ray) -> Option<TList> {
         if approx_eq!(ray.direction.y, 0.0) {
             return None;
@@ -25,7 +24,6 @@ impl Intersectable for Plane {
         Some(TList::from(-ray.origin.y / ray.direction.y))
     }
 
-    #[must_use]
     fn normal_at(
         &self,
         _point: &Point,

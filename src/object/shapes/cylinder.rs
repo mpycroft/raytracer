@@ -54,7 +54,6 @@ impl Cylinder {
 }
 
 impl Intersectable for Cylinder {
-    #[must_use]
     fn intersect(&self, ray: &Ray) -> Option<TList> {
         let a = ray.direction.x.powi(2) + ray.direction.z.powi(2);
 
@@ -94,7 +93,6 @@ impl Intersectable for Cylinder {
         self.intersect_caps(ray, list)
     }
 
-    #[must_use]
     fn normal_at(&self, point: &Point, _intersection: &Intersection) -> Vector {
         let distance = point.x.powi(2) + point.z.powi(2);
 
