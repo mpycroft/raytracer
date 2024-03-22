@@ -1,8 +1,12 @@
 use enum_map::{enum_map, Enum, EnumMap};
 use float_cmp::{ApproxEq, F64Margin};
 
-use super::UvPattern;
-use crate::math::{float::approx_eq, Point};
+use super::{UvPattern, UvPatternAt};
+use crate::{
+    math::{float::approx_eq, Point},
+    pattern::pattern_at::PatternAt,
+    Colour,
+};
 
 #[derive(Clone, Copy, Debug)]
 pub struct CubicMapping(EnumMap<Face, UvPattern>);
@@ -17,7 +21,7 @@ impl CubicMapping {
         up: UvPattern,
         down: UvPattern,
     ) -> Self {
-        CubicMapping(enum_map! {
+        Self(enum_map! {
             Face::Left => left,
             Face::Right => right,
             Face::Front => front,
@@ -28,8 +32,8 @@ impl CubicMapping {
     }
 
     #[must_use]
-    fn cube_uv(point: &Point) -> (f64, f64) {
-        match Face::from(*point) {
+    fn cube_uv(face: Face, point: &Point) -> (f64, f64) {
+        match face {
             Face::Left => {
                 let u = (point.z + 1.0).rem_euclid(2.0) / 2.0;
                 let v = (point.y + 1.0).rem_euclid(2.0) / 2.0;
@@ -67,6 +71,16 @@ impl CubicMapping {
                 (u, v)
             }
         }
+    }
+}
+
+impl PatternAt for CubicMapping {
+    fn pattern_at(&self, point: &Point) -> Colour {
+        let face = Face::from(*point);
+
+        let (u, v) = Self::cube_uv(face, point);
+
+        self.0[face].uv_pattern_at(u, v)
     }
 }
 
@@ -162,7 +176,8 @@ mod tests {
     #[test]
     fn uv_mapping_a_cube() {
         let test = |point, cu, cv| {
-            let (u, v) = CubicMapping::cube_uv(&point);
+            let f = Face::from(point);
+            let (u, v) = CubicMapping::cube_uv(f, &point);
 
             assert_approx_eq!(u, cu);
             assert_approx_eq!(v, cv);
@@ -185,6 +200,171 @@ mod tests {
 
         test(Point::new(-0.5, -1.0, 0.5), 0.25, 0.75);
         test(Point::new(0.5, -1.0, -0.5), 0.75, 0.25);
+    }
+
+    #[test]
+    #[allow(clippy::too_many_lines)]
+    fn finding_the_colours_on_a_mapped_cube() {
+        let brown = Colour::new(1.0, 0.5, 0.0);
+
+        let c = CubicMapping::new(
+            UvPattern::new_align_check(
+                Colour::yellow(),
+                Colour::cyan(),
+                Colour::red(),
+                Colour::blue(),
+                brown,
+            ),
+            UvPattern::new_align_check(
+                Colour::red(),
+                Colour::yellow(),
+                Colour::purple(),
+                Colour::green(),
+                Colour::white(),
+            ),
+            UvPattern::new_align_check(
+                Colour::cyan(),
+                Colour::red(),
+                Colour::yellow(),
+                brown,
+                Colour::green(),
+            ),
+            UvPattern::new_align_check(
+                Colour::green(),
+                Colour::purple(),
+                Colour::cyan(),
+                Colour::white(),
+                Colour::blue(),
+            ),
+            UvPattern::new_align_check(
+                brown,
+                Colour::cyan(),
+                Colour::purple(),
+                Colour::red(),
+                Colour::yellow(),
+            ),
+            UvPattern::new_align_check(
+                Colour::purple(),
+                brown,
+                Colour::green(),
+                Colour::blue(),
+                Colour::white(),
+            ),
+        );
+
+        assert_approx_eq!(
+            c.pattern_at(&Point::new(-1.0, 0.0, 0.0)),
+            Colour::yellow()
+        );
+        assert_approx_eq!(
+            c.pattern_at(&Point::new(-1.0, 0.9, -0.9)),
+            Colour::cyan()
+        );
+        assert_approx_eq!(
+            c.pattern_at(&Point::new(-1.0, 0.9, 0.9)),
+            Colour::red()
+        );
+        assert_approx_eq!(
+            c.pattern_at(&Point::new(-1.0, -0.9, -0.9)),
+            Colour::blue()
+        );
+        assert_approx_eq!(c.pattern_at(&Point::new(-1.0, -0.9, 0.9)), brown);
+
+        assert_approx_eq!(
+            c.pattern_at(&Point::new(0.0, 0.0, 1.0)),
+            Colour::cyan()
+        );
+        assert_approx_eq!(
+            c.pattern_at(&Point::new(-0.9, 0.9, 1.0)),
+            Colour::red()
+        );
+        assert_approx_eq!(
+            c.pattern_at(&Point::new(0.9, 0.9, 1.0)),
+            Colour::yellow()
+        );
+        assert_approx_eq!(c.pattern_at(&Point::new(-0.9, -0.9, 1.0)), brown);
+        assert_approx_eq!(
+            c.pattern_at(&Point::new(0.9, -0.9, 1.0)),
+            Colour::green()
+        );
+
+        assert_approx_eq!(
+            c.pattern_at(&Point::new(1.0, 0.0, 0.0)),
+            Colour::red()
+        );
+        assert_approx_eq!(
+            c.pattern_at(&Point::new(1.0, 0.9, 0.9)),
+            Colour::yellow()
+        );
+        assert_approx_eq!(
+            c.pattern_at(&Point::new(1.0, 0.9, -0.9)),
+            Colour::purple()
+        );
+        assert_approx_eq!(
+            c.pattern_at(&Point::new(1.0, -0.9, 0.9)),
+            Colour::green()
+        );
+        assert_approx_eq!(
+            c.pattern_at(&Point::new(1.0, -0.9, -0.9)),
+            Colour::white()
+        );
+
+        assert_approx_eq!(
+            c.pattern_at(&Point::new(0.0, 0.0, -1.0)),
+            Colour::green()
+        );
+        assert_approx_eq!(
+            c.pattern_at(&Point::new(0.9, 0.9, -1.0)),
+            Colour::purple()
+        );
+        assert_approx_eq!(
+            c.pattern_at(&Point::new(-0.9, 0.9, -1.0)),
+            Colour::cyan()
+        );
+        assert_approx_eq!(
+            c.pattern_at(&Point::new(0.9, -0.9, -1.0)),
+            Colour::white()
+        );
+        assert_approx_eq!(
+            c.pattern_at(&Point::new(-0.9, -0.9, -1.0)),
+            Colour::blue()
+        );
+
+        assert_approx_eq!(c.pattern_at(&Point::new(0.0, 1.0, 0.0)), brown);
+        assert_approx_eq!(
+            c.pattern_at(&Point::new(-0.9, 1.0, -0.9)),
+            Colour::cyan()
+        );
+        assert_approx_eq!(
+            c.pattern_at(&Point::new(0.9, 1.0, -0.9)),
+            Colour::purple()
+        );
+        assert_approx_eq!(
+            c.pattern_at(&Point::new(-0.9, 1.0, 0.9)),
+            Colour::red()
+        );
+        assert_approx_eq!(
+            c.pattern_at(&Point::new(0.9, 1.0, 0.9)),
+            Colour::yellow()
+        );
+
+        assert_approx_eq!(
+            c.pattern_at(&Point::new(0.0, -1.0, 0.0)),
+            Colour::purple()
+        );
+        assert_approx_eq!(c.pattern_at(&Point::new(-0.9, -1.0, 0.9)), brown);
+        assert_approx_eq!(
+            c.pattern_at(&Point::new(0.9, -1.0, 0.9)),
+            Colour::green()
+        );
+        assert_approx_eq!(
+            c.pattern_at(&Point::new(-0.9, -1.0, -0.9)),
+            Colour::blue()
+        );
+        assert_approx_eq!(
+            c.pattern_at(&Point::new(0.9, -1.0, -0.9)),
+            Colour::white()
+        );
     }
 
     #[test]

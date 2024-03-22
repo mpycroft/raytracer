@@ -7,17 +7,18 @@ mod uv_pattern_at;
 
 use float_cmp::{ApproxEq, F64Margin};
 
-pub use self::uv_mapping::UvMapping;
 use self::{
-    uv_align_check::UvAlignCheck, uv_checker::UvChecker, uv_pattern::UvPattern,
-    uv_pattern_at::UvPatternAt,
+    cubic_mapping::CubicMapping, uv_align_check::UvAlignCheck,
+    uv_checker::UvChecker, uv_pattern_at::UvPatternAt,
 };
+pub use self::{uv_mapping::UvMapping, uv_pattern::UvPattern};
 use super::PatternAt;
 use crate::{math::Point, Colour};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 pub enum TextureMap {
     SingleMapping { pattern: UvPattern, mapping: UvMapping },
+    CubicMapping(Box<CubicMapping>),
 }
 
 impl TextureMap {
@@ -55,6 +56,20 @@ impl TextureMap {
             mapping,
         }
     }
+
+    #[must_use]
+    pub fn new_cubic_mapping(
+        left: UvPattern,
+        right: UvPattern,
+        front: UvPattern,
+        back: UvPattern,
+        up: UvPattern,
+        down: UvPattern,
+    ) -> Self {
+        TextureMap::CubicMapping(Box::new(CubicMapping::new(
+            left, right, front, back, up, down,
+        )))
+    }
 }
 
 impl PatternAt for TextureMap {
@@ -64,6 +79,9 @@ impl PatternAt for TextureMap {
                 let (u, v) = mapping.get_u_v(point);
 
                 pattern.uv_pattern_at(u, v)
+            }
+            Self::CubicMapping(cubic_mapping) => {
+                cubic_mapping.pattern_at(point)
             }
         }
     }
@@ -89,6 +107,10 @@ impl ApproxEq for &TextureMap {
                 lhs_pattern.approx_eq(rhs_pattern, margin)
                     && lhs_mapping == rhs_mapping
             }
+            (TextureMap::CubicMapping(lhs), TextureMap::CubicMapping(rhs)) => {
+                lhs.approx_eq(rhs, margin)
+            }
+            (_, _) => false,
         }
     }
 }

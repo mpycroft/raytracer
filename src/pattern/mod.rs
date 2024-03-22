@@ -38,7 +38,7 @@ use self::{
     ring::Ring,
     solid::Solid,
     stripe::Stripe,
-    texture_map::{TextureMap, UvMapping},
+    texture_map::{TextureMap, UvMapping, UvPattern},
 };
 use crate::{
     math::{float::impl_approx_eq, Point, Transformable, Transformation},
@@ -122,6 +122,19 @@ impl Pattern {
             bottom_left,
             bottom_right,
             mapping,
+        )))
+    }
+
+    pub fn uv_cubic_mapping_builder(
+        left: UvPattern,
+        right: UvPattern,
+        front: UvPattern,
+        back: UvPattern,
+        up: UvPattern,
+        down: UvPattern,
+    ) -> PatternBuilder<((), (Kind,))> {
+        Self::_builder().kind(Kind::TextureMap(TextureMap::new_cubic_mapping(
+            left, right, front, back, up, down,
         )))
     }
 
@@ -368,6 +381,76 @@ mod tests {
         let pn = Pattern::perturbed_builder(0.3, w.into(), &mut r)
             .transformation(t)
             .build();
+
+        assert_approx_eq!(pn.transformation, t);
+        assert_approx_eq!(pn.inverse_transformation, ti);
+        assert_approx_eq!(pn.kind, &p);
+
+        let p = Kind::TextureMap(TextureMap::new_checker(
+            2,
+            2,
+            Colour::red(),
+            Colour::green(),
+            UvMapping::Spherical,
+        ));
+
+        let pn = Pattern::uv_checker_builder(
+            2,
+            2,
+            Colour::red(),
+            Colour::green(),
+            UvMapping::Spherical,
+        )
+        .transformation(t)
+        .build();
+
+        assert_approx_eq!(pn.transformation, t);
+        assert_approx_eq!(pn.inverse_transformation, ti);
+        assert_approx_eq!(pn.kind, &p);
+
+        let p = Kind::TextureMap(TextureMap::new_align_check(
+            Colour::red(),
+            Colour::green(),
+            Colour::blue(),
+            Colour::yellow(),
+            Colour::purple(),
+            UvMapping::Planar,
+        ));
+
+        let pn = Pattern::uv_align_check_builder(
+            Colour::red(),
+            Colour::green(),
+            Colour::blue(),
+            Colour::yellow(),
+            Colour::purple(),
+            UvMapping::Planar,
+        )
+        .transformation(t)
+        .build();
+
+        assert_approx_eq!(pn.transformation, t);
+        assert_approx_eq!(pn.inverse_transformation, ti);
+        assert_approx_eq!(pn.kind, &p);
+
+        let p = Kind::TextureMap(TextureMap::new_cubic_mapping(
+            UvPattern::new_uv_checker(3, 3, Colour::red(), Colour::green()),
+            UvPattern::new_uv_checker(3, 3, Colour::blue(), Colour::black()),
+            UvPattern::new_uv_checker(3, 3, Colour::white(), Colour::yellow()),
+            UvPattern::new_uv_checker(3, 3, Colour::purple(), Colour::cyan()),
+            UvPattern::new_uv_checker(3, 3, Colour::red(), Colour::purple()),
+            UvPattern::new_uv_checker(3, 3, Colour::green(), Colour::black()),
+        ));
+
+        let pn = Pattern::uv_cubic_mapping_builder(
+            UvPattern::new_uv_checker(3, 3, Colour::red(), Colour::green()),
+            UvPattern::new_uv_checker(3, 3, Colour::blue(), Colour::black()),
+            UvPattern::new_uv_checker(3, 3, Colour::white(), Colour::yellow()),
+            UvPattern::new_uv_checker(3, 3, Colour::purple(), Colour::cyan()),
+            UvPattern::new_uv_checker(3, 3, Colour::red(), Colour::purple()),
+            UvPattern::new_uv_checker(3, 3, Colour::green(), Colour::black()),
+        )
+        .transformation(t)
+        .build();
 
         assert_approx_eq!(pn.transformation, t);
         assert_approx_eq!(pn.inverse_transformation, ti);
