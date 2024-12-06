@@ -961,6 +961,8 @@ Tried to invert a Matrix that cannot be inverted - Matrix<4>([
     #[should_panic(
         expected = "index out of bounds: the len is 4 but the index is 5"
     )]
+    #[allow(clippy::out_of_bounds_indexing)]
+    #[allow(unconditional_panic)]
     fn mutable_indexing_with_invalid_values() {
         let mut m = Matrix([
             [1.0, 2.0, 3.0, 4.0],
@@ -968,7 +970,6 @@ Tried to invert a Matrix that cannot be inverted - Matrix<4>([
             [0.0, 0.0, 0.0, 0.0],
             [0.0, 0.0, 1.0, 1.0],
         ]);
-
         m[5][10] = 0.5;
     }
 

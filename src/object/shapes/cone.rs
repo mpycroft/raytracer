@@ -1,5 +1,3 @@
-use std::f64::EPSILON;
-
 use derive_new::new;
 
 use super::{Bounded, BoundingBox, Intersectable};
@@ -101,9 +99,9 @@ impl Intersectable for Cone {
     fn normal_at(&self, point: &Point, _intersection: &Intersection) -> Vector {
         let distance = point.x.powi(2) + point.z.powi(2);
 
-        if distance < 1.0 && point.y >= self.maximum - EPSILON {
+        if distance < 1.0 && point.y >= self.maximum - f64::EPSILON {
             return Vector::y_axis();
-        } else if distance < 1.0 && point.y <= self.minimum + EPSILON {
+        } else if distance < 1.0 && point.y <= self.minimum + f64::EPSILON {
             return -Vector::y_axis();
         }
 
@@ -131,17 +129,14 @@ impl_approx_eq!(&Cone { eq closed, minimum, maximum });
 
 #[cfg(test)]
 mod tests {
-    use std::f64::{
-        consts::{FRAC_1_SQRT_2, SQRT_2},
-        INFINITY,
-    };
+    use std::f64::consts::{FRAC_1_SQRT_2, SQRT_2};
 
     use super::*;
     use crate::{math::float::*, Object};
 
     #[test]
     fn intersecting_a_cone_with_a_ray() {
-        let c = Cone::new(-INFINITY, INFINITY, false);
+        let c = Cone::new(-f64::INFINITY, f64::INFINITY, false);
 
         assert!(c
             .intersect(&Ray::new(Point::new(5.0, 0.0, 5.0), Vector::z_axis()))
@@ -176,7 +171,7 @@ mod tests {
 
     #[test]
     fn intersecting_a_cone_with_a_ray_parallel_to_one_of_its_halves() {
-        let c = Cone::new(-INFINITY, INFINITY, false);
+        let c = Cone::new(-f64::INFINITY, f64::INFINITY, false);
 
         let i = c
             .intersect(&Ray::new(

@@ -1,5 +1,3 @@
-use std::f64::EPSILON;
-
 use derive_new::new;
 
 use super::{Bounded, BoundingBox, Intersectable};
@@ -96,9 +94,9 @@ impl Intersectable for Cylinder {
     fn normal_at(&self, point: &Point, _intersection: &Intersection) -> Vector {
         let distance = point.x.powi(2) + point.z.powi(2);
 
-        if distance < 1.0 && point.y >= self.maximum - EPSILON {
+        if distance < 1.0 && point.y >= self.maximum - f64::EPSILON {
             return Vector::y_axis();
-        } else if distance < 1.0 && point.y <= self.minimum + EPSILON {
+        } else if distance < 1.0 && point.y <= self.minimum + f64::EPSILON {
             return -Vector::y_axis();
         }
 
@@ -119,14 +117,12 @@ impl_approx_eq!(&Cylinder { eq closed, minimum, maximum });
 
 #[cfg(test)]
 mod tests {
-    use std::f64::INFINITY;
-
     use super::*;
     use crate::{math::float::*, Object};
 
     #[test]
     fn a_ray_misses_a_cylinder() {
-        let c = Cylinder::new(-INFINITY, INFINITY, false);
+        let c = Cylinder::new(-f64::INFINITY, f64::INFINITY, false);
 
         assert!(c
             .intersect(&Ray::new(Point::new(1.0, 0.0, 0.0), Vector::y_axis()))
@@ -144,7 +140,7 @@ mod tests {
 
     #[test]
     fn a_ray_strikes_a_cylinder() {
-        let c = Cylinder::new(-INFINITY, INFINITY, false);
+        let c = Cylinder::new(-f64::INFINITY, f64::INFINITY, false);
 
         let test = |r, t0, t1| {
             let i = c.intersect(&r).unwrap();
@@ -247,7 +243,7 @@ mod tests {
 
     #[test]
     fn normal_vector_on_a_cylinder() {
-        let c = Cylinder::new(-INFINITY, INFINITY, false);
+        let c = Cylinder::new(-f64::INFINITY, f64::INFINITY, false);
 
         let o = Object::test_builder().build();
         let i = Intersection::new(&o, 0.0);

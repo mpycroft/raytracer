@@ -3,8 +3,6 @@ mod list;
 mod t_list;
 mod t_values;
 
-use std::f64::EPSILON;
-
 use float_cmp::{ApproxEq, F64Margin};
 
 pub use self::{
@@ -97,8 +95,8 @@ impl<'a> Intersection<'a> {
             self.object,
             self.t,
             point,
-            point + normal * 100_000.0 * EPSILON,
-            point - normal * 100_000.0 * EPSILON,
+            point + normal * 100_000.0 * f64::EPSILON,
+            point - normal * 100_000.0 * f64::EPSILON,
             eye,
             normal,
             inside,
@@ -109,7 +107,7 @@ impl<'a> Intersection<'a> {
     }
 }
 
-impl<'a> ApproxEq for Intersection<'a> {
+impl ApproxEq for Intersection<'_> {
     type Margin = F64Margin;
 
     fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
@@ -195,7 +193,7 @@ mod tests {
 
         let c = i.prepare_computations(&r, &List::from(i));
 
-        assert!(c.over_point.z < -EPSILON / 2.0);
+        assert!(c.over_point.z < -f64::EPSILON / 2.0);
         assert!(c.point.z > c.over_point.z);
     }
 
@@ -282,7 +280,7 @@ mod tests {
 
         let c = i.prepare_computations(&r, &List::from(i));
 
-        assert!(c.under_point.z > EPSILON / 2.0);
+        assert!(c.under_point.z > f64::EPSILON / 2.0);
         assert!(c.point.z < c.under_point.z);
     }
 

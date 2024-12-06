@@ -14,7 +14,7 @@ impl<O: Write> Output<O> {
     }
 
     #[must_use]
-    pub fn new_sink() -> Self {
+    pub const fn new_sink() -> Self {
         Self { buffer: Right(sink()) }
     }
 

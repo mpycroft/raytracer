@@ -23,7 +23,7 @@ pub struct Computations<'a> {
     pub n2: f64,
 }
 
-impl<'a> Computations<'a> {
+impl Computations<'_> {
     #[must_use]
     pub fn schlick(&self) -> f64 {
         let mut cos = self.eye.dot(&self.normal);

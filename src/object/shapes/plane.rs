@@ -1,5 +1,3 @@
-use std::f64::{INFINITY, NEG_INFINITY};
-
 use derive_new::new;
 
 use super::{Bounded, BoundingBox, Intersectable};
@@ -36,8 +34,8 @@ impl Intersectable for Plane {
 impl Bounded for Plane {
     fn bounding_box(&self) -> BoundingBox {
         BoundingBox::new(
-            Point::new(NEG_INFINITY, 0.0, NEG_INFINITY),
-            Point::new(INFINITY, 0.0, INFINITY),
+            Point::new(f64::NEG_INFINITY, 0.0, f64::NEG_INFINITY),
+            Point::new(f64::INFINITY, 0.0, f64::INFINITY),
         )
     }
 }
@@ -108,8 +106,8 @@ mod tests {
         assert_approx_eq!(
             p.bounding_box(),
             BoundingBox::new(
-                Point::new(NEG_INFINITY, 0.0, NEG_INFINITY),
-                Point::new(INFINITY, 0.0, INFINITY)
+                Point::new(f64::NEG_INFINITY, 0.0, f64::NEG_INFINITY),
+                Point::new(f64::INFINITY, 0.0, f64::INFINITY)
             )
         );
     }

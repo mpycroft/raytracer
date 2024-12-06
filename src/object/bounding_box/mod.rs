@@ -1,9 +1,6 @@
 mod bounded;
 
-use std::{
-    f64::{INFINITY, NEG_INFINITY},
-    ops::{Add, AddAssign},
-};
+use std::ops::{Add, AddAssign};
 
 use derive_new::new;
 
@@ -99,7 +96,7 @@ impl BoundingBox {
         let max_numerator = max - origin;
 
         let (min, max) = if approx_eq!(direction, 0.0) {
-            (min_numerator * INFINITY, max_numerator * INFINITY)
+            (min_numerator * f64::INFINITY, max_numerator * f64::INFINITY)
         } else {
             (min_numerator / direction, max_numerator / direction)
         };
@@ -203,8 +200,8 @@ impl Transformable for BoundingBox {
 impl Default for BoundingBox {
     fn default() -> Self {
         Self::new(
-            Point::new(INFINITY, INFINITY, INFINITY),
-            Point::new(NEG_INFINITY, NEG_INFINITY, NEG_INFINITY),
+            Point::new(f64::INFINITY, f64::INFINITY, f64::INFINITY),
+            Point::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY),
         )
     }
 }
@@ -213,10 +210,7 @@ impl_approx_eq!(BoundingBox { minimum, maximum });
 
 #[cfg(test)]
 mod tests {
-    use std::f64::{
-        consts::{FRAC_1_SQRT_2, FRAC_PI_4, SQRT_2},
-        INFINITY, NEG_INFINITY,
-    };
+    use std::f64::consts::{FRAC_1_SQRT_2, FRAC_PI_4, SQRT_2};
 
     use super::*;
     use crate::math::{float::*, Angle, Vector};
@@ -224,12 +218,12 @@ mod tests {
     #[test]
     fn creating_a_bounding_box() {
         let b = BoundingBox::new(
-            Point::new(-10.0, NEG_INFINITY, 5.0),
-            Point::new(5.1, INFINITY, 10.6),
+            Point::new(-10.0, f64::NEG_INFINITY, 5.0),
+            Point::new(5.1, f64::INFINITY, 10.6),
         );
 
-        assert_approx_eq!(b.minimum, Point::new(-10.0, NEG_INFINITY, 5.0));
-        assert_approx_eq!(b.maximum, Point::new(5.1, INFINITY, 10.6));
+        assert_approx_eq!(b.minimum, Point::new(-10.0, f64::NEG_INFINITY, 5.0));
+        assert_approx_eq!(b.maximum, Point::new(5.1, f64::INFINITY, 10.6));
     }
 
     #[test]

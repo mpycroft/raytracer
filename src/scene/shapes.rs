@@ -1,5 +1,3 @@
-use std::f64::{INFINITY, NEG_INFINITY};
-
 use anyhow::{bail, Result};
 use paste::paste;
 use rand::prelude::*;
@@ -116,9 +114,13 @@ macro_rules! impl_parse {
     };
 }
 
-impl_parse!(Cone { min: NEG_INFINITY, max: INFINITY, closed: false });
+impl_parse!(Cone { min: f64::NEG_INFINITY, max: f64::INFINITY, closed: false });
 impl_parse!(Cube {});
-impl_parse!(Cylinder { min: NEG_INFINITY, max: INFINITY, closed: false });
+impl_parse!(Cylinder {
+    min: f64::NEG_INFINITY,
+    max: f64::INFINITY,
+    closed: false
+});
 impl_parse!(Plane {});
 impl_parse!(Sphere {});
 
@@ -259,7 +261,7 @@ transform:
         let o = c.parse(&d, &mut Xoshiro256PlusPlus::seed_from_u64(0)).unwrap();
         assert_approx_eq!(
             o,
-            &Object::cone_builder(0.0, INFINITY, true)
+            &Object::cone_builder(0.0, f64::INFINITY, true)
                 .material(
                     crate::Material::builder()
                         .pattern(Colour::green().into())

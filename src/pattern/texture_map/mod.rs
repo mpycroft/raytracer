@@ -66,7 +66,7 @@ impl TextureMap {
         up: UvPattern,
         down: UvPattern,
     ) -> Self {
-        TextureMap::CubicMapping(Box::new(CubicMapping::new(
+        Self::CubicMapping(Box::new(CubicMapping::new(
             left, right, front, back, up, down,
         )))
     }

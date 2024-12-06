@@ -14,6 +14,8 @@ macro_rules! approx_eq {
         )
     };
     ($lhs:expr, $rhs:expr $(, $set:ident = $val:expr)*) => {{
+        use float_cmp::FloatMargin;
+
         let margin = float_cmp::F64Margin::zero()$(.$set($val))*;
         crate::math::float::approx_eq!($lhs, $rhs, margin)
     }};
@@ -41,6 +43,8 @@ macro_rules! _assert_approx_helper {
         )
     };
     ($approx:ident, $lhs:expr, $rhs:expr $(, $set:ident = $val:expr)*) => {{
+        use float_cmp::FloatMargin;
+
         let margin = float_cmp::F64Margin::zero()$(.$set($val))*;
         crate::math::float::_assert_approx_helper!($approx, $lhs, $rhs, margin)
     }};
@@ -195,8 +199,6 @@ pub(crate) use impl_approx_eq;
 
 #[cfg(test)]
 mod tests {
-    use std::f64::EPSILON;
-
     use super::*;
 
     #[test]
@@ -212,27 +214,27 @@ mod tests {
         assert_ne!(a, b);
 
         assert!(approx_eq!(a, b));
-        assert!(approx_eq!(a, b, epsilon = 1_000.0 * EPSILON));
+        assert!(approx_eq!(a, b, epsilon = 1_000.0 * f64::EPSILON));
         assert!(approx_eq!(a, b, ulps = 2));
 
         assert!(approx_eq!(b, a));
-        assert!(approx_eq!(b, a, epsilon = 1_000.0 * EPSILON));
+        assert!(approx_eq!(b, a, epsilon = 1_000.0 * f64::EPSILON));
         assert!(approx_eq!(b, a, ulps = 2));
 
-        assert!(approx_eq!(a, b, ulps = 2, epsilon = 0.05 * EPSILON));
-        assert!(approx_eq!(b, a, epsilon = 0.05 * EPSILON, ulps = 2));
+        assert!(approx_eq!(a, b, ulps = 2, epsilon = 0.05 * f64::EPSILON));
+        assert!(approx_eq!(b, a, epsilon = 0.05 * f64::EPSILON, ulps = 2));
 
         assert!(approx_ne!(a, c));
         assert!(approx_ne!(c, a));
 
-        assert!(approx_ne!(a, b, epsilon = 0.05 * EPSILON));
+        assert!(approx_ne!(a, b, epsilon = 0.05 * f64::EPSILON));
         assert!(approx_ne!(a, b, ulps = 1));
 
-        assert!(approx_ne!(b, a, epsilon = 0.05 * EPSILON));
+        assert!(approx_ne!(b, a, epsilon = 0.05 * f64::EPSILON));
         assert!(approx_ne!(b, a, ulps = 1));
 
-        assert!(approx_ne!(a, b, ulps = 1, epsilon = 0.05 * EPSILON));
-        assert!(approx_ne!(b, a, epsilon = 0.05 * EPSILON, ulps = 1));
+        assert!(approx_ne!(a, b, ulps = 1, epsilon = 0.05 * f64::EPSILON));
+        assert!(approx_ne!(b, a, epsilon = 0.05 * f64::EPSILON, ulps = 1));
     }
 
     #[test]
@@ -249,25 +251,25 @@ mod tests {
 
         assert_approx_eq!(a, b);
         assert_approx_eq!(a, b, ulps = 3);
-        assert_approx_eq!(a, b, epsilon = 1_000_000.0 * EPSILON);
+        assert_approx_eq!(a, b, epsilon = 1_000_000.0 * f64::EPSILON);
 
         assert_approx_eq!(b, a);
         assert_approx_eq!(b, a, ulps = 3);
-        assert_approx_eq!(b, a, epsilon = 1_000_000.0 * EPSILON);
+        assert_approx_eq!(b, a, epsilon = 1_000_000.0 * f64::EPSILON);
 
-        assert_approx_eq!(a, b, ulps = 3, epsilon = 1_000_000.0 * EPSILON);
-        assert_approx_eq!(a, b, epsilon = 1_000_000.0 * EPSILON, ulps = 3);
+        assert_approx_eq!(a, b, ulps = 3, epsilon = 1_000_000.0 * f64::EPSILON);
+        assert_approx_eq!(a, b, epsilon = 1_000_000.0 * f64::EPSILON, ulps = 3);
 
         assert_approx_ne!(a, c);
         assert_approx_ne!(c, a);
 
         assert_approx_ne!(a, b, ulps = 1);
-        assert_approx_ne!(a, b, epsilon = 0.5 * EPSILON);
+        assert_approx_ne!(a, b, epsilon = 0.5 * f64::EPSILON);
 
         assert_approx_ne!(b, a, ulps = 1);
-        assert_approx_ne!(b, a, epsilon = 0.5 * EPSILON);
+        assert_approx_ne!(b, a, epsilon = 0.5 * f64::EPSILON);
 
-        assert_approx_ne!(a, b, ulps = 1, epsilon = 0.5 * EPSILON);
-        assert_approx_ne!(b, a, epsilon = 0.5 * EPSILON, ulps = 1);
+        assert_approx_ne!(a, b, ulps = 1, epsilon = 0.5 * f64::EPSILON);
+        assert_approx_ne!(b, a, epsilon = 0.5 * f64::EPSILON, ulps = 1);
     }
 }

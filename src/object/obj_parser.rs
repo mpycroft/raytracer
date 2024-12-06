@@ -20,7 +20,7 @@ pub struct ObjParser {
 
 impl ObjParser {
     #[must_use]
-    fn new() -> Self {
+    const fn new() -> Self {
         Self {
             vertices: Vec::new(),
             normals: Vec::new(),
@@ -138,11 +138,7 @@ Found {} items.",
         Ok(())
     }
 
-    fn parse_face(
-        &mut self,
-        line: &str,
-        group: &mut Vec<Object>,
-    ) -> Result<()> {
+    fn parse_face(&self, line: &str, group: &mut Vec<Object>) -> Result<()> {
         let items = Self::split(line);
 
         if items.len() < 4 {

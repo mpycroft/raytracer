@@ -36,7 +36,7 @@ impl Add {
 
 #[cfg(test)]
 mod tests {
-    use std::f64::{consts::FRAC_PI_2, INFINITY, NEG_INFINITY};
+    use std::f64::consts::FRAC_PI_2;
 
     use rand_xoshiro::Xoshiro256PlusPlus;
     use serde_yaml::from_str;
@@ -166,7 +166,8 @@ material:
 
         assert_approx_eq!(
             d.objects[0],
-            &Object::cylinder_builder(NEG_INFINITY, INFINITY, false).build()
+            &Object::cylinder_builder(f64::NEG_INFINITY, f64::INFINITY, false)
+                .build()
         );
     }
 

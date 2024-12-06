@@ -56,7 +56,7 @@ impl<'a> From<Intersection<'a>> for List<'a> {
     }
 }
 
-impl<'a> Default for List<'a> {
+impl Default for List<'_> {
     fn default() -> Self {
         Self::new()
     }
@@ -64,8 +64,6 @@ impl<'a> Default for List<'a> {
 
 #[cfg(test)]
 mod tests {
-    use std::f64::{INFINITY, NEG_INFINITY};
-
     use super::*;
     use crate::{math::float::*, Object};
 
@@ -193,21 +191,21 @@ mod tests {
             Intersection::new(&o, 1.0),
             Intersection::new(&o, 2.0),
             Intersection::new(&o, 3.6),
-            Intersection::new(&o, INFINITY),
+            Intersection::new(&o, f64::INFINITY),
             Intersection::new(&o, -0.5),
             Intersection::new(&o, 2.5),
-            Intersection::new(&o, NEG_INFINITY),
+            Intersection::new(&o, f64::NEG_INFINITY),
         ]);
 
         l.sort();
 
-        assert_approx_eq!(l[0].t, NEG_INFINITY);
+        assert_approx_eq!(l[0].t, f64::NEG_INFINITY);
         assert_approx_eq!(l[1].t, -0.5);
         assert_approx_eq!(l[2].t, 1.0);
         assert_approx_eq!(l[3].t, 2.0);
         assert_approx_eq!(l[4].t, 2.5);
         assert_approx_eq!(l[5].t, 3.6);
-        assert_approx_eq!(l[6].t, INFINITY);
+        assert_approx_eq!(l[6].t, f64::INFINITY);
     }
 
     #[test]

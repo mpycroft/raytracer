@@ -1,5 +1,3 @@
-use std::ops::Mul;
-
 use derive_more::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign,
 };
